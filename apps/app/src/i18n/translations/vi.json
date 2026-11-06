@@ -2585,7 +2585,7 @@
       },
       "fields": {
         "name": "Tên",
-        "key": "Key",
+        "key": "Mã khóa",
         "status": "Trạng thái",
         "createdAt": "Ngày tạo",
         "createdBy": "Người tạo"
@@ -2612,7 +2612,8 @@
         "configHint": "Dán đoạn này vào cấu hình của MCP client, ví dụ tệp mcp.json của Cursor.",
         "saved": "Tôi đã lưu key này",
         "done": "Xong",
-        "savedRequired": "Sao chép key hoặc đánh dấu ô ở trên để đóng."
+        "savedRequired": "Sao chép key hoặc đánh dấu ô ở trên để đóng.",
+        "composition": "Key đầy đủ gồm Mã khóa và secret. Chỉ giá trị đầy đủ này mới dùng được."
       },
       "delete": {
         "confirm": {
@@ -2642,7 +2643,9 @@
         "header": "Header",
         "headerValue": "x-api-key: <key của bạn>",
         "guide": "Hướng dẫn cài đặt MCP"
-      }
+      },
+      "keyIdHint": "Đây chỉ là mã công khai. Key đầy đủ chỉ hiện một lần, lúc bạn tạo key.",
+      "noReadPermission": "Bạn không thể xem API key trong workspace này. Hãy nhờ chủ workspace hoặc admin."
     },
     "backTo": "Quay lại {{name}}",
     "general": "Chung",

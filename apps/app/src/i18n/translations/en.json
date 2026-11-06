@@ -2544,7 +2544,7 @@
       },
       "fields": {
         "name": "Name",
-        "key": "Key",
+        "key": "Key ID",
         "status": "Status",
         "createdAt": "Created",
         "createdBy": "Created by"
@@ -2571,7 +2571,8 @@
         "configHint": "Paste this into your MCP client's config, for example Cursor's mcp.json.",
         "saved": "I've saved this key",
         "done": "Done",
-        "savedRequired": "Copy the key or tick the box above to close."
+        "savedRequired": "Copy the key or tick the box above to close.",
+        "composition": "The full key is the Key ID plus the secret. Only this full value works."
       },
       "delete": {
         "confirm": {
@@ -2601,7 +2602,9 @@
         "header": "Header",
         "headerValue": "x-api-key: <your key>",
         "guide": "MCP setup guide"
-      }
+      },
+      "keyIdHint": "Public ID only. The full key is shown once, when you create it.",
+      "noReadPermission": "You can't view API keys in this workspace. Ask the owner or an admin."
     },
     "backTo": "Back to {{name}}",
     "general": "General",

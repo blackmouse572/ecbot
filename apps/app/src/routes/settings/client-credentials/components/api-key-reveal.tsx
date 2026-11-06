@@ -21,7 +21,8 @@ export const ApiKeyReveal = ({
   onSavedChange,
 }: ApiKeyRevealProps) => {
   const { t } = useTranslation();
-  // The value a client sends as the x-api-key header.
+  // The value a client sends as the x-api-key header: `key:secret`, which
+  // ClientCredentialGuard splits on the colon.
   const apiKey = `${credential.key}:${credential.secret}`;
 
   return (
@@ -29,11 +30,16 @@ export const ApiKeyReveal = ({
       <Badge size="small" color="orange" className="self-start">
         {t("settings.clientCredentials.reveal.warning")}
       </Badge>
-      <CopyField
-        label={t("settings.clientCredentials.reveal.keyLabel")}
-        value={apiKey}
-        onCopied={() => onSavedChange(true)}
-      />
+      <div className="flex flex-col gap-y-1">
+        <CopyField
+          label={t("settings.clientCredentials.reveal.keyLabel")}
+          value={apiKey}
+          onCopied={() => onSavedChange(true)}
+        />
+        <Text size="small" className="text-ui-fg-subtle">
+          {t("settings.clientCredentials.reveal.composition")}
+        </Text>
+      </div>
       <div className="flex flex-col gap-y-1">
         <CopyField
           label={t("settings.clientCredentials.reveal.config")}

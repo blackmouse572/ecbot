@@ -10,8 +10,10 @@ import {
   type ClientCredentialGetResponseDto,
 } from "@/hooks/api/client-credentials";
 import { useDataTable } from "@/hooks/use-data-table";
+import { readApiError } from "@/libs/api-error";
+import { isWorkspaceSuspendedError } from "@/libs/workspace-suspended";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowPath, Trash } from "@medusajs/icons";
+import { ArrowPath, InformationCircleSolid, Trash } from "@medusajs/icons";
 import {
   Badge,
   Button,
@@ -21,6 +23,7 @@ import {
   Input,
   Text,
   toast,
+  Tooltip,
   usePrompt,
 } from "@medusajs/ui";
 import { useAbility } from "@repo/auth";
@@ -42,15 +45,32 @@ type ApiKeyFormValues = zod.infer<typeof ApiKeyFormSchema>;
 
 const PAGE_SIZE = 100;
 
+/** The same checks the API runs on each route (WorkspaceScopedProtected). */
+const useApiKeyAbilities = () => {
+  const ability = useAbility();
+  return {
+    canRead: ability.can("read", "CLIENT_CREDENTIAL"),
+    canCreate: ability.can("create", "CLIENT_CREDENTIAL"),
+    // POST /:id/rotate is guarded by UPDATE.
+    canRotate: ability.can("update", "CLIENT_CREDENTIAL"),
+    canDelete: ability.can("delete", "CLIENT_CREDENTIAL"),
+  };
+};
+
+/** A 403 from the list call, other than a suspended workspace. */
+const isForbidden = (error: unknown) =>
+  readApiError(error).status === 403 && !isWorkspaceSuspendedError(error);
+
 export const ClientCredentials = () => {
   const { t } = useTranslation();
   const { workspace } = useWorkspace();
-  const { credentials, isLoading, isError, error } = useClientCredentialList();
+  const { canRead, canCreate, canRotate, canDelete } = useApiKeyAbilities();
+  const { credentials, isLoading, isError, error } = useClientCredentialList({
+    enabled: canRead,
+  });
   const [creating, setCreating] = useState(false);
-  // The same check the API runs on create (WorkspaceScopedProtected).
-  const canCreate = useAbility().can("create", "CLIENT_CREDENTIAL");
 
-  const columns = useColumns();
+  const columns = useColumns({ canRotate, canDelete });
 
   const { table } = useDataTable({
     data: credentials,
@@ -60,7 +80,9 @@ export const ClientCredentials = () => {
     getRowId: (row) => row.id,
   });
 
-  if (isError) throw error;
+  const canView = canRead && !(isError && isForbidden(error));
+  if (isError && canView) throw error;
+
   return (
     <div className="flex flex-col gap-y-3">
       <Container className="divide-y p-0">
@@ -73,7 +95,7 @@ export const ClientCredentials = () => {
               })}
             </Text>
           </div>
-          {canCreate ? (
+          {canView && canCreate && (
             <Button
               type="button"
               variant="primary"
@@ -83,7 +105,8 @@ export const ClientCredentials = () => {
             >
               {t("settings.clientCredentials.actions.create")}
             </Button>
-          ) : (
+          )}
+          {canView && !canCreate && (
             <Text
               size="small"
               className="text-ui-fg-subtle max-w-xs"
@@ -93,34 +116,59 @@ export const ClientCredentials = () => {
             </Text>
           )}
         </div>
-        <ApiKeyQuickStart />
-        <_DataTable
-          table={table}
-          columns={columns}
-          count={credentials.length}
-          pageSize={PAGE_SIZE}
-          isLoading={isLoading}
-          noRecords={{
-            title: t("settings.clientCredentials.emptyTitle"),
-            message: t("settings.clientCredentials.empty"),
-            action: canCreate
-              ? {
-                  onClick: () => setCreating(true),
-                  label: t("settings.clientCredentials.actions.create"),
-                }
-              : undefined,
-            icon: <IconKey />,
-          }}
-        />
+        {canView ? (
+          <>
+            <ApiKeyQuickStart />
+            <_DataTable
+              table={table}
+              columns={columns}
+              count={credentials.length}
+              pageSize={PAGE_SIZE}
+              isLoading={isLoading}
+              noRecords={{
+                title: t("settings.clientCredentials.emptyTitle"),
+                message: t("settings.clientCredentials.empty"),
+                action: canCreate
+                  ? {
+                      onClick: () => setCreating(true),
+                      label: t("settings.clientCredentials.actions.create"),
+                    }
+                  : undefined,
+                icon: <IconKey />,
+              }}
+            />
+          </>
+        ) : (
+          <div
+            className="flex flex-col items-center gap-y-2 px-6 py-12 text-center"
+            data-testid="api-keys-no-access"
+          >
+            <IconKey className="text-ui-fg-muted" />
+            <Text size="small" className="text-ui-fg-subtle max-w-sm">
+              {t("settings.clientCredentials.noReadPermission")}
+            </Text>
+          </div>
+        )}
       </Container>
 
-      <CreateApiKeyDrawer open={creating} onClose={() => setCreating(false)} />
+      {canCreate && (
+        <CreateApiKeyDrawer
+          open={creating}
+          onClose={() => setCreating(false)}
+        />
+      )}
     </div>
   );
 };
 
 const columnHelper = createColumnHelper<ClientCredentialGetResponseDto>();
-const useColumns = () => {
+const useColumns = ({
+  canRotate,
+  canDelete,
+}: {
+  canRotate: boolean;
+  canDelete: boolean;
+}) => {
   const { t, i18n } = useTranslation();
 
   return useMemo(
@@ -130,9 +178,20 @@ const useColumns = () => {
         cell: ({ getValue }) => <span>{getValue()}</span>,
       }),
       columnHelper.accessor("key", {
-        header: () => t("settings.clientCredentials.fields.key"),
+        // Only the public half of the key: it can't authenticate on its own.
+        header: () => (
+          <span className="inline-flex items-center gap-x-1">
+            {t("settings.clientCredentials.fields.key")}
+            <Tooltip content={t("settings.clientCredentials.keyIdHint")}>
+              <InformationCircleSolid
+                className="text-ui-fg-muted"
+                aria-label={t("settings.clientCredentials.keyIdHint")}
+              />
+            </Tooltip>
+          </span>
+        ),
         cell: ({ getValue }) => (
-          <span className="font-mono text-ui-fg-subtle">{getValue()}</span>
+          <span className="text-ui-fg-muted font-mono">{getValue()}</span>
         ),
       }),
       columnHelper.display({
@@ -166,19 +225,34 @@ const useColumns = () => {
           </span>
         ),
       }),
-      columnHelper.display({
-        id: "actions",
-        cell: ({ row }) => <ApiKeyRowActions apiKey={row.original} />,
-      }),
+      // No column at all when the member may neither rotate nor delete.
+      ...(canRotate || canDelete
+        ? [
+            columnHelper.display({
+              id: "actions",
+              cell: ({ row }) => (
+                <ApiKeyRowActions
+                  apiKey={row.original}
+                  canRotate={canRotate}
+                  canDelete={canDelete}
+                />
+              ),
+            }),
+          ]
+        : []),
     ],
-    [t, i18n.language],
+    [t, i18n.language, canRotate, canDelete],
   );
 };
 
 const ApiKeyRowActions = ({
   apiKey,
+  canRotate,
+  canDelete,
 }: {
   apiKey: ClientCredentialGetResponseDto;
+  canRotate: boolean;
+  canDelete: boolean;
 }) => {
   const { t } = useTranslation();
   const prompt = usePrompt();
@@ -230,16 +304,24 @@ const ApiKeyRowActions = ({
         groups={[
           {
             actions: [
-              {
-                icon: <ArrowPath />,
-                label: t("settings.clientCredentials.rotate.action"),
-                onClick: handleRotate,
-              },
-              {
-                icon: <Trash />,
-                label: t("actions.delete"),
-                onClick: handleDelete,
-              },
+              ...(canRotate
+                ? [
+                    {
+                      icon: <ArrowPath />,
+                      label: t("settings.clientCredentials.rotate.action"),
+                      onClick: handleRotate,
+                    },
+                  ]
+                : []),
+              ...(canDelete
+                ? [
+                    {
+                      icon: <Trash />,
+                      label: t("actions.delete"),
+                      onClick: handleDelete,
+                    },
+                  ]
+                : []),
             ],
           },
         ]}

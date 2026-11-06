@@ -42,13 +42,15 @@ export const clientCredentialQueryKeys = {
   ),
 };
 
-export const useClientCredentialList = () => {
+export const useClientCredentialList = ({
+  enabled = true,
+}: { enabled?: boolean } = {}) => {
   const { slug, isLoading: isLoadingWorkspace } = useResolvedWorkspaceSlug();
 
   const { data, isLoading, ...rest } = useQuery({
     // Keyed by workspace: switching workspace on this page must refetch.
     queryKey: clientCredentialQueryKeys.list({ workspace: slug }),
-    enabled: !!slug,
+    enabled: enabled && !!slug,
     queryFn: () =>
       clientCredentialWorkspaceControllerListV1({
         path: {
