@@ -13,6 +13,10 @@ import {
     ChatbotDocQueryStatus,
     ChatbotDocQueryType,
 } from '../constants/chatbot.doc.constant';
+import { ChatbotClientPreviewRequestDto } from '../dtos/request/chatbot.client-preview.request.dto';
+import { ChatbotClientPreviewResponseDto } from '../dtos/response/chatbot.client-preview.response.dto';
+import { ChatbotLinkAccountRequestDto } from '../dtos/request/chatbot.link-account.request.dto';
+import { ChatbotLinkAccountResponseDto } from '../dtos/response/chatbot.link-account.response.dto';
 import { ChatbotCreateRequestDto } from '../dtos/request/chatbot.create.request.dto';
 import { ChatbotUpdateRequestDto } from '../dtos/request/chatbot.update.request.dto';
 import { ChatbotGetDetailResponseDto } from '../dtos/response/chatbot.detail.response.dto';
@@ -117,5 +121,56 @@ export function ChatbotClientDeleteDoc(): MethodDecorator {
         DocRequest({ params: ChatbotClientDocParamsId }),
         DocAuth({ xApiKey: true }),
         DocResponse('chatbot.delete', { dto: ChatbotListResponseDto })
+    );
+}
+
+export function ChatbotClientPreviewDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'send a test message to a chatbot and get its reply',
+            description:
+                "The app's preview chat: a real AI turn with the chatbot's prompt, knowledge, tools and skills. The chat is kept for a while under sessionId and never reaches the inbox. Tools the chatbot calls run for real, and the tokens count as preview usage.",
+        }),
+        DocRequest({
+            params: ChatbotClientDocParamsId,
+            dto: ChatbotClientPreviewRequestDto,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        }),
+        DocAuth({ xApiKey: true }),
+        DocResponse('chatbot.previewReply', {
+            dto: ChatbotClientPreviewResponseDto,
+        })
+    );
+}
+
+export function ChatbotClientLinkAccountsDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'put a chatbot on connected accounts',
+            description:
+                'Accounts already on a different chatbot are refused and listed under skipped, never moved.',
+        }),
+        DocRequest({
+            params: ChatbotClientDocParamsId,
+            dto: ChatbotLinkAccountRequestDto,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        }),
+        DocAuth({ xApiKey: true }),
+        DocResponse('chatbot.linkAccount', {
+            dto: ChatbotLinkAccountResponseDto,
+        })
+    );
+}
+
+export function ChatbotClientUnlinkAccountsDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({ summary: 'take a chatbot off connected accounts' }),
+        DocRequest({
+            params: ChatbotClientDocParamsId,
+            dto: ChatbotLinkAccountRequestDto,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        }),
+        DocAuth({ xApiKey: true }),
+        DocResponse('chatbot.unlinkAccount', { dto: ChatbotListResponseDto })
     );
 }

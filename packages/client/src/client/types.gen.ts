@@ -6951,6 +6951,58 @@ export type ApiChannelSendMessageRequestDto = {
     timestamp?: string;
 };
 
+export type ChatbotPreviewMediaResponseDto = {
+    url: string;
+    kind: 'image' | 'file';
+    name?: string;
+    size?: number;
+    mimeType?: string;
+};
+
+export type ChatbotPreviewToolCallResponseDto = {
+    name: string;
+    /**
+     * The arguments the chatbot passed to the tool
+     */
+    input: {
+        [key: string]: unknown;
+    };
+};
+
+export type ChatbotClientPreviewResponseDto = {
+    /**
+     * Send it back with the next message to continue this chat
+     */
+    sessionId: string;
+    /**
+     * The chatbot's reply text
+     */
+    reply: string;
+    /**
+     * Images and files the reply sent
+     */
+    media: Array<ChatbotPreviewMediaResponseDto>;
+    /**
+     * Tools the chatbot called for this reply, in order
+     */
+    toolCalls: Array<ChatbotPreviewToolCallResponseDto>;
+    /**
+     * A guardrail stopped the reply; reply is then empty and the turn is not kept
+     */
+    blocked: boolean;
+};
+
+export type ChatbotClientPreviewRequestDto = {
+    /**
+     * What the test customer says to the chatbot
+     */
+    message: string;
+    /**
+     * The sessionId a previous preview call returned, to continue that chat. Leave it out to start a new one.
+     */
+    sessionId?: string;
+};
+
 export type KnowledgeItemUploadUrlResponseDto = {
     /**
      * PUT the file here, with a Content-Length of exactly `size` bytes.
@@ -7094,6 +7146,20 @@ export type ConversationSendMessageRequestDto = {
      * Message text to send to the customer
      */
     text: string;
+};
+
+export type AccountClientConnectLinkResponseDto = {
+    /**
+     * The app's connect page with the platform picked. The person opens it, signs in on the platform and approves.
+     */
+    url: string;
+};
+
+export type AccountClientTelegramRequestDto = {
+    /**
+     * The bot token BotFather gave, e.g. 123456:ABC-DEF...
+     */
+    botToken: string;
 };
 
 export type RequestUserResponseDto = {
@@ -33873,6 +33939,225 @@ export type ChatbotClientControllerInactiveV1Responses = {
 
 export type ChatbotClientControllerInactiveV1Response = ChatbotClientControllerInactiveV1Responses[keyof ChatbotClientControllerInactiveV1Responses];
 
+export type ChatbotClientControllerLinkAccountsV1Data = {
+    body: ChatbotLinkAccountRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{id}/link-account';
+};
+
+export type ChatbotClientControllerLinkAccountsV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotClientControllerLinkAccountsV1Error = ChatbotClientControllerLinkAccountsV1Errors[keyof ChatbotClientControllerLinkAccountsV1Errors];
+
+export type ChatbotClientControllerLinkAccountsV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ChatbotLinkAccountResponseDto;
+    };
+};
+
+export type ChatbotClientControllerLinkAccountsV1Response = ChatbotClientControllerLinkAccountsV1Responses[keyof ChatbotClientControllerLinkAccountsV1Responses];
+
+export type ChatbotClientControllerUnlinkAccountsV1Data = {
+    body: ChatbotLinkAccountRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{id}/unlink-account';
+};
+
+export type ChatbotClientControllerUnlinkAccountsV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotClientControllerUnlinkAccountsV1Error = ChatbotClientControllerUnlinkAccountsV1Errors[keyof ChatbotClientControllerUnlinkAccountsV1Errors];
+
+export type ChatbotClientControllerUnlinkAccountsV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ChatbotListResponseDto;
+    };
+};
+
+export type ChatbotClientControllerUnlinkAccountsV1Response = ChatbotClientControllerUnlinkAccountsV1Responses[keyof ChatbotClientControllerUnlinkAccountsV1Responses];
+
+export type ChatbotPreviewClientControllerPreviewV1Data = {
+    body: ChatbotClientPreviewRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/chatbots/{id}/preview';
+};
+
+export type ChatbotPreviewClientControllerPreviewV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ChatbotPreviewClientControllerPreviewV1Error = ChatbotPreviewClientControllerPreviewV1Errors[keyof ChatbotPreviewClientControllerPreviewV1Errors];
+
+export type ChatbotPreviewClientControllerPreviewV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ChatbotClientPreviewResponseDto;
+    };
+};
+
+export type ChatbotPreviewClientControllerPreviewV1Response = ChatbotPreviewClientControllerPreviewV1Responses[keyof ChatbotPreviewClientControllerPreviewV1Responses];
+
 export type KnowledgeBaseClientControllerListV1Data = {
     body?: never;
     headers?: {
@@ -37542,6 +37827,451 @@ export type AnalyticsClientControllerCustomersV1Responses = {
 };
 
 export type AnalyticsClientControllerCustomersV1Response = AnalyticsClientControllerCustomersV1Responses[keyof AnalyticsClientControllerCustomersV1Responses];
+
+export type AccountClientControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Keep only accounts in this state
+         */
+        status?: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
+        /**
+         * Keep only channels of this platform
+         */
+        type?: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
+        /**
+         * Keep only the children of this parent account
+         */
+        account?: string;
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/client/accounts';
+};
+
+export type AccountClientControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AccountClientControllerListV1Error = AccountClientControllerListV1Errors[keyof AccountClientControllerListV1Errors];
+
+export type AccountClientControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<AccountListResponseDto>;
+    };
+};
+
+export type AccountClientControllerListV1Response = AccountClientControllerListV1Responses[keyof AccountClientControllerListV1Responses];
+
+export type AccountClientControllerConnectLinkV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query: {
+        /**
+         * FACEBOOK_ACCOUNT connects the Facebook Pages of a login. The others connect one account each.
+         */
+        platform: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'ZALO_ACCOUNT' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
+    };
+    url: '/api/v1/client/accounts/connect-link';
+};
+
+export type AccountClientControllerConnectLinkV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AccountClientControllerConnectLinkV1Error = AccountClientControllerConnectLinkV1Errors[keyof AccountClientControllerConnectLinkV1Errors];
+
+export type AccountClientControllerConnectLinkV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AccountClientConnectLinkResponseDto;
+    };
+};
+
+export type AccountClientControllerConnectLinkV1Response = AccountClientControllerConnectLinkV1Responses[keyof AccountClientControllerConnectLinkV1Responses];
+
+export type AccountClientControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/accounts/{id}';
+};
+
+export type AccountClientControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AccountClientControllerGetV1Error = AccountClientControllerGetV1Errors[keyof AccountClientControllerGetV1Errors];
+
+export type AccountClientControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AccountGetDetailResponseDto;
+    };
+};
+
+export type AccountClientControllerGetV1Response = AccountClientControllerGetV1Responses[keyof AccountClientControllerGetV1Responses];
+
+export type AccountClientControllerCreateApiChannelV1Data = {
+    body: AccountProvisionApiChannelRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/client/accounts/api-channel';
+};
+
+export type AccountClientControllerCreateApiChannelV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AccountClientControllerCreateApiChannelV1Error = AccountClientControllerCreateApiChannelV1Errors[keyof AccountClientControllerCreateApiChannelV1Errors];
+
+export type AccountClientControllerCreateApiChannelV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AccountProvisionApiChannelResponseDto;
+    };
+};
+
+export type AccountClientControllerCreateApiChannelV1Response = AccountClientControllerCreateApiChannelV1Responses[keyof AccountClientControllerCreateApiChannelV1Responses];
+
+export type AccountClientControllerCreateWebsiteWidgetV1Data = {
+    body: AccountProvisionWebsiteWidgetRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/client/accounts/website-widget';
+};
+
+export type AccountClientControllerCreateWebsiteWidgetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AccountClientControllerCreateWebsiteWidgetV1Error = AccountClientControllerCreateWebsiteWidgetV1Errors[keyof AccountClientControllerCreateWebsiteWidgetV1Errors];
+
+export type AccountClientControllerCreateWebsiteWidgetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AccountProvisionWebsiteWidgetResponseDto;
+    };
+};
+
+export type AccountClientControllerCreateWebsiteWidgetV1Response = AccountClientControllerCreateWebsiteWidgetV1Responses[keyof AccountClientControllerCreateWebsiteWidgetV1Responses];
+
+export type AccountClientControllerConnectTelegramV1Data = {
+    body: AccountClientTelegramRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/client/accounts/telegram';
+};
+
+export type AccountClientControllerConnectTelegramV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type AccountClientControllerConnectTelegramV1Error = AccountClientControllerConnectTelegramV1Errors[keyof AccountClientControllerConnectTelegramV1Errors];
+
+export type AccountClientControllerConnectTelegramV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AccountGetDetailResponseDto;
+    };
+};
+
+export type AccountClientControllerConnectTelegramV1Response = AccountClientControllerConnectTelegramV1Responses[keyof AccountClientControllerConnectTelegramV1Responses];
 
 export type RequestControllerGetRequestsV1Data = {
     body?: never;

@@ -101,21 +101,32 @@ Các trợ lý cấu hình bằng tệp JSON, như tệp `mcp.json` của Cursor
 
 ## Trợ lý làm được gì
 
-| Phần            | Xem                                                                                                                   | Thay đổi                                                                             |
-| --------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Agent           | Liệt kê agent, xem một agent, liệt kê các mô hình AI                                                                  | Tạo, sửa, kích hoạt hoặc tắt, xóa                                                    |
-| Hội thoại       | Liệt kê cuộc trò chuyện, xem một cuộc và các tin nhắn                                                                 | Trả lời, bật hoặc tắt agent trong một cuộc, chuyển sang **Đang mở** hoặc **Đã đóng** |
-| Cơ sở kiến thức | Liệt kê cơ sở kiến thức và các mục, xem một mục                                                                       | Tạo cơ sở kiến thức, thêm mục văn bản hoặc trang web, sửa, xử lý hoặc xóa một mục    |
-| Khách hàng      | Liệt kê khách hàng và thẻ, xem một khách và thẻ của họ                                                                | Sửa thông tin khách, tạo, sửa hoặc xóa thẻ, gắn hoặc gỡ thẻ cho khách                |
-| Công cụ         | Liệt kê công cụ của workspace và của một agent                                                                        | Tạo công cụ HTTP hoặc MCP, sửa hoặc xóa, bật hoặc tắt cho một agent                  |
-| Kỹ năng         | Liệt kê kỹ năng của bạn và các mẫu, xem một kỹ năng                                                                   | Tạo kỹ năng, sao chép mẫu, sửa hoặc xóa, gắn vào agent hoặc gỡ ra                    |
-| Số liệu         | Số liệu trên trang tổng quan trong 7, 30 hoặc 90 ngày qua: chuyển đổi, cảm xúc khách hàng, hiệu quả agent, khách hàng |                                                                                      |
+| Phần            | Xem                                                                                                                   | Thay đổi                                                                                                                                                         |
+| --------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agent           | Liệt kê agent, xem một agent, liệt kê các mô hình AI, chat thử với agent                                              | Tạo, sửa, kích hoạt hoặc tắt, xóa                                                                                                                                |
+| Hội thoại       | Liệt kê cuộc trò chuyện, xem một cuộc và các tin nhắn                                                                 | Trả lời, bật hoặc tắt agent trong một cuộc, chuyển sang **Đang mở** hoặc **Đã đóng**                                                                             |
+| Cơ sở kiến thức | Liệt kê cơ sở kiến thức và các mục, xem một mục                                                                       | Tạo cơ sở kiến thức, thêm mục văn bản hoặc trang web, sửa, xử lý hoặc xóa một mục                                                                                |
+| Khách hàng      | Liệt kê khách hàng và thẻ, xem một khách và thẻ của họ                                                                | Sửa thông tin khách, tạo, sửa hoặc xóa thẻ, gắn hoặc gỡ thẻ cho khách                                                                                            |
+| Công cụ         | Liệt kê công cụ của workspace và của một agent                                                                        | Tạo công cụ HTTP hoặc MCP, sửa hoặc xóa, bật hoặc tắt cho một agent                                                                                              |
+| Kỹ năng         | Liệt kê kỹ năng của bạn và các mẫu, xem một kỹ năng                                                                   | Tạo kỹ năng, sao chép mẫu, sửa hoặc xóa, gắn vào agent hoặc gỡ ra                                                                                                |
+| Kênh            | Liệt kê các kênh đã kết nối và agent trên từng kênh, xem một kênh                                                     | Tạo kênh API hoặc khung chat website, kết nối bot Telegram, lấy liên kết kết nối Facebook, Instagram, Zalo, WhatsApp hoặc Threads, gắn agent vào kênh hoặc gỡ ra |
+| Số liệu         | Số liệu trên trang tổng quan trong 7, 30 hoặc 90 ngày qua: chuyển đổi, cảm xúc khách hàng, hiệu quả agent, khách hàng |                                                                                                                                                                  |
 
 Tải tệp lên, cài ứng dụng từ kho công cụ và xóa vĩnh viễn dữ liệu của khách chỉ làm được trong ứng dụng.
+
+## Kết nối kênh
+
+Trợ lý có thể kết nối các [kênh](/docs/channels) không cần đăng nhập ở trang khác: kênh API cho ứng dụng riêng của bạn, khung chat cho website, hoặc bot Telegram từ token mà BotFather gửi cho bạn. Secret ký của kênh API chỉ hiện một lần, nên hãy lưu lại khi trợ lý đưa cho bạn.
+
+Facebook, Instagram, Zalo, WhatsApp và Threads cần bạn đăng nhập trên nền tảng đó bằng trình duyệt, việc mà trợ lý không làm thay được. Hãy nhờ trợ lý kết nối, trợ lý sẽ gửi bạn liên kết đến trang kết nối trong ứng dụng, với nền tảng đã được chọn sẵn. Đăng nhập ở đó, báo trợ lý là xong, rồi trợ lý có thể gắn agent vào kênh mới.
 
 ## Hỏi về số liệu
 
 Bạn có thể hỏi trợ lý những câu như "Tuần này so với tuần trước thế nào?" hay "Agent nào chuyển cho nhân viên nhiều nhất?". Trợ lý đọc đúng số liệu trên trang tổng quan, và chỉ những tab mà vai trò của bạn được xem. Mỗi key được hỏi số liệu 20 lần mỗi phút, nên trợ lý sẽ dùng lại kết quả đã lấy.
+
+## Chat thử với agent
+
+Hãy nhờ trợ lý nhắn với agent như một khách hàng, ví dụ "hỏi agent của cửa hàng về chính sách đổi trả và kiểm tra câu trả lời". Việc này giống khung chat thử trên trang của agent: không tin nào đi ra kênh hay vào mục Hội thoại, nhưng công cụ của agent vẫn chạy thật, nên công cụ tạo đơn sẽ tạo đơn thật. Trợ lý có thể tiếp tục cùng một cuộc chat qua nhiều tin nhắn. Tin nhắn thử dùng token như mọi câu trả lời khác, và mỗi key gửi được 20 tin thử mỗi phút.
 
 ## Tạo kỹ năng cùng trợ lý
 

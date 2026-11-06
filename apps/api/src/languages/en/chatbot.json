@@ -23,6 +23,7 @@
         "shareLinkNotConfigured": "Preview sharing is not configured on this server.",
         "previewNotAvailable": "This chatbot is not available for preview.",
         "previewSessionLimit": "You've reached the message limit for this preview. Please try again later.",
+        "previewRateLimited": "Too many preview messages for this key. Wait a minute and try again.",
         "emptyMessage": "Write a message or attach a file.",
         "attachmentNotSupported": "This file type or size is not supported. Attach an image up to 5 MB, or a PDF, Word, Excel, text or CSV file up to 10 MB.",
         "invalidAgentProfile": "The agent builder answers are not valid.",
@@ -38,6 +39,7 @@
     "shareLink": "Preview share link created successfully.",
     "previewAttachment": "File uploaded.",
     "preview": "Chatbot preview loaded successfully.",
+    "previewReply": "The chatbot replied.",
     "batchDelete": "Chatbots deleted",
     "batchStatus": "Chatbot status updated"
 }
