@@ -63,7 +63,7 @@ const renderAndFill = ({
   countries = [{ label: "Vietnam", value: "vn" }],
   withTurnstile = true,
 } = {}) => {
-  const onSubmit = vi.fn(async () => {});
+  const onSubmit = vi.fn(async (_data: unknown) => {});
   const { container } = render(
     <RegisterForm
       id="f"
