@@ -53,6 +53,10 @@ replace data, **deletes** remove it.
 |               | `update_skill`                                                               | skill update            | overwrites |
 |               | `attach_skill`, `detach_skill`                                               | skill update            | switches   |
 |               | `delete_skill`                                                               | skill delete            | deletes    |
+| Channels      | `list_accounts`, `get_account`                                               | account read            | reads      |
+|               | `create_api_channel`, `create_website_widget`, `connect_telegram_bot`        | account create          | adds       |
+|               | `get_channel_connect_link` (a link to the app; changes nothing itself)       | account create          | reads      |
+|               | `link_account_to_chatbot`, `unlink_account_from_chatbot`                     | chatbot update          | switches   |
 | Analytics     | `get_conversion_analytics`, `get_customer_analytics`                         | customer read           | reads      |
 |               | `get_bot_analytics`                                                          | chatbot read            | reads      |
 |               | `get_marketing_analytics`                                                    | customer + chatbot read | reads      |
@@ -75,6 +79,12 @@ prompt, knowledge, Tools and Skills, on active and inactive chatbots alike.
 The chat lives in Redis under the returned `sessionId` (per API key), never in
 the inbox, and its tokens count as preview usage. It skips what only a channel
 does: formatting, debounce and steering, customer memory.
+
+Channels that need a sign-in on the platform itself (Facebook, Instagram,
+Zalo, WhatsApp, Threads) can't be connected by an agent:
+`get_channel_connect_link` returns the app's connect page with the platform
+picked (`/{workspace}/accounts/create?platform=...`), the user signs in
+there, and the agent sees the new channel with `list_accounts`.
 
 Not exposed: file uploads, the marketplace installs (they need a browser
 for OAuth), and permanent customer erasure.

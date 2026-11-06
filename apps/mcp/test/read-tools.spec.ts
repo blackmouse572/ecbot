@@ -22,6 +22,22 @@ const cases: [
   result: unknown,
 ][] = [
   [
+    "list_accounts",
+    { type: "FACEBOOK_PAGE", page: 2 },
+    "accountClientControllerListV1",
+    { query: { type: "FACEBOOK_PAGE", page: 2 } },
+    page([{ id: "acc-1" }]),
+    { accounts: [{ id: "acc-1" }], pagination: { total: 1 } },
+  ],
+  [
+    "get_account",
+    { id: "acc-1" },
+    "accountClientControllerGetV1",
+    { path: { id: "acc-1" } },
+    { data: { id: "acc-1", name: "Mộc Coffee" } },
+    { id: "acc-1", name: "Mộc Coffee" },
+  ],
+  [
     "list_knowledge_bases",
     { search: "faq" },
     "knowledgeBaseClientControllerListV1",

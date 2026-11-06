@@ -24,5 +24,7 @@
     "rotateApiChannelSecret": "Đã cấp signing secret mới. Secret cũ không còn dùng được.",
     "provisionWebsiteWidget": "Đã tạo website widget. Dán đoạn mã nhúng lên website để bắt đầu.",
     "updateCallbackUrl": "Đã cập nhật callback URL.",
-    "updateAllowedOrigins": "Đã cập nhật danh sách website được phép."
+    "updateAllowedOrigins": "Đã cập nhật danh sách website được phép.",
+    "connectTelegram": "Đã kết nối bot Telegram.",
+    "connectLink": "Đã tạo đường dẫn kết nối. Mở đường dẫn để đăng nhập vào nền tảng."
 }

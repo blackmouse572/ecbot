@@ -50,13 +50,17 @@ import {
     ChatbotClientDeleteDoc,
     ChatbotClientGetDoc,
     ChatbotClientInactiveDoc,
+    ChatbotClientLinkAccountsDoc,
     ChatbotClientListDoc,
     ChatbotClientModelsDoc,
+    ChatbotClientUnlinkAccountsDoc,
     ChatbotClientUpdateDoc,
 } from '../docs/chatbot.client.doc';
 import { ChatbotCreateRequestDto } from '../dtos/request/chatbot.create.request.dto';
+import { ChatbotLinkAccountRequestDto } from '../dtos/request/chatbot.link-account.request.dto';
 import { ChatbotUpdateRequestDto } from '../dtos/request/chatbot.update.request.dto';
 import { ChatbotGetDetailResponseDto } from '../dtos/response/chatbot.detail.response.dto';
+import { ChatbotLinkAccountResponseDto } from '../dtos/response/chatbot.link-account.response.dto';
 import { ChatbotListResponseDto } from '../dtos/response/chatbot.list.response.dto';
 import { ChatbotModelResponseDto } from '../dtos/response/chatbot.model.response.dto';
 import { ENUM_CHATBOT_STATUS, ENUM_CHATBOT_TYPE } from '../enums/chatbot.enum';
@@ -319,6 +323,65 @@ export class ChatbotClientController {
             });
         }
         return chatbot;
+    }
+
+    @ChatbotClientLinkAccountsDoc()
+    @Response('chatbot.linkAccount')
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        action: [ENUM_POLICY_ACTION.UPDATE],
+    })
+    @Post('/:id/link-account')
+    async linkAccounts(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @ClientCredentialPayload() credential: ClientCredentialEntity,
+        @Param('id') id: string,
+        @Body() body: ChatbotLinkAccountRequestDto
+    ): Promise<IResponse<ChatbotLinkAccountResponseDto>> {
+        const chatbot = await this.findChatbotOrFail(workspace, id);
+        // An account on another chatbot comes back under `skipped`, never moved.
+        const result = await this.chatbotService.linkBatchAccounts(
+            chatbot,
+            body.accounts,
+            { actionBy: credential.createdBy.id }
+        );
+        await this.log(
+            ENUM_ACTIVITY_ACTION.LINK_ACCOUNT_CHATBOT,
+            workspace,
+            credential,
+            { id: chatbot.id, name: chatbot.name }
+        );
+
+        return { data: result };
+    }
+
+    @ChatbotClientUnlinkAccountsDoc()
+    @Response('chatbot.unlinkAccount')
+    @ClientCredentialProtected({
+        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        action: [ENUM_POLICY_ACTION.UPDATE],
+    })
+    @Post('/:id/unlink-account')
+    async unlinkAccounts(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @ClientCredentialPayload() credential: ClientCredentialEntity,
+        @Param('id') id: string,
+        @Body() body: ChatbotLinkAccountRequestDto
+    ): Promise<IResponse<ChatbotListResponseDto>> {
+        const chatbot = await this.findChatbotOrFail(workspace, id);
+        const updated = await this.chatbotService.unlinkBatchAccounts(
+            chatbot,
+            body.accounts,
+            { actionBy: credential.createdBy.id }
+        );
+        await this.log(
+            ENUM_ACTIVITY_ACTION.UNLINK_ACCOUNT_CHATBOT,
+            workspace,
+            credential,
+            { id: chatbot.id, name: chatbot.name }
+        );
+
+        return { data: this.chatbotService.mapList([updated])[0] };
     }
 
     private async log(

@@ -82,13 +82,25 @@ type AccountLinkFormValues = {
   accessToken: string;
 };
 
-export const AccountCreateForm = () => {
+/** A platform the dialog can connect right now, so a link may open on it. */
+function connectablePlatform(platform?: string | null): string | null {
+  const match = PLATFORMS.find((p) => p.value === platform && !p.comingSoon);
+  return match?.value ?? null;
+}
+
+export const AccountCreateForm = ({
+  initialPlatform,
+}: {
+  /** From `?platform=`: open on that platform's connect step. */
+  initialPlatform?: string | null;
+}) => {
   const { t } = useTranslation();
   const { handleSuccess } = useRouteModal();
+  const preset = connectablePlatform(initialPlatform);
 
   const form = useForm<AccountLinkFormValues>({
     defaultValues: {
-      platform: null,
+      platform: preset,
       acceptedTerms: false,
       botToken: "",
       phoneNumberId: "",
@@ -97,8 +109,12 @@ export const AccountCreateForm = () => {
     mode: "onChange",
   });
 
-  const [tab, setTab] = useState<TabKey>("PLATFORM");
-  const [tabState, setTabState] = useState<TabState>(initialTabState);
+  const [tab, setTab] = useState<TabKey>(preset ? "CONNECT" : "PLATFORM");
+  const [tabState, setTabState] = useState<TabState>(
+    preset
+      ? { ...initialTabState, PLATFORM: "completed", CONNECT: "in-progress" }
+      : initialTabState,
+  );
   const [linkedData, setLinkedData] = useState<
     | (AccountGetDetailResponseDto & {
         pages: AccountGetDetailResponseDto[];
