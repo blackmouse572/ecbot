@@ -19,7 +19,7 @@ vi.mock("@/hooks/api/workspace", () => ({
   useResolvedWorkspaceSlug: () => ({ slug: "kunmart" }),
 }));
 
-import { AccountSettingsHeader, WorkspaceSettingsHint } from "./setting-layout";
+import { AccountSettingsHeader } from "./setting-layout";
 import { WorkspaceSettingsHeader } from "./workspace-setting-layout";
 
 const renderAt = (path: string, ui: React.ReactNode, state?: unknown) =>
@@ -33,13 +33,14 @@ const renderAt = (path: string, ui: React.ReactNode, state?: unknown) =>
   );
 
 describe("WorkspaceSettingsHeader", () => {
-  it("shows the workspace switcher and a back link named after the workspace", () => {
+  it("shows the workspace switcher and a plain back link", () => {
     renderAt("/kunmart/settings/members", <WorkspaceSettingsHeader />);
 
     expect(screen.getByRole("button", { name: /Kunmart/ })).toBeTruthy();
-    expect(
-      screen.getByRole("link", { name: "Back to Kunmart" }),
-    ).toHaveAttribute("href", "/kunmart/dashboard");
+    expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute(
+      "href",
+      "/kunmart/dashboard",
+    );
   });
 
   it("goes back to the page the user came from", () => {
@@ -47,27 +48,20 @@ describe("WorkspaceSettingsHeader", () => {
       from: "/kunmart/chatbot/42",
     });
 
-    expect(
-      screen.getByRole("link", { name: "Back to Kunmart" }),
-    ).toHaveAttribute("href", "/kunmart/chatbot/42");
+    expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute(
+      "href",
+      "/kunmart/chatbot/42",
+    );
   });
 });
 
 describe("account settings", () => {
-  it("names the last workspace in the back link", () => {
+  it("goes back to the last workspace", () => {
     renderAt("/settings/profile", <AccountSettingsHeader />);
 
-    expect(
-      screen.getByRole("link", { name: "Back to Kunmart" }),
-    ).toHaveAttribute("href", "/kunmart/dashboard");
-  });
-
-  it("points to workspace settings for members and API keys", () => {
-    renderAt("/settings/profile", <WorkspaceSettingsHint />);
-
-    expect(screen.getByText(/Looking for members or API keys\?/)).toBeTruthy();
-    expect(
-      screen.getByRole("link", { name: "Workspace settings" }),
-    ).toHaveAttribute("href", "/kunmart/settings/workspace");
+    expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute(
+      "href",
+      "/kunmart/dashboard",
+    );
   });
 });

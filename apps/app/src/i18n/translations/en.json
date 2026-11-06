@@ -2616,13 +2616,9 @@
       "keyIdHint": "Public ID only. The full key is shown once, when you create it.",
       "noReadPermission": "You can't view API keys in this workspace. Ask the owner or an admin."
     },
-    "backTo": "Back to {{name}}",
     "general": "General",
     "developers": "Developers",
-    "workspaceHint": {
-      "text": "Looking for members or API keys?",
-      "link": "Workspace settings"
-    }
+    "back": "Back"
   },
   "tools": {
     "destructiveAction": "Can delete data",
