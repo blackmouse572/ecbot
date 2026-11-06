@@ -5,7 +5,10 @@ import { useTranslation } from "react-i18next";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { _DataTable } from "@/components/table/data-table";
+import { NoPermissionState } from "@/components/common/no-permission-state";
 import { useWorkspaceRoles } from "@/hooks/api/workspace-roles";
+import { useIsWorkspaceOwner } from "@/hooks/use-is-workspace-owner";
+import { isNoPermissionError } from "@/libs/permission-error";
 import { useDataTable } from "@/hooks/use-data-table";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes/constants";
@@ -26,9 +29,12 @@ export const RoleListTable = () => {
   const navigate = useNavigate();
   const { searchParams, raw } = useRoleTableQuery({ pageSize: PAGE_SIZE });
 
-  const { roles, totals, isLoading, isError, error } = useWorkspaceRoles({
-    ...searchParams,
-  });
+  // The list is owner-only in the API (WorkspaceOwnerProtected).
+  const isOwner = useIsWorkspaceOwner();
+  const { roles, totals, isLoading, isError, error } = useWorkspaceRoles(
+    { ...searchParams },
+    { enabled: isOwner },
+  );
 
   const columns = useColumns();
   const roleFilters = useRoleTableFilters();
@@ -42,7 +48,8 @@ export const RoleListTable = () => {
     getRowId: (row) => row.id,
   });
 
-  if (isError) {
+  const canView = isOwner && !(isError && isNoPermissionError(error));
+  if (isError && canView) {
     throw error;
   }
 
@@ -50,7 +57,7 @@ export const RoleListTable = () => {
     <Container className="divide-y p-0">
       <div className="flex items-center justify-between px-6 py-4">
         <Heading level="h2">{t("app.nav.roles.header")}</Heading>
-        <div className="flex items-center justify-center gap-x-2">
+        {canView && (
           <Button
             variant="secondary"
             size="small"
@@ -60,26 +67,34 @@ export const RoleListTable = () => {
           >
             {t("actions.create")}
           </Button>
-        </div>
+        )}
       </div>
-      <_DataTable
-        table={table}
-        columns={columns}
-        count={totals}
-        pageSize={PAGE_SIZE}
-        filters={roleFilters}
-        search
-        pagination
-        isLoading={isLoading}
-        queryObject={raw}
-        navigateTo={(row) => `${row.original.id}`}
-        noRecords={{
-          title: t("roles.list.noRecordsTitle"),
-          message: t("roles.list.noRecordsMessage"),
-          action: { to: "create", label: t("roles.list.createFirst") },
-          icon: <IconShieldLock />,
-        }}
-      />
+      {!canView ? (
+        <NoPermissionState
+          icon={<IconShieldLock />}
+          message={t("roles.list.noReadPermission")}
+          data-testid="roles-no-access"
+        />
+      ) : (
+        <_DataTable
+          table={table}
+          columns={columns}
+          count={totals}
+          pageSize={PAGE_SIZE}
+          filters={roleFilters}
+          search
+          pagination
+          isLoading={isLoading}
+          queryObject={raw}
+          navigateTo={(row) => `${row.original.id}`}
+          noRecords={{
+            title: t("roles.list.noRecordsTitle"),
+            message: t("roles.list.noRecordsMessage"),
+            action: { to: "create", label: t("roles.list.createFirst") },
+            icon: <IconShieldLock />,
+          }}
+        />
+      )}
       <Outlet />
     </Container>
   );

@@ -10,8 +10,8 @@ import {
   type ClientCredentialGetResponseDto,
 } from "@/hooks/api/client-credentials";
 import { useDataTable } from "@/hooks/use-data-table";
-import { readApiError } from "@/libs/api-error";
-import { isWorkspaceSuspendedError } from "@/libs/workspace-suspended";
+import { NoPermissionState } from "@/components/common/no-permission-state";
+import { isNoPermissionError } from "@/libs/permission-error";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowPath, InformationCircleSolid, Trash } from "@medusajs/icons";
 import {
@@ -57,10 +57,6 @@ const useApiKeyAbilities = () => {
   };
 };
 
-/** A 403 from the list call, other than a suspended workspace. */
-const isForbidden = (error: unknown) =>
-  readApiError(error).status === 403 && !isWorkspaceSuspendedError(error);
-
 export const ClientCredentials = () => {
   const { t } = useTranslation();
   const { workspace } = useWorkspace();
@@ -80,7 +76,7 @@ export const ClientCredentials = () => {
     getRowId: (row) => row.id,
   });
 
-  const canView = canRead && !(isError && isForbidden(error));
+  const canView = canRead && !(isError && isNoPermissionError(error));
   if (isError && canView) throw error;
 
   return (
@@ -139,15 +135,11 @@ export const ClientCredentials = () => {
             />
           </>
         ) : (
-          <div
-            className="flex flex-col items-center gap-y-2 px-6 py-12 text-center"
+          <NoPermissionState
+            icon={<IconKey />}
+            message={t("settings.clientCredentials.noReadPermission")}
             data-testid="api-keys-no-access"
-          >
-            <IconKey className="text-ui-fg-muted" />
-            <Text size="small" className="text-ui-fg-subtle max-w-sm">
-              {t("settings.clientCredentials.noReadPermission")}
-            </Text>
-          </div>
+          />
         )}
       </Container>
 

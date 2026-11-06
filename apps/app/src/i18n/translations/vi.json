@@ -1541,7 +1541,8 @@
     "invitations": {
       "title": "Lời mời",
       "empty": "Lời mời bạn gửi từ trang Thành viên sẽ nằm ở đây cho tới khi được chấp nhận.",
-      "emptyTitle": "Không có lời mời đang chờ"
+      "emptyTitle": "Không có lời mời đang chờ",
+      "noReadPermission": "Bạn không thể xem lời mời trong workspace này. Hãy nhờ chủ workspace hoặc admin."
     },
     "joinRequests": {
       "title": "Yêu cầu tham gia",
@@ -1551,7 +1552,8 @@
         "loading": "Đang phê duyệt yêu cầu...",
         "success": "Đã phê duyệt yêu cầu. Chào mừng thành viên mới!"
       },
-      "emptyTitle": "Không có yêu cầu tham gia đang chờ"
+      "emptyTitle": "Không có yêu cầu tham gia đang chờ",
+      "noReadPermission": "Bạn không thể xem yêu cầu tham gia trong workspace này. Hãy nhờ chủ workspace hoặc admin."
     },
     "list": {
       "noRecordsTitle": "Chưa có thành viên nào",
@@ -1600,7 +1602,8 @@
     "list": {
       "noRecordsTitle": "Chưa có vai trò nào",
       "noRecordsMessage": "Vai trò quyết định mỗi thành viên được xem và chỉnh sửa những gì trong workspace.",
-      "createFirst": "Tạo vai trò"
+      "createFirst": "Tạo vai trò",
+      "noReadPermission": "Bạn không thể xem vai trò trong workspace này. Hãy nhờ chủ workspace hoặc admin."
     }
   },
   "profile": {

@@ -2,6 +2,9 @@ import {
   useApproveJoinRequest,
   useJoinRequests,
 } from "@/hooks/api/join-requests";
+import { NoPermissionState } from "@/components/common/no-permission-state";
+import { useIsWorkspaceOwner } from "@/hooks/use-is-workspace-owner";
+import { isNoPermissionError } from "@/libs/permission-error";
 import { Button, Container, Text, toast } from "@medusajs/ui";
 import { NoRecords } from "@repo/ui/common-components";
 import { SingleColumnPage } from "@repo/ui/layout";
@@ -11,7 +14,11 @@ import { ListSkeleton } from "@repo/ui/common-components";
 
 export const JoinRequests = () => {
   const { t, i18n } = useTranslation();
-  const { joinRequests, isLoading, isError, error } = useJoinRequests();
+  // The list is owner-only in the API (WorkspaceOwnerProtected).
+  const isOwner = useIsWorkspaceOwner();
+  const { joinRequests, isLoading, isError, error } = useJoinRequests({
+    enabled: isOwner,
+  });
   const { mutateAsync: approve } = useApproveJoinRequest();
 
   const handleApprove = (id: string) =>
@@ -21,14 +28,21 @@ export const JoinRequests = () => {
       error: t("errorBoundary.internalServerErrorMessage"),
     });
 
-  if (isError) throw error;
+  const canView = isOwner && !(isError && isNoPermissionError(error));
+  if (isError && canView) throw error;
   return (
     <SingleColumnPage>
       <Container className="divide-y p-0">
         <div className="flex items-center justify-between px-6 py-4">
           <Text weight="plus">{t("members.joinRequests.title")}</Text>
         </div>
-        {isLoading ? (
+        {!canView ? (
+          <NoPermissionState
+            icon={<IconUserCheck />}
+            message={t("members.joinRequests.noReadPermission")}
+            data-testid="join-requests-no-access"
+          />
+        ) : isLoading ? (
           <ListSkeleton label={t("general.loading")} className="px-6 py-4" />
         ) : joinRequests && joinRequests.length > 0 ? (
           joinRequests.map((request) => (
