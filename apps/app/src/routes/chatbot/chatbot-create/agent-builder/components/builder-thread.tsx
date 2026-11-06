@@ -1,14 +1,29 @@
+import { useTrackOnce } from "@/analytics/use-track-once";
 import { buildQuestionGroups, type Question } from "@repo/agent-blueprint";
 import { Button, clx, usePrompt } from "@medusajs/ui";
 import {
-  Marker, MarkerContent, Message, MessageContent, MessageScroller, MessageScrollerButton,
-  MessageScrollerContent, MessageScrollerItem, MessageScrollerViewport,
+  Marker,
+  MarkerContent,
+  Message,
+  MessageContent,
+  MessageScroller,
+  MessageScrollerButton,
+  MessageScrollerContent,
+  MessageScrollerItem,
+  MessageScrollerViewport,
 } from "@repo/ui/common-components";
 import { motion, useReducedMotion } from "motion/react";
 import { Fragment } from "react";
 import { ConnectChannelButton } from "@/components/channel-connect/connect-channel-button";
 import { useTranslation } from "react-i18next";
-import { activationAnchor, asksActivation, awaitsActivation, currentStep, isComplete, steps } from "../builder-state";
+import {
+  activationAnchor,
+  asksActivation,
+  awaitsActivation,
+  currentStep,
+  isComplete,
+  steps,
+} from "../builder-state";
 import type { AgentBuilderController } from "../use-agent-builder";
 import { ActivationAsk } from "./activation-ask";
 import { AnswerMessage } from "./answer-message";
@@ -31,17 +46,37 @@ export function BuilderThread(builder: AgentBuilderController) {
   const prompt = usePrompt();
 
   const profile = state.profile;
+  const open = currentStep(state);
+  const viewedStep = asksActivation(state)
+    ? "activation"
+    : open?.question.id === "channels"
+      ? "channels"
+      : open?.group.id;
+  useTrackOnce(
+    viewedStep ? "onboarding_step_viewed" : null,
+    { step: viewedStep ?? "identity" },
+    viewedStep ?? "",
+  );
 
   // Wireframe delta section 1: step 0 is a centered hero, not part of the
   // thread, while there is no profile yet.
   if (!profile) {
-    return <Hero loading={builder.starting} onDescribe={builder.startFromDescription} onTemplate={builder.startFromTemplate} />;
+    return (
+      <Hero
+        loading={builder.starting}
+        onDescribe={builder.startFromDescription}
+        onTemplate={builder.startFromTemplate}
+      />
+    );
   }
 
   // A new type resets the answers that depend on it, and autosave sends that
   // to a live bot at once, so the owner confirms first.
   const answer = async (question: Question, value: unknown) => {
-    const changesLiveType = state.finished && question.id === "businessType" && value !== profile.businessType;
+    const changesLiveType =
+      state.finished &&
+      question.id === "businessType" &&
+      value !== profile.businessType;
     if (changesLiveType) {
       const confirmed = await prompt({
         title: t("agentBuilder.ui.changeTypeTitle"),
@@ -61,16 +96,25 @@ export function BuilderThread(builder: AgentBuilderController) {
   const waiting = awaitsActivation(state);
   // Answers the description gave further down (#256) show when the thread
   // reaches them, not piled up below the open question. Editing shows all.
-  const currentIndex = current && !state.editing ? all.findIndex((s) => s.question.id === current.question.id) : -1;
-  const answeredAhead = (id: string) => currentIndex >= 0 && all.findIndex((s) => s.question.id === id) > currentIndex;
+  const currentIndex =
+    current && !state.editing
+      ? all.findIndex((s) => s.question.id === current.question.id)
+      : -1;
+  const answeredAhead = (id: string) =>
+    currentIndex >= 0 &&
+    all.findIndex((s) => s.question.id === id) > currentIndex;
   const anchor = activationAnchor(profile);
 
   // Section E (kept by the wireframe delta): step 0's answer, once a
   // description or template was chosen.
   const step0Answer =
-    state.source === "template" ? t("agentBuilder.ui.templateAnswer", { name: t(`agentBuilder.types.${profile.businessType}`) })
-    : state.source === "describe" ? (state.describeText ?? "")
-    : null; // hydrate: no original step-0 choice to redisplay.
+    state.source === "template"
+      ? t("agentBuilder.ui.templateAnswer", {
+          name: t(`agentBuilder.types.${profile.businessType}`),
+        })
+      : state.source === "describe"
+        ? (state.describeText ?? "")
+        : null; // hydrate: no original step-0 choice to redisplay.
 
   // Section F.4: plays once when the agent becomes active.
   const finishedMessage = (
@@ -100,7 +144,9 @@ export function BuilderThread(builder: AgentBuilderController) {
           {step0Answer !== null && (
             <div className="flex flex-col gap-4">
               <Message from="assistant">
-                <MessageContent>{t("agentBuilder.ui.heroSubtitle")}</MessageContent>
+                <MessageContent>
+                  {t("agentBuilder.ui.heroSubtitle")}
+                </MessageContent>
               </Message>
               <Message from="user">
                 {/* Once activated, restarting would overwrite the live bot,
@@ -109,7 +155,14 @@ export function BuilderThread(builder: AgentBuilderController) {
                   <MessageContent>{step0Answer}</MessageContent>
                 ) : (
                   <MessageContent
-                    render={<button type="button" onClick={() => dispatch({ type: "restart" })} title={t("actions.edit")} className="text-left" />}
+                    render={
+                      <button
+                        type="button"
+                        onClick={() => dispatch({ type: "restart" })}
+                        title={t("actions.edit")}
+                        className="text-left"
+                      />
+                    }
                   >
                     {step0Answer}
                   </MessageContent>
@@ -120,14 +173,21 @@ export function BuilderThread(builder: AgentBuilderController) {
 
           {state.source === "describe" && (
             <Message from="assistant">
-              <MessageContent>{t(state.understood ? "agentBuilder.ui.suggested" : "agentBuilder.ui.suggestFailed")}</MessageContent>
+              <MessageContent>
+                {t(
+                  state.understood
+                    ? "agentBuilder.ui.suggested"
+                    : "agentBuilder.ui.suggestFailed",
+                )}
+              </MessageContent>
             </Message>
           )}
 
           {buildQuestionGroups(profile).map((group) => {
             const visible = group.questions.filter(
               (q) =>
-                (state.answered.includes(q.id) && !answeredAhead(q.id)) || (!waiting && q.id === current?.question.id),
+                (state.answered.includes(q.id) && !answeredAhead(q.id)) ||
+                (!waiting && q.id === current?.question.id),
             );
             if (!visible.length) return null;
             return (
@@ -138,7 +198,14 @@ export function BuilderThread(builder: AgentBuilderController) {
                 {visible.map((question) => (
                   <Fragment key={question.id}>
                     {question.id === current?.question.id ? (
-                      <MessageScrollerItem messageId={question.id} scrollAnchor className={clx("flex flex-col gap-4", QUESTION_ENTRANCE)}>
+                      <MessageScrollerItem
+                        messageId={question.id}
+                        scrollAnchor
+                        className={clx(
+                          "flex flex-col gap-4",
+                          QUESTION_ENTRANCE,
+                        )}
+                      >
                         <QuestionTurn
                           key={`${question.id}:${state.editing ?? ""}`}
                           question={question}
@@ -147,16 +214,24 @@ export function BuilderThread(builder: AgentBuilderController) {
                           position={{
                             // Answers the description gave count as done (#256).
                             current: state.editing
-                              ? all.findIndex((s) => s.question.id === question.id) + 1
-                              : all.filter((s) => state.answered.includes(s.question.id)).length + 1,
+                              ? all.findIndex(
+                                  (s) => s.question.id === question.id,
+                                ) + 1
+                              : all.filter((s) =>
+                                  state.answered.includes(s.question.id),
+                                ).length + 1,
                             total: all.length,
                           }}
                           onAnswer={(value) => answer(question, value)}
                           onSkip={() => dispatch({ type: "skip", question })}
                           chatbotId={state.chatbotId}
                           linkedAccounts={state.linkedAccounts}
-                          onAccountsLinked={(accounts) => dispatch({ type: "accountsLinked", accounts })}
-                          onAccountsUnlinked={(ids) => dispatch({ type: "accountsUnlinked", ids })}
+                          onAccountsLinked={(accounts) =>
+                            dispatch({ type: "accountsLinked", accounts })
+                          }
+                          onAccountsUnlinked={(ids) =>
+                            dispatch({ type: "accountsUnlinked", ids })
+                          }
                         />
                       </MessageScrollerItem>
                     ) : (
@@ -170,25 +245,52 @@ export function BuilderThread(builder: AgentBuilderController) {
                             question={question}
                             linkedAccounts={state.linkedAccounts}
                             channels={profile.channels}
-                            onEdit={() => dispatch({ type: "edit", questionId: question.id })}
+                            onEdit={() =>
+                              dispatch({
+                                type: "edit",
+                                questionId: question.id,
+                              })
+                            }
                           />
                         ) : (
-                          <AnswerMessage question={question} profile={profile} onEdit={() => dispatch({ type: "edit", questionId: question.id })} />
+                          <AnswerMessage
+                            question={question}
+                            profile={profile}
+                            onEdit={() =>
+                              dispatch({
+                                type: "edit",
+                                questionId: question.id,
+                              })
+                            }
+                          />
                         )}
                       </div>
                     )}
                     {/* Batch 3: the draft-created message moves to right
                         after the agent-name answer (step 3, when the draft
                         is actually created). */}
-                    {question.id === "agentName" && state.chatbotId && state.source !== "hydrate" && (
-                      <Message from="assistant">
-                        <MessageContent>{t("agentBuilder.ui.draftCreated")}</MessageContent>
-                      </Message>
-                    )}
+                    {question.id === "agentName" &&
+                      state.chatbotId &&
+                      state.source !== "hydrate" && (
+                        <Message from="assistant">
+                          <MessageContent>
+                            {t("agentBuilder.ui.draftCreated")}
+                          </MessageContent>
+                        </Message>
+                      )}
                     {question.id === anchor && asking && (
-                      <MessageScrollerItem messageId="activation" scrollAnchor={waiting} className={clx("flex flex-col gap-4", QUESTION_ENTRANCE)}>
+                      <MessageScrollerItem
+                        messageId="activation"
+                        scrollAnchor={waiting}
+                        className={clx(
+                          "flex flex-col gap-4",
+                          QUESTION_ENTRANCE,
+                        )}
+                      >
                         <ActivationAsk {...builder} />
-                        {state.finished && !state.activateLater && finishedMessage}
+                        {state.finished &&
+                          !state.activateLater &&
+                          finishedMessage}
                       </MessageScrollerItem>
                     )}
                   </Fragment>
@@ -207,14 +309,21 @@ export function BuilderThread(builder: AgentBuilderController) {
             <Message from="assistant">
               <MessageContent className="flex flex-col items-start gap-3">
                 {t("agentBuilder.ui.done")}
-                <Button size="small" onClick={builder.finish} isLoading={builder.finishing} disabled={!state.chatbotId}>
+                <Button
+                  size="small"
+                  onClick={builder.finish}
+                  isLoading={builder.finishing}
+                  disabled={!state.chatbotId}
+                >
                   {t("agentBuilder.ui.finish")}
                 </Button>
               </MessageContent>
             </Message>
           )}
           {/* Activated from the ask above shows its message there. */}
-          {state.finished && (!asking || state.activateLater) && finishedMessage}
+          {state.finished &&
+            (!asking || state.activateLater) &&
+            finishedMessage}
         </MessageScrollerContent>
       </MessageScrollerViewport>
       <MessageScrollerButton />

@@ -25,6 +25,7 @@ import { useCoreRoutes } from "./use-core-routes";
 import { useSetAtom } from "jotai";
 import { NotificationMenu } from "../notification-menu/notification-menu";
 
+import { useAnalyticsGroup } from "@/analytics/use-analytics-group";
 import { useLogout } from "@/hooks/api";
 import { useEnsureWorkspace, useWorkspaceList } from "@/hooks/api/workspace";
 import { useScrollEdges } from "@/hooks/use-scroll-edges";
@@ -48,6 +49,7 @@ export const MainLayout = () => {
     useEnsureWorkspace();
   const { workspaces } = useWorkspaceList();
   const { workspaceSlug } = useWorkspaceParams();
+  useAnalyticsGroup(workspace?.id);
   if (isLoading) {
     return <LogoBoxSpinner />;
   }

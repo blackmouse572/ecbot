@@ -1,6 +1,6 @@
 import { clx } from "@medusajs/ui";
 import { type ReactNode } from "react";
-import { Outlet, useNavigation } from "react-router-dom";
+import { Outlet, useMatches, useNavigation } from "react-router-dom";
 import { DesktopSidebarContainer } from "./desktop-sidebar-container";
 import { Gutter } from "./gutter";
 import {
@@ -24,6 +24,11 @@ export const Shell = ({
   const navigation = useNavigation();
 
   const loading = navigation.state === "loading";
+  // A route with `handle: { private: true }` shows customer data: tag the
+  // page (breadcrumbs included) so analytics tools can mask it.
+  const isPrivate = useMatches().some(
+    (match) => (match.handle as { private?: boolean } | undefined)?.private,
+  );
 
   return (
     <div className="relative flex h-screen flex-col items-start overflow-hidden lg:flex-row">
@@ -34,7 +39,10 @@ export const Shell = ({
         </MobileSidebarContainer>
         <DesktopSidebarContainer>{children}</DesktopSidebarContainer>
       </div>
-      <div className="flex h-screen w-full flex-col overflow-auto">
+      <div
+        className="flex h-screen w-full flex-col overflow-auto"
+        data-private={isPrivate || undefined}
+      >
         <Topbar topbarActions={topbarActions} />
         <main
           className={clx(

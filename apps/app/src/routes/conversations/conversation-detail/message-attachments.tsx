@@ -125,6 +125,8 @@ export const MessageAttachments: FC<Props> = ({
 
   return (
     <div
+      // A customer's photos, voice notes and files: never in a recording.
+      data-private-block
       className={clx(
         "flex flex-wrap items-end gap-2",
         align === "end" ? "justify-end" : "justify-start",

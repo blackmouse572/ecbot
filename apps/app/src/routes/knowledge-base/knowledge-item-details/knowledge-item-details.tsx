@@ -1,3 +1,4 @@
+import { useTrackOnce } from "@/analytics/use-track-once";
 import {
   KNOWLEDGE_ITEM_PENDING_STATUSES,
   pollWhileKnowledgeItemPending,
@@ -27,6 +28,12 @@ export function KnowledgeItemDetails() {
     id || "",
     // Only this page watches processing, so only it polls.
     { refetchInterval: pollWhileKnowledgeItemPending },
+  );
+
+  useTrackOnce(
+    item?.status === "FAILED" ? "knowledge_failed_seen" : null,
+    { kind: String(item?.type ?? "").toLowerCase() },
+    id ?? "",
   );
 
   // Processing finished (or failed) while the user is on this page.

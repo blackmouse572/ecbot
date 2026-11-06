@@ -1,3 +1,5 @@
+import { analytics } from "@/analytics/analytics";
+import type { ClientConnectFailureReason } from "@/analytics/analytics-events";
 import { useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -155,6 +157,17 @@ function generateState(): string {
   );
 }
 
+/** Platforms whose connect flow starts in this hook's sign-in popup. */
+export const isOAuthPlatform = (platform: string) =>
+  platform in PLATFORM_CONFIGS;
+
+const connectFailed = (platform: string, reason: ClientConnectFailureReason) =>
+  analytics.capture("channel_connect_failed", {
+    channel: platform.toLowerCase(),
+    step: "auth",
+    reason,
+  });
+
 export function useOAuthLogin(
   platform: string,
   { onSuccess, onError, onClosed }: UseOAuthLoginProps,
@@ -183,10 +196,14 @@ export function useOAuthLogin(
   const handleLinkClick = useCallback(() => {
     const configFn = PLATFORM_CONFIGS[platform];
     if (!configFn) {
+      connectFailed(platform, "unsupported");
       handlers.current.onError?.(`Unsupported platform: ${platform}`);
       return;
     }
 
+    analytics.capture("channel_connect_started", {
+      channel: platform.toLowerCase(),
+    });
     const state = generateState();
     if (STATEFUL_PLATFORMS.has(platform)) {
       sessionStorage.setItem(oauthStateKey(platform), state);
@@ -205,6 +222,7 @@ export function useOAuthLogin(
     );
 
     if (!popup) {
+      connectFailed(platform, "popup_blocked");
       handlers.current.onError?.("popup-blocked");
       return;
     }
@@ -231,6 +249,7 @@ export function useOAuthLogin(
           const expectedState = sessionStorage.getItem(key);
           sessionStorage.removeItem(key);
           if (!expectedState || data.payload?.state !== expectedState) {
+            connectFailed(platform, "invalid_state");
             handlers.current.onError?.(t("accounts.link.invalidState"));
             return;
           }
@@ -239,6 +258,7 @@ export function useOAuthLogin(
       } else if (data.type === "oauth-error") {
         settledRef.current = true;
         stopPolling();
+        connectFailed(platform, "auth_denied");
         handlers.current.onError?.(data.payload?.error ?? "Unknown error");
       }
     };
