@@ -59,7 +59,7 @@ export function InvitedMemberItem({
           <Trash className="shrink-0" />
         </IconButton>
         <InvitationRoleSelect
-          className="w-[140px]"
+          className="w-[170px]"
           value={invitation.role}
           onValueChange={(role) => onUpdateRole?.(invitation, role)}
         />
