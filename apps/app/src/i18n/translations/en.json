@@ -210,6 +210,8 @@
           "turnstileRequired": "Please complete the verification.",
           "turnstileFailed": "Verification failed. Please try again.",
           "turnstileVerifying": "Verifying, please wait...",
+          "turnstileUnavailable": "Security check could not load. Turn off ad or script blockers, or try again.",
+          "turnstileRetry": "Try again",
           "invalidCredentials": "Invalid email or password.",
           "accountLocked": "Account is locked. Contact support.",
           "banned": {
@@ -258,6 +260,9 @@
           "turnstileRequired": "Please complete the verification.",
           "turnstileFailed": "Verification failed. Please try again.",
           "turnstileVerifying": "Verifying, please wait...",
+          "turnstileUnavailable": "Security check could not load. Turn off ad or script blockers, or try again.",
+          "turnstileRetry": "Try again",
+          "invalidForm": "Some details are missing or invalid. Check the form and try again.",
           "emailExists": "Email already registered. Please sign in.",
           "passwordMismatch": "Passwords do not match.",
           "signUpFailed": "Registration failed. Please try again.",

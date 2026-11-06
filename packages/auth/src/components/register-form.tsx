@@ -16,7 +16,7 @@ import {
   useTurnstile,
 } from "./turnstile";
 import { ZodFormWrapper } from "./zod-form-wrapper";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 interface IRegisterFormProps extends Omit<
   React.HTMLProps<HTMLFormElement>,
@@ -58,6 +58,12 @@ interface IRegisterFormProps extends Omit<
       label: React.ReactNode;
       required: string;
     };
+    /**
+     * Shown under the form when a submit fails validation, so a field whose
+     * own error has nowhere to show (the country when the list failed to
+     * load) still turns the click into a visible answer.
+     */
+    invalid?: string;
   };
 }
 
@@ -108,6 +114,7 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
 
   const honeypot = useHoneypot();
   const turnstile = useTurnstile(turnstileConfig, "sign-up");
+  const [isInvalid, setIsInvalid] = useState(false);
 
   // Spans the whole submit lifecycle (honeypot/password check + turnstile
   // wait + onSubmit), not just the network call — that's the window a fast
@@ -126,6 +133,7 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
       country,
       acceptTerms,
     }) => {
+      setIsInvalid(false);
       if (honeypot.isTrapped()) return;
       if (password !== confirmPassword) {
         form.setError("confirmPassword", {
@@ -175,6 +183,7 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
         turnstile.reset();
       }
     },
+    () => setIsInvalid(true),
   );
 
   return (
@@ -343,6 +352,11 @@ const RegisterForm: React.FC<IRegisterFormProps> = (
           }}
         />
         <TurnstileField turnstile={turnstile} />
+        {isInvalid && messages.invalid && (
+          <p role="alert" className="txt-small text-ui-fg-error">
+            {messages.invalid}
+          </p>
+        )}
       </form>
     </Form>
   );
