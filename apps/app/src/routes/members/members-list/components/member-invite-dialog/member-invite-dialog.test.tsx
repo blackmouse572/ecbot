@@ -78,8 +78,19 @@ describe("MemberInviteDialog", () => {
     await i18n.changeLanguage("en");
   });
 
-  it("asks for an email address and shows people found directly", () => {
+  it("hides the people found heading when nobody is found", () => {
     renderDialog();
+
+    expect(screen.queryByText("People found")).not.toBeInTheDocument();
+  });
+
+  it("asks for an email address and shows people found directly", () => {
+    invitableUsers.current = [
+      { id: "u-1", name: "Lan", email: "lan@example.com" },
+    ];
+    renderDialog();
+
+    expect(screen.getByText("lan@example.com")).toBeInTheDocument();
 
     expect(
       screen.getByPlaceholderText("Enter an email address"),

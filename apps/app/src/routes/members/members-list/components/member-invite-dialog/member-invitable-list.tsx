@@ -68,9 +68,12 @@ export function MemberInvitableList({
   const isBusy = isLoading || isFetching;
   const isEmail = looksLikeEmail(search);
   const offerTypedEmail = users?.length === 0 && isEmail;
+  const hasRows = isBusy || !!users?.length || offerTypedEmail;
 
   return (
-    <CommandGroup heading={t("members.inviteMember.searchResults")}>
+    <CommandGroup
+      heading={hasRows ? t("members.inviteMember.searchResults") : undefined}
+    >
       {isBusy &&
         Array.from({ length: CANDIDATES_PER_PAGE }).map((_, index) => (
           <InviteItemSkeleton key={index} />
