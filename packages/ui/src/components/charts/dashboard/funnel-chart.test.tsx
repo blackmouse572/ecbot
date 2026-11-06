@@ -25,7 +25,7 @@ describe("FunnelChart", () => {
 
   it("shows each channel's count and share when hovering a stage", () => {
     render(<FunnelChart {...props} />);
-    fireEvent.mouseEnter(screen.getByLabelText("Engaged"));
+    fireEvent.mouseEnter(screen.getByRole("group", { name: "Engaged" }));
 
     const tip = screen.getByRole("tooltip");
     expect(tip.textContent).toContain("Engaged");
@@ -39,9 +39,12 @@ describe("FunnelChart", () => {
 
   it("opens on keyboard focus and closes when the pointer leaves", () => {
     render(<FunnelChart {...props} />);
-    const stage = screen.getByLabelText("New customers");
+    const stage = screen.getByRole("group", { name: "New customers" });
     fireEvent.focus(stage);
-    expect(screen.getByRole("tooltip").textContent).toContain("Zalo");
+    const tip = screen.getByRole("tooltip");
+    expect(tip.textContent).toContain("Zalo");
+    // The first stage has no share of itself and no drop before it.
+    expect(tip.textContent).not.toMatch(/%|stopped/);
     fireEvent.mouseLeave(stage);
     expect(screen.queryByRole("tooltip")).toBeNull();
   });

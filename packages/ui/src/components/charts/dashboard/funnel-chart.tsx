@@ -195,6 +195,7 @@ export const FunnelChart: FC<FunnelChartProps> = ({
           {stages.map((stage, i) => (
             <div
               key={stage.key}
+              role="group"
               tabIndex={0}
               aria-label={stage.label}
               aria-describedby={active === i ? tipId : undefined}
