@@ -18,10 +18,17 @@ const INDICATOR_TONE: Record<Tone, string> = {
 
 type RootProps = MeterPrimitive.Root.Props;
 
-function Root({ className, ...props }: RootProps) {
+// Base UI appends a visually hidden `<span role="presentation">x</span>` to
+// every meter root. Some screen readers announce it as "x", so we render the
+// root ourselves with only the caller's children. The label, value and
+// aria-value* attributes still come from Base UI.
+function Root({ className, children, ...props }: RootProps) {
   return (
     <MeterPrimitive.Root
       className={clx("flex w-full flex-col gap-y-2", className)}
+      render={({ children: _withPlaceholder, ...rootProps }) => (
+        <div {...rootProps}>{children}</div>
+      )}
       {...props}
     />
   );

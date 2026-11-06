@@ -70,5 +70,15 @@ EXPOSE 8080
 ARG APP_DIR=apps/api
 ENV APP_DIR=${APP_DIR}
 
+# Which commit this image is, served at GET /api/public/build-info. The deploy
+# passes them as --build-arg; a plain build reports "unknown". Declared last so
+# a new commit only rebuilds this layer.
+ARG GIT_COMMIT_SHA
+ARG GIT_BRANCH
+ARG BUILT_AT
+ENV GIT_COMMIT_SHA=${GIT_COMMIT_SHA} \
+    GIT_BRANCH=${GIT_BRANCH} \
+    BUILT_AT=${BUILT_AT}
+
 # exec keeps node as PID 1 so SIGTERM reaches it directly.
 CMD ["sh", "-c", "exec node $APP_DIR/dist/main"]

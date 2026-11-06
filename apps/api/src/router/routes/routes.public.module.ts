@@ -18,6 +18,7 @@ import { ChatbotPreviewPublicController } from 'src/modules/chatbot/controllers/
 import { ChatbotModule } from 'src/modules/chatbot/chatbot.module';
 import { CountryModule } from 'src/modules/country/country.module';
 import { EmailModule } from 'src/modules/email/email.module';
+import { HealthBuildInfoPublicController } from 'src/modules/health/controllers/health.build-info.public.controller';
 import { HealthPublicController } from 'src/modules/health/controllers/health.public.controller';
 import { HealthModule } from 'src/modules/health/health.module';
 import { HelloPublicController } from 'src/modules/hello/controllers/hello.public.controller';
@@ -42,6 +43,7 @@ import { CloudTasksQueueModule } from 'src/worker/cloud-tasks-queue.module';
         PlatformWebhookPublicController,
         WidgetPublicController,
         HealthPublicController,
+        HealthBuildInfoPublicController,
         WaitlistPublicController,
         ChatbotPreviewPublicController,
         AccountDataDeletionPublicController,

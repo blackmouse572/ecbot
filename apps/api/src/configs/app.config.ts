@@ -27,6 +27,13 @@ export default registerAs('app', (): Record<string, any> => {
         env: process.env.APP_ENV,
         timezone: process.env.APP_TIMEZONE,
         version,
+        // The commit this image was built from, passed in by the deploy as
+        // build args (see Dockerfile). Served at /api/public/build-info.
+        build: {
+            commit: process.env.GIT_COMMIT_SHA,
+            branch: process.env.GIT_BRANCH,
+            builtAt: process.env.BUILT_AT,
+        },
         globalPrefix: '/api',
         // Origin of this backend as reachable from the public internet
         // (e.g. https://eccho.onrender.com). Used to build absolute URLs for

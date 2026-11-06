@@ -6,6 +6,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { defineConfig, type Plugin } from "vite";
 import checker from "vite-plugin-checker";
+import { buildInfo } from "./build-info";
 import dts from "vite-plugin-dts";
 import svgr from "vite-plugin-svgr";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -16,8 +17,7 @@ function faviconSync(): Plugin {
   return {
     name: "favicon-sync",
     config(_, { mode }) {
-      const env =
-        mode === "production" || mode === "staging" ? mode : "dev";
+      const env = mode === "production" || mode === "staging" ? mode : "dev";
       syncFavicon(env, path.resolve(import.meta.dirname, "public/favicon"));
     },
   };
@@ -33,8 +33,11 @@ export default defineConfig({
     tsconfigPaths(),
     tailwindcss(),
     // Deploy-only: a clean clone has no wrangler.json and must still build.
-    ...(existsSync(path.resolve(import.meta.dirname, "wrangler.json")) ? [cloudflare()] : []),
+    ...(existsSync(path.resolve(import.meta.dirname, "wrangler.json"))
+      ? [cloudflare()]
+      : []),
     faviconSync(),
+    buildInfo(),
   ],
   optimizeDeps: {
     exclude: ["../../node_modules/.vite", "../../node_modules/.cache"],
