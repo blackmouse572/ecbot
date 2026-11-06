@@ -3,10 +3,6 @@ import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from '@app/modules/workspace/enums/w
 import { WorkspaceOwnerGuard } from '@app/modules/workspace/guards/workspace.owner.guard';
 import type { WorkspaceMemberService } from '@app/modules/workspace/services/workspace.member.service';
 
-jest.mock('@app/modules/workspace/services/workspace.member.service', () => ({
-    WorkspaceMemberService: class {},
-}));
-
 function contextFor(userId: string) {
     const request = {
         __user: { id: userId },

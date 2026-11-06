@@ -74,6 +74,10 @@ describe('WorkspacePolicyGuard customer permissions', () => {
         expect(
             workspaceMemberService.getMemberWorkspaceRoles
         ).toHaveBeenCalledWith('workspace-1', 'user-1');
+        // The stranger check runs only when the role check fails.
+        expect(
+            workspaceMemberService.isUserMemberOfWorkspace
+        ).not.toHaveBeenCalled();
     });
 
     it('rejects a workspace member without CUSTOMER permission', async () => {
@@ -141,7 +145,7 @@ describe('WorkspacePolicyGuard stranger', () => {
     it('answers 404 5200 to a user who is not a member', async () => {
         const workspaceMemberService = {
             isUserMemberOfWorkspace: jest.fn().mockResolvedValue(false),
-            getMemberWorkspaceRoles: jest.fn(),
+            getMemberWorkspaceRoles: jest.fn().mockResolvedValue([]),
         };
         const guard = new WorkspacePolicyGuard(
             { get: jest.fn() } as any,
@@ -172,8 +176,5 @@ describe('WorkspacePolicyGuard stranger', () => {
                 statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.NOT_FOUND,
             },
         });
-        expect(
-            workspaceMemberService.getMemberWorkspaceRoles
-        ).not.toHaveBeenCalled();
     });
 });

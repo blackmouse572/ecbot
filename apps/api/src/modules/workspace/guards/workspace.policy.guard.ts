@@ -63,18 +63,6 @@ export class WorkspacePolicyGuard implements CanActivate {
             return true;
         }
 
-        // A stranger gets the same 404 as a missing workspace, before any
-        // role check could answer 403 and confirm the workspace exists.
-        const isMember =
-            await this.workspaceMemberService.isUserMemberOfWorkspace(
-                __workspace.id,
-                __user.id
-            );
-
-        if (!isMember) {
-            throw workspaceNotFoundException(workspaceIdOrSlug);
-        }
-
         // Get required abilities and roles from metadata
         const requiredAbilities = this.reflector.get<IPolicyAbility[]>(
             WORKSPACE_POLICY_ABILITY_META_KEY,
@@ -86,16 +74,30 @@ export class WorkspacePolicyGuard implements CanActivate {
             context.getHandler()
         );
 
-        await assertWorkspaceMemberPolicy(
-            {
-                workspaceMemberService: this.workspaceMemberService,
-                roleService: this.roleService,
-                policyAbilityFactory: this.policyAbilityFactory,
-            },
-            __workspace.id,
-            __user.id,
-            { abilities: requiredAbilities, roles: requiredRoles }
-        );
+        try {
+            await assertWorkspaceMemberPolicy(
+                {
+                    workspaceMemberService: this.workspaceMemberService,
+                    roleService: this.roleService,
+                    policyAbilityFactory: this.policyAbilityFactory,
+                },
+                __workspace.id,
+                __user.id,
+                { abilities: requiredAbilities, roles: requiredRoles }
+            );
+        } catch (error) {
+            // Only on the failure path, so a member pays no extra query. A
+            // stranger gets the same 404 as a missing workspace instead of a
+            // 403 that confirms the workspace exists.
+            const isMember =
+                await this.workspaceMemberService.isUserMemberOfWorkspace(
+                    __workspace.id,
+                    __user.id
+                );
+
+            if (!isMember) throw workspaceNotFoundException(workspaceIdOrSlug);
+            throw error;
+        }
 
         return true;
     }
