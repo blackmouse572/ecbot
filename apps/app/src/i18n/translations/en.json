@@ -1741,6 +1741,11 @@
       "custom": "Custom avatar",
       "default": "Default avatar"
     },
+    "notFound": {
+      "title": "Workspace not found",
+      "description": "This workspace doesn't exist, or you're not a member of it. Ask its owner for an invite.",
+      "goTo": "Go to {{name}}"
+    },
     "suspended": {
       "title": "This workspace is suspended",
       "description": "An admin has suspended this workspace, so its agents no longer reply and it can't be opened. Your data is kept. Contact support to restore access.",

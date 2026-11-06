@@ -30,6 +30,7 @@ import { useEnsureWorkspace, useWorkspaceList } from "@/hooks/api/workspace";
 import { useScrollEdges } from "@/hooks/use-scroll-edges";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes";
+import { WorkspaceNotFound } from "./workspace-not-found";
 import { WorkspaceSuspended } from "./workspace-suspended";
 import { WorkspaceSwitcher } from "../workspace-switcher";
 import type { WorkSpaceGetResponseDto } from "@repo/client";
@@ -43,7 +44,7 @@ export type WorkspaceNavItem = NonNullable<INavItem["items"]>[number];
 export const MainLayout = () => {
   const { t } = useTranslation();
   // Ensure we have a valid workspace
-  const { workspace, isLoading, hasWorkspaces, isSuspended } =
+  const { workspace, isLoading, hasWorkspaces, isSuspended, isNotFound } =
     useEnsureWorkspace();
   const { workspaces } = useWorkspaceList();
   const { workspaceSlug } = useWorkspaceParams();
@@ -59,6 +60,12 @@ export const MainLayout = () => {
     return (
       <WorkspaceSuspended workspaces={workspaces} currentSlug={workspaceSlug} />
     );
+  }
+
+  // Before the shell, so no page under it runs against a workspace the user
+  // cannot open (the dashboard used to crash there).
+  if (isNotFound) {
+    return <WorkspaceNotFound workspaces={workspaces} />;
   }
 
   return (
