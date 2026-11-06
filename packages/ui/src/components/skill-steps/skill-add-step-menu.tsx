@@ -1,8 +1,8 @@
-import { PlusMini } from "@medusajs/icons";
-import { Button, DropdownMenu } from "@medusajs/ui";
+import { DropdownMenu } from "@medusajs/ui";
 import type { SkillStep } from "@repo/agent-blueprint";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
+import { SkillAddButton } from "./skill-add-button";
 import { SkillStepKind } from "./skill-step-kind";
 
 const TYPES: SkillStep["type"][] = ["ask", "say", "tell", "tool", "if"];
@@ -19,15 +19,7 @@ export const SkillAddStepMenu: FC<Props> = ({ canIf, onAdd }) => {
   return (
     <DropdownMenu>
       <DropdownMenu.Trigger asChild>
-        <Button
-          type="button"
-          size="small"
-          variant="transparent"
-          className="w-fit"
-        >
-          <PlusMini />
-          {t("skills.steps.addStep")}
-        </Button>
+        <SkillAddButton>{t("skills.steps.addStep")}</SkillAddButton>
       </DropdownMenu.Trigger>
       <DropdownMenu.Content align="start">
         {types.map((type) => (

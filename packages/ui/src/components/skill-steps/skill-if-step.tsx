@@ -1,10 +1,11 @@
-import { PlusMini, XMark } from "@medusajs/icons";
-import { Button, IconButton, Input, Text } from "@medusajs/ui";
+import { XMark } from "@medusajs/icons";
+import { IconButton, Input, Text } from "@medusajs/ui";
 import type { IfStep, SkillStep } from "@repo/agent-blueprint";
 import type { FC, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { elseKey, newBranch } from "./step-tree";
 import type { StepEditorApi } from "./types";
+import { SkillAddButton } from "./skill-add-button";
 import { SkillStepIssue } from "./skill-step-issue";
 import { SkillStepKind } from "./skill-step-kind";
 import { SkillStepList } from "./skill-step-list";
@@ -19,6 +20,7 @@ type Props = {
 };
 
 // An If with its Else ifs and Else, each with its own steps and Add step.
+// A `.step-group` of its own, for the Else if / Else buttons.
 export const SkillIfStep: FC<Props> = ({
   step,
   number,
@@ -49,7 +51,7 @@ export const SkillIfStep: FC<Props> = ({
   );
 
   return (
-    <div className="flex flex-col gap-y-3">
+    <div className="step-group flex flex-col gap-y-3">
       {step.branches.map((branch, i) => (
         <div key={branch.id} className="flex flex-col gap-y-2">
           {label(
@@ -134,28 +136,20 @@ export const SkillIfStep: FC<Props> = ({
           </div>
         </div>
       )}
-      <div className="ml-10 flex gap-x-1">
-        <Button
-          type="button"
-          size="small"
-          variant="transparent"
+      <div className="-mt-1 ml-10 flex gap-x-1">
+        <SkillAddButton
           onClick={() =>
             patch((s) => ({ ...s, branches: [...s.branches, newBranch()] }))
           }
         >
-          <PlusMini />
           {t("skills.steps.elseIf")}
-        </Button>
+        </SkillAddButton>
         {!step.otherwise && (
-          <Button
-            type="button"
-            size="small"
-            variant="transparent"
+          <SkillAddButton
             onClick={() => patch((s) => ({ ...s, otherwise: [] }))}
           >
-            <PlusMini />
             {t("skills.steps.else")}
-          </Button>
+          </SkillAddButton>
         )}
       </div>
     </div>
