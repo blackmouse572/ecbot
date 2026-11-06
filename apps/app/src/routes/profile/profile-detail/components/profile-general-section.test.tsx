@@ -39,4 +39,11 @@ describe("ProfileGeneralSection", () => {
 
     expect(screen.getByText("Nguyễn Văn Chủ")).toBeInTheDocument();
   });
+
+  it("shows the status as a label, not the raw API value", () => {
+    renderSection({ name: "Lan", status: "ACTIVE" });
+
+    expect(screen.getByText("profile.status.ACTIVE")).toBeInTheDocument();
+    expect(screen.queryByText("ACTIVE")).not.toBeInTheDocument();
+  });
 });

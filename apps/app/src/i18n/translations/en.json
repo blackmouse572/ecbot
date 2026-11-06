@@ -1503,12 +1503,19 @@
       "chatbot": "Agent",
       "rag": "RAG",
       "knowledgeBase": "Knowledge Base",
-      "customer": "Customer"
+      "customer": "Customer",
+      "skill": "Skills",
+      "tool": "Tools",
+      "customerData": "Customer data",
+      "member": "Team",
+      "clientCredential": "API keys",
+      "workspace": "Workspace settings"
     },
     "title": "Roles",
     "description": "Manage roles and permissions for members",
     "fields": {
-      "permissions": "Permissions"
+      "permissions": "Permissions",
+      "subject": "Area"
     },
     "types": {
       "admin": "Admin",
@@ -1534,12 +1541,30 @@
     },
     "delete": {
       "title": "Delete role",
-      "description": "Are you sure you want to delete this role? This action cannot be undone."
+      "description": "Are you sure you want to delete this role? This action cannot be undone.",
+      "success": "Role deleted",
+      "error": "Could not delete the role"
     },
     "list": {
       "noRecordsTitle": "No roles yet",
       "noRecordsMessage": "Roles decide what each member can see and change in this workspace.",
       "createFirst": "Create role"
+    },
+    "create": {
+      "namePlaceholder": "For example: Sales staff",
+      "descriptionPlaceholder": "What this role is for"
+    },
+    "edit": {
+      "title": "Edit role",
+      "description": "Change what this role can do.",
+      "nameHint": "A role name cannot be changed after it is created.",
+      "success": "Role updated",
+      "error": "Could not update the role"
+    },
+    "access": {
+      "none": "No access",
+      "view": "View",
+      "full": "Full access"
     }
   },
   "profile": {
@@ -1620,6 +1645,16 @@
       "loading": "Preparing your data...",
       "success": "Your data has been downloaded.",
       "error": "We could not prepare your data. Please try again."
+    },
+    "edit": {
+      "title": "Edit profile",
+      "success": "Profile updated",
+      "error": "Could not update your profile"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "INACTIVE": "Inactive",
+      "BLOCKED": "Blocked"
     }
   },
   "changePassword": {

@@ -74,7 +74,9 @@ export const ProfileGeneralSection = ({ user }: ProfileGeneralSectionProps) => {
         <Text size="small" leading="compact" weight="plus">
           {t("fields.status")}
         </Text>
-        <UserStatusBadge status={status}>{status}</UserStatusBadge>
+        <UserStatusBadge status={status}>
+          {t(`profile.status.${status}`)}
+        </UserStatusBadge>
       </div>
       <div className="grid grid-cols-2 items-center px-6 py-4">
         <Text size="small" leading="compact" weight="plus">

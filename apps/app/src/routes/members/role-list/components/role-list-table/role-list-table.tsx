@@ -1,18 +1,15 @@
 import { IconShieldLock } from "@tabler/icons-react";
-import { Button, Container, Heading, toast, usePrompt } from "@medusajs/ui";
+import { Button, Container, Heading } from "@medusajs/ui";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 
 import { _DataTable } from "@/components/table/data-table";
 import { useWorkspaceRoles } from "@/hooks/api/workspace-roles";
 import { useDataTable } from "@/hooks/use-data-table";
-import { useWorkspaceParams } from "@/hooks/use-workspace-params";
-import { ROUTES } from "@/routes/constants";
-import { Pencil, Trash } from "@medusajs/icons";
 import type { RoleListResponseDto } from "@repo/client";
-import { ActionMenu } from "@repo/ui/common-components";
 import { createColumnHelper } from "@tanstack/react-table";
+import { RoleActions } from "./role-actions";
 import {
   useRoleTableColumns,
   useRoleTableFilters,
@@ -82,63 +79,6 @@ export const RoleListTable = () => {
       />
       <Outlet />
     </Container>
-  );
-};
-
-const RoleActions = ({ item }: { item: RoleListResponseDto }) => {
-  const { t } = useTranslation();
-  const { workspaceSlug } = useWorkspaceParams();
-  const navigate = useNavigate();
-  const dialog = usePrompt();
-  const location = useLocation();
-
-  const deleteRoleHandler = async () => {
-    const confirmed = await dialog({
-      title: t("roles.delete.title"),
-      description: t("roles.delete.description"),
-      confirmText: t("actions.delete"),
-      cancelText: t("actions.cancel"),
-    });
-
-    if (!confirmed) return;
-
-    // TODO: Implement delete role functionality
-    toast.promise(Promise.resolve(), {
-      success: "Role deleted successfully",
-      error: "Failed to delete role",
-      loading: "Deleting role...",
-    });
-  };
-
-  return (
-    <ActionMenu
-      groups={[
-        {
-          actions: [
-            {
-              icon: <Pencil />,
-              label: t("actions.edit"),
-              onClick: () =>
-                navigate(
-                  `/${workspaceSlug}/${ROUTES.Settings}/${ROUTES.WorkspaceRoles}/${item.id}/edit`,
-                  {
-                    state: { prev: location.pathname },
-                  },
-                ),
-            },
-          ],
-        },
-        {
-          actions: [
-            {
-              icon: <Trash />,
-              label: t("actions.delete"),
-              onClick: () => deleteRoleHandler(),
-            },
-          ],
-        },
-      ]}
-    />
   );
 };
 

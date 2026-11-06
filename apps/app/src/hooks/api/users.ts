@@ -5,10 +5,12 @@ import {
   userSharedControllerGetUserProfileV1,
   userSharedControllerProfileV1,
   userSharedControllerUpdateNotificationsV1,
+  userSharedControllerUpdateProfileV1,
   userUserControllerDeleteV1,
   workspaceControllerProfileV1,
   type UserProfileResponseDto,
   type UserSharedControllerProfileV1Response,
+  type UserUpdateProfileRequestDto,
   type WorkspaceGetProfileResponseDto,
 } from "@repo/client";
 import {
@@ -91,6 +93,18 @@ export function useUpdateNotificationSettings() {
   });
 
   return { updateNotifications: mutateAsync, ...rest };
+}
+
+/** Saves the signed-in user's own name and country. */
+export function useUpdateProfile() {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: (body: UserUpdateProfileRequestDto) =>
+      userSharedControllerUpdateProfileV1({ body, throwOnError: true }),
+    onSuccess: () =>
+      client.invalidateQueries({ queryKey: [USERS_QUERY_KEY, "me"] }),
+  });
 }
 
 export function useDeleteProfile() {

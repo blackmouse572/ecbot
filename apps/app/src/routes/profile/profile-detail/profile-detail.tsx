@@ -1,5 +1,6 @@
 import { useMe } from "@/hooks/api";
 import { SingleColumnPageSkeleton } from "@repo/ui/common-components";
+import { Outlet } from "react-router-dom";
 import {
   ProfileDeleteSection,
   ProfileGeneralSection,
@@ -23,6 +24,7 @@ export const ProfileDetail = () => {
       <ProfileMfaSection user={user} />
       <ProfileExportSection />
       <ProfileDeleteSection user={user} />
+      <Outlet />
     </div>
   );
 };
