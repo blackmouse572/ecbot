@@ -2,6 +2,7 @@ import { plainToInstance } from 'class-transformer';
 import { AccountGetResponseDto } from '@app/modules/account/dtos/response/account.get.response.dto';
 import { ChatbotListResponseDto } from '@app/modules/chatbot/dtos/response/chatbot.list.response.dto';
 import { ChatbotEntity } from '@app/modules/chatbot/repository/entities/chatbot.entity';
+import { InvitationListResponseDto } from '@app/modules/invitation/dtos/response/invitation-list.response.dto';
 import { ConversationGetResponseDto } from '@app/modules/conversation/dtos/response/conversation.get.response.dto';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 
@@ -65,6 +66,20 @@ describe('nested workspace in conversation responses', () => {
         const dto = plainToInstance(
             Dto as typeof AccountGetResponseDto,
             { id: 'x', workspace: REAL_WORKSPACE_ID },
+            { excludeExtraneousValues: true }
+        );
+
+        expect(dto.workspace).toBe(REAL_WORKSPACE_ID);
+    });
+});
+
+// Same path on the invitation list: InvitationService.mapList maps the raw
+// entity, whose workspace is an unpopulated reference.
+describe('nested workspace in invitation list responses', () => {
+    it('carries the real workspace id', () => {
+        const dto = plainToInstance(
+            InvitationListResponseDto,
+            { id: 'invitation-1', workspace: workspaceReference() },
             { excludeExtraneousValues: true }
         );
 
