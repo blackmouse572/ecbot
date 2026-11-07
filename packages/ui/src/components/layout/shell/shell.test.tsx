@@ -10,7 +10,10 @@ const mobileNavLabels = {
   description: "Navigate through the application.",
 };
 
-const renderShell = (topbarActions?: React.ReactNode) => {
+const renderShell = (
+  topbarActions?: React.ReactNode,
+  initialEntry = "/channels/acme",
+) => {
   const router = createMemoryRouter(
     [
       {
@@ -27,6 +30,11 @@ const renderShell = (topbarActions?: React.ReactNode) => {
         ),
         children: [
           {
+            path: "inbox",
+            handle: { private: true },
+            element: <div>Customer inbox</div>,
+          },
+          {
             path: "channels",
             handle: { breadcrumb: () => "Channels" },
             children: [
@@ -40,7 +48,7 @@ const renderShell = (topbarActions?: React.ReactNode) => {
         ],
       },
     ],
-    { initialEntries: ["/channels/acme"] },
+    { initialEntries: [initialEntry] },
   );
 
   return render(<RouterProvider router={router} />);
@@ -94,6 +102,15 @@ describe("Shell", () => {
 
     const rail = getDesktopRail(container);
     expect(rail.className).toContain("w-[220px]");
+  });
+
+  // The sidebar pins its header and footer with z-index. Without its own
+  // stacking context those layers outrank a modal portaled to <body> (which
+  // has none), and paint over it while the nav between them is hidden.
+  it("keeps the desktop rail's layers below modals opened over the page", () => {
+    const { container } = renderShell();
+
+    expect(getDesktopRail(container)).toHaveClass("isolate");
   });
 
   it("hides the desktop rail after toggling it closed", async () => {
@@ -233,5 +250,20 @@ describe("Shell", () => {
     await user.click(getMobileToggleButton());
 
     expect(screen.getAllByText("sidebar marker")).toHaveLength(2);
+  });
+});
+
+describe("Shell private pages", () => {
+  it("tags a route with handle.private as data-private, breadcrumbs included", () => {
+    renderShell(undefined, "/inbox");
+    const page = screen.getByText("Customer inbox").closest("[data-private]");
+    expect(page).not.toBeNull();
+  });
+
+  it("leaves other pages untagged", () => {
+    renderShell();
+    expect(
+      screen.getByText("Account detail").closest("[data-private]"),
+    ).toBeNull();
   });
 });

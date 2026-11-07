@@ -208,9 +208,7 @@ export const WorkspaceSettingsHeader = () => {
               size="small"
               className="truncate"
             >
-              {workspace
-                ? t("settings.backTo", { name: workspace.name })
-                : t("app.nav.settings.header")}
+              {workspace ? t("settings.back") : t("app.nav.settings.header")}
             </Text>
           </div>
         </Link>

@@ -1493,6 +1493,7 @@
       "title": "Invitations",
       "empty": "Invitations you send from the Members page wait here until they are accepted.",
       "emptyTitle": "No pending invitations",
+      "noReadPermission": "You can't view invitations in this workspace. Ask the workspace owner.",
       "defaultRole": "Member (default)",
       "status": {
         "PENDING": "Pending",
@@ -1509,7 +1510,8 @@
         "loading": "Approving request...",
         "success": "Request approved. Welcome aboard!"
       },
-      "emptyTitle": "No pending join requests"
+      "emptyTitle": "No pending join requests",
+      "noReadPermission": "You can't view join requests in this workspace. Ask the workspace owner."
     },
     "list": {
       "noRecordsTitle": "No members yet",
@@ -1521,12 +1523,19 @@
       "chatbot": "Agent",
       "rag": "RAG",
       "knowledgeBase": "Knowledge Base",
-      "customer": "Customer"
+      "customer": "Customer",
+      "skill": "Skills",
+      "tool": "Tools",
+      "customerData": "Customer data",
+      "member": "Team",
+      "clientCredential": "API keys",
+      "workspace": "Workspace settings"
     },
     "title": "Roles",
     "description": "Manage roles and permissions for members",
     "fields": {
-      "permissions": "Permissions"
+      "permissions": "Permissions",
+      "subject": "Area"
     },
     "types": {
       "admin": "Admin",
@@ -1552,12 +1561,31 @@
     },
     "delete": {
       "title": "Delete role",
-      "description": "Are you sure you want to delete this role? This action cannot be undone."
+      "description": "Are you sure you want to delete this role? This action cannot be undone.",
+      "success": "Role deleted",
+      "error": "Could not delete the role"
     },
     "list": {
       "noRecordsTitle": "No roles yet",
       "noRecordsMessage": "Roles decide what each member can see and change in this workspace.",
-      "createFirst": "Create role"
+      "createFirst": "Create role",
+      "noReadPermission": "You can't view roles in this workspace. Ask the workspace owner."
+    },
+    "create": {
+      "namePlaceholder": "For example: Sales staff",
+      "descriptionPlaceholder": "What this role is for"
+    },
+    "edit": {
+      "title": "Edit role",
+      "description": "Change what this role can do.",
+      "nameHint": "A role name cannot be changed after it is created.",
+      "success": "Role updated",
+      "error": "Could not update the role"
+    },
+    "access": {
+      "none": "No access",
+      "view": "View",
+      "full": "Full access"
     }
   },
   "profile": {
@@ -1638,6 +1666,16 @@
       "loading": "Preparing your data...",
       "success": "Your data has been downloaded.",
       "error": "We could not prepare your data. Please try again."
+    },
+    "edit": {
+      "title": "Edit profile",
+      "success": "Profile updated",
+      "error": "Could not update your profile"
+    },
+    "status": {
+      "ACTIVE": "Active",
+      "INACTIVE": "Inactive",
+      "BLOCKED": "Blocked"
     }
   },
   "changePassword": {
@@ -2359,6 +2397,9 @@
           "title": "Tags",
           "empty": "No tags yet",
           "add": "Add tag",
+          "searchPlaceholder": "Search tags…",
+          "noResults": "No tags found",
+          "create": "Create tag \"{{query}}\"",
           "remove": "Remove",
           "emptyHint": "Pick a tag below to group this customer."
         },
@@ -2634,13 +2675,9 @@
       "keyIdHint": "Public ID only. The full key is shown once, when you create it.",
       "noReadPermission": "You can't view API keys in this workspace. Ask the owner or an admin."
     },
-    "backTo": "Back to {{name}}",
     "general": "General",
     "developers": "Developers",
-    "workspaceHint": {
-      "text": "Looking for members or API keys?",
-      "link": "Workspace settings"
-    }
+    "back": "Back"
   },
   "tools": {
     "destructiveAction": "Can delete data",

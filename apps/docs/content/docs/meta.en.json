@@ -1,4 +1,14 @@
 {
   "title": "Ecbot Docs",
-  "pages": ["index", "getting-started", "agents", "channels", "customers", "cookbook", "dev"]
+  "pages": [
+    "index",
+    "getting-started",
+    "agents",
+    "channels",
+    "customers",
+    "workspace",
+    "account",
+    "cookbook",
+    "dev"
+  ]
 }

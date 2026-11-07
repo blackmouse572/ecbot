@@ -1,3 +1,4 @@
+import { analytics } from "@/analytics/analytics";
 import { toolsQueryKeys } from "@/hooks/api/tools";
 import {
   BUILT_IN_TOOL_KINDS,
@@ -276,6 +277,8 @@ export type ChatTransportConfig = {
     file: File,
     sessionId: string,
   ) => Promise<ChatAttachmentResponseDto>;
+  /** Called as each message goes out, with its 1-based turn in the chat. */
+  onSend?: (turnIndex: number) => void;
 };
 
 /** The stored file an upload endpoint answered with, or a thrown error. */
@@ -293,6 +296,9 @@ export function workspaceChatTransport(
   return {
     path: `/api/v1/shared/${encodeURIComponent(workspaceSlug)}/chatbots/${encodeURIComponent(chatbotId)}/stream`,
     includeCredentials: true,
+    // The member trying their own agent: the playground, never the widget.
+    onSend: (turnIndex) =>
+      analytics.capture("playground_message_sent", { turn_index: turnIndex }),
     invalidateToolInvocations: true,
     upload: async (file) => {
       const { data } = await chatbotControllerUploadPreviewAttachmentV1({
@@ -466,8 +472,11 @@ export function useAiChat({
     () =>
       new DefaultChatTransport({
         api: transportConfig.path,
-        prepareSendMessagesRequest: ({ id, messages }) =>
-          buildChatStreamRequest({
+        prepareSendMessagesRequest: ({ id, messages }) => {
+          transportConfig.onSend?.(
+            messages.filter((m) => m.role === "user").length,
+          );
+          return buildChatStreamRequest({
             transport: transportConfig,
             clientConfig: client.getConfig() as ClientConfigLike,
             // Read fresh at send time (not memoized) — same freshness the
@@ -476,7 +485,8 @@ export function useAiChat({
             token: readStreamAuthToken(),
             id,
             messages,
-          }),
+          });
+        },
       }),
     [transportConfig],
   );

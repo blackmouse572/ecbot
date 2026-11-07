@@ -29,7 +29,8 @@ export const ScrollShadowRow: FC<{ children: ReactNode }> = ({ children }) => {
   }, [measure]);
 
   return (
-    <div className="relative min-w-0">
+    // `isolate` keeps the z-10 blur bands from painting over a modal.
+    <div className="relative isolate min-w-0">
       <ScrollArea ref={root} onScrollCapture={measure}>
         {children}
       </ScrollArea>

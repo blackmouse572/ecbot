@@ -99,9 +99,7 @@ export function RoleForm({
               name="permissions"
               render={({ field }) => (
                 <Form.Item>
-                  <Form.Label>
-                    {t("roles.permissions.title", "Permissions")}
-                  </Form.Label>
+                  <Form.Label>{t("roles.fields.permissions")}</Form.Label>
                   <Form.Control>
                     <PermissionsField
                       value={field.value}

@@ -22,7 +22,8 @@ type Props = {
 };
 
 // Editable step tree: Add step in every list, Else if / Else on an If, and
-// move up, move down or delete from each step's menu.
+// move up, move down or delete from each step's menu. Sits on the standard
+// card surface; branches are set apart by their left rule, not a darker fill.
 export const SkillStepsEditor: FC<Props> = ({
   steps,
   onChange,
@@ -45,12 +46,14 @@ export const SkillStepsEditor: FC<Props> = ({
   };
   let n = 0;
   return (
-    <SkillStepList
-      steps={steps}
-      listKey="root"
-      depth={0}
-      api={api}
-      next={() => `${++n}`}
-    />
+    <div className="rounded-lg border bg-ui-bg-base p-4">
+      <SkillStepList
+        steps={steps}
+        listKey="root"
+        depth={0}
+        api={api}
+        next={() => `${++n}`}
+      />
+    </div>
   );
 };

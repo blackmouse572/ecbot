@@ -1,6 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const owner = vi.hoisted(() => ({ isOwner: true, isPending: false }));
+vi.mock("@/hooks/use-is-workspace-owner", () => ({
+  useIsWorkspaceOwner: () => owner,
+}));
 
 const approveMutateAsync = vi.fn();
 
@@ -33,7 +38,16 @@ const request = {
   requestFrom: { id: "u1", name: "Alice", email: "alice@mail.com" },
 };
 
+const apiError = (status: number, statusCode: number) => ({
+  response: { status, data: { statusCode } },
+});
+
 describe("Join requests page", () => {
+  beforeEach(() => {
+    owner.isOwner = true;
+    owner.isPending = false;
+  });
+
   it("renders the requester and the reason", () => {
     vi.mocked(useJoinRequests).mockReturnValue({
       joinRequests: [request],
@@ -90,5 +104,52 @@ describe("Join requests page", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
 
     expect(() => render(<JoinRequests />)).toThrow(error);
+  });
+
+  it("tells a member they can't view join requests, without asking the API", () => {
+    owner.isOwner = false;
+    vi.mocked(useJoinRequests).mockReturnValue({
+      joinRequests: undefined,
+      isLoading: false,
+    } as A);
+
+    render(<JoinRequests />);
+
+    expect(
+      screen.getByText("members.joinRequests.noReadPermission"),
+    ).toBeInTheDocument();
+    expect(vi.mocked(useJoinRequests).mock.lastCall?.[0]).toEqual({
+      enabled: false,
+    });
+  });
+
+  it.each([
+    ["the owner guard's 400 5208", apiError(400, 5208)],
+    ["a 403", apiError(403, 5100)],
+  ])("shows the no-permission message on %s", (_, error) => {
+    vi.mocked(useJoinRequests).mockReturnValue({
+      joinRequests: undefined,
+      isLoading: false,
+      isError: true,
+      error,
+    } as A);
+
+    render(<JoinRequests />);
+
+    expect(
+      screen.getByText("members.joinRequests.noReadPermission"),
+    ).toBeInTheDocument();
+  });
+
+  it("still throws a suspended workspace's 403 to the error boundary", () => {
+    vi.mocked(useJoinRequests).mockReturnValue({
+      joinRequests: undefined,
+      isLoading: false,
+      isError: true,
+      error: apiError(403, 5215),
+    } as A);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    expect(() => render(<JoinRequests />)).toThrow();
   });
 });

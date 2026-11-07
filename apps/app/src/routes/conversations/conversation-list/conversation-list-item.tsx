@@ -149,15 +149,20 @@ export const ConversationListItem = ({
               </Text>
             ))}
         </div>
-        <div className="flex items-center gap-x-2">
+        <div className="flex min-w-0 items-center gap-x-2">
           <StatusPill conversation={conversation} />
           {handoffReasonLabel && (
-            <Text size="xsmall" className="text-ui-fg-muted truncate">
-              {handoffReasonLabel}
-            </Text>
+            <Tooltip content={handoffReasonLabel} maxWidth={260}>
+              <Text
+                size="xsmall"
+                className="text-ui-fg-muted min-w-0 flex-1 truncate"
+              >
+                {handoffReasonLabel}
+              </Text>
+            </Tooltip>
           )}
           {(conversation as A).unreadCount > 0 && (
-            <span className="bg-ui-tag-blue-bg text-ui-tag-blue-text ml-auto flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold leading-none">
+            <span className="bg-ui-tag-blue-bg text-ui-tag-blue-text ml-auto flex shrink-0 h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold leading-none">
               {(conversation as A).unreadCount > 99
                 ? "99+"
                 : (conversation as A).unreadCount}

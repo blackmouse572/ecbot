@@ -1,4 +1,120 @@
 {
+  "account-preferences": {
+    "en": {
+      "src": "/_docs/screenshots/en/account-preferences.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "general": {
+          "x": 17.5,
+          "y": 4.16,
+          "w": 80.28,
+          "h": 28.56
+        },
+        "notifications": {
+          "x": 15.97,
+          "y": 37.93,
+          "w": 83.33,
+          "h": 41.07
+        },
+        "app": {
+          "x": 15.97,
+          "y": 79.89,
+          "w": 83.33,
+          "h": 19.02
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/account-preferences.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "general": {
+          "x": 17.5,
+          "y": 6.49,
+          "w": 80.28,
+          "h": 28.56
+        },
+        "notifications": {
+          "x": 15.97,
+          "y": 40.27,
+          "w": 83.33,
+          "h": 38.76
+        },
+        "app": {
+          "x": 15.97,
+          "y": 79.91,
+          "w": 83.33,
+          "h": 19.02
+        }
+      }
+    }
+  },
+  "account-profile": {
+    "en": {
+      "src": "/_docs/screenshots/en/account-profile.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "nav": {
+          "x": 0.42,
+          "y": 9.89,
+          "w": 14.38,
+          "h": 14.44
+        },
+        "mfa": {
+          "x": 15.97,
+          "y": 55.53,
+          "w": 83.33,
+          "h": 9.42
+        },
+        "export": {
+          "x": 15.97,
+          "y": 65.84,
+          "w": 83.33,
+          "h": 12.98
+        },
+        "delete": {
+          "x": 15.97,
+          "y": 79.71,
+          "w": 83.33,
+          "h": 13.2
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/account-profile.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "nav": {
+          "x": 0.42,
+          "y": 9.89,
+          "w": 14.38,
+          "h": 14.44
+        },
+        "mfa": {
+          "x": 15.97,
+          "y": 55.53,
+          "w": 83.33,
+          "h": 9.42
+        },
+        "export": {
+          "x": 15.97,
+          "y": 65.84,
+          "w": 83.33,
+          "h": 12.98
+        },
+        "delete": {
+          "x": 15.97,
+          "y": 79.71,
+          "w": 83.33,
+          "h": 13.2
+        }
+      }
+    }
+  },
   "agent-followup-rules": {
     "en": {
       "src": "/_docs/screenshots/en/agent-followup-rules.png",
@@ -231,6 +347,58 @@
           "y": 8.56,
           "w": 6.71,
           "h": 4
+        }
+      }
+    }
+  },
+  "billing": {
+    "en": {
+      "src": "/_docs/screenshots/en/billing.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "plan": {
+          "x": 15.97,
+          "y": 13.76,
+          "w": 83.33,
+          "h": 38.8
+        },
+        "change": {
+          "x": 90.68,
+          "y": 15.31,
+          "w": 7.1,
+          "h": 4
+        },
+        "history": {
+          "x": 15.97,
+          "y": 53.44,
+          "w": 83.33,
+          "h": 46.56
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/billing.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "plan": {
+          "x": 15.97,
+          "y": 13.76,
+          "w": 83.33,
+          "h": 38.8
+        },
+        "change": {
+          "x": 93.11,
+          "y": 15.31,
+          "w": 4.66,
+          "h": 4
+        },
+        "history": {
+          "x": 15.97,
+          "y": 53.44,
+          "w": 83.33,
+          "h": 43.76
         }
       }
     }
@@ -551,6 +719,46 @@
       }
     }
   },
+  "role-create": {
+    "en": {
+      "src": "/_docs/screenshots/en/role-create.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "name": {
+          "x": 26.39,
+          "y": 10.89,
+          "w": 47.22,
+          "h": 4.44
+        },
+        "permissions": {
+          "x": 26.25,
+          "y": 30.93,
+          "w": 47.5,
+          "h": 10.22
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/role-create.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "name": {
+          "x": 26.39,
+          "y": 10.89,
+          "w": 47.22,
+          "h": 4.44
+        },
+        "permissions": {
+          "x": 26.25,
+          "y": 30.93,
+          "w": 47.5,
+          "h": 10.22
+        }
+      }
+    }
+  },
   "skill-create": {
     "en": {
       "src": "/_docs/screenshots/en/skill-create.png",
@@ -771,6 +979,46 @@
           "y": 27.22,
           "w": 6.47,
           "h": 3.11
+        }
+      }
+    }
+  },
+  "team-invite": {
+    "en": {
+      "src": "/_docs/screenshots/en/team-invite.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "search": {
+          "x": 19.93,
+          "y": 34.78,
+          "w": 60.14,
+          "h": 5
+        },
+        "code": {
+          "x": 62.88,
+          "y": 60.11,
+          "w": 16.22,
+          "h": 4
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/team-invite.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "search": {
+          "x": 19.93,
+          "y": 34.78,
+          "w": 60.14,
+          "h": 5
+        },
+        "code": {
+          "x": 68.71,
+          "y": 60.11,
+          "w": 10.39,
+          "h": 4
         }
       }
     }
@@ -1055,6 +1303,58 @@
           "y": 6.56,
           "w": 9.85,
           "h": 4.44
+        }
+      }
+    }
+  },
+  "workspace-settings": {
+    "en": {
+      "src": "/_docs/screenshots/en/workspace-settings.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "nav": {
+          "x": 0.42,
+          "y": 20.11,
+          "w": 14.38,
+          "h": 31.22
+        },
+        "edit": {
+          "x": 61.28,
+          "y": 8.56,
+          "w": 4.83,
+          "h": 4
+        },
+        "danger": {
+          "x": 16.11,
+          "y": 41.18,
+          "w": 51.39,
+          "h": 16.4
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/workspace-settings.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "nav": {
+          "x": 0.42,
+          "y": 20.11,
+          "w": 14.38,
+          "h": 31.22
+        },
+        "edit": {
+          "x": 58.59,
+          "y": 8.56,
+          "w": 7.52,
+          "h": 4
+        },
+        "danger": {
+          "x": 16.11,
+          "y": 41.18,
+          "w": 51.39,
+          "h": 16.4
         }
       }
     }

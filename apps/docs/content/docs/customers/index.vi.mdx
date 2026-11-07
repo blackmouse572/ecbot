@@ -26,9 +26,18 @@ Agent không bao giờ lưu thông tin thanh toán. Để xem hoặc sửa hồ 
 
 Khi hai hồ sơ trong không gian làm việc có cùng số điện thoại hoặc email, Ecbot gợi ý gộp chúng và báo cho nhân viên.
 
-<Screenshot name="customer-suggestions" alt="Trang gợi ý khách hàng với các gợi ý chờ xử lý">
-  <Mark id="nav">**Gợi ý** trong nhóm **Khách hàng** ở thanh bên. Số trên nhãn cho biết có bao nhiêu gợi ý đang chờ.</Mark>
-  <Mark id="status">Các gợi ý đang chờ bạn. Mỗi dòng hiện hai khách hàng và số điện thoại hoặc email bị trùng.</Mark>
+<Screenshot
+  name="customer-suggestions"
+  alt="Trang gợi ý khách hàng với các gợi ý chờ xử lý"
+>
+  <Mark id="nav">
+    **Gợi ý** trong nhóm **Khách hàng** ở thanh bên. Số trên nhãn cho biết có
+    bao nhiêu gợi ý đang chờ.
+  </Mark>
+  <Mark id="status">
+    Các gợi ý đang chờ bạn. Mỗi dòng hiện hai khách hàng và số điện thoại hoặc
+    email bị trùng.
+  </Mark>
 </Screenshot>
 
 Chọn **Xem xét** ở một gợi ý, chọn khách hàng giữ lại và giữ tên, số điện thoại, email, ngôn ngữ, ghi chú của hồ sơ nào, rồi bấm **Xác nhận gộp**. Các cuộc trò chuyện và kênh liên hệ sẽ chuyển sang hồ sơ được giữ. Chọn **Bỏ qua** nếu đó là hai người khác nhau. Nếu lỡ gộp nhầm, mở khung thông tin khách và chọn **Tách gộp**.
@@ -41,21 +50,21 @@ Mở **Hội thoại** để đọc mọi cuộc trò chuyện.
 
 Mỗi cuộc trò chuyện có một trạng thái. Di chuột lên trạng thái trong ứng dụng để xem ý nghĩa.
 
-| Trạng thái | Ý nghĩa |
-| --- | --- |
-| **Bot đang trả lời** | Agent đang trả lời khách. |
-| **Cần bạn xử lý** | Agent đã chuyển cuộc trò chuyện cho nhân viên và ngừng trả lời. Nhân viên cần trả lời khách. |
-| **Bạn đang xử lý** | Nhân viên đã tạm dừng agent và đang tự trả lời. Agent im lặng cho tới khi được bật lại. |
-| **Đã xử lý** | Nhân viên đã xử lý xong việc được chuyển. Agent trả lời lại và không chuyển lại việc đó. Bạn vẫn gửi tin nhắn được. |
+| Trạng thái         | Ý nghĩa                                                                                                             |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| **Bot trả lời**    | Agent đang trả lời khách.                                                                                           |
+| **Chờ bạn**        | Agent đã chuyển cuộc trò chuyện cho nhân viên và ngừng trả lời. Nhân viên cần trả lời khách.                        |
+| **Bạn đang xử lý** | Nhân viên đã tạm dừng agent và đang tự trả lời. Agent im lặng cho tới khi được bật lại.                             |
+| **Đã xử lý**       | Nhân viên đã xử lý xong việc được chuyển. Agent trả lời lại và không chuyển lại việc đó. Bạn vẫn gửi tin nhắn được. |
 
 <ConversationStatusDiagram />
 
 Cách cuộc trò chuyện chuyển giữa các trạng thái:
 
-- **Bot đang trả lời** thành **Cần bạn xử lý** khi agent chuyển cho nhân viên (xem bên dưới).
-- **Bot đang trả lời** thành **Bạn đang xử lý** khi nhân viên chọn **Tạm dừng bot**.
-- **Cần bạn xử lý** hoặc **Bạn đang xử lý** thành **Đã xử lý** khi nhân viên chọn **Đã xử lý**, hoặc thành **Bot đang trả lời** khi nhân viên bật bot lại.
-- **Đã xử lý** trở lại **Bot đang trả lời** khi khách nhắn tin mới, hoặc khi nhân viên chọn **Khôi phục tự động** trong menu của cuộc trò chuyện.
+- **Bot trả lời** thành **Chờ bạn** khi agent chuyển cho nhân viên (xem bên dưới).
+- **Bot trả lời** thành **Bạn đang xử lý** khi nhân viên chọn **Tạm dừng bot**.
+- **Chờ bạn** hoặc **Bạn đang xử lý** thành **Đã xử lý** khi nhân viên chọn **Đã xử lý**, hoặc thành **Bot trả lời** khi nhân viên bật bot lại.
+- **Đã xử lý** trở lại **Bot trả lời** khi khách nhắn tin mới, hoặc khi nhân viên chọn **Khôi phục tự động** trong menu của cuộc trò chuyện.
 - Một yêu cầu mới cần nhân viên, ví dụ đổi đơn, vẫn được chuyển lại kể cả sau khi **Đã xử lý**.
 - Khi chọn **Đã xử lý** hoặc bật bot lại, các nhãn chuyển cho nhân viên của khách (Cần nhân viên, Đơn hàng mới, Lịch hẹn mới, Khiếu nại, Bực tức, và các nhãn bạn tự tạo có bật chuyển cho nhân viên) cũng được gỡ, trừ khi khách còn một cuộc trò chuyện khác đang chờ nhân viên. Lịch sử nhãn vẫn ghi lại. Các nhãn khác vẫn giữ nguyên.
 

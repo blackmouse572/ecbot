@@ -1,4 +1,14 @@
 {
   "title": "Tài liệu Ecbot",
-  "pages": ["index", "getting-started", "agents", "channels", "customers", "cookbook", "dev"]
+  "pages": [
+    "index",
+    "getting-started",
+    "agents",
+    "channels",
+    "customers",
+    "workspace",
+    "account",
+    "cookbook",
+    "dev"
+  ]
 }

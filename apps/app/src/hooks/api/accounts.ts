@@ -1,3 +1,6 @@
+import { analytics } from "@/analytics/analytics";
+import { analyticsChannel } from "@/analytics/analytics-events";
+import { isOAuthPlatform } from "@/hooks/use-oauth-login";
 import type { BatchResult } from "@/hooks/use-batch-result-toast";
 import { queryKeysFactory } from "@/libs/query-factory";
 import {
@@ -163,6 +166,13 @@ export const useLinkAccount = () => {
   const { workspace } = useWorkspace();
   const queryClient = useQueryClient();
   return useMutation({
+    onMutate: (data: AccountLinkRequestDto) => {
+      // OAuth channels counted their start when the sign-in popup opened.
+      if (!isOAuthPlatform(data.platform))
+        analytics.capture("channel_connect_started", {
+          channel: analyticsChannel(data.platform),
+        });
+    },
     mutationFn: (data: AccountLinkRequestDto) =>
       accountControllerLinkV1({
         body: data,
@@ -190,6 +200,9 @@ export const useProvisionApiChannel = () => {
   const { workspace } = useWorkspace();
   const queryClient = useQueryClient();
   return useMutation({
+    onMutate: () => {
+      analytics.capture("channel_connect_started", { channel: "api_channel" });
+    },
     mutationFn: (data: AccountProvisionApiChannelRequestDto) =>
       accountControllerProvisionApiChannelV1({
         body: data,
@@ -271,6 +284,11 @@ export const useProvisionWebsiteWidget = () => {
   const { workspace } = useWorkspace();
   const queryClient = useQueryClient();
   return useMutation({
+    onMutate: () => {
+      analytics.capture("channel_connect_started", {
+        channel: "website_widget",
+      });
+    },
     mutationFn: (data: AccountProvisionWebsiteWidgetRequestDto) =>
       accountControllerProvisionWebsiteWidgetV1({
         body: data,

@@ -68,6 +68,9 @@ const workspaceMemberChildren: RouteObject[] = [
   },
 ];
 
+// `handle.private` marks pages that show customer data, secrets or account
+// details: the shell tags them `data-private`, so any analytics an overlay
+// adds masks them. Harmless without one.
 function getRouteMaps(): RouteObject[] {
   return [
     {
@@ -113,6 +116,7 @@ function getRouteMaps(): RouteObject[] {
             {
               path: ROUTES.Accounts,
               handle: {
+                private: true,
                 breadcrumb: () => t("app.nav.accounts.header"),
               },
               children: [
@@ -168,6 +172,7 @@ function getRouteMaps(): RouteObject[] {
             {
               path: ROUTES.Conversations,
               handle: {
+                private: true,
                 breadcrumb: () => t("conversations.title"),
               },
               ErrorBoundary: ErrorBoundary,
@@ -248,6 +253,7 @@ function getRouteMaps(): RouteObject[] {
             {
               path: ROUTES.KnowledgeBase,
               handle: {
+                private: true,
                 breadcrumb: () => t("knowledgeBase.title"),
               },
               ErrorBoundary: ErrorBoundary,
@@ -296,6 +302,7 @@ function getRouteMaps(): RouteObject[] {
             {
               path: ROUTES.Tools,
               handle: {
+                private: true,
                 breadcrumb: () => t("tools.title"),
               },
               ErrorBoundary: ErrorBoundary,
@@ -425,6 +432,7 @@ function getRouteMaps(): RouteObject[] {
             {
               path: ROUTES.Customers,
               handle: {
+                private: true,
                 breadcrumb: () => t("customers.title"),
               },
               ErrorBoundary: ErrorBoundary,
@@ -433,6 +441,7 @@ function getRouteMaps(): RouteObject[] {
             {
               path: ROUTES.CustomerSuggestions,
               handle: {
+                private: true,
                 breadcrumb: () => t("customers.suggestions.title"),
               },
               ErrorBoundary: ErrorBoundary,
@@ -500,7 +509,7 @@ function getRouteMaps(): RouteObject[] {
             },
             {
               path: ROUTES.WorkspaceMember,
-              handle: { breadcrumb: membersBreadcrumb },
+              handle: { private: true, breadcrumb: membersBreadcrumb },
               children: workspaceMemberChildren,
             },
             {
@@ -511,10 +520,8 @@ function getRouteMaps(): RouteObject[] {
               children: [
                 {
                   index: true,
-                  loader: (params) =>
-                    import("./members/role-list").then((res) =>
-                      res.roleListLoader(params),
-                    ),
+                  // No loader: the list is owner-only, so the page checks
+                  // the ability before it fetches.
                   lazy: () => import("./members/role-list"),
                 },
                 {
@@ -537,12 +544,20 @@ function getRouteMaps(): RouteObject[] {
                       },
                     };
                   },
+                  children: [
+                    {
+                      path: "edit",
+                      ErrorBoundary: ErrorBoundary,
+                      lazy: () => import("./members/role-edit"),
+                    },
+                  ],
                 },
               ],
             },
             {
               path: ROUTES.ClientCredentials,
               handle: {
+                private: true,
                 breadcrumb: () => t("settings.clientCredentials.title"),
               },
               ErrorBoundary: ErrorBoundary,
@@ -569,12 +584,15 @@ function getRouteMaps(): RouteObject[] {
             {
               path: ROUTES.Profile,
               handle: {
+                private: true,
                 breadcrumb: () => t("app.nav.settings.myAccount"),
               },
+              lazy: () => import("./profile/profile-detail"),
               children: [
                 {
-                  index: true,
-                  lazy: () => import("./profile/profile-detail"),
+                  path: "edit",
+                  ErrorBoundary: ErrorBoundary,
+                  lazy: () => import("./profile/profile-edit"),
                 },
               ],
             },
@@ -595,6 +613,7 @@ function getRouteMaps(): RouteObject[] {
             {
               path: ROUTES.Sessions,
               handle: {
+                private: true,
                 breadcrumb: () => t("app.nav.settings.sessions"),
               },
               lazy: () => import("./profile/sessions"),
@@ -609,6 +628,7 @@ function getRouteMaps(): RouteObject[] {
       // sit behind ProtectedRoute. It only reads code/error from the query
       // and postMessages back to window.opener (see account-callback.tsx).
       path: ROUTES.AccountCallback,
+      handle: { private: true },
       lazy: () => import("./accounts/account-callback"),
     },
     // Onboard routes

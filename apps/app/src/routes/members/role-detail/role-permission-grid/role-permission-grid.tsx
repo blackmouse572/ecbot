@@ -5,6 +5,7 @@ import { type RoleGetResponseDto } from "@repo/client";
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { t } from "i18next";
 import { useMemo } from "react";
+import { ROLE_SUBJECTS } from "../../role-create/constants";
 
 type RolePermissionGridProps = {
   item: Pick<RoleGetResponseDto, "permissions">;
@@ -69,11 +70,14 @@ function useColumns() {
         accessorFn: (row) => row.subject,
         accessorKey: "subject",
         enableSorting: false,
-        header: "Subject",
+        header: t("roles.fields.subject"),
         cell: (row) => {
+          const subject = row.getValue() as string;
+          const known = ROLE_SUBJECTS.find((s) => s.value === subject);
+
           return (
             <div className="min-h-12 flex items-center">
-              <TextCell text={row.getValue() as string} />
+              <TextCell text={known ? t(known.labelKey) : subject} />
             </div>
           );
         },

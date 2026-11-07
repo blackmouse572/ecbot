@@ -1,6 +1,7 @@
 import "@/i18n";
 import { TooltipProvider } from "@medusajs/ui";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { ConversationListItem } from "./conversation-list-item";
@@ -8,6 +9,7 @@ import { ConversationListItem } from "./conversation-list-item";
 const renderRow = (
   handoffReason: string | null,
   chatbot?: { id?: string; name?: string },
+  unreadCount = 0,
 ) =>
   render(
     <TooltipProvider>
@@ -32,6 +34,7 @@ const renderRow = (
                     botEnabled: false,
                     handoffReason,
                     chatbot,
+                    unreadCount,
                   } as never
                 }
                 basePath="/acme/conversations"
@@ -68,6 +71,23 @@ describe("ConversationListItem", () => {
     expect(screen.getByText("Sales Bot").closest("a")).toHaveAttribute(
       "href",
       "/acme/chatbot/bot-1",
+    );
+  });
+
+  it("truncates a long handoff reason so the pill and unread count stay whole", async () => {
+    const reason =
+      "Khách hỏi về chính sách đổi trả cho đơn hàng đặt tuần trước và muốn gặp nhân viên";
+
+    renderRow(reason, undefined, 3);
+    const label = screen.getByText(reason);
+
+    expect(label).toHaveClass("min-w-0", "flex-1", "truncate");
+    expect(screen.getByText("3")).toHaveClass("ml-auto", "shrink-0");
+
+    // The full reason stays one hover away.
+    await userEvent.hover(label);
+    await waitFor(() =>
+      expect(screen.getAllByText(reason).length).toBeGreaterThan(1),
     );
   });
 });

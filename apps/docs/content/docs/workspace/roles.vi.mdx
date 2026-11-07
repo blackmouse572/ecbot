@@ -1,0 +1,52 @@
+---
+title: Vai trò và quyền hạn
+description: Vai trò quyết định mỗi thành viên được xem và thay đổi gì trong workspace. Xem quyền của Chủ sở hữu, Admin, Thành viên và tạo vai trò riêng.
+faq:
+  - q: Thành viên mới nhận vai trò gì?
+    a: Vai trò Thành viên, trừ khi chủ workspace chọn vai trò khác trong lời mời. Chủ workspace có thể đổi lại sau ở trang Đội ngũ.
+  - q: Admin có làm được mọi việc như chủ workspace không?
+    a: Gần như vậy. Chỉ chủ workspace mới quản lý vai trò, đổi vai trò của thành viên, xóa thành viên, duyệt yêu cầu tham gia, đổi gói và xóa workspace.
+  - q: Tôi có sửa được quyền của Admin hoặc Thành viên không?
+    a: Không sửa được trong ứng dụng. Thay vào đó, hãy tạo một vai trò với những phần bạn muốn và gán cho người cần.
+---
+
+Vai trò quyết định một thành viên được xem và thay đổi những gì trong workspace. Mỗi workspace có sẵn hai vai trò, **Admin** và **Thành viên**, còn người tạo workspace là chủ sở hữu. Chủ workspace có thể tạo thêm vai trò, ví dụ một vai trò cho nhân viên bán hàng.
+
+## Các vai trò có sẵn
+
+| Vai trò        | Ai có vai trò này                                       | Được làm gì                                                                                                                                                                       |
+| -------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Chủ sở hữu** | Người tạo workspace.                                    | Mọi việc, kể cả vai trò, thay đổi đội ngũ, thanh toán và xóa workspace.                                                                                                           |
+| **Admin**      | Thành viên được chủ workspace tin tưởng giao điều hành. | Quản lý agent, kiến thức, công cụ, kỹ năng, khách hàng và dữ liệu của khách, mức sử dụng, trang tổng quan và thông tin workspace. Mời thành viên và tạo [API key](/docs/dev/mcp). |
+| **Thành viên** | Mọi người còn lại, theo mặc định.                       | Quản lý agent, kiến thức và khách hàng. Xem công cụ và kỹ năng nhưng không sửa được.                                                                                              |
+
+Bộ chuyển workspace hiện vai trò của bạn dưới tên workspace đang mở. Trong danh sách **Đội ngũ**, Admin hiện là **Quản trị viên**.
+
+## Tạo vai trò
+
+<Screenshot
+  name="role-create"
+  alt="Biểu mẫu tạo vai trò với tên, mô tả và các phần vai trò được quản lý"
+>
+  <Mark id="name">
+    Đặt tên vai trò dễ hiểu với đội ngũ, ví dụ "Nhân viên bán hàng".
+  </Mark>
+  <Mark id="permissions">Đánh dấu từng phần vai trò được quản lý.</Mark>
+</Screenshot>
+
+1. Mở **Cài đặt workspace**, rồi **Vai trò**, và chọn **Tạo mới**.
+2. Nhập **Tên** và, nếu muốn, **Mô tả**.
+3. Đánh dấu các phần vai trò được quản lý:
+   - **Agent**: agent và hội thoại của chúng, kể cả trả lời khách;
+   - **Cơ sở kiến thức**: thêm và sửa mục kiến thức;
+   - **RAG**: tải lên và gỡ các tệp trong cơ sở kiến thức;
+   - **Khách hàng**: hồ sơ khách hàng và nhãn.
+4. Chọn **Tạo mới**.
+
+Mỗi phần được đánh dấu cho quyền đầy đủ với phần đó: xem, tạo, sửa và xóa. Để gán vai trò cho ai đó, mở **Đội ngũ**, chọn **Gán vai trò cho thành viên** ở dòng của họ và chọn vai trò (xem [Đội ngũ và lời mời](/docs/workspace/team)).
+
+Chọn một vai trò trong danh sách để xem chi tiết và bảng quyền của nó ở từng phần.
+
+## Ai quản lý vai trò
+
+Chỉ chủ workspace mới mở được **Vai trò**, tạo vai trò và gán vai trò. API key cũng theo vai trò: key làm được những gì vai trò của người tạo cho phép, nên đổi vai trò của ai đó cũng đổi luôn quyền của các key họ tạo.

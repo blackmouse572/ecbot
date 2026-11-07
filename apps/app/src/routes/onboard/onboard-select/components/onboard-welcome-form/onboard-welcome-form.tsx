@@ -1,3 +1,4 @@
+import { useTrackOnce } from "@/analytics/use-track-once";
 import { useLogout } from "@/hooks/api";
 import { useCreateWorkspace } from "@/hooks/api/workspace";
 import { readApiError } from "@/libs/api-error";
@@ -32,6 +33,7 @@ const slugOf = (res: unknown) =>
  */
 export const OnboardWelcomeForm: FC<Props> = ({ onStart }) => {
   const { t } = useTranslation();
+  useTrackOnce("onboarding_step_viewed", { step: "welcome" }, "welcome");
   const navigate = useNavigate();
   const logout = useLogout();
   const { mutateAsync: createWorkspace } = useCreateWorkspace();

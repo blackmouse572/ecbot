@@ -1,3 +1,4 @@
+import { useTrackOnce } from "@/analytics/use-track-once";
 import { AIChatCard } from "@/components/ai-chat/ai-chat-card";
 import { AIChatInput } from "@/components/ai-chat/ai-chat-input";
 import { TestChatNotice } from "@/components/ai-chat/test-chat-notice";
@@ -17,23 +18,50 @@ type Props = {
   extraInstructions: string;
   /** "Talk with {{name}}"'s name, computed once by the caller (agent-builder.tsx). */
   agentDisplayName: string;
+  /** Whether the panel is showing (it stays mounted while closed). */
+  open?: boolean;
 };
 
-export function TestPanel({ chatbotId, profile, extraInstructions, agentDisplayName }: Props) {
+export function TestPanel({
+  chatbotId,
+  profile,
+  extraInstructions,
+  agentDisplayName,
+  open = false,
+}: Props) {
   const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
   const token = useAuthToken();
-  const transport = useMemo(() => workspaceChatTransport(workspaceSlug, chatbotId), [workspaceSlug, chatbotId]);
-  const prompt = useMemo(() => (profile ? compilePrompt(profile, { extraInstructions }) : ""), [profile, extraInstructions]);
-  const tryAgentLabel = t("agentBuilder.ui.tryAgent", { name: agentDisplayName });
+  const transport = useMemo(
+    () => workspaceChatTransport(workspaceSlug, chatbotId),
+    [workspaceSlug, chatbotId],
+  );
+  const prompt = useMemo(
+    () => (profile ? compilePrompt(profile, { extraInstructions }) : ""),
+    [profile, extraInstructions],
+  );
+  const tryAgentLabel = t("agentBuilder.ui.tryAgent", {
+    name: agentDisplayName,
+  });
+  useTrackOnce(
+    open ? "onboarding_step_viewed" : null,
+    { step: "test_panel" },
+    "test_panel",
+  );
 
   return (
     <Tabs defaultValue="chat" className="flex h-full min-h-0 flex-col gap-3">
       <Tabs.List>
-        <Tabs.Trigger value="chat" className="min-w-0 max-w-[200px]" title={tryAgentLabel}>
+        <Tabs.Trigger
+          value="chat"
+          className="min-w-0 max-w-[200px]"
+          title={tryAgentLabel}
+        >
           <span className="truncate">{tryAgentLabel}</span>
         </Tabs.Trigger>
-        <Tabs.Trigger value="prompt">{t("agentBuilder.ui.promptTab")}</Tabs.Trigger>
+        <Tabs.Trigger value="prompt">
+          {t("agentBuilder.ui.promptTab")}
+        </Tabs.Trigger>
       </Tabs.List>
       <Tabs.Content value="chat" className="min-h-0 flex-1">
         <AIChatCard
@@ -49,7 +77,13 @@ export function TestPanel({ chatbotId, profile, extraInstructions, agentDisplayN
       </Tabs.Content>
       <Tabs.Content value="prompt" className="min-h-0 flex-1 overflow-hidden">
         <ScrollArea className="h-full">
-          {profile && <PromptSummary profile={profile} extraInstructions={extraInstructions} prompt={prompt} />}
+          {profile && (
+            <PromptSummary
+              profile={profile}
+              extraInstructions={extraInstructions}
+              prompt={prompt}
+            />
+          )}
         </ScrollArea>
       </Tabs.Content>
     </Tabs>

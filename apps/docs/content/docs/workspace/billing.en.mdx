@@ -1,0 +1,60 @@
+---
+title: Billing
+description: The Billing page in Workspace settings shows your plan and its renewal date, lets the owner change or cancel it, and lists payments with their invoices.
+faq:
+  - q: Who can change the plan?
+    a: Only the workspace owner. Other members see the current plan and a note naming the owner to ask.
+  - q: What happens when I cancel?
+    a: Your plan stays active until the end of the period you paid for. After that the workspace moves to the free plan, and agents that go over its limits stop answering.
+  - q: Is Billing in the self-hosted version?
+    a: No. Plans and payments are part of the hosted Ecbot at ecbot.dev. A self-hosted install has no plan limits.
+---
+
+Each workspace has its own plan. The **Billing** page in Workspace settings shows which plan the workspace is on, when it renews and how much of its quota is used. The owner changes or cancels the plan there, pays, and downloads an invoice for every payment.
+
+## Open Billing
+
+Open **Workspace settings** and choose **Billing**.
+
+<Screenshot
+  name="billing"
+  alt="The Billing page with the current plan and the payment history"
+>
+  <Mark id="plan">
+    The current plan, how much of its token quota and knowledge storage is used,
+    and when it renews or ends.
+  </Mark>
+  <Mark id="change">**Change plan** opens the list of plans.</Mark>
+  <Mark id="history">
+    **Payment history** lists every payment and its invoice.
+  </Mark>
+</Screenshot>
+
+## Change your plan
+
+Choose **Change plan** and pick a plan.
+
+- **Upgrade**: you move to the new plan right away. Today you pay only the difference for the rest of the current period.
+- **Downgrade**: you keep your current plan until the period ends, then switch.
+
+Before paying you see a summary with the price and how many tokens the plan includes each period. Choose how to pay, then **Continue to payment**. When the payment goes through you come back to Billing, and the new plan shows on the page.
+
+If the plan renews by itself with a saved card, **Change card** updates the card. If you paid once for the period, choose **Renew** to pay for the next one before it ends.
+
+## Cancel or resume
+
+Choose **Cancel subscription**, tell us why, then **Cancel at period end**. The plan stays active until its end date, and the page shows when it cancels. Changed your mind? Choose **Resume subscription** before that date.
+
+## Payments and invoices
+
+**Payment history** lists each payment with its date, what it was for (a subscription, a renewal, a plan change or a [token top-up](/docs/agents/usage)), the amount, a reference to quote if you contact support, and its status:
+
+| Status                  | Meaning                                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------ |
+| **Waiting for payment** | The payment was started but not finished. Choose **Pay now** to finish it.                             |
+| **Paid**                | The payment went through. Choose **Download invoice** for a copy when the payment provider issued one. |
+| **Failed**              | The card was declined or the payment session failed. Choose **Try again**.                             |
+| **Expired**             | The payment was not finished in time. Start it again from **Change plan**.                             |
+| **Refunded**            | The money was returned.                                                                                |
+
+Only the owner sees payments. To follow how many tokens your agents use, open [Usage](/docs/agents/usage).

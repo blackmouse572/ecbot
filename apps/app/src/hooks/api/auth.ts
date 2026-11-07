@@ -1,3 +1,4 @@
+import { analytics } from "@/analytics/analytics";
 import { logoutGuard, useAuth } from "@/modules/auth";
 import { useEndImpersonation, useImpersonation } from "@/modules/impersonation";
 import { useSetLastWorkspaceSlug } from "@/modules/workspace";
@@ -79,7 +80,10 @@ export const useSignUpWithEmailPass = (
         console.error("[useSignUpWithEmailPass] error: ", response.error);
         throw response.error;
       }
-      return (response.data as A)?.data?.userId;
+      const userId = (response.data as A)?.data?.userId as string | undefined;
+      // Joins what this person did before signing up to their account.
+      analytics.identify(userId);
+      return userId;
     },
     onSuccess: async (data, variables, context) => {
       options?.onSuccess?.(data, variables, context);
@@ -238,6 +242,7 @@ export const useLogout = () => {
       console.error("[useLogout] server logout failed: ", error);
     } finally {
       setAuth(null);
+      analytics.reset();
       setLastWorkspaceSlug(RESET);
       queryClient.cancelQueries();
       queryClient.invalidateQueries();

@@ -1553,6 +1553,7 @@
       "title": "Lời mời",
       "empty": "Lời mời bạn gửi từ trang Thành viên sẽ nằm ở đây cho tới khi được chấp nhận.",
       "emptyTitle": "Không có lời mời đang chờ",
+      "noReadPermission": "Bạn không thể xem lời mời trong workspace này. Hãy nhờ chủ workspace.",
       "defaultRole": "Member (mặc định)",
       "status": {
         "PENDING": "Đang chờ",
@@ -1569,7 +1570,8 @@
         "loading": "Đang phê duyệt yêu cầu...",
         "success": "Đã phê duyệt yêu cầu. Chào mừng thành viên mới!"
       },
-      "emptyTitle": "Không có yêu cầu tham gia đang chờ"
+      "emptyTitle": "Không có yêu cầu tham gia đang chờ",
+      "noReadPermission": "Bạn không thể xem yêu cầu tham gia trong workspace này. Hãy nhờ chủ workspace."
     },
     "list": {
       "noRecordsTitle": "Chưa có thành viên nào",
@@ -1581,13 +1583,19 @@
       "chatbot": "Agent",
       "rag": "RAG",
       "knowledgeBase": "Cơ sở kiến thức",
-      "customer": "Khách hàng"
+      "customer": "Khách hàng",
+      "skill": "Skills",
+      "tool": "Công cụ",
+      "customerData": "Dữ liệu khách hàng",
+      "member": "Đội ngũ",
+      "clientCredential": "API key",
+      "workspace": "Cài đặt workspace"
     },
     "title": "Vai trò",
     "description": "Quản lý vai trò và quyền hạn cho các thành viên",
     "fields": {
       "permissions": "Quyền hạn",
-      "subject": "Đối tượng"
+      "subject": "Khu vực"
     },
     "types": {
       "admin": "Quản trị viên",
@@ -1613,12 +1621,31 @@
     },
     "delete": {
       "title": "Xóa vai trò",
-      "description": "Bạn có chắc muốn xóa vai trò này? Thao tác này không thể hoàn tác."
+      "description": "Bạn có chắc muốn xóa vai trò này? Thao tác này không thể hoàn tác.",
+      "success": "Đã xóa vai trò",
+      "error": "Không thể xóa vai trò"
     },
     "list": {
       "noRecordsTitle": "Chưa có vai trò nào",
       "noRecordsMessage": "Vai trò quyết định mỗi thành viên được xem và chỉnh sửa những gì trong workspace.",
-      "createFirst": "Tạo vai trò"
+      "createFirst": "Tạo vai trò",
+      "noReadPermission": "Bạn không thể xem vai trò trong workspace này. Hãy nhờ chủ workspace."
+    },
+    "create": {
+      "namePlaceholder": "Ví dụ: Nhân viên bán hàng",
+      "descriptionPlaceholder": "Vai trò này dùng để làm gì"
+    },
+    "edit": {
+      "title": "Sửa vai trò",
+      "description": "Thay đổi những gì vai trò này được làm.",
+      "nameHint": "Không thể đổi tên vai trò sau khi đã tạo.",
+      "success": "Đã cập nhật vai trò",
+      "error": "Không thể cập nhật vai trò"
+    },
+    "access": {
+      "none": "Không có quyền",
+      "view": "Chỉ xem",
+      "full": "Toàn quyền"
     }
   },
   "profile": {
@@ -1699,6 +1726,16 @@
       "loading": "Đang chuẩn bị dữ liệu của bạn...",
       "success": "Đã tải xong dữ liệu của bạn.",
       "error": "Chưa thể chuẩn bị dữ liệu. Bạn vui lòng thử lại."
+    },
+    "edit": {
+      "title": "Sửa hồ sơ",
+      "success": "Đã cập nhật hồ sơ",
+      "error": "Không thể cập nhật hồ sơ của bạn"
+    },
+    "status": {
+      "ACTIVE": "Đang hoạt động",
+      "INACTIVE": "Ngừng hoạt động",
+      "BLOCKED": "Bị khóa"
     }
   },
   "changePassword": {
@@ -2285,8 +2322,8 @@
       "emptyMessage": "Hội thoại sẽ hiện ở đây khi khách hàng nhắn tin tới một kênh đã liên kết."
     },
     "status": {
-      "botActive": "Bot đang trả lời",
-      "needsYou": "Cần bạn xử lý",
+      "botActive": "Bot trả lời",
+      "needsYou": "Chờ bạn",
       "youHandling": "Bạn đang xử lý",
       "resolved": "Đã xử lý",
       "lifecycle": {
@@ -2401,6 +2438,9 @@
           "title": "Nhãn",
           "empty": "Chưa có nhãn",
           "add": "Thêm nhãn",
+          "searchPlaceholder": "Tìm nhãn…",
+          "noResults": "Không tìm thấy nhãn",
+          "create": "Tạo nhãn \"{{query}}\"",
           "remove": "Xoá",
           "emptyHint": "Chọn nhãn bên dưới để phân nhóm khách hàng này."
         },
@@ -2675,13 +2715,9 @@
       "keyIdHint": "Đây chỉ là mã công khai. Key đầy đủ chỉ hiện một lần, lúc bạn tạo key.",
       "noReadPermission": "Bạn không thể xem API key trong workspace này. Hãy nhờ chủ workspace hoặc admin."
     },
-    "backTo": "Quay lại {{name}}",
     "general": "Chung",
     "developers": "Nhà phát triển",
-    "workspaceHint": {
-      "text": "Bạn tìm thành viên hoặc API key?",
-      "link": "Cài đặt workspace"
-    }
+    "back": "Quay lại"
   },
   "tools": {
     "destructiveAction": "Có thể xóa dữ liệu",

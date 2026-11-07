@@ -28,7 +28,7 @@ export const RecentActivityListTable = () => {
   }
 
   return (
-    <Container className="divide-y p-0 pb-4">
+    <Container className="divide-y p-0 pb-4" data-private>
       <div className="flex items-center justify-between px-5 py-4">
         <Heading level="h2">{t("dashboard.recentActivities")}</Heading>
         <IconButton asChild variant="transparent">

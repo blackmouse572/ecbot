@@ -15,6 +15,7 @@ type Props = {
 };
 
 // One editable list of steps (the skill, or an If branch), with Add step.
+// A `.step-group`: its Add step brightens while the pointer or focus is in it.
 export const SkillStepList: FC<Props> = ({
   steps,
   listKey,
@@ -22,7 +23,7 @@ export const SkillStepList: FC<Props> = ({
   api,
   next,
 }) => (
-  <div className="flex flex-col gap-y-3">
+  <div className="step-group flex flex-col gap-y-3">
     {steps.map((step, i) => (
       <SkillStepItem
         key={step.id}
@@ -34,9 +35,11 @@ export const SkillStepList: FC<Props> = ({
         last={i === steps.length - 1}
       />
     ))}
-    <SkillAddStepMenu
-      canIf={depth < SKILL_STEP_MAX_DEPTH}
-      onAdd={(type) => api.add(listKey, type)}
-    />
+    <div className="-mt-1">
+      <SkillAddStepMenu
+        canIf={depth < SKILL_STEP_MAX_DEPTH}
+        onAdd={(type) => api.add(listKey, type)}
+      />
+    </div>
   </div>
 );
