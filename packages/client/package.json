@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node init && tsc --watch",
-    "build": "node init && tsc"
+    "dev": "tsc --watch",
+    "build": "tsc"
   },
   "exports": {
     ".": {

@@ -9,6 +9,8 @@ node_modules
 .pnp.js
 
 # Local env files
+.env
+.env.local
 .env.development.local
 .env.test.local
 .env.production.local
@@ -117,4 +119,3 @@ apps/*/wrangler.json
 
 # SDD scratch workspaces (superpowers:subagent-driven-development)
 .superpowers/
-config.bat

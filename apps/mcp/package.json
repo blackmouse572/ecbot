@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node init && wrangler dev --env-file .env",
+    "dev": "wrangler dev --env-file .env",
     "deploy": "wrangler deploy",
     "test": "vitest run",
     "check-types": "tsc --noEmit",
