@@ -44,7 +44,7 @@ Values come from `@medusajs/ui-preset`; the full list (90 colours) is in `src/th
 | `bg-overlay`      | `#18181b66` | `#18181bb8` | Scrim behind FocusModal, Drawer, Prompt.                                  |
 | `bg-disabled`     | `#f4f4f5`   | `#27272a`   | Disabled controls.                                                        |
 | `fg-base`         | `#18181b`   | `#f4f4f5`   | Content text and titles.                                                  |
-| `fg-subtle`       | `#52525b`   | `#a1a1aa`   | Labels, secondary text (7:1 or better in both themes).                    |
+| `fg-subtle`       | `#52525b`   | `#a1a1aa`   | Labels, secondary text (6.3:1 or better in both themes).                  |
 | `fg-muted`        | `#71717a`   | `#71717a`   | Placeholders and non-essential hints only (3.3:1 on dark `bg-base`).      |
 | `fg-disabled`     | `#a1a1aa`   | `#52525b`   | Text on disabled controls.                                                |
 | `fg-interactive`  | `#3b82f6`   | `#60a5fa`   | Links and inline actions. 3.7:1 on white: use weight 500 or an underline. |
@@ -73,7 +73,7 @@ Values come from `@medusajs/ui-preset`; the full list (90 colours) is in `src/th
 
   Each ramp has `-bg`, `-text`, `-icon`, `-border`. Always pair a state colour with a word or icon; colour is never the only signal.
 
-- **Charts** use `--chart-1` to `--chart-5` from `apps/app/src/index.css` (`chart-1` follows `bg-interactive`). Channel series may use the channel brand tints (Messenger `oklch(56% 0.18 260)`, Instagram `oklch(64% 0.2 25)`, TikTok `oklch(60% 0.08 340)`, Shopee `oklch(66% 0.2 38)`, Zalo `oklch(60% 0.18 240)`), for charts and legends only.
+- **Charts** use `--chart-1` to `--chart-5` from `apps/app/src/index.css` (`chart-1` follows `bg-interactive`). No per-channel chart colours exist yet; add them to `index.css` as tokens before a chart needs one, never inline.
 
 ### Dark mode
 
@@ -81,7 +81,7 @@ Dark is the `.dark` class on `<html>`, set by `ThemeProvider` (`@custom-variant 
 
 ## 4. Typography
 
-- **Inter** for UI, **Geist Mono** for IDs, keys and code (`--font-sans`, `--font-mono` in `apps/app/src/index.css`).
+- Intended faces: **Inter** for UI, **Geist Mono** for IDs, keys and code (`--font-sans`, `--font-mono` in `apps/app/src/index.css`). Today `apps/app` only names them and never loads them (only `apps/docs` does), so the SPA renders in the system font until the fonts are loaded. The preset's `code-label` / `code-paragraph` classes set Roboto Mono; add `font-mono` to get Geist Mono.
 - Set text with `Text` and `Heading` from `@medusajs/ui`; they emit the classes below. Don't use raw `text-xs` / `text-sm`: they drop the 20px line height and crowd Vietnamese diacritics.
 - `txt-compact-*` (20px line) is for single-line UI: cells, buttons, labels. `txt-*` (taller line) is for anything that wraps: descriptions, help text, chat bubbles.
 - Weights stop at 500 (`-plus`). No bold body text, no italic emphasis (diacritics suffer).
@@ -101,7 +101,7 @@ Dark is the `.dark` class on `<html>`, set by `ThemeProvider` (`@custom-variant 
 | `txt-small`                 | 13 / 20.8px | 400       | Multi-line body: descriptions, hints, empty states.   |
 | `txt-medium`                | 14 / 22.4px | 400       | Long-form: chat bubbles, skill instructions.          |
 | `txt-large`                 | 16 / 25.6px | 400       | Onboarding lead paragraphs.                           |
-| `code-label`                | 12 / 15px   | 400       | Inline IDs and keys (`DisplayId`).                    |
+| `code-label`                | 12 / 15px   | 400       | Inline IDs and keys, with `font-mono`.                |
 | `code-paragraph`            | 12 / 19.2px | 400       | Code blocks, webhook payloads.                        |
 
 ## 5. Spacing, radius, shadows
@@ -179,19 +179,21 @@ Any z-indexed region inside the app shell gets `isolate` (its own stacking conte
 
 ### Lists and tables
 
-- Use the data table from `@repo/ui/table`. Cells are `txt-compact-small`; IDs are `DisplayId` in mono; counts and money are `tabular-nums` and right-aligned.
+- Use the data table from `@repo/ui/table`. Cells are `txt-compact-small`; IDs use `code-label font-mono`; counts and money are `tabular-nums` and right-aligned.
 - Row state is a `StatusBadge`. Bulk actions go in Medusa's `CommandBar`.
 - Show `NoRecords` when nothing exists yet and `NoResults` when a filter matches nothing.
 
 ### Create = FocusModal
 
-Creating a resource (chatbot, skill, tool, knowledge item, clone) opens a full-screen **`RouteFocusModal`** on its own route, such as `/:slug/chatbot/create`. Also use one for edits that need a wide editor, such as skill steps.
+Creating a resource (chatbot, skill, tool, knowledge item, clone) opens a full-screen **`RouteFocusModal`** on its own route, such as `/:workspaceSlug/chatbot/create`. Also use one for edits that need a wide editor, such as skill steps.
 
 - **Header**: close button and `esc` only. The title lives in the body.
 - **Body**: one centred column, `max-w-[720px]`, `gap-y-6` to `gap-y-8`, padding `px-6 py-10`. It starts with `Heading` and one `fg-subtle` sentence, then the fields (`gap-y-4`).
 - **Footer**: right-aligned, `gap-x-2`. Cancel (`secondary`, small, inside `RouteFocusModal.Close`), then the create action (`primary`, small, `type="submit"`, `isLoading`). The create button names the thing it creates: "Tạo trợ lý", not "Lưu".
 - **On success**: `toast.success`, then `handleSuccess()` from `useRouteModal()`, or `handleSuccess(path)` to land on the new resource.
 - A flow that must not close on a stray Escape calls `setCloseOnEscape(false)`. A dialog opened from inside uses `StackedFocusModal` / `StackedDrawer`.
+
+The shape to follow (the existing `skill-create` predates it and differs in details):
 
 ```tsx
 <RouteFocusModal>
@@ -212,7 +214,7 @@ Creating a resource (chatbot, skill, tool, knowledge item, clone) opens a full-s
             </Button>
           </RouteFocusModal.Close>
           <Button size="small" type="submit" isLoading={isPending}>
-            {t("skills.create.submit")}
+            {t("actions.create")}
           </Button>
         </div>
       </RouteFocusModal.Footer>
@@ -223,7 +225,7 @@ Creating a resource (chatbot, skill, tool, knowledge item, clone) opens a full-s
 
 ### Edit = Drawer
 
-Editing an existing resource's fields (profile, workspace, customer, tag, a chatbot settings section) opens a **`RouteDrawer`** from the right on its own route, such as `/profile/edit`, with the detail page still visible behind it. This fits short forms, up to about eight fields in the 560px column.
+Editing an existing resource's fields (profile, workspace, customer, tag, a chatbot settings section) opens a **`RouteDrawer`** from the right on its own route, such as `/settings/profile/edit`, with the detail page still visible behind it. This fits short forms, up to about eight fields in the 560px column.
 
 - **Header**: `RouteDrawer.Title asChild` around `Heading`, plus a `RouteDrawer.Description` (it can be `sr-only`).
 - **Body**: `flex flex-1 flex-col gap-y-4 overflow-y-auto`. While the record loads, render the header and a `FormSkeleton` so the drawer opens at once. Render the form only after the data arrives, with `defaultValues` from the record.
@@ -252,7 +254,7 @@ Reference implementations: `routes/profile/profile-edit`, `routes/workspace/work
 ### Conversations
 
 - An inbox row shows the channel logo, the customer name (`txt-compact-small-plus`), a one-line preview (`txt-compact-small`, `fg-subtle`, truncated) and a status pill that stays on one line ("Chờ bạn", "Bot trả lời").
-- Chat bubbles use `txt-medium`. Customer bubbles sit on `bg-component`; bot and staff bubbles on `bg-base` with `shadow-borders-base`.
+- Chat bubbles are a **deliberate exception** to the token-only rule: `apps/app/src/styles/chat-bubble.css` (`chat-bubble` plus `--customer`, `--bot` or `--operator`) draws them as gradients with their own shadows and 14px / 1.625 text, and re-points the `fg`/`bg`/`border` tokens inside coloured bubbles so markdown stays readable. Customer is a soft neutral, the bot is blue, staff is dark neutral so a staff reply never reads as the bot. Change bubbles only in that file.
 
 ### Channels
 
@@ -260,14 +262,14 @@ Reference implementations: `routes/profile/profile-edit`, `routes/workspace/work
 
 ## 10. States
 
-| State           | How                                                                                                                           |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Hover / pressed | The surface's `-hover` / `-pressed` token (`bg-ui-bg-base-hover`). Gate hover-only effects with `@media (hover: hover)`.      |
-| Focus           | Medusa primitives carry their own `*-focus` shadow; custom focusables use `shadow-borders-focus`. Never remove focus styling. |
-| Disabled        | `bg-disabled` + `fg-disabled`, plus a `ConditionalTooltip` saying why.                                                        |
-| Loading         | Button `isLoading`; sections use `Skeleton` in the shape of the content.                                                      |
-| Empty           | `NoRecords` with one action.                                                                                                  |
-| Error           | Field: `fg-error` text + `shadow-borders-error`. Page: `Alert variant="error"`. Mutation: `toast.error`.                      |
+| State           | How                                                                                                                                          |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hover / pressed | The surface's `-hover` / `-pressed` token (`bg-ui-bg-base-hover`). Gate hover-only effects with `@media (hover: hover) and (pointer: fine)`. |
+| Focus           | Medusa primitives carry their own `*-focus` shadow; custom focusables use `shadow-borders-focus`. Never remove focus styling.                |
+| Disabled        | `bg-disabled` + `fg-disabled`, plus a `ConditionalTooltip` saying why.                                                                       |
+| Loading         | Button `isLoading`; sections use `Skeleton` in the shape of the content.                                                                     |
+| Empty           | `NoRecords` with one action.                                                                                                                 |
+| Error           | Field: `fg-error` text + `shadow-borders-error`. Page: `Alert variant="error"`. Mutation: `toast.error`.                                     |
 
 ## 11. Checklist before you open a UI PR
 

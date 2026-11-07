@@ -62,7 +62,7 @@ Invoke the `eccho-frontend` skill before writing code.
 </important>
 
 <important if="you are designing or building UI (screens, components, forms, overlays, copy) in apps/app or packages/ui">
-Follow `DESIGN.md`: tokens, type scale, component rules, and the create (FocusModal) and edit (Drawer) patterns.
+Follow `DESIGN.md`: tokens, type scale, component rules, and the create (FocusModal) and edit (Drawer) patterns. `DESIGN.md` is authoritative for tokens, type, components and patterns; `eccho-frontend/references/design-system.md` stays the source for library picks and motion values. Where they disagree, `DESIGN.md` wins.
 </important>
 
 <important if="you are adding or changing a chat channel (Messenger, Instagram, WhatsApp, Threads, Zalo, TikTok, Shopee, Telegram, API channel, website widget)">
