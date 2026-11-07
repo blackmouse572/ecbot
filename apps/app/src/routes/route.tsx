@@ -520,10 +520,8 @@ function getRouteMaps(): RouteObject[] {
               children: [
                 {
                   index: true,
-                  loader: (params) =>
-                    import("./members/role-list").then((res) =>
-                      res.roleListLoader(params),
-                    ),
+                  // No loader: the list is owner-only, so the page checks
+                  // the ability before it fetches.
                   lazy: () => import("./members/role-list"),
                 },
                 {

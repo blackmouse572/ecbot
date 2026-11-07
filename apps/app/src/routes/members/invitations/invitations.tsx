@@ -4,6 +4,9 @@ import {
   useUpdateInvitationRole,
 } from "@/hooks/api/invitations";
 import { useWorkspaceRoles } from "@/hooks/api/workspace-roles";
+import { useIsWorkspaceOwner } from "@/hooks/use-is-workspace-owner";
+import { NoPermissionState } from "@/components/common/no-permission-state";
+import { readListAccess } from "@/libs/permission-error";
 import { Trash } from "@medusajs/icons";
 import {
   Badge,
@@ -23,13 +26,18 @@ import { MemberInviteDialog } from "../members-list/components/member-invite-dia
 export const Invitations = () => {
   const { t } = useTranslation();
   const [isInviteOpen, setInviteOpen] = useState(false);
-  const { invitations, isLoading, isError, error } = useInvitations({
-    orderBy: "createdAt",
-    orderDirection: "desc",
-    page: 1,
-    perPage: 100,
-  });
-  const { roles } = useWorkspaceRoles({ perPage: 100 });
+  // Both lists are owner-only in the API (WorkspaceOwnerProtected).
+  const { isOwner, isPending: isCheckingOwner } = useIsWorkspaceOwner();
+  const { invitations, isLoading, isError, error } = useInvitations(
+    {
+      orderBy: "createdAt",
+      orderDirection: "desc",
+      page: 1,
+      perPage: 100,
+    },
+    { enabled: isOwner },
+  );
+  const { roles } = useWorkspaceRoles({ perPage: 100 }, { enabled: isOwner });
   const { mutateAsync: updateRole } = useUpdateInvitationRole();
   const { mutateAsync: revokeInvitation } = useRevokeInvitation();
 
@@ -47,14 +55,25 @@ export const Invitations = () => {
       error: t("errorBoundary.internalServerErrorMessage"),
     });
 
-  if (isError) throw error;
+  const { denied, shouldThrow } = readListAccess({
+    allowed: isOwner || isCheckingOwner,
+    isError,
+    error,
+  });
+  if (shouldThrow) throw error;
   return (
     <SingleColumnPage>
       <Container className="divide-y p-0">
         <div className="flex items-center justify-between px-6 py-4">
           <Text weight="plus">{t("members.invitations.title")}</Text>
         </div>
-        {isLoading ? (
+        {denied ? (
+          <NoPermissionState
+            icon={<IconMail />}
+            message={t("members.invitations.noReadPermission")}
+            data-testid="invitations-no-access"
+          />
+        ) : isCheckingOwner || isLoading ? (
           <ListSkeleton label={t("general.loading")} className="px-6 py-4" />
         ) : invitations && invitations.length > 0 ? (
           invitations.map((invitation) => (
