@@ -84,3 +84,44 @@ describe("vi coverage", () => {
     expect(missing).toEqual([]);
   });
 });
+
+// QA gate run 6 (D9, D12): plain invite copy and real status words.
+describe("invite and workspace copy", () => {
+  it.each([
+    ["en", "Invitation sent to lan@example.com."],
+    ["vi", "Đã gửi lời mời tới lan@example.com."],
+  ])("%s invite toast names the invitee", (lng, expected) => {
+    expect(
+      i18n.t("members.inviteMember.success", {
+        lng,
+        email: "lan@example.com",
+      }),
+    ).toBe(expected);
+  });
+
+  it.each(["PENDING", "ACCEPTED", "REVOKED", "EXPIRED"])(
+    "has en and vi text for the %s invitation status",
+    (status) => {
+      for (const lng of ["en", "vi"]) {
+        const key = `members.invitations.status.${status}`;
+        expect(i18n.t(key, { lng })).not.toBe(key);
+      }
+    },
+  );
+
+  it("titles the create-workspace dialog as a workspace, not an account", () => {
+    expect(i18n.t("onboard.create.title", { lng: "en" })).toBe(
+      "Create workspace",
+    );
+    expect(i18n.t("onboard.create.description", { lng: "en" })).toBe(
+      "Create a new workspace",
+    );
+    expect(i18n.t("onboard.create.title", { lng: "vi" })).toBe(
+      "Tạo không gian làm việc",
+    );
+    // The platform-account screen keeps its own title.
+    expect(i18n.t("accounts.create.title", { lng: "en" })).toBe(
+      "Create Account",
+    );
+  });
+});

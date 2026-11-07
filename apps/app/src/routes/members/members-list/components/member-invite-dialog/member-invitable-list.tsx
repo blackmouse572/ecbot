@@ -18,14 +18,25 @@ const looksLikeEmail = (value?: string) =>
 type MemberInvitableListProps = {
   enabled?: boolean;
   search?: string;
+  /** Role every invite from this list carries. */
+  roleId?: string;
+  /** Called after an invite goes out, so the dialog can clear its search. */
+  onInvited?: () => void;
 };
 
 export function MemberInvitableList({
   enabled,
   search,
+  roleId,
+  onInvited,
 }: MemberInvitableListProps) {
   const { t } = useTranslation();
-  const { users, isLoading, isFetching } = useInvitableUsers(
+  const hasSearch = !!search?.trim();
+  const {
+    users: results,
+    isLoading,
+    isFetching,
+  } = useInvitableUsers(
     {
       orderBy: "createdAt",
       orderDirection: "desc",
@@ -34,7 +45,8 @@ export function MemberInvitableList({
       search,
     },
     {
-      enabled,
+      // Nothing is suggested until the owner types.
+      enabled: enabled && hasSearch,
     },
   );
   const inviteUser = useInviteUser();
@@ -44,8 +56,12 @@ export function MemberInvitableList({
   const invite = async (invitedEmail: string) => {
     const id = toast.loading(t("members.inviteMember.loading"));
     try {
-      await inviteUser.mutateAsync({ invitedEmail });
-      toast.success(t("members.inviteMember.success"), { id });
+      await inviteUser.mutateAsync({ invitedEmail, roleId });
+      toast.success(
+        t("members.inviteMember.success", { email: invitedEmail }),
+        { id },
+      );
+      onInvited?.();
     } catch (error) {
       toast.error(
         readApiError(error).message ??
@@ -55,11 +71,16 @@ export function MemberInvitableList({
     }
   };
 
-  const isBusy = isLoading || isFetching;
-  const offerTypedEmail = users?.length === 0 && looksLikeEmail(search);
+  const users = hasSearch ? results : [];
+  const isBusy = hasSearch && (isLoading || isFetching);
+  const isEmail = looksLikeEmail(search);
+  const offerTypedEmail = users?.length === 0 && isEmail;
+  const hasRows = isBusy || !!users?.length || offerTypedEmail;
 
   return (
-    <CommandGroup heading={t("members.inviteMember.searchResults")}>
+    <CommandGroup
+      heading={hasRows ? t("members.inviteMember.searchResults") : undefined}
+    >
       {isBusy &&
         Array.from({ length: CANDIDATES_PER_PAGE }).map((_, index) => (
           <InviteItemSkeleton key={index} />

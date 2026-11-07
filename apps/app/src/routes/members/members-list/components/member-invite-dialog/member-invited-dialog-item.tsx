@@ -1,12 +1,10 @@
 import { getAvatarFallback } from "@/components/utils/avatar-fallback";
-import { useWorkspaceRoles } from "@/hooks/api/workspace-roles";
 import { Trash } from "@medusajs/icons";
-import { Avatar, clx, IconButton, Select } from "@medusajs/ui";
+import { Avatar, clx, IconButton } from "@medusajs/ui";
 import type { InvitationListResponseDto } from "@repo/client";
 import { CommandItem } from "@repo/ui/components";
 import { IconLink } from "@tabler/icons-react";
-
-const ROLE_OPTIONS_PER_PAGE = 100;
+import { InvitationRoleSelect } from "../../../components/invitation-role-select";
 
 export type Invitation = Pick<
   InvitationListResponseDto,
@@ -29,8 +27,6 @@ export function InvitedMemberItem({
   onRevoke,
   ...rest
 }: InvitedMemberItemProps) {
-  const { roles } = useWorkspaceRoles({ perPage: ROLE_OPTIONS_PER_PAGE });
-
   if (!invitation) {
     return null;
   }
@@ -62,21 +58,11 @@ export function InvitedMemberItem({
         >
           <Trash className="shrink-0" />
         </IconButton>
-        <Select
-          defaultValue={invitation.role}
+        <InvitationRoleSelect
+          className="w-[170px]"
+          value={invitation.role}
           onValueChange={(role) => onUpdateRole?.(invitation, role)}
-        >
-          <Select.Trigger className="w-[100px] [&>span]:truncate">
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Content>
-            {roles?.map((role) => (
-              <Select.Item key={role.id} value={role.id} textValue={role.name}>
-                {role.name}
-              </Select.Item>
-            ))}
-          </Select.Content>
-        </Select>
+        />
       </div>
     </CommandItem>
   );

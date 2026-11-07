@@ -35,6 +35,10 @@ describe('InvitationWorkspaceController', () => {
         }),
     };
     const mockActivityService = { createByUserWithWorkspace: jest.fn() };
+    const mockRoleService = {
+        findOne: jest.fn(),
+        isWorkspaceOwnerRole: jest.fn(),
+    };
 
     const workspace = { id: randomUUID() } as any;
     const user = { id: 'user-1', email: 'op@acme.test' } as any;
@@ -55,7 +59,8 @@ describe('InvitationWorkspaceController', () => {
             mockPaginationService as any,
             mockJwtService as any,
             mockConfigService as any,
-            mockActivityService as any
+            mockActivityService as any,
+            mockRoleService as any
         );
     });
 
@@ -125,8 +130,46 @@ describe('InvitationWorkspaceController', () => {
             ).rejects.toThrow(ConflictException);
         });
 
+        it('refuses a role from outside this workspace', async () => {
+            mockInvitationService.findOneById.mockResolvedValue(inWorkspace());
+            mockRoleService.findOne.mockResolvedValue(null);
+
+            await expect(
+                controller.updateInvitationRole(
+                    workspace,
+                    'x',
+                    { roleId: 'foreign' } as any,
+                    user
+                )
+            ).rejects.toThrow(NotFoundException);
+            expect(mockRoleService.findOne).toHaveBeenCalledWith({
+                id: 'foreign',
+                workspace: workspace.id,
+                isActive: true,
+            });
+            expect(mockInvitationService.updateRole).not.toHaveBeenCalled();
+        });
+
+        it('refuses the Owner role', async () => {
+            mockInvitationService.findOneById.mockResolvedValue(inWorkspace());
+            mockRoleService.findOne.mockResolvedValue({ id: 'owner' });
+            mockRoleService.isWorkspaceOwnerRole.mockResolvedValue(true);
+
+            await expect(
+                controller.updateInvitationRole(
+                    workspace,
+                    'x',
+                    { roleId: 'owner' } as any,
+                    user
+                )
+            ).rejects.toThrow(NotFoundException);
+            expect(mockInvitationService.updateRole).not.toHaveBeenCalled();
+        });
+
         it('updates the role of a PENDING invitation', async () => {
             mockInvitationService.findOneById.mockResolvedValue(inWorkspace());
+            mockRoleService.findOne.mockResolvedValue({ id: 'r' });
+            mockRoleService.isWorkspaceOwnerRole.mockResolvedValue(false);
             mockInvitationService.updateRole.mockResolvedValue({ id: 'i' });
             mockInvitationService.mapDetail.mockResolvedValue({ id: 'i' });
 

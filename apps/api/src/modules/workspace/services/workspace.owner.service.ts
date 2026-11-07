@@ -30,6 +30,7 @@ import { plainToInstance } from 'class-transformer';
 import { toWorkspaceSlug } from '@app/modules/workspace/utils/workspace-slug.util';
 import { RoleService } from 'src/modules/role/services/role.service';
 import {
+    WORKSPACE_DEFAULT_MEMBER_ROLE_NAME,
     WORKSPACE_DEFAULT_MEMBER_ROLES,
     WORKSPACE_INVITATION_CODE_LENGTH,
     WORKSPACE_SLUG_PATTERN,
@@ -52,6 +53,7 @@ import { WorkspaceMemberRepository } from '../repository/repositories/workspace-
 import { WorkSpaceRepository } from '../repository/repositories/workspace.repository';
 import { WorkspaceMemberService } from './workspace.member.service';
 import { WorkspaceSeatQuotaService } from './workspace-seat-quota.service';
+import { defaultMemberRoleMissingException } from '../utils/default-member-role-missing.util';
 import { KnowledgeBaseService } from '@app/modules/knowledge-base/services/knowledge-base.service';
 import { ENUM_MESSAGE_LANGUAGE } from 'src/common/message/enums/message.enum';
 import { CUSTOMER_TAG_DEFAULTS } from '@app/modules/customer/constants/customer-tag.seed.constant';
@@ -223,6 +225,45 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
                 invitedEmail
             );
 
+        if (existingInvitation && existingInvitation.expiresAt <= new Date()) {
+            // Expired but still PENDING (nothing marks it EXPIRED): re-sign
+            // the same invitation so the invitee gets a link that works.
+            const token = this.jwtService.sign(
+                {
+                    ownerId,
+                    workspaceId: workspace.id,
+                    invitedEmail: existingInvitation.inviteeEmail,
+                    roleId: existingInvitation.role?.id,
+                } satisfies InvitationLinkPayload,
+                {
+                    privateKey: this.invitationTokenSecret,
+                    expiresIn: this.invitationTokenExpired,
+                    algorithm: 'HS256',
+                }
+            );
+
+            const expiresAt = new Date(
+                Date.now() + this.parseExpiration(this.invitationTokenExpired)
+            );
+
+            const invitationLink = buildInvitationLink(url, token);
+
+            await this.invitationService.regenerateToken(
+                existingInvitation.id,
+                token,
+                expiresAt,
+                invitationLink
+            );
+
+            return {
+                invitationLink,
+                token,
+                expiresAt,
+                workspaceId: workspace.id,
+                invitationId: existingInvitation.id,
+            };
+        }
+
         if (existingInvitation) {
             // Rebuild the link from the configured url + the stored token —
             // never trust the persisted invitationLink column. Pre-fix rows
@@ -275,7 +316,11 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
                 workspace: workspace.id,
                 isActive: true,
                 type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
+                name: WORKSPACE_DEFAULT_MEMBER_ROLE_NAME,
             });
+            if (!role) {
+                throw defaultMemberRoleMissingException();
+            }
         }
 
         const payload: InvitationLinkPayload = {
@@ -631,8 +676,12 @@ export class WorkspaceOwnerService implements IWorkspaceOwnerService {
         const memberRole = await this.roleService.findOne({
             workspace: workspace.id,
             type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
+            name: WORKSPACE_DEFAULT_MEMBER_ROLE_NAME,
             isActive: true,
         });
+        if (!memberRole) {
+            throw defaultMemberRoleMissingException();
+        }
         await this.createActiveMembership(
             workspace,
             userId,

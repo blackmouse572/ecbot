@@ -375,12 +375,16 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
             options
         );
 
-        // Assign role if provided by creating WorkspaceMember entry
-        if (payload.roleId) {
+        // The invitation row's role is the one to grant: it is set when the
+        // invite is sent and changes when an owner edits it on the
+        // Invitations page. The token's roleId is frozen at send time, so it
+        // would ignore that edit. No role: the caller falls back to Member.
+        const roleId = invitation.role?.id;
+        if (roleId) {
             await this.assignRoleToMember(
                 payload.workspaceId,
                 userId,
-                payload.roleId,
+                roleId,
                 options
             );
         }
@@ -388,10 +392,7 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
         // Mark invitation as accepted
         await this.invitationService.accept(invitation.id, userId, options);
 
-        return {
-            workspace,
-            roleId: payload.roleId,
-        };
+        return { workspace, roleId };
     }
 
     async getUserIdsFromWorkspaceMembers(

@@ -1,5 +1,5 @@
 import { useWorkspace } from "@/hooks/api";
-import { Button, IconButton, Prompt, toast } from "@medusajs/ui";
+import { IconButton, Kbd, Prompt, toast } from "@medusajs/ui";
 import {
   Command,
   CommandEmpty,
@@ -11,6 +11,7 @@ import { t } from "i18next";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { useCopyToClipboard, useDebounceValue } from "usehooks-ts";
+import { useInvitableRoles } from "../../../hooks/use-invitable-roles";
 import { MemberInvitableList } from "./member-invitable-list";
 import { MemberInvitedList } from "./member-invited-list";
 
@@ -25,6 +26,8 @@ export const MemberInviteDialog = (
   const [, copyToClipboard] = useCopyToClipboard();
   const [justCopied, setJustCopied] = useState(false);
   const { workspace } = useWorkspace();
+  // New invites go out as Member; the role is changed on the invited row.
+  const { defaultRoleId } = useInvitableRoles();
 
   const isOpen = props.open === true;
   const invitationCode = workspace?.invitationCode;
@@ -76,7 +79,12 @@ export const MemberInviteDialog = (
             onValueChange={setQuery}
           />
           <CommandList>
-            <MemberInvitableList enabled={isOpen} search={debouncedQuery} />
+            <MemberInvitableList
+              enabled={isOpen}
+              search={debouncedQuery}
+              roleId={defaultRoleId}
+              onInvited={() => setQuery("")}
+            />
             <MemberInvitedList enabled={isOpen} search={debouncedQuery} />
             <CommandEmpty className="py-6 text-sm text-ui-fg-muted flex items-center justify-center w-full">
               {t("general.noResultsMessage")}
@@ -84,11 +92,17 @@ export const MemberInviteDialog = (
           </CommandList>
         </Command>
         <Prompt.Footer className="py-2 px-4 border-t bg-ui-bg-component flex-wrap items-center justify-between gap-2">
-          <Prompt.Cancel asChild>
-            <Button size="small" variant="secondary">
-              {t("actions.close")}
-            </Button>
-          </Prompt.Cancel>
+          <div className="flex items-center gap-x-3 text-ui-fg-muted text-xs">
+            <span className="flex items-center gap-x-1">
+              <Kbd>esc</Kbd>
+              {t("members.inviteMember.keyHints.close")}
+            </span>
+            <span className="flex items-center gap-x-1">
+              <Kbd>↑</Kbd>
+              <Kbd>↓</Kbd>
+              {t("members.inviteMember.keyHints.move")}
+            </span>
+          </div>
           <div className="flex items-center gap-x-2">
             <p className="text-ui-fg-muted text-xs">
               {t("members.inviteMember.inviteCode.title")}:
@@ -97,6 +111,7 @@ export const MemberInviteDialog = (
             <IconButton
               size="small"
               variant="transparent"
+              aria-label={t("members.inviteMember.inviteCode.copy")}
               onClick={copyInvitationCode}
               className={justCopied ? "text-ui-tag-green-icon" : ""}
             >
