@@ -92,9 +92,8 @@ export class UserSharedController {
         // client-controlled `originalname` — same scheme as
         // UserService#createRandomFilenamePhoto (the presign path).
         const extension =
-            EXTENSION_BY_MIME_IMAGE[
-                image.mimetype as ENUM_FILE_MIME_IMAGE
-            ] ?? 'jpg';
+            EXTENSION_BY_MIME_IMAGE[image.mimetype as ENUM_FILE_MIME_IMAGE] ??
+            'jpg';
         const key = `user/${userId}/${randomUUID()}.${extension}`;
         const uploaded = await this.awsS3Service.putItem({
             key,
@@ -176,15 +175,12 @@ export class UserSharedController {
         await session.begin();
 
         try {
-            let avatarUrl = body.avatar;
+            // An edit without a new avatar keeps the current one.
+            const data: UserUpdateProfileRequestDto = { country, ...body };
             if (image) {
-                avatarUrl = await this.uploadAvatarImage(image, user.id);
+                data.avatar = await this.uploadAvatarImage(image, user.id);
             }
-            await this.userService.updateProfile(
-                user,
-                { country, ...body, avatar: avatarUrl },
-                { em: session }
-            );
+            await this.userService.updateProfile(user, data, { em: session });
 
             await this.activityService.createByUser(
                 user,

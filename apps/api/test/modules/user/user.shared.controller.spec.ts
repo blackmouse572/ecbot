@@ -123,11 +123,21 @@ describe('UserSharedController — avatar upload hardening (Task 14)', () => {
             expect(mockAwsS3Service.putItem).toHaveBeenCalledTimes(1);
             const call = mockAwsS3Service.putItem.mock.calls[0][0];
 
-            expect(call.key).toMatch(
-                /^user\/user-1\/[0-9a-f-]{36}\.png$/
-            );
+            expect(call.key).toMatch(/^user\/user-1\/[0-9a-f-]{36}\.png$/);
             expect(call.key).not.toContain('evil');
             expect(call.key).not.toContain('originalname');
+        });
+
+        it('keeps the current avatar when the edit sends no avatar or image', async () => {
+            await controller.updateProfile(
+                user,
+                { name: 'Lan', country: 'vn' } as any,
+                undefined
+            );
+
+            const data = mockUserService.updateProfile.mock.calls[0][1];
+            expect(data).toEqual({ name: 'Lan', country: 'vn' });
+            expect('avatar' in data).toBe(false);
         });
     });
 });

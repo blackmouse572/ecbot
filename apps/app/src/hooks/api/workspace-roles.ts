@@ -1,12 +1,15 @@
 import { queryKeysFactory } from "@/libs/query-factory";
 import {
   roleWorkspaceControllerCreateV1,
+  roleWorkspaceControllerDeleteV1,
   roleWorkspaceControllerGetV1,
   roleWorkspaceControllerListV1,
+  roleWorkspaceControllerUpdateV1,
   type ResponsePagingDto,
   type RoleCreateWorkspaceRequestDto,
   type RoleGetResponseDto,
   type RoleListResponseDto,
+  type RoleUpdateWorkspaceRequestDto,
   type RoleWorkspaceControllerListV1Data,
 } from "@repo/client";
 import {
@@ -104,6 +107,46 @@ export function useCreateWorkspaceRole() {
     },
     onError: (error) => {
       console.error("Failed to create role:", error);
+    },
+  });
+}
+
+export function useUpdateWorkspaceRole(roleId: string) {
+  const { workspaceSlug } = useWorkspaceParams();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (body: RoleUpdateWorkspaceRequestDto) =>
+      roleWorkspaceControllerUpdateV1({
+        body,
+        path: { workspace: workspaceSlug, role: roleId },
+        throwOnError: true,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: workspaceRoleQueryKey.lists(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: workspaceRoleQueryKey.detail(roleId),
+      });
+    },
+  });
+}
+
+export function useDeleteWorkspaceRole() {
+  const { workspaceSlug } = useWorkspaceParams();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (roleId: string) =>
+      roleWorkspaceControllerDeleteV1({
+        path: { workspace: workspaceSlug, role: roleId },
+        throwOnError: true,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: workspaceRoleQueryKey.lists(),
+      });
     },
   });
 }

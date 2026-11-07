@@ -544,6 +544,13 @@ function getRouteMaps(): RouteObject[] {
                       },
                     };
                   },
+                  children: [
+                    {
+                      path: "edit",
+                      ErrorBoundary: ErrorBoundary,
+                      lazy: () => import("./members/role-edit"),
+                    },
+                  ],
                 },
               ],
             },
@@ -580,10 +587,12 @@ function getRouteMaps(): RouteObject[] {
                 private: true,
                 breadcrumb: () => t("app.nav.settings.myAccount"),
               },
+              lazy: () => import("./profile/profile-detail"),
               children: [
                 {
-                  index: true,
-                  lazy: () => import("./profile/profile-detail"),
+                  path: "edit",
+                  ErrorBoundary: ErrorBoundary,
+                  lazy: () => import("./profile/profile-edit"),
                 },
               ],
             },
