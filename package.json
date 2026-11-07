@@ -2,11 +2,11 @@
   "name": "eccho",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "dev:app": "turbo run dev --filter api --filter app",
-    "dev:docs": "turbo run dev --filter docs",
-    "start:prod": "turbo run start:prod",
+    "build": "node init && turbo run build",
+    "dev": "node init && turbo run dev",
+    "dev:app": "node init && turbo run dev --filter api --filter app",
+    "dev:docs": "node init && turbo run dev --filter docs",
+    "start:prod": "node init && turbo run start:prod",
     "test:api": "turbo run test --filter api",
     "generate:client": "turbo run generate:client --filter api",
     "setup:local": "node scripts/setup-local.mjs",
@@ -44,8 +44,8 @@
     "@commitlint/cli": "^21",
     "@commitlint/config-conventional": "^21",
     "lefthook": "^2.2.2",
-    "prettier": "^3.9.9",
-    "turbo": "^2.11.3",
+    "prettier": "^3.9.10",
+    "turbo": "^2.11.10",
     "typescript": "5.8.2"
   },
   "packageManager": "pnpm@9.15.9",
@@ -75,7 +75,7 @@
     }
   },
   "dependencies": {
-    "@turbo/gen": "^2.11.3",
+    "@turbo/gen": "^2.11.10",
     "slugify": "^1.6.9"
   }
 }
