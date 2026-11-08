@@ -7,7 +7,7 @@
     "unreadCount": "Số lượng thông báo chưa đọc",
     "invitation": {
         "title": "Lời mời tham gia không gian làm việc",
-        "message": "Bạn đã được mời tham gia không gian làm việc \"{workspaceName}\".",
+        "message": "{inviterName} đã mời bạn tham gia {workspaceName}.",
         "accept": "Chấp nhận lời mời"
     },
     "activity": {

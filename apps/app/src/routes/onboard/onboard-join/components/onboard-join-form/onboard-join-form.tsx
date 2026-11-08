@@ -6,10 +6,13 @@ import {
 } from "@/hooks/api";
 import { partialFormValidation } from "@/libs/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, ProgressTabs, type ProgressStatus } from "@medusajs/ui";
+import { translateRoleName } from "@/components/layout/workspace-switcher/use-workspace-role-label";
+import { ROUTES } from "@/routes/constants";
+import { Button, ProgressTabs, toast, type ProgressStatus } from "@medusajs/ui";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import z from "zod/v4";
 import { OnboardConfirmTab } from "./onboard-confirm-tab";
 import { OnboardJoinTab } from "./onboard-join-tab";
@@ -20,7 +23,9 @@ const TAB = {
   CONFIRM: "CONFIRM",
   SUCCESS: "SUCCESS",
 };
+
 type TabState = Record<(typeof TAB)[keyof typeof TAB], ProgressStatus>;
+
 const initialTabState: TabState = {
   [TAB.JOIN]: "in-progress",
   [TAB.CONFIRM]: "not-started",
@@ -30,10 +35,13 @@ const initialTabState: TabState = {
 const onboardJoinSchema = z.object({
   invitationCode: z.string().min(6).max(6),
 });
+
 const onboardJoinFields = Object.keys(onboardJoinSchema.shape);
 
 export const OnboardJoinForm = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
   const form = useForm<z.infer<typeof onboardJoinSchema>>({
     resolver: zodResolver(onboardJoinSchema),
     defaultValues: {
@@ -43,11 +51,13 @@ export const OnboardJoinForm = () => {
 
   const [tab, setTab] = useState<keyof typeof TAB>("JOIN");
   const [tabState, setTabState] = useState<TabState>(initialTabState);
+
   const {
     mutateAsync: getWorkspace,
     isPending,
     workspace,
   } = useGetWorkspaceByInvitationCodeMutation();
+
   const joinWorkspace = useJoinWorkspaceWithInvitationCode();
 
   const tabOrder = useMemo(() => {
@@ -88,6 +98,7 @@ export const OnboardJoinForm = () => {
             defaultValue: message,
           }),
         });
+
         return;
       }
 
@@ -98,6 +109,7 @@ export const OnboardJoinForm = () => {
         [newTab]: "in-progress",
       }));
     }
+
     return;
   };
 
@@ -106,18 +118,21 @@ export const OnboardJoinForm = () => {
       return;
     }
 
-    const { message, statusCode, success } = await joinWorkspace
+    const { message, statusCode, success, joined } = await joinWorkspace
       .mutateAsync(workspace.invitationCode || "")
       .then((res) => ({
         success: true,
         statusCode: 200,
         message: "",
+        joined: res?.data?.joined ? res.data : undefined,
       }))
       .catch((e) => ({
         success: false,
         statusCode: e.response?.data.statusCode || e.statusCode,
         message: e.response?.data.message || e.message,
+        joined: undefined,
       }));
+
     if (!success) {
       form.setError("root", {
         type: "manual",
@@ -125,8 +140,24 @@ export const OnboardJoinForm = () => {
           defaultValue: message,
         }),
       });
+
       return;
     }
+
+    // I already had an invitation to this workspace: the code accepted it
+    // with its role, so there is no request to wait for.
+    if (joined?.workspace) {
+      toast.success(
+        t("workspace.invitations.joined", {
+          workspace: joined.workspace.name,
+          role: translateRoleName(t, joined.roleName),
+        }),
+      );
+      navigate(`/${joined.workspace.slug}/${ROUTES.Dashboard}`);
+
+      return;
+    }
+
     setTabState((prev) => ({
       ...prev,
       [tab]: "completed",
@@ -138,13 +169,18 @@ export const OnboardJoinForm = () => {
   const handleNextTab = async () => {
     if (tab === TAB.JOIN) {
       await handleSubmit(TAB.CONFIRM as keyof typeof TAB, form.getValues());
+
       return;
     }
+
     if (tab === TAB.CONFIRM) {
       await handleJoinWorkspace(TAB.SUCCESS as keyof typeof TAB);
+
       return;
     }
+
     const nextTabIndex = tabOrder.indexOf(tab) + 1;
+
     if (nextTabIndex < tabOrder.length) {
       const nextTab = tabOrder[nextTabIndex] as keyof typeof TAB;
       setTab(nextTab);
@@ -235,11 +271,14 @@ type PrimaryButtonProps = {
   reset: () => void;
   isLoading?: boolean;
 };
+
 const PrimaryButton = ({ tab, next, reset, isLoading }: PrimaryButtonProps) => {
   const { t } = useTranslation();
+
   if (tab === TAB.SUCCESS) {
     return null;
   }
+
   if (tab === TAB.JOIN) {
     return (
       <Button

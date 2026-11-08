@@ -11,6 +11,8 @@ import {
   useUnreadNotificationCount,
   type NotificationItem,
 } from "@/hooks/api/notifications";
+import { useMyInvitationActions } from "@/components/invitations/use-my-invitation-actions";
+import { useMyInvitations } from "@/hooks/api/workspace-member";
 import { useIsLeaderTab } from "@/hooks/use-leader-tab";
 import { usePushBridge } from "@/modules/pwa";
 import { useNotificationSound } from "@/modules/sound";
@@ -42,6 +44,8 @@ export const NotificationMenu: FC = () => {
   const markManyAsRead = useMarkNotificationsAsRead();
   const markAsRead = useMarkNotificationAsRead();
   const markAllAsRead = useMarkAllNotificationsAsRead();
+  const { invitations, isFetched: invitationsFetched } = useMyInvitations();
+  const { accept, decline, busyId } = useMyInvitationActions();
   const [newIds, setNewIds] = useState<Set<string>>(() => new Set());
   const isOpen = useRef(false);
 
@@ -54,13 +58,30 @@ export const NotificationMenu: FC = () => {
     refetch,
   });
 
+  // An invitation notification gets Accept and Decline while that invitation
+  // is still mine to answer. Older notifications carry only the workspace id.
+  const pendingInvitation = (notification: NotificationItem) => {
+    if (notification.type !== "invitation") return undefined;
+    const data = notification.metadata?.data;
+    return invitations.find(
+      (invitation) =>
+        invitation.id === data?.invitationId ||
+        invitation.workspace.id === data?.workspace?.id,
+    );
+  };
+
   // Seeing a row counts as reading it: mark it read so the bell clears, but
   // keep it highlighted until the menu closes. A customer waiting for a
-  // person stays unread until its row is clicked.
+  // person stays unread until its row is clicked, and an invitation stays
+  // unread until I accept or decline it.
   const markSeen = (rows: NotificationItem[]) => {
     if (!isOpen.current) return;
     const seenIds = rows.flatMap((notification) =>
-      notification.status === "unread" && !isHandoffNotification(notification)
+      notification.status === "unread" &&
+      !isHandoffNotification(notification) &&
+      // Until my invitations load, any invitation may still be pending.
+      !(notification.type === "invitation" && !invitationsFetched) &&
+      !pendingInvitation(notification)
         ? [notification.id]
         : [],
     );
@@ -140,21 +161,44 @@ export const NotificationMenu: FC = () => {
             ) : notifications.length === 0 ? (
               <NotificationEmptyState />
             ) : (
-              notifications.map((notification) => (
-                <NotificationRow
-                  key={notification.id}
-                  notification={notification}
-                  isNew={
-                    newIds.has(notification.id) ||
-                    notification.status === "unread"
-                  }
-                  onClick={
-                    notification.status === "unread"
-                      ? () => markAsRead.mutate(notification.id)
-                      : undefined
-                  }
-                />
-              ))
+              notifications.map((notification) => {
+                const invitation = pendingInvitation(notification);
+                return (
+                  <NotificationRow
+                    key={notification.id}
+                    notification={notification}
+                    isNew={
+                      newIds.has(notification.id) ||
+                      notification.status === "unread"
+                    }
+                    onClick={
+                      notification.status === "unread"
+                        ? () => markAsRead.mutate(notification.id)
+                        : undefined
+                    }
+                    actions={
+                      invitation && (
+                        <>
+                          <DropdownMenu.Item
+                            className="txt-compact-xsmall-plus shadow-buttons-neutral h-6 px-2"
+                            disabled={!!busyId}
+                            onSelect={() => decline(invitation)}
+                          >
+                            {t("workspace.invitations.decline")}
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Item
+                            className="txt-compact-xsmall-plus bg-ui-button-inverted text-ui-fg-on-inverted hover:bg-ui-button-inverted-hover focus:bg-ui-button-inverted-hover h-6 px-2"
+                            disabled={!!busyId}
+                            onSelect={() => accept(invitation)}
+                          >
+                            {t("workspace.invitations.accept")}
+                          </DropdownMenu.Item>
+                        </>
+                      )
+                    }
+                  />
+                );
+              })
             )}
             {isFetchingNextPage && <NotificationRowSkeleton />}
           </div>

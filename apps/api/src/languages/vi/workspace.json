@@ -51,6 +51,10 @@
         },
         "assign": {
             "success": "Đã gán vai trò mới cho thành viên thành công!"
+        },
+        "invitations": {
+            "list": "Đã lấy danh sách lời mời đang chờ.",
+            "decline": "Đã từ chối lời mời."
         }
     }
 }

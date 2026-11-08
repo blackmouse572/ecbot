@@ -22,6 +22,9 @@ import { InvitationEntity } from '../repository/entities/invitation.entity';
 import { InvitationRepository } from '../repository/repositories/invitation.repository';
 import { buildInvitationLink } from '../utils/invitation-link.util';
 
+/** Newest pending invitations returned to one invitee. */
+export const INVITATION_PENDING_FOR_EMAIL_LIMIT = 50;
+
 @Injectable()
 export class InvitationService implements IInvitationService {
     private readonly homeUrl: string;
@@ -111,6 +114,36 @@ export class InvitationService implements IInvitationService {
         );
     }
 
+    /**
+     * Pending, unexpired invitations sent to this email, in workspaces that
+     * still exist, newest first. The caller passes the account's verified
+     * email, never one the client sent. `find` narrows it (an id, a
+     * workspace id).
+     */
+    async findPendingForEmail(
+        email: string,
+        find?: { id?: string; workspace?: string }
+    ): Promise<InvitationEntity[]> {
+        return this.invitationRepository.find(
+            {
+                ...(find?.id && { id: find.id }),
+                inviteeEmail: email.toLowerCase(),
+                status: ENUM_INVITATION_STATUS.PENDING,
+                expiresAt: { $gt: new Date() },
+                workspace: {
+                    ...(find?.workspace && { id: find.workspace }),
+                    deleted: false,
+                },
+            },
+            {
+                populate: ['workspace', 'inviter', 'role'],
+                order: { createdAt: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC },
+                // Anyone who can invite can grow this list: keep it bounded.
+                limit: INVITATION_PENDING_FOR_EMAIL_LIMIT,
+            }
+        );
+    }
+
     async create(
         data: CreateInvitationRequestDto,
         options?: IDatabaseCreateOptions
@@ -142,13 +175,19 @@ export class InvitationService implements IInvitationService {
         options?: IDatabaseFindOneOptions
     ): Promise<InvitationEntity> {
         const updateData: any = { status };
+        // `acceptedByUser`/`revokedByUser` are the mapped relations; the
+        // bare `...UserId` keys this used to write were never persisted.
+        const em = options?.em ?? this.invitationRepository.getEntityManager();
 
         if (
             status === ENUM_INVITATION_STATUS.ACCEPTED &&
             metadata?.acceptedByUserId
         ) {
             updateData.acceptedAt = new Date();
-            updateData.acceptedByUserId = metadata.acceptedByUserId;
+            updateData.acceptedByUser = em.getReference(
+                UserEntity,
+                metadata.acceptedByUserId
+            );
         }
 
         if (
@@ -156,7 +195,10 @@ export class InvitationService implements IInvitationService {
             metadata?.revokedByUserId
         ) {
             updateData.revokedAt = new Date();
-            updateData.revokedByUserId = metadata.revokedByUserId;
+            updateData.revokedByUser = em.getReference(
+                UserEntity,
+                metadata.revokedByUserId
+            );
         }
 
         return this.invitationRepository.updateEntity(

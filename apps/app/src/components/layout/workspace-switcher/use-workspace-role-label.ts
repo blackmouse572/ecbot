@@ -1,11 +1,18 @@
 import type { useMe } from "@/hooks/api";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 
 /**
- * "Owner", "Admin", "Member" or a custom role's name, for the switcher.
  * Admin and Member are the roles every workspace is created with (apps/api
  * workspace.constant.ts), so they are translated; custom roles keep their name.
  */
+export const translateRoleName = (t: TFunction, name?: string) => {
+  if (name === "Admin") return t("workspace.switcher.roles.admin");
+  if (name === "Member") return t("workspace.switcher.roles.member");
+  return name || undefined;
+};
+
+/** "Owner", "Admin", "Member" or a custom role's name, for the switcher. */
 export const useWorkspaceRoleLabel = (
   user: ReturnType<typeof useMe>["user"] | undefined,
 ): string | undefined => {
@@ -16,7 +23,5 @@ export const useWorkspaceRoleLabel = (
   }
   const name =
     "workspaceMember" in user ? user.workspaceMember?.role?.name : undefined;
-  if (name === "Admin") return t("workspace.switcher.roles.admin");
-  if (name === "Member") return t("workspace.switcher.roles.member");
-  return name || undefined;
+  return translateRoleName(t, name);
 };

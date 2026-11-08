@@ -12,7 +12,19 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { WorkspaceMemberController } from '../../../../src/modules/workspace/controllers/workspace.member.controller';
 
-const mockMemberJoinedEmail = { send: jest.fn() };
+const mockInvitationAccept = {
+    acceptByToken: jest.fn(),
+    acceptMineForWorkspace: jest.fn(),
+    mapAccepted: jest.fn(({ workspace, role }) => ({
+        joined: true,
+        workspace: {
+            id: workspace.id,
+            name: workspace.name,
+            slug: workspace.slug,
+        },
+        roleName: role.name,
+    })),
+};
 
 // Unit tests for the controller's delegation + workspace-scoping. Auth/membership
 // guards and the transactional join flow (POST /join) are covered by the e2e suite.
@@ -32,8 +44,6 @@ describe('WorkspaceMemberController', () => {
         getMemberWorkspaceRoles: jest.fn(),
         isUserMemberOfWorkspace: jest.fn(),
         verifyInvitationToken: jest.fn(),
-        joinWorkspaceViaInvitation: jest.fn(),
-        assignRoleToMember: jest.fn(),
         getUserWorkspaces: jest.fn(),
     };
     const mockRoleService = { findOne: jest.fn() };
@@ -45,15 +55,13 @@ describe('WorkspaceMemberController', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         controller = new WorkspaceMemberController(
-            {} as any, // em
             {} as any, // userService
             mockMemberService as any,
-            {} as any, // workSpaceService (owner)
             mockRoleService as any,
             mockPaginationService as any,
             mockActivityService as any,
             {} as any, // workspaceRequestService
-            mockMemberJoinedEmail as any
+            mockInvitationAccept as any
         );
     });
 
@@ -209,129 +217,104 @@ describe('WorkspaceMemberController', () => {
         });
     });
 
-    describe('joinWorkspace', () => {
-        const caller = { id: 'caller-1', email: 'caller@mail.com' } as any;
-        const targetWorkspace = { id: 'ws-target', name: 'Target' } as any;
+    describe('joinWorkspace (emailed link)', () => {
+        it('accepts through the shared accept as the caller from the JWT', async () => {
+            const caller = { id: 'caller-1' } as any;
+            mockInvitationAccept.acceptByToken.mockResolvedValue({});
 
-        const mockEm = {
-            begin: jest.fn(),
-            commit: jest.fn(),
-            rollback: jest.fn(),
-        };
-        const mockRootEm = { fork: jest.fn(() => mockEm) };
-        const mockOwnerService = { findOneById: jest.fn() };
+            await controller.joinWorkspace(caller, 'token');
 
-        let joinController: WorkspaceMemberController;
+            expect(mockInvitationAccept.acceptByToken).toHaveBeenCalledWith(
+                'token',
+                caller
+            );
+        });
+    });
+
+    describe('createJoinRequestByInvitationCode', () => {
+        const caller = { id: 'caller-1', email: 'an@mail.com' } as any;
+        const codeWorkspace = {
+            id: 'ws-code',
+            name: 'Moc',
+            slug: 'moc',
+            owner: { id: 'owner-1' },
+        } as any;
+        const mockRequestService = { createJoinWorkspaceRequest: jest.fn() };
+        let codeController: WorkspaceMemberController;
 
         beforeEach(() => {
-            jest.clearAllMocks();
+            (mockMemberService as any).findWorkspaceByInvitationCode = jest
+                .fn()
+                .mockResolvedValue(codeWorkspace);
             mockMemberService.isUserMemberOfWorkspace.mockResolvedValue(false);
-            mockMemberService.verifyInvitationToken.mockResolvedValue({
-                workspaceId: targetWorkspace.id,
-            });
-            mockOwnerService.findOneById.mockResolvedValue(targetWorkspace);
-
-            joinController = new WorkspaceMemberController(
-                mockRootEm as any, // em
-                {} as any, // userService
+            codeController = new WorkspaceMemberController(
+                {} as any,
                 mockMemberService as any,
-                mockOwnerService as any, // workSpaceService (owner)
                 mockRoleService as any,
                 mockPaginationService as any,
                 mockActivityService as any,
-                {} as any, // workspaceRequestService
-                mockMemberJoinedEmail as any
+                mockRequestService as any,
+                mockInvitationAccept as any
             );
         });
 
-        it('rejects when the caller is already a member of the target workspace', async () => {
+        it('accepts my pending invitation to that workspace instead of filing a request', async () => {
+            mockInvitationAccept.acceptMineForWorkspace.mockResolvedValue({
+                workspace: codeWorkspace,
+                role: { id: 'role-sales', name: 'Sales' },
+            });
+
+            const res = await codeController.createJoinRequestByInvitationCode(
+                caller,
+                'ABC123',
+                {}
+            );
+
+            expect(
+                mockInvitationAccept.acceptMineForWorkspace
+            ).toHaveBeenCalledWith('ws-code', caller);
+            expect(
+                mockRequestService.createJoinWorkspaceRequest
+            ).not.toHaveBeenCalled();
+            // The invitation's role, not one from the code.
+            expect(res.data).toEqual({
+                joined: true,
+                workspace: { id: 'ws-code', name: 'Moc', slug: 'moc' },
+                roleName: 'Sales',
+            });
+        });
+
+        it('files a join request as before when I have no invitation', async () => {
+            mockInvitationAccept.acceptMineForWorkspace.mockResolvedValue(null);
+            mockRequestService.createJoinWorkspaceRequest.mockResolvedValue({
+                id: 'req-1',
+            });
+
+            const res = await codeController.createJoinRequestByInvitationCode(
+                caller,
+                'ABC123',
+                { reason: 'hi' }
+            );
+
+            expect(
+                mockRequestService.createJoinWorkspaceRequest
+            ).toHaveBeenCalledWith(caller, 'owner-1', 'ABC123', 'hi');
+            expect(res.data).toEqual({ joined: false, requestId: 'req-1' });
+        });
+
+        it('still refuses an existing member', async () => {
             mockMemberService.isUserMemberOfWorkspace.mockResolvedValue(true);
 
             await expect(
-                joinController.joinWorkspace(caller, 'token')
+                codeController.createJoinRequestByInvitationCode(
+                    caller,
+                    'ABC123',
+                    {}
+                )
             ).rejects.toThrow(ConflictException);
-
             expect(
-                mockMemberService.joinWorkspaceViaInvitation
+                mockInvitationAccept.acceptMineForWorkspace
             ).not.toHaveBeenCalled();
-        });
-
-        it('joins via joinWorkspaceViaInvitation using the caller from the JWT', async () => {
-            mockMemberService.joinWorkspaceViaInvitation.mockResolvedValue({
-                workspace: targetWorkspace,
-                roleId: 'role-1',
-            });
-
-            await joinController.joinWorkspace(caller, 'token');
-
-            expect(
-                mockMemberService.joinWorkspaceViaInvitation
-            ).toHaveBeenCalledWith('token', caller.id, { em: mockEm });
-            expect(mockEm.commit).toHaveBeenCalled();
-            // The owner hears about the new member once the join is committed.
-            expect(mockMemberJoinedEmail.send).toHaveBeenCalledWith(
-                targetWorkspace.id,
-                caller.id
-            );
-            expect(mockEm.rollback).not.toHaveBeenCalled();
-            expect(
-                mockActivityService.createByUserWithWorkspace
-            ).toHaveBeenCalled();
-        });
-
-        it('gives a null-role invitation the built-in Member role, not Admin', async () => {
-            mockMemberService.joinWorkspaceViaInvitation.mockResolvedValue({
-                workspace: targetWorkspace,
-                roleId: undefined,
-            });
-            mockRoleService.findOne.mockResolvedValue({ id: 'member-role' });
-
-            await joinController.joinWorkspace(caller, 'token');
-
-            expect(mockRoleService.findOne).toHaveBeenCalledWith({
-                workspace: targetWorkspace.id,
-                type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
-                name: 'Member',
-                isActive: true,
-            });
-            expect(mockMemberService.assignRoleToMember).toHaveBeenCalledWith(
-                targetWorkspace.id,
-                caller.id,
-                'member-role'
-            );
-        });
-
-        it('rolls back instead of joining with no role when the Member role is off', async () => {
-            mockMemberService.joinWorkspaceViaInvitation.mockResolvedValue({
-                workspace: targetWorkspace,
-                roleId: undefined,
-            });
-            mockRoleService.findOne.mockResolvedValue(null);
-
-            await expect(
-                joinController.joinWorkspace(caller, 'token')
-            ).rejects.toMatchObject({
-                response: {
-                    message: 'workspace.error.defaultMemberRoleMissing',
-                },
-            });
-            expect(mockEm.rollback).toHaveBeenCalled();
-            expect(mockEm.commit).not.toHaveBeenCalled();
-        });
-
-        it('rolls back and propagates a rejected invitation (e.g. caller mismatch)', async () => {
-            const rejection = new ConflictException('nope');
-            mockMemberService.joinWorkspaceViaInvitation.mockRejectedValue(
-                rejection
-            );
-
-            await expect(
-                joinController.joinWorkspace(caller, 'token')
-            ).rejects.toBe(rejection);
-
-            expect(mockEm.rollback).toHaveBeenCalled();
-            expect(mockEm.commit).not.toHaveBeenCalled();
-            expect(mockMemberJoinedEmail.send).not.toHaveBeenCalled();
         });
     });
 
@@ -362,15 +345,13 @@ describe('WorkspaceMemberController', () => {
             mockUserService.mapShort.mockImplementation(user => user);
 
             inviteController = new WorkspaceMemberController(
-                {} as any, // em
                 mockUserService as any,
                 mockMemberService as any,
-                {} as any, // workSpaceService (owner)
                 mockRoleService as any,
                 mockPaginationService as any,
                 mockActivityService as any,
                 {} as any, // workspaceRequestService
-                mockMemberJoinedEmail as any
+                mockInvitationAccept as any
             );
         });
 

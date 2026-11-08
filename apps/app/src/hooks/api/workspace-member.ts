@@ -9,6 +9,9 @@ import {
   workspaceMemberControllerJoinWorkspaceV1,
   workspaceMemberControllerMemberDetailsV1,
   workspaceMemberControllerMembersV1,
+  workspaceMemberControllerAcceptMyInvitationV1,
+  workspaceMemberControllerDeclineMyInvitationV1,
+  workspaceMemberControllerListMyInvitationsV1,
   type ResponsePagingDto,
   type UserShortResponseDto,
   type WorkSpaceGetResponseDto,
@@ -17,6 +20,8 @@ import {
   type WorkspaceMemberControllerGetAvailableInviteMembersV1Data,
   type WorkspaceMemberGetResponseDto,
   type WorkspaceMemberListResponseDto,
+  type WorkspaceJoinResultResponseDto,
+  type WorkspaceMyInvitationResponseDto,
 } from "@repo/client";
 import {
   queryOptions,
@@ -42,6 +47,7 @@ const fetchMemberPage = async (
     query,
     path: { workspace },
   });
+
   const page = response?.data;
 
   return page as unknown as ResponsePagingDto;
@@ -65,6 +71,7 @@ export const useWorkspaceMembers = (
 ) => {
   const { workspaceSlug } = useWorkspaceParams(),
     baseConfig = workspaceMemberListQueryOptions(workspaceSlug, query);
+
   const queryConfig = Object.assign({}, baseConfig, options);
   const queryResult = useQuery(queryConfig);
 
@@ -108,6 +115,7 @@ const fetchInvitableUsers = async (
       path: { workspace },
       query,
     });
+
   return response.data as Omit<ResponsePagingDto, "data"> & {
     data: UserShortResponseDto[];
   };
@@ -169,6 +177,7 @@ const rethrowJoinError = (error: A): never => {
       statusCode: error.response.data.statusCode as number | undefined,
     });
   }
+
   throw error;
 };
 
@@ -201,6 +210,7 @@ export function useJoinWorkspace(options?: { onSuccess: () => void }) {
           ) {
             return undefined;
           }
+
           return rethrowJoinError(error);
         }),
     onSuccess: () => refreshAfterJoin(client, options?.onSuccess),
@@ -233,6 +243,7 @@ const fetchWorkspaceByInvitationCode = async (invitationCode: string) => {
   const res = await workspaceMemberControllerFindWorkspaceByInvitationCodeV1({
     path: { invitationcode: invitationCode },
   });
+
   return res.data as unknown as WorkspaceMemberControllerFindWorkspaceByInvitationCodeV1Response;
 };
 
@@ -295,6 +306,7 @@ export function useWorkspaceMember(id: string) {
 export function useAssignRoleWorkspaceMember(id: string) {
   const { workspaceSlug } = useWorkspaceParams(),
     queryClient = useQueryClient();
+
   const detailKey = workspaceMemberKeys.detail(id);
 
   return useMutation({
@@ -305,3 +317,60 @@ export function useAssignRoleWorkspaceMember(id: string) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: detailKey }),
   });
 }
+
+export const MY_INVITATIONS_QUERY_KEY = "my-invitations" as const;
+export const myInvitationKeys = queryKeysFactory(MY_INVITATIONS_QUERY_KEY);
+
+/**
+ * Pending invitations sent to my verified email (none while it is not
+ * verified), for /onboard and the workspace switcher.
+ */
+export function useMyInvitations() {
+  const { data, ...rest } = useQuery({
+    queryKey: myInvitationKeys.lists(),
+    queryFn: async () => {
+      const res = await workspaceMemberControllerListMyInvitationsV1({
+        throwOnError: true,
+      });
+
+      return res.data.data ?? [];
+    },
+  });
+
+  return { invitations: data ?? [], ...rest };
+}
+
+/** Joins with the invitation's role; resolves with where to go next. */
+export function useAcceptMyInvitation() {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await workspaceMemberControllerAcceptMyInvitationV1({
+        path: { invitation: id },
+        throwOnError: true,
+      });
+
+      return res.data.data as WorkspaceJoinResultResponseDto;
+    },
+    // Refetch everything: the workspace list and my role change too.
+    onSuccess: () => client.invalidateQueries(),
+  });
+}
+
+export function useDeclineMyInvitation() {
+  const client = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await workspaceMemberControllerDeclineMyInvitationV1({
+        path: { invitation: id },
+        throwOnError: true,
+      });
+    },
+    onSuccess: () =>
+      client.invalidateQueries({ queryKey: myInvitationKeys.all }),
+  });
+}
+
+export type MyInvitation = WorkspaceMyInvitationResponseDto;

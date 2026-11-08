@@ -1,5 +1,5 @@
 import { DropdownMenu, Text, clx } from "@medusajs/ui";
-import type { FC } from "react";
+import type { FC, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -13,12 +13,16 @@ type NotificationRowProps = {
   // Unread, or unread when the menu opened (highlighted until it closes).
   isNew: boolean;
   onClick?: () => void;
+  // Menu items under the row (Accept and Decline on an invitation). They sit
+  // beside the row's own item, never inside it, so each stays one menuitem.
+  actions?: ReactNode;
 };
 
 export const NotificationRow: FC<NotificationRowProps> = ({
   notification,
   isNew,
   onClick,
+  actions,
 }) => {
   const { i18n } = useTranslation();
   const actionUrl = notification.metadata?.actionUrl;
@@ -58,17 +62,23 @@ export const NotificationRow: FC<NotificationRowProps> = ({
     </div>
   );
 
-  if (actionUrl) {
-    return (
-      <DropdownMenu.Item asChild className="p-0" onClick={onClick}>
-        <Link to={actionUrl}>{content}</Link>
-      </DropdownMenu.Item>
-    );
-  }
-
-  return (
+  const row = actionUrl ? (
+    <DropdownMenu.Item asChild className="p-0" onClick={onClick}>
+      <Link to={actionUrl}>{content}</Link>
+    </DropdownMenu.Item>
+  ) : (
     <DropdownMenu.Item className="p-0" onClick={onClick}>
       {content}
     </DropdownMenu.Item>
+  );
+
+  if (!actions) return row;
+
+  return (
+    <div className={clx({ "bg-ui-bg-highlight": isNew })}>
+      {row}
+      {/* pl-12 lines the buttons up with the text (px-2 + icon + gap). */}
+      <div className="flex gap-x-1 pb-2 pl-12">{actions}</div>
+    </div>
   );
 };

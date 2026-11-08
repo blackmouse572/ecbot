@@ -468,6 +468,7 @@ export class WorkspaceController {
         // The invitee has no language of their own yet, so the email follows
         // the inviter's (#185).
         const inviter = await this.userService.findOneById(userId);
+        const inviterName = inviter?.name?.trim() || inviter?.email || '';
 
         // Before the email: a failed audit write then fails an invitation
         // nobody received yet, and a retry reuses the pending invitation.
@@ -491,7 +492,7 @@ export class WorkspaceController {
             {
                 invitationLink,
                 workspaceName: workspace.name,
-                inviterName: inviter?.name?.trim() || inviter?.email || '',
+                inviterName,
                 expiresAt,
                 language: request?.__language,
             }
@@ -499,11 +500,19 @@ export class WorkspaceController {
 
         const user = await this.userService.findOneByEmail(body.invitedEmail);
 
+        // Already has an account: tell them in the app too. The link is the
+        // same accept as the email's (and as Accept on /onboard).
         if (user) {
             await this.notificationService.createWorkspaceInvitation(
                 user.id,
                 userId,
-                { id: workspace.id, name: workspace.name, invitationLink }
+                {
+                    id: workspace.id,
+                    name: workspace.name,
+                    invitationLink,
+                    invitationId,
+                    inviterName,
+                }
             );
         }
 

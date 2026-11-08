@@ -224,7 +224,13 @@ export class NotificationService {
     async createWorkspaceInvitation(
         recipientId: string,
         senderId: string,
-        workspace: { id: string; name: string; invitationLink: string }
+        workspace: {
+            id: string;
+            name: string;
+            invitationLink: string;
+            invitationId: string;
+            inviterName: string;
+        }
     ): Promise<NotificationEntity> {
         return this.create({
             title: this.messageService.setMessage(
@@ -232,7 +238,12 @@ export class NotificationService {
             ),
             message: this.messageService.setMessage(
                 'notification.invitation.message',
-                { properties: { workspaceName: workspace.name } }
+                {
+                    properties: {
+                        inviterName: workspace.inviterName,
+                        workspaceName: workspace.name,
+                    },
+                }
             ),
             type: NotificationType.INVITATION,
             recipient: recipientId,
@@ -246,6 +257,7 @@ export class NotificationService {
                     workspace: {
                         id: workspace.id,
                     },
+                    invitationId: workspace.invitationId,
                     inviterId: senderId,
                 },
             },

@@ -4,6 +4,7 @@ import { LogoBoxSpinner } from "@repo/ui/common-components";
 import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { OnboardLayout, OnboardWelcomeForm } from "./components";
+import { OnboardInvitations } from "./components/onboard-invitations/onboard-invitations";
 
 export const Onboard = () => {
   const { slug, isLoading } = useResolvedWorkspaceSlug();
@@ -26,6 +27,10 @@ export const Onboard = () => {
 
   return (
     <OnboardLayout>
+      {/* Invited? Accept first, above the form that creates a workspace. */}
+      <div className="mx-auto w-full max-w-[640px] px-4 pt-8 empty:hidden">
+        <OnboardInvitations />
+      </div>
       <OnboardWelcomeForm onStart={() => setStarted(true)} />
     </OnboardLayout>
   );

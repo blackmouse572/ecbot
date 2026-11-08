@@ -1817,6 +1817,15 @@
         "admin": "Admin",
         "member": "Member"
       }
+    },
+    "invitations": {
+      "title": "Invitations",
+      "invitedYou": "{{inviter}} invited you to {{workspace}} as {{role}}",
+      "accept": "Accept",
+      "decline": "Decline",
+      "joined": "You joined {{workspace}} as {{role}}",
+      "declined": "Invitation declined",
+      "failed": "Something went wrong. Try again."
     }
   },
   "subscription": {

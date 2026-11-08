@@ -1880,6 +1880,15 @@
         "admin": "Admin",
         "member": "Thành viên"
       }
+    },
+    "invitations": {
+      "title": "Lời mời",
+      "invitedYou": "{{inviter}} đã mời bạn vào {{workspace}} với vai trò {{role}}",
+      "accept": "Chấp nhận",
+      "decline": "Từ chối",
+      "joined": "Bạn đã tham gia {{workspace}} với vai trò {{role}}",
+      "declined": "Đã từ chối lời mời",
+      "failed": "Có lỗi xảy ra. Hãy thử lại."
     }
   },
   "subscription": {

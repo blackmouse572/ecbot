@@ -51,6 +51,10 @@
         },
         "assign": {
             "success": "Assigned member with new role"
+        },
+        "invitations": {
+            "list": "Fetched your pending invitations.",
+            "decline": "Invitation declined."
         }
     }
 }
