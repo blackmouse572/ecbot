@@ -3,36 +3,14 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { WorkSpaceGetResponseDto } from "@repo/client";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const current = vi.hoisted(() => ({
   user: undefined as unknown,
-  invitations: [] as unknown[],
-  accepted: [] as string[],
-  declined: [] as string[],
 }));
 
 vi.mock("@/hooks/api", () => ({
   useMe: () => ({ user: current.user }),
-}));
-vi.mock("@/hooks/api/workspace-member", () => ({
-  useMyInvitations: () => ({ invitations: current.invitations }),
-  useAcceptMyInvitation: () => ({
-    isPending: false,
-    mutateAsync: async (id: string) => {
-      current.accepted.push(id);
-      return {
-        workspace: { id: "ws-c", name: "Tiệm Bánh", slug: "c" },
-        roleName: "Member",
-      };
-    },
-  }),
-  useDeclineMyInvitation: () => ({
-    isPending: false,
-    mutateAsync: async (id: string) => {
-      current.declined.push(id);
-    },
-  }),
 }));
 
 import { WorkspaceSwitcher } from "./workspace-switcher";
@@ -73,11 +51,6 @@ const openSwitcher = async (path = "/a/chatbot") => {
 };
 
 describe("WorkspaceSwitcher", () => {
-  beforeEach(() => {
-    current.invitations = [];
-    current.accepted = [];
-    current.declined = [];
-  });
   it("shows the user's role under the workspace name", async () => {
     current.user = { isOwner: true };
     await openSwitcher();
@@ -133,66 +106,5 @@ describe("WorkspaceSwitcher", () => {
     expect(screen.getByTestId("location").textContent).toBe(
       "/b/settings/members",
     );
-  });
-
-  describe("invitations", () => {
-    const invitation = {
-      id: "inv-1",
-      workspace: { id: "ws-c", name: "Tiệm Bánh", slug: "c" },
-      inviterName: "Lan",
-      roleName: "Member",
-      expiresAt: "2026-11-15T00:00:00.000Z",
-    };
-
-    it("has no group and no dot without invitations", async () => {
-      current.user = member("Member");
-      await openSwitcher();
-
-      expect(screen.queryByText("Invitations")).toBeNull();
-      expect(screen.queryByTestId("invitations-dot")).toBeNull();
-    });
-
-    it("shows a dot on the trigger and an Invitations group above Create workspace", async () => {
-      current.user = member("Member");
-      current.invitations = [invitation];
-      await openSwitcher();
-
-      expect(screen.getByTestId("invitations-dot")).toBeTruthy();
-      expect(screen.getByText("1 pending invitation")).toBeTruthy();
-      expect(
-        screen.getByText("Lan invited you to Tiệm Bánh as Member"),
-      ).toBeTruthy();
-
-      const items = screen
-        .getAllByRole("menuitem")
-        .map((item) => item.textContent);
-      const accept = items.indexOf("Accept");
-      expect(accept).toBeGreaterThan(-1);
-      expect(items.indexOf("Decline")).toBeGreaterThan(-1);
-      expect(items.findIndex((text) => /Create/i.test(text ?? ""))).toBe(
-        items.length - 1,
-      );
-    });
-
-    it("Accept joins and opens that workspace's dashboard", async () => {
-      current.user = member("Member");
-      current.invitations = [invitation];
-      const user = await openSwitcher();
-
-      await user.click(screen.getByRole("menuitem", { name: "Accept" }));
-
-      expect(current.accepted).toEqual(["inv-1"]);
-      expect(screen.getByTestId("location").textContent).toBe("/c/dashboard");
-    });
-
-    it("Decline declines it", async () => {
-      current.user = member("Member");
-      current.invitations = [invitation];
-      const user = await openSwitcher();
-
-      await user.click(screen.getByRole("menuitem", { name: "Decline" }));
-
-      expect(current.declined).toEqual(["inv-1"]);
-    });
   });
 });

@@ -21,7 +21,7 @@ export const invitationText = (t: TFunction, invitation: MyInvitation) =>
 
 /**
  * Accept (lands on that workspace's dashboard) and Decline for one of my
- * invitations, shared by /onboard and the workspace switcher.
+ * invitations, shared by /onboard and the notification bell.
  */
 export const useMyInvitationActions = () => {
   const { t } = useTranslation();

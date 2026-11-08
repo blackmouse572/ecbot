@@ -1,6 +1,6 @@
 import "@/i18n";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { NotificationItem } from "@/hooks/api/notifications";
@@ -12,6 +12,29 @@ const api = vi.hoisted(() => ({
   markOne: vi.fn(),
   fetchNextPage: vi.fn(),
   hasNextPage: false,
+  invitations: [] as unknown[],
+  accepted: [] as string[],
+  declined: [] as string[],
+}));
+
+vi.mock("@/hooks/api/workspace-member", () => ({
+  useMyInvitations: () => ({ invitations: api.invitations }),
+  useAcceptMyInvitation: () => ({
+    isPending: false,
+    mutateAsync: async (id: string) => {
+      api.accepted.push(id);
+      return {
+        workspace: { id: "ws-c", name: "Tiệm Bánh", slug: "c" },
+        roleName: "Member",
+      };
+    },
+  }),
+  useDeclineMyInvitation: () => ({
+    isPending: false,
+    mutateAsync: async (id: string) => {
+      api.declined.push(id);
+    },
+  }),
 }));
 
 vi.mock("@/hooks/use-leader-tab", () => ({ useIsLeaderTab: () => true }));
@@ -58,10 +81,17 @@ const item = (overrides: Partial<NotificationItem>): NotificationItem => ({
   ...overrides,
 });
 
+const Location = () => (
+  <div data-testid="location">{useLocation().pathname}</div>
+);
+
 const open = () => {
   render(
     <MemoryRouter>
       <NotificationMenu />
+      <Routes>
+        <Route path="*" element={<Location />} />
+      </Routes>
     </MemoryRouter>,
   );
   fireEvent.keyDown(screen.getByRole("button", { name: /notifications/i }), {
@@ -77,6 +107,9 @@ describe("NotificationMenu", () => {
     api.hasNextPage = false;
     api.count = 0;
     api.notifications = [];
+    api.invitations = [];
+    api.accepted = [];
+    api.declined = [];
   });
 
   it("shows the unread count on the bell", () => {
@@ -230,5 +263,78 @@ describe("NotificationMenu", () => {
     expect(screen.getByTestId("notification-shadow-top")).toHaveClass(
       "opacity-0",
     );
+  });
+
+  describe("invitations", () => {
+    const invitation = {
+      id: "inv-1",
+      workspace: { id: "ws-c", name: "Tiệm Bánh", slug: "c" },
+      inviterName: "Lan",
+      roleName: "Member",
+      expiresAt: "2026-11-15T00:00:00.000Z",
+    };
+    const invited = (data: Record<string, unknown>) =>
+      item({
+        id: "n-inv",
+        type: "invitation",
+        title: "Workspace invitation",
+        message: "Lan invited you to Tiệm Bánh.",
+        metadata: { actionUrl: "/invitation?token=t", data },
+      });
+
+    it("puts Decline and Accept on a pending invitation and keeps it unread", async () => {
+      api.count = 2;
+      api.invitations = [invitation];
+      api.notifications = [
+        invited({ invitationId: "inv-1", workspace: { id: "ws-c" } }),
+        item({ id: "n-2" }),
+      ];
+      open();
+
+      await waitFor(() => expect(api.markMany).toHaveBeenCalledWith(["n-2"]));
+      expect(screen.getByRole("menuitem", { name: "Decline" })).toBeTruthy();
+      expect(screen.getByRole("menuitem", { name: "Accept" })).toBeTruthy();
+    });
+
+    it("Accept joins and opens that workspace's dashboard", async () => {
+      api.invitations = [invitation];
+      api.notifications = [invited({ invitationId: "inv-1" })];
+      open();
+
+      fireEvent.click(await screen.findByRole("menuitem", { name: "Accept" }));
+
+      await waitFor(() =>
+        expect(screen.getByTestId("location").textContent).toBe("/c/dashboard"),
+      );
+      expect(api.accepted).toEqual(["inv-1"]);
+    });
+
+    it("Decline declines it", async () => {
+      api.invitations = [invitation];
+      api.notifications = [invited({ invitationId: "inv-1" })];
+      open();
+
+      fireEvent.click(await screen.findByRole("menuitem", { name: "Decline" }));
+
+      await waitFor(() => expect(api.declined).toEqual(["inv-1"]));
+    });
+
+    it("matches an older notification by its workspace", async () => {
+      api.invitations = [invitation];
+      api.notifications = [invited({ workspace: { id: "ws-c" } })];
+      open();
+
+      expect(
+        await screen.findByRole("menuitem", { name: "Accept" }),
+      ).toBeTruthy();
+    });
+
+    it("has no buttons once the invitation is answered", async () => {
+      api.notifications = [invited({ invitationId: "inv-1" })];
+      open();
+
+      expect(await screen.findByText("Workspace invitation")).toBeTruthy();
+      expect(screen.queryByRole("menuitem", { name: "Accept" })).toBeNull();
+    });
   });
 });

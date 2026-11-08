@@ -1867,8 +1867,6 @@
       "decline": "Từ chối",
       "joined": "Bạn đã tham gia {{workspace}} với vai trò {{role}}",
       "declined": "Đã từ chối lời mời",
-      "pending_one": "{{count}} lời mời đang chờ",
-      "pending_other": "{{count}} lời mời đang chờ",
       "failed": "Có lỗi xảy ra. Hãy thử lại."
     }
   },

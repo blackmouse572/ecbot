@@ -1804,8 +1804,6 @@
       "decline": "Decline",
       "joined": "You joined {{workspace}} as {{role}}",
       "declined": "Invitation declined",
-      "pending_one": "{{count}} pending invitation",
-      "pending_other": "{{count}} pending invitations",
       "failed": "Something went wrong. Try again."
     }
   },

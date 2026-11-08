@@ -1,5 +1,5 @@
 import { DropdownMenu, Text, clx } from "@medusajs/ui";
-import type { FC } from "react";
+import type { FC, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -13,12 +13,16 @@ type NotificationRowProps = {
   // Unread, or unread when the menu opened (highlighted until it closes).
   isNew: boolean;
   onClick?: () => void;
+  // Buttons under the text (Accept and Decline on an invitation). The row
+  // itself is then not clickable, so a click lands on one button only.
+  actions?: ReactNode;
 };
 
 export const NotificationRow: FC<NotificationRowProps> = ({
   notification,
   isNew,
   onClick,
+  actions,
 }) => {
   const { i18n } = useTranslation();
   const actionUrl = notification.metadata?.actionUrl;
@@ -54,9 +58,14 @@ export const NotificationRow: FC<NotificationRowProps> = ({
         <Text size="xsmall" leading="compact" className="text-ui-fg-muted">
           {formatRelativeTime(notification.createdAt, i18n.language)}
         </Text>
+        {actions && <div className="flex gap-x-1 pt-1">{actions}</div>}
       </div>
     </div>
   );
+
+  if (actions) {
+    return <div onClick={onClick}>{content}</div>;
+  }
 
   if (actionUrl) {
     return (
