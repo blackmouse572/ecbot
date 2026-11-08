@@ -12,7 +12,12 @@ import { Skeleton } from "@repo/ui/common-components";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
+import {
+  invitationText,
+  useMyInvitationActions,
+} from "@/components/invitations/use-my-invitation-actions";
 import { useMe } from "@/hooks/api";
+import { useMyInvitations } from "@/hooks/api/workspace-member";
 import { switchWorkspacePath } from "@/libs/workspace-switch-path";
 import { ROUTES } from "@/routes/constants";
 import { useWorkspaceRoleLabel } from "./use-workspace-role-label";
@@ -38,6 +43,8 @@ export const WorkspaceSwitcher = ({
   const location = useLocation();
   const { user } = useMe();
   const roleLabel = useWorkspaceRoleLabel(user);
+  const { invitations } = useMyInvitations();
+  const { accept, decline, busyId } = useMyInvitationActions();
 
   const others = workspaces.filter((ws) => ws.id !== workspace.id);
   const settingsBase = `/${workspace.slug}/${ROUTES.Settings}`;
@@ -70,12 +77,28 @@ export const WorkspaceSwitcher = ({
             "focus-visible:shadow-borders-focus",
           )}
         >
-          <Avatar
-            variant="squared"
-            size="xsmall"
-            fallback={initials(workspace.name)}
-            src={workspace.avatar}
-          />
+          <span className="relative flex">
+            <Avatar
+              variant="squared"
+              size="xsmall"
+              fallback={initials(workspace.name)}
+              src={workspace.avatar}
+            />
+            {invitations.length > 0 && (
+              <>
+                <span
+                  aria-hidden
+                  data-testid="invitations-dot"
+                  className="bg-ui-tag-red-icon shadow-borders-base absolute -right-0.5 -top-0.5 size-2 rounded-full"
+                />
+                <span className="sr-only">
+                  {t("workspace.invitations.pending", {
+                    count: invitations.length,
+                  })}
+                </span>
+              </>
+            )}
+          </span>
           <div className="flex flex-col overflow-hidden">
             {workspace.name ? (
               <Text
@@ -163,6 +186,52 @@ export const WorkspaceSwitcher = ({
                     />
                     <span className="truncate">{ws.name}</span>
                   </DropdownMenu.Item>
+                ))}
+              </div>
+            </>
+          )}
+
+          {invitations.length > 0 && (
+            <>
+              <DropdownMenu.Separator />
+              <DropdownMenu.Label className="text-ui-fg-muted txt-compact-xsmall-plus px-2 py-1">
+                {t("workspace.invitations.title")}
+              </DropdownMenu.Label>
+              <div className="max-h-56 overflow-y-auto">
+                {invitations.map((invitation) => (
+                  <div
+                    key={invitation.id}
+                    className="flex flex-col gap-y-1.5 px-2 py-1.5"
+                    data-testid="switcher-invitation"
+                  >
+                    <div className="flex items-center gap-x-2">
+                      <Avatar
+                        variant="squared"
+                        size="xsmall"
+                        fallback={initials(invitation.workspace.name)}
+                        src={invitation.workspace.avatar ?? undefined}
+                      />
+                      <Text size="xsmall" leading="compact" className="min-w-0">
+                        {invitationText(t, invitation)}
+                      </Text>
+                    </div>
+                    <div className="flex justify-end gap-x-1">
+                      <DropdownMenu.Item
+                        className="txt-compact-xsmall-plus h-6 px-2"
+                        disabled={!!busyId}
+                        onSelect={() => decline(invitation)}
+                      >
+                        {t("workspace.invitations.decline")}
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        className="txt-compact-xsmall-plus text-ui-fg-interactive h-6 px-2"
+                        disabled={!!busyId}
+                        onSelect={() => accept(invitation)}
+                      >
+                        {t("workspace.invitations.accept")}
+                      </DropdownMenu.Item>
+                    </div>
+                  </div>
                 ))}
               </div>
             </>

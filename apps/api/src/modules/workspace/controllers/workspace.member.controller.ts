@@ -1,4 +1,3 @@
-import { MemberJoinedEmailService } from '@app/modules/workspace/services/member-joined-email.service';
 import { PaginationQuery } from '@app/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from '@app/common/pagination/dtos/pagination.list.dto';
 import { PaginationService } from '@app/common/pagination/services/pagination.service';
@@ -12,10 +11,7 @@ import {
     AuthJwtAccessProtected,
     AuthJwtPayload,
 } from '@app/modules/auth/decorators/auth.jwt.decorator';
-import {
-    ENUM_POLICY_ROLE_TYPE,
-    ENUM_POLICY_SUBJECT,
-} from '@app/modules/policy/enums/policy.enum';
+import { ENUM_POLICY_SUBJECT } from '@app/modules/policy/enums/policy.enum';
 import { ENUM_ROLE_STATUS_CODE_ERROR } from '@app/modules/role/enums/role.status-code.enum';
 import { RoleEntity } from '@app/modules/role/repository/entities/role.entity';
 import { RoleService } from '@app/modules/role/services/role.service';
@@ -25,19 +21,15 @@ import { ENUM_USER_STATUS_CODE_ERROR } from '@app/modules/user/enums/user.status
 import { UserParsePipe } from '@app/modules/user/pipes/user.parse.pipe';
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
 import { UserService } from '@app/modules/user/services/user.service';
-import { EntityManager } from '@mikro-orm/postgresql';
 import {
-    BadRequestException,
     Body,
     ConflictException,
     Controller,
     Delete,
     Get,
-    HttpException,
-    InternalServerErrorException,
-    Logger,
     NotFoundException,
     Param,
+    ParseUUIDPipe,
     Post,
     Query,
 } from '@nestjs/common';
@@ -52,7 +44,12 @@ import {
     WorkspaceCreateJoinRequestDoc,
     WorkspaceFindByInvitationCodeDoc,
 } from '../docs/workspace.invitation-code.doc';
-import { WorkspaceMemberAcceptInvitationDoc } from '../docs/workspace.member.doc';
+import {
+    WorkspaceMemberAcceptInvitationDoc,
+    WorkspaceMyInvitationAcceptDoc,
+    WorkspaceMyInvitationDeclineDoc,
+    WorkspaceMyInvitationListDoc,
+} from '../docs/workspace.member.doc';
 import {
     GetInvitableUserListDoc,
     WorkspaceAssignRoleToMemberDoc,
@@ -62,11 +59,13 @@ import {
 } from '../docs/workspace.owner.doc';
 import { WorkspaceJoinRequestDto } from '../dtos/request/workspace.join-request.request.dto';
 import { WorkspaceMemberGetResponseDto } from '../dtos/response/workspace-member.get.response.dto';
+import { WorkspaceJoinResultResponseDto } from '../dtos/response/workspace.join-result.response.dto';
+import { WorkspaceMyInvitationResponseDto } from '../dtos/response/workspace.my-invitation.response.dto';
 import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from '../enums/workspace.status-code.enum';
 import { IWorkspaceMemberWithUserDoc } from '../interfaces/workspace-member.interface';
 import { WorkspaceEntity } from '../repository/entities/workspace.entity';
 import { WorkspaceMemberService } from '../services/workspace.member.service';
-import { WorkspaceOwnerService } from '../services/workspace.owner.service';
+import { WorkspaceInvitationAcceptService } from '../services/workspace-invitation-accept.service';
 import { WorkspaceRequestService } from '../services/workspace.request.service';
 
 @ApiTags('modules.member.workspace')
@@ -75,18 +74,14 @@ import { WorkspaceRequestService } from '../services/workspace.request.service';
     path: 'workspace/member',
 })
 export class WorkspaceMemberController {
-    private readonly logger = new Logger();
-
     constructor(
-        private readonly em: EntityManager,
         private readonly userService: UserService,
         private readonly workSpaceMemberService: WorkspaceMemberService,
-        private readonly workSpaceService: WorkspaceOwnerService,
         private readonly roleService: RoleService,
         private readonly paginationService: PaginationService,
         private readonly activityService: ActivityService,
         private readonly workspaceRequestService: WorkspaceRequestService,
-        private readonly memberJoinedEmail: MemberJoinedEmailService
+        private readonly invitationAccept: WorkspaceInvitationAcceptService
     ) {}
 
     @WorkspaceCreateJoinRequestDoc()
@@ -98,7 +93,7 @@ export class WorkspaceMemberController {
         @AuthJwtPayload('user', UserParsePipe) user: UserEntity,
         @Param('invitationcode') invitationCode: string,
         @Body() body: WorkspaceJoinRequestDto
-    ) {
+    ): Promise<{ data: WorkspaceJoinResultResponseDto }> {
         // Find workspace by invitation code
         const workspace =
             await this.workSpaceMemberService.findWorkspaceByInvitationCode(
@@ -119,6 +114,16 @@ export class WorkspaceMemberController {
             });
         }
 
+        // Already invited to this workspace: the code accepts that invitation
+        // (its role; the code never picks one) instead of asking the owner.
+        const accepted = await this.invitationAccept.acceptMineForWorkspace(
+            workspace.id,
+            user
+        );
+        if (accepted) {
+            return { data: this.invitationAccept.mapAccepted(accepted) };
+        }
+
         // Create join workspace request
         const request =
             await this.workspaceRequestService.createJoinWorkspaceRequest(
@@ -128,7 +133,47 @@ export class WorkspaceMemberController {
                 body.reason
             );
 
-        return { data: { requestId: request.id } };
+        return { data: { joined: false, requestId: request.id } };
+    }
+
+    // The signed-in user's own pending invitations (onboard, switcher).
+    @WorkspaceMyInvitationListDoc()
+    @Response('workspace.member.invitations.list')
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @Get('/invitations')
+    async listMyInvitations(
+        @AuthJwtPayload('user', UserParsePipe) user: UserEntity
+    ): Promise<{ data: WorkspaceMyInvitationResponseDto[] }> {
+        const invitations = await this.invitationAccept.listMine(user);
+
+        return { data: invitations.map(i => this.invitationAccept.mapMine(i)) };
+    }
+
+    @WorkspaceMyInvitationAcceptDoc()
+    @Response('workspace.member.join.success')
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @Post('/invitations/:invitation/accept')
+    async acceptMyInvitation(
+        @AuthJwtPayload('user', UserParsePipe) user: UserEntity,
+        @Param('invitation', ParseUUIDPipe) id: string
+    ): Promise<{ data: WorkspaceJoinResultResponseDto }> {
+        const accepted = await this.invitationAccept.acceptMine(id, user);
+
+        return { data: this.invitationAccept.mapAccepted(accepted) };
+    }
+
+    @WorkspaceMyInvitationDeclineDoc()
+    @Response('workspace.member.invitations.decline')
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @Post('/invitations/:invitation/decline')
+    async declineMyInvitation(
+        @AuthJwtPayload('user', UserParsePipe) user: UserEntity,
+        @Param('invitation', ParseUUIDPipe) id: string
+    ): Promise<void> {
+        await this.invitationAccept.declineMine(id, user);
     }
 
     @WorkspaceFindByInvitationCodeDoc()
@@ -157,122 +202,12 @@ export class WorkspaceMemberController {
     async joinWorkspace(
         @AuthJwtPayload('user', UserParsePipe) user: UserEntity,
         @Query('token') token: string
-    ) {
-        // Resolve the target workspace from the token itself (not from the
-        // invitedEmail — the caller's identity comes from the JWT, never
-        // from a claim inside the token being redeemed).
-        const { workspaceId } =
-            await this.workSpaceMemberService.verifyInvitationToken(token);
-
-        const workspace = await this.workSpaceService.findOneById(workspaceId);
-
-        const isUserAlreadyMember =
-            await this.workSpaceMemberService.isUserMemberOfWorkspace(
-                workspaceId,
-                user.id
-            );
-
-        if (workspace && isUserAlreadyMember) {
-            throw new ConflictException({
-                statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.MEMBER_EXIST,
-                message: 'workspace.error.memberExist',
-            });
-        }
-
-        const em = this.em.fork();
-        await em.begin();
-        try {
-            // Joins as the caller (from the JWT). The service checks the
-            // invitation is PENDING, unexpired, and that the caller's own
-            // email matches the invitation's invitedEmail.
-            const { workspace: joinedWorkspace, roleId } =
-                await this.workSpaceMemberService.joinWorkspaceViaInvitation(
-                    token,
-                    user.id,
-                    { em }
-                );
-
-            if (!roleId) {
-                await this.assignDefaultRole(workspaceId, joinedWorkspace, user);
-            }
-
-            await this.activityService.createByUserWithWorkspace(
-                user,
-                joinedWorkspace,
-                {
-                    action: ENUM_ACTIVITY_ACTION.JOIN_WORKSPACE,
-                    subject: ENUM_POLICY_SUBJECT.WORKSPACE,
-                    metadata: {
-                        id: joinedWorkspace.id,
-                        name: joinedWorkspace.name,
-                        old: {
-                            username: user.username,
-                        },
-                        new: {
-                            username: user.username,
-                            roleId: roleId || null,
-                        },
-                    },
-                }
-            );
-            await em.commit();
-            await this.memberJoinedEmail.send(workspaceId, user.id);
-            return;
-        } catch (e) {
-            this.logger.error(
-                `Failed for user ${user.id}[${user.email}] to join workspace ${workspaceId} due to: ${e.message}`
-            );
-            await em.rollback();
-
-            // Let known errors (invalid/expired/mismatched invitation,
-            // role-assignment failures) surface with their real status
-            // instead of being flattened into a 500.
-            if (e instanceof HttpException) {
-                throw e;
-            }
-
-            throw new InternalServerErrorException({
-                statusCode:
-                    ENUM_WORKSPACE_STATUS_CODE_ERROR.INVITATION_LINK_INVALID,
-                message: 'workspace.member.join.failed',
-            });
-        }
-    }
-
-    // No roleId on the invitation: fall back to the workspace's default
-    // member role. Silently a no-op if that role doesn't exist.
-    private async assignDefaultRole(
-        workspaceId: string,
-        workspace: WorkspaceEntity,
-        user: UserEntity
     ): Promise<void> {
-        const memberRole = await this.roleService.findOne({
-            workspace: workspaceId,
-            type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
-            isActive: true,
-        });
-
-        if (!memberRole) {
-            return;
-        }
-
-        try {
-            await this.workSpaceMemberService.assignRoleToMember(
-                workspaceId,
-                user.id,
-                memberRole.id
-            );
-        } catch (err) {
-            this.logger.error(
-                `Default role assignment failed for ${user.email} (${user.id}) joining ${workspace.name} (${workspace.id}): ${err.message}`
-            );
-            const failure = new BadRequestException({
-                statusCode:
-                    ENUM_WORKSPACE_STATUS_CODE_ERROR.INVITATION_LINK_INVALID,
-                message: 'workspace.member.join.failed',
-            });
-            throw failure;
-        }
+        // The workspace comes from the invitation row the token resolves to,
+        // never from a claim the caller sent. Joins as the caller (from the
+        // JWT). The shared accept checks the invitation is PENDING,
+        // unexpired, and that the caller's own email matches the invitee's.
+        await this.invitationAccept.acceptByToken(token, user);
     }
 
     @ResponsePaging('workspace.member.list')
@@ -401,10 +336,12 @@ export class WorkspaceMemberController {
             email: email.toLowerCase(),
             id: { $nin: excludedMemberIds },
         };
-        const invitableUsers =
-            await this.userService.findAllWithRoleAndCountry(find, {
+        const invitableUsers = await this.userService.findAllWithRoleAndCountry(
+            find,
+            {
                 paging: { limit, offset },
-            });
+            }
+        );
         const total = await this.countInvitableUsers(find);
         const totalPage: number = this.paginationService.totalPage(
             total,
@@ -442,11 +379,13 @@ export class WorkspaceMemberController {
             ...nameSearch,
             id: { $in: coMemberIds, $nin: excludedMemberIds },
         };
-        const invitableUsers =
-            await this.userService.findAllWithRoleAndCountry(find, {
+        const invitableUsers = await this.userService.findAllWithRoleAndCountry(
+            find,
+            {
                 paging: { limit: paging.limit, offset: paging.offset },
                 order: paging.order,
-            });
+            }
+        );
         const total = await this.countInvitableUsers(find);
         const totalPage: number = this.paginationService.totalPage(
             total,

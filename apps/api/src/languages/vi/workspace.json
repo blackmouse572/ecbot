@@ -19,7 +19,8 @@
         "invalidInvitationCode": "Mã mời không hợp lệ. Có thể đã hết hạn hoặc sai rồi.",
         "invalidSlug": "Đường dẫn không gian làm việc chỉ được dùng chữ thường, số và dấu gạch ngang.",
         "suspended": "Không gian làm việc này đã bị tạm khoá. Vui lòng liên hệ bộ phận hỗ trợ để mở lại.",
-        "seatLimitExceeded": "Gói hiện tại đã hết chỗ cho thành viên. Hãy xóa bớt thành viên, hủy lời mời đang chờ hoặc nâng cấp gói để thêm."
+        "seatLimitExceeded": "Gói hiện tại đã hết chỗ cho thành viên. Hãy xóa bớt thành viên, hủy lời mời đang chờ hoặc nâng cấp gói để thêm.",
+        "defaultMemberRoleMissing": "Vai trò Member mặc định đang bị tắt hoặc không còn. Hãy bật lại vai trò này để thêm thành viên mới."
     },
     "owner": {
         "inviteMember": {
@@ -50,6 +51,10 @@
         },
         "assign": {
             "success": "Đã gán vai trò mới cho thành viên thành công!"
+        },
+        "invitations": {
+            "list": "Đã lấy danh sách lời mời đang chờ.",
+            "decline": "Đã từ chối lời mời."
         }
     }
 }

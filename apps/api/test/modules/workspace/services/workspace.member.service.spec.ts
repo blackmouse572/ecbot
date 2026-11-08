@@ -215,8 +215,14 @@ describe('WorkspaceMemberService', () => {
         });
     });
 
-    describe('joinWorkspaceViaInvitation', () => {
+    describe('acceptInvitation', () => {
         const userId = randomUUID();
+        // The invitation row, as the token, id or join-code lookup found it.
+        const join = async () =>
+            service.acceptInvitation(
+                await mockInvitationService.findOneByToken(),
+                userId
+            );
         const workspaceId = randomUUID();
         const roleId = randomUUID();
         const invitationId = randomUUID();
@@ -241,21 +247,91 @@ describe('WorkspaceMemberService', () => {
                 status: 'PENDING',
                 expiresAt: new Date(Date.now() + 60_000),
                 inviteeEmail: 'invitee@mail.com',
+                workspace: { id: workspaceId },
                 role: { id: roleId },
             });
 
-            const result = await service.joinWorkspaceViaInvitation(
-                'token',
-                userId
-            );
+            const result = await join();
 
             expect(result.workspace).toEqual({ id: workspaceId });
-            expect(result.roleId).toBe(roleId);
+            expect(result.role).toEqual({ id: roleId });
+            // The invitation row's role, scoped to its workspace.
+            expect(mockRoleService.findOne).toHaveBeenCalledWith(
+                { id: roleId, workspace: workspaceId, isActive: true },
+                undefined
+            );
             expect(mockInvitationService.accept).toHaveBeenCalledWith(
                 invitationId,
                 userId,
                 undefined
             );
+        });
+
+        it('grants the built-in Member role (by name, never Admin) when the invitation has none', async () => {
+            const memberRoleId = randomUUID();
+            mockRoleService.findOne.mockResolvedValue({
+                id: memberRoleId,
+                name: 'Member',
+            });
+            mockInvitationService.findOneByToken.mockResolvedValue({
+                id: invitationId,
+                status: 'PENDING',
+                expiresAt: new Date(Date.now() + 60_000),
+                inviteeEmail: 'invitee@mail.com',
+                workspace: { id: workspaceId },
+                role: null,
+            });
+
+            const result = await join();
+
+            expect(mockRoleService.findOne).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    workspace: workspaceId,
+                    name: 'Member',
+                    isActive: true,
+                }),
+                undefined
+            );
+            expect(result.role).toMatchObject({ id: memberRoleId });
+            expect(mockWorkspaceMemberRepository.create).toHaveBeenCalledWith(
+                expect.objectContaining({ role: { id: memberRoleId } }),
+                undefined
+            );
+        });
+
+        it('refuses a role-less invitation when the Member role is off', async () => {
+            mockRoleService.findOne.mockResolvedValue(null);
+            mockInvitationService.findOneByToken.mockResolvedValue({
+                id: invitationId,
+                status: 'PENDING',
+                expiresAt: new Date(Date.now() + 60_000),
+                inviteeEmail: 'invitee@mail.com',
+                workspace: { id: workspaceId },
+                role: null,
+            });
+
+            await expect(join()).rejects.toMatchObject({
+                response: {
+                    statusCode:
+                        ENUM_WORKSPACE_STATUS_CODE_ERROR.DEFAULT_MEMBER_ROLE_MISSING,
+                },
+            });
+            expect(mockInvitationService.accept).not.toHaveBeenCalled();
+        });
+
+        it('refuses when the invited custom role was deleted since', async () => {
+            mockRoleService.findOne.mockResolvedValue(null);
+            mockInvitationService.findOneByToken.mockResolvedValue({
+                id: invitationId,
+                status: 'PENDING',
+                expiresAt: new Date(Date.now() + 60_000),
+                inviteeEmail: 'invitee@mail.com',
+                workspace: { id: workspaceId },
+                role: { id: roleId },
+            });
+
+            await expect(join()).rejects.toThrow(NotFoundException);
+            expect(mockWorkspaceMemberRepository.create).not.toHaveBeenCalled();
         });
 
         it('should reject an already-used invitation', async () => {
@@ -265,9 +341,7 @@ describe('WorkspaceMemberService', () => {
                 expiresAt: new Date(Date.now() + 60_000),
             });
 
-            await expect(
-                service.joinWorkspaceViaInvitation('token', userId)
-            ).rejects.toThrow(UnauthorizedException);
+            await expect(join()).rejects.toThrow(UnauthorizedException);
             expect(mockInvitationService.accept).not.toHaveBeenCalled();
         });
 
@@ -278,9 +352,7 @@ describe('WorkspaceMemberService', () => {
                 expiresAt: new Date(Date.now() - 60_000),
             });
 
-            await expect(
-                service.joinWorkspaceViaInvitation('token', userId)
-            ).rejects.toThrow(UnauthorizedException);
+            await expect(join()).rejects.toThrow(UnauthorizedException);
         });
 
         it('should match a mixed-case caller email against the lowercased invitee email', async () => {
@@ -293,13 +365,11 @@ describe('WorkspaceMemberService', () => {
                 status: 'PENDING',
                 expiresAt: new Date(Date.now() + 60_000),
                 inviteeEmail: 'invitee@mail.com',
+                workspace: { id: workspaceId },
                 role: { id: roleId },
             });
 
-            const result = await service.joinWorkspaceViaInvitation(
-                'token',
-                userId
-            );
+            const result = await join();
 
             expect(result.workspace).toEqual({ id: workspaceId });
             expect(mockInvitationService.accept).toHaveBeenCalledWith(
@@ -317,10 +387,11 @@ describe('WorkspaceMemberService', () => {
                 status: 'PENDING',
                 expiresAt: new Date(Date.now() + 60_000),
                 inviteeEmail: 'someone-else@mail.com',
+                workspace: { id: workspaceId },
                 role: { id: roleId },
             });
 
-            const result = service.joinWorkspaceViaInvitation('token', userId);
+            const result = join();
             await expect(result).rejects.toThrow(ForbiddenException);
             // #184: say the invitation is for another account, not that the
             // link is invalid or expired.
@@ -344,25 +415,9 @@ describe('WorkspaceMemberService', () => {
             });
             mockUserService.findOneById.mockResolvedValue(null);
 
-            await expect(
-                service.joinWorkspaceViaInvitation('token', userId)
-            ).rejects.toMatchObject({
+            await expect(join()).rejects.toMatchObject({
                 response: { message: 'workspace.member.join.invalid' },
             });
-        });
-
-        it('should reject with 404 when no invitation row matches the token', async () => {
-            mockInvitationService.findOneByToken.mockResolvedValue(null);
-
-            const error = await service
-                .joinWorkspaceViaInvitation('token', userId)
-                .catch((err: unknown) => err);
-
-            expect(error).toBeInstanceOf(NotFoundException);
-            expect((error as NotFoundException).getResponse()).toMatchObject({
-                message: 'invitation.error.notFound',
-            });
-            expect(mockInvitationService.accept).not.toHaveBeenCalled();
         });
     });
 

@@ -4,6 +4,7 @@ import {
     IDatabaseGetTotalOptions,
     IDatabaseOptions,
 } from '@app/common/database/interfaces/database.interface';
+import { InvitationEntity } from '@app/modules/invitation/repository/entities/invitation.entity';
 import { RoleEntity } from '@app/modules/role/repository/entities/role.entity';
 import { WorkspaceMemberEntity } from '../repository/entities/workspace-member.entity';
 import { WorkspaceEntity } from '../repository/entities/workspace.entity';
@@ -19,6 +20,12 @@ export type DecodedInvitationToken = InvitationLinkPayload & {
 // Nullable membership lookups (getMembershipDetails, getWorkspaceMemberByUserId)
 // share this shape.
 export type WorkspaceMembershipOrNull = WorkspaceMemberEntity | null;
+
+// What accepting an invitation granted: the workspace and the role.
+export interface IAcceptedInvitation {
+    workspace: WorkspaceEntity;
+    role: RoleEntity;
+}
 
 export interface IWorkspaceMemberService {
     verifyInvitationToken(token: string): Promise<DecodedInvitationToken>;
@@ -54,14 +61,11 @@ export interface IWorkspaceMemberService {
         workspaceId: string,
         userId: string
     ): Promise<WorkspaceMembershipOrNull>;
-    joinWorkspaceViaInvitation(
-        token: string,
+    acceptInvitation(
+        invitation: InvitationEntity,
         userId: string,
         options?: IDatabaseFindOneOptions
-    ): Promise<{
-        workspace: WorkspaceEntity;
-        roleId?: string;
-    }>;
+    ): Promise<IAcceptedInvitation>;
     findAll(
         find?: Record<string, any>,
         options?: IDatabaseFindAllOptions

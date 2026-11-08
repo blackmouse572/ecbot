@@ -25,6 +25,7 @@ import { UserRepositoryModule } from '../user/repository/user.repository.module'
 import { CloudTasksQueueModule } from '@app/worker/cloud-tasks-queue.module';
 import { MemberJoinedEmailService } from './services/member-joined-email.service';
 import { WorkspaceSeatQuotaService } from './services/workspace-seat-quota.service';
+import { WorkspaceInvitationAcceptService } from './services/workspace-invitation-accept.service';
 
 @Module({
     imports: [
@@ -54,6 +55,7 @@ import { WorkspaceSeatQuotaService } from './services/workspace-seat-quota.servi
         WorkspacePolicyGuard,
         MemberJoinedEmailService,
         WorkspaceSeatQuotaService,
+        WorkspaceInvitationAcceptService,
     ],
     controllers: [WorkspaceController, WorkspaceMemberController],
     exports: [

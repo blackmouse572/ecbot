@@ -10,6 +10,7 @@ import { applyDecorators } from '@nestjs/common';
 import { WorkspaceDocInvitationParams } from '../constants/workspace.doc.constant';
 import { WorkspaceJoinRequestDto } from '../dtos/request/workspace.join-request.request.dto';
 import { WorkspaceMemberGetResponseDto } from '../dtos/response/workspace-member.get.response.dto';
+import { WorkspaceJoinResultResponseDto } from '../dtos/response/workspace.join-result.response.dto';
 
 export function WorkspaceFindByInvitationCodeDoc(): MethodDecorator {
     return applyDecorators(
@@ -38,7 +39,7 @@ export function WorkspaceCreateJoinRequestDoc(): MethodDecorator {
         Doc({
             summary: 'Create request to join workspace by invitation code',
             description:
-                'Create a request to join a workspace using an invitation code. This creates a request for the workspace owner to approve.',
+                'Join a workspace with its code. When the caller has a pending invitation to it (verified email), that invitation is accepted with its role (joined true). Otherwise a request is filed for the owner to approve (joined false, requestId).',
         }),
         DocAuth({
             jwtAccessToken: true,
@@ -51,6 +52,8 @@ export function WorkspaceCreateJoinRequestDoc(): MethodDecorator {
             dto: WorkspaceJoinRequestDto,
             params: [...WorkspaceDocInvitationParams],
         }),
-        DocResponse('workspace.joinRequest.success')
+        DocResponse('workspace.joinRequest.success', {
+            dto: WorkspaceJoinResultResponseDto,
+        })
     );
 }

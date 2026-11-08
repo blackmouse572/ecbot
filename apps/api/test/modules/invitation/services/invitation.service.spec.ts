@@ -138,7 +138,7 @@ describe('InvitationService', () => {
     });
 
     describe('accept', () => {
-        it('should set status ACCEPTED with acceptedAt + acceptedByUserId', async () => {
+        it('should set status ACCEPTED with acceptedAt + the acceptedByUser relation', async () => {
             const id = randomUUID();
             const userId = randomUUID();
             mockInvitationRepository.updateEntity.mockResolvedValue({ id });
@@ -149,7 +149,8 @@ describe('InvitationService', () => {
                 { id },
                 expect.objectContaining({
                     status: ENUM_INVITATION_STATUS.ACCEPTED,
-                    acceptedByUserId: userId,
+                    // The mapped relation; a bare acceptedByUserId was never saved.
+                    acceptedByUser: { id: userId },
                     acceptedAt: expect.any(Date),
                 }),
                 undefined
@@ -158,7 +159,7 @@ describe('InvitationService', () => {
     });
 
     describe('revoke', () => {
-        it('should set status REVOKED with revokedAt + revokedByUserId', async () => {
+        it('should set status REVOKED with revokedAt + the revokedByUser relation', async () => {
             const id = randomUUID();
             const userId = randomUUID();
             mockInvitationRepository.updateEntity.mockResolvedValue({ id });
@@ -169,11 +170,50 @@ describe('InvitationService', () => {
                 { id },
                 expect.objectContaining({
                     status: ENUM_INVITATION_STATUS.REVOKED,
-                    revokedByUserId: userId,
+                    revokedByUser: { id: userId },
                     revokedAt: expect.any(Date),
                 }),
                 undefined
             );
+        });
+    });
+
+    describe('findPendingForEmail', () => {
+        it('finds only pending, unexpired invitations to the lowercased email in live workspaces', async () => {
+            mockInvitationRepository.find.mockResolvedValue([]);
+
+            await service.findPendingForEmail('An@Mail.com');
+
+            const [filter, options] =
+                mockInvitationRepository.find.mock.calls[0];
+            expect(filter).toEqual({
+                inviteeEmail: 'an@mail.com',
+                status: ENUM_INVITATION_STATUS.PENDING,
+                expiresAt: { $gt: expect.any(Date) },
+                workspace: { deleted: false },
+            });
+            // Expired ones are excluded by the database, not later.
+            expect(filter.expiresAt.$gt.getTime()).toBeLessThanOrEqual(
+                Date.now()
+            );
+            expect(options.populate).toEqual(['workspace', 'inviter', 'role']);
+        });
+
+        it('narrows to one invitation id or one workspace', async () => {
+            mockInvitationRepository.find.mockResolvedValue([]);
+
+            await service.findPendingForEmail('an@mail.com', {
+                id: 'inv-1',
+                workspace: 'ws-1',
+            });
+
+            expect(
+                mockInvitationRepository.find.mock.calls[0][0]
+            ).toMatchObject({
+                id: 'inv-1',
+                inviteeEmail: 'an@mail.com',
+                workspace: { id: 'ws-1', deleted: false },
+            });
         });
     });
 

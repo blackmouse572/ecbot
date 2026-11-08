@@ -4,12 +4,15 @@ import {
     IDatabaseGetTotalOptions,
     IDatabaseOptions,
 } from '@app/common/database/interfaces/database.interface';
-import { ENUM_INVITATION_STATUS_CODE_ERROR } from '@app/modules/invitation/enums/invitation.enum';
+import { ENUM_INVITATION_STATUS } from '@app/modules/invitation/enums/invitation.enum';
+import { InvitationEntity } from '@app/modules/invitation/repository/entities/invitation.entity';
 import { InvitationService } from '@app/modules/invitation/services/invitation.service';
+import { ENUM_POLICY_ROLE_TYPE } from '@app/modules/policy/enums/policy.enum';
 import { RoleEntity } from '@app/modules/role/repository/entities/role.entity';
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
 import { EntityManager } from '@mikro-orm/postgresql';
 import {
+    ConflictException,
     ForbiddenException,
     Injectable,
     NotFoundException,
@@ -25,10 +28,12 @@ import {
     WorkspaceMemberGetResponseDto,
 } from '../dtos/response/workspace-member.get.response.dto';
 import { WorkspaceMemberListResponseDto } from '../dtos/response/workspace-member.list.response.dto';
+import { WORKSPACE_DEFAULT_MEMBER_ROLE_NAME } from '../constants/workspace.constant';
 import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from '../enums/workspace.status-code.enum';
 import { IWorkspaceMemberWithUserDoc } from '../interfaces/workspace-member.interface';
 import {
     DecodedInvitationToken,
+    IAcceptedInvitation,
     IWorkspaceMemberService,
     WorkspaceMembershipOrNull,
 } from '../interfaces/workspace.member.service.interface';
@@ -138,6 +143,7 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
         options?: IDatabaseFindOneOptions
     ): Promise<void> {
         const em = options?.em || this.em;
+
         // Verify the role belongs to the workspace
         const role = await this.roleService.findOne(
             {
@@ -157,6 +163,7 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
 
         // Find the user
         const user = await this.userService.findOneById(userId, options);
+
         if (!user) {
             throw new UnauthorizedException({
                 statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.NOT_FOUND,
@@ -234,6 +241,7 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
 
         // Find the user
         const user = await this.userService.findOneById(userId);
+
         if (!user) {
             throw new UnauthorizedException({
                 statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.NOT_FOUND,
@@ -287,6 +295,7 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
             user: memberUserId,
             isActive: true,
         });
+
         const workspaceIds = memberships.map(({ workspace }) => workspace.id);
 
         // De-duplicate: a user can hold more than one active role per workspace.
@@ -306,28 +315,18 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
         return this.workspaceMemberRepository.findOne(criteria);
     }
 
-    async joinWorkspaceViaInvitation(
-        token: string,
+    /**
+     * The one accept path, shared by the emailed link (token), the in-app
+     * Accept button (id) and the join code. Grants the invitation row's role,
+     * or the built-in Member role when it has none, and marks it accepted.
+     */
+    async acceptInvitation(
+        invitation: InvitationEntity,
         userId: string,
         options?: IDatabaseFindOneOptions
-    ): Promise<{
-        workspace: WorkspaceEntity;
-        roleId?: string;
-    }> {
-        // Verify the token first
-        const payload = await this.verifyInvitationToken(token);
-
-        // Find the invitation in database
-        const invitation = await this.invitationService.findOneByToken(token);
-        if (!invitation) {
-            throw new NotFoundException({
-                statusCode: ENUM_INVITATION_STATUS_CODE_ERROR.NOT_FOUND,
-                message: 'invitation.error.notFound',
-            });
-        }
-
+    ): Promise<IAcceptedInvitation> {
         // Check if invitation is still pending
-        if (invitation.status !== 'PENDING') {
+        if (invitation.status !== ENUM_INVITATION_STATUS.PENDING) {
             throw new UnauthorizedException({
                 statusCode:
                     ENUM_WORKSPACE_STATUS_CODE_ERROR.INVITATION_LINK_INVALID,
@@ -348,6 +347,7 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
         // authenticated as that exact user — never someone who merely knows
         // the token. Compare against the caller's own (JWT-authenticated) id.
         const caller = await this.userService.findOneById(userId);
+
         if (!caller) {
             // 403, not 401: apps/app retries a 401 as an expired session.
             throw new ForbiddenException({
@@ -356,6 +356,7 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
                 message: 'workspace.member.join.invalid',
             });
         }
+
         if (
             caller.email.toLowerCase() !== invitation.inviteeEmail.toLowerCase()
         ) {
@@ -368,30 +369,61 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
             });
         }
 
-        // Join the workspace
+        // The workspace comes from the invitation row, never from a claim
+        // the caller sent.
+        const workspaceId = invitation.workspace.id;
+
         const workspace = await this.joinWorkspace(
-            payload.workspaceId,
+            workspaceId,
             userId,
             options
         );
 
-        // Assign role if provided by creating WorkspaceMember entry
-        if (payload.roleId) {
-            await this.assignRoleToMember(
-                payload.workspaceId,
-                userId,
-                payload.roleId,
-                options
-            );
+        // The invitation row's role is the one to grant: it is set when the
+        // invite is sent and changes when an owner edits it on the
+        // Invitations page. The token's roleId is frozen at send time, so it
+        // would ignore that edit. No role: the built-in Member role (never
+        // Admin, which shares its type).
+        const role = await this.roleService.findOne(
+            invitation.role?.id
+                ? {
+                      id: invitation.role.id,
+                      workspace: workspaceId,
+                      isActive: true,
+                  }
+                : {
+                      workspace: workspaceId,
+                      type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
+                      name: WORKSPACE_DEFAULT_MEMBER_ROLE_NAME,
+                      isActive: true,
+                  },
+            options
+        );
+
+        if (!role && !invitation.role?.id) {
+            // The owner turned the built-in Member role off. Never fall back
+            // to Admin, which shares its type.
+            throw new ConflictException({
+                statusCode:
+                    ENUM_WORKSPACE_STATUS_CODE_ERROR.DEFAULT_MEMBER_ROLE_MISSING,
+                message: 'workspace.error.defaultMemberRoleMissing',
+            });
         }
+
+        if (!role) {
+            // The invited role was deleted or turned off since the invite.
+            throw new NotFoundException({
+                statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.NOT_FOUND,
+                message: 'role.error.notFound',
+            });
+        }
+
+        await this.assignRoleToMember(workspaceId, userId, role.id, options);
 
         // Mark invitation as accepted
         await this.invitationService.accept(invitation.id, userId, options);
 
-        return {
-            workspace,
-            roleId: payload.roleId,
-        };
+        return { workspace, role };
     }
 
     async getUserIdsFromWorkspaceMembers(
@@ -425,6 +457,7 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
             workspaceId,
             userId
         );
+
         return !!membership;
     }
 

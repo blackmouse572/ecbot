@@ -377,3 +377,42 @@ describe('NotificationService subscription notifications', () => {
         expect(subscriptionResumed.message).toContain('{planName}');
     });
 });
+
+describe('NotificationService.createWorkspaceInvitation', () => {
+    const create = jest.fn(async (data: unknown) => data);
+    const messageService = {
+        setMessage: jest.fn(
+            (key: string, opts?: { properties?: Record<string, string> }) =>
+                opts?.properties
+                    ? `${key}:${JSON.stringify(opts.properties)}`
+                    : key
+        ),
+    };
+    const service = new NotificationService(
+        { create } as any,
+        {} as any,
+        messageService as any,
+        { sendToUser: async () => undefined } as any
+    );
+
+    it('names the inviter and the workspace, and links to the same accept', async () => {
+        await service.createWorkspaceInvitation('invitee-1', 'owner-1', {
+            id: 'ws-1',
+            name: 'Moc Coffee',
+            invitationLink: 'https://app.test/join?token=t',
+            invitationId: 'inv-1',
+            inviterName: 'Lan',
+        });
+
+        const sent = create.mock.calls[0][0] as any;
+        expect(messageService.setMessage).toHaveBeenCalledWith(
+            'notification.invitation.message',
+            { properties: { inviterName: 'Lan', workspaceName: 'Moc Coffee' } }
+        );
+        expect(sent.metadata.actionUrl).toBe('https://app.test/join?token=t');
+        expect(sent.metadata.data).toMatchObject({
+            invitationId: 'inv-1',
+            workspace: { id: 'ws-1' },
+        });
+    });
+});

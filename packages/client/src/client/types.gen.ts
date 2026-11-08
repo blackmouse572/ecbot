@@ -445,11 +445,45 @@ export type WorkSpaceInviteMemberRequestDto = {
     roleId?: string;
 };
 
+export type WorkspaceSummaryResponseDto = {
+    id: string;
+    name: string;
+    slug: string;
+    avatar?: string | null;
+};
+
+export type WorkspaceJoinResultResponseDto = {
+    /**
+     * True when a pending invitation was accepted instead of filing a request
+     */
+    joined: boolean;
+    /**
+     * The filed join request
+     */
+    requestId?: string;
+    workspace?: WorkspaceSummaryResponseDto;
+    roleName?: string;
+};
+
 export type WorkspaceJoinRequestDto = {
     /**
      * Optional reason for joining the workspace
      */
     reason?: string;
+};
+
+export type WorkspaceMyInvitationResponseDto = {
+    id: string;
+    workspace: WorkspaceSummaryResponseDto;
+    /**
+     * The inviter's name, or their email when unnamed
+     */
+    inviterName: string;
+    /**
+     * The role granted on accept: the invitation role, or Member when it has none
+     */
+    roleName: string;
+    expiresAt: string;
 };
 
 export type RoleListResponseDto = {
@@ -7771,10 +7805,197 @@ export type WorkspaceMemberControllerCreateJoinRequestByInvitationCodeV1Response
     200: ResponseDto & {
         message?: unknown;
         statusCode?: number;
+        data?: WorkspaceJoinResultResponseDto;
     };
 };
 
 export type WorkspaceMemberControllerCreateJoinRequestByInvitationCodeV1Response = WorkspaceMemberControllerCreateJoinRequestByInvitationCodeV1Responses[keyof WorkspaceMemberControllerCreateJoinRequestByInvitationCodeV1Responses];
+
+export type WorkspaceMemberControllerListMyInvitationsV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/workspace/member/invitations';
+};
+
+export type WorkspaceMemberControllerListMyInvitationsV1Errors = {
+    /**
+     * 401
+     */
+    401: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type WorkspaceMemberControllerListMyInvitationsV1Error = WorkspaceMemberControllerListMyInvitationsV1Errors[keyof WorkspaceMemberControllerListMyInvitationsV1Errors];
+
+export type WorkspaceMemberControllerListMyInvitationsV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<WorkspaceMyInvitationResponseDto>;
+    };
+};
+
+export type WorkspaceMemberControllerListMyInvitationsV1Response = WorkspaceMemberControllerListMyInvitationsV1Responses[keyof WorkspaceMemberControllerListMyInvitationsV1Responses];
+
+export type WorkspaceMemberControllerAcceptMyInvitationV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the invitation
+         */
+        invitation: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/member/invitations/{invitation}/accept';
+};
+
+export type WorkspaceMemberControllerAcceptMyInvitationV1Errors = {
+    /**
+     * 401
+     */
+    401: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type WorkspaceMemberControllerAcceptMyInvitationV1Error = WorkspaceMemberControllerAcceptMyInvitationV1Errors[keyof WorkspaceMemberControllerAcceptMyInvitationV1Errors];
+
+export type WorkspaceMemberControllerAcceptMyInvitationV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: WorkspaceJoinResultResponseDto;
+    };
+};
+
+export type WorkspaceMemberControllerAcceptMyInvitationV1Response = WorkspaceMemberControllerAcceptMyInvitationV1Responses[keyof WorkspaceMemberControllerAcceptMyInvitationV1Responses];
+
+export type WorkspaceMemberControllerDeclineMyInvitationV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the invitation
+         */
+        invitation: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/member/invitations/{invitation}/decline';
+};
+
+export type WorkspaceMemberControllerDeclineMyInvitationV1Errors = {
+    /**
+     * 401
+     */
+    401: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 403
+     */
+    403: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type WorkspaceMemberControllerDeclineMyInvitationV1Error = WorkspaceMemberControllerDeclineMyInvitationV1Errors[keyof WorkspaceMemberControllerDeclineMyInvitationV1Errors];
+
+export type WorkspaceMemberControllerDeclineMyInvitationV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type WorkspaceMemberControllerDeclineMyInvitationV1Response = WorkspaceMemberControllerDeclineMyInvitationV1Responses[keyof WorkspaceMemberControllerDeclineMyInvitationV1Responses];
 
 export type WorkspaceMemberControllerFindWorkspaceByInvitationCodeV1Data = {
     body?: never;

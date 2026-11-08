@@ -13,6 +13,12 @@ const workspace = {
 vi.mock("@/hooks/api", () => ({
   useMe: () => ({ user: { isOwner: false } }),
 }));
+// The switcher's pending invitations (tested in workspace-switcher.test.tsx).
+vi.mock("@/hooks/api/workspace-member", () => ({
+  useMyInvitations: () => ({ invitations: [] }),
+  useAcceptMyInvitation: () => ({ isPending: false }),
+  useDeclineMyInvitation: () => ({ isPending: false }),
+}));
 vi.mock("@/hooks/api/workspace", () => ({
   useEnsureWorkspace: () => ({ workspace }),
   useWorkspaceList: () => ({ workspaces: [workspace] }),

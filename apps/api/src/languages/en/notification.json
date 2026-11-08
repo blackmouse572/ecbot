@@ -7,7 +7,7 @@
     "unreadCount": "Unread notifications count",
     "invitation": {
         "title": "Workspace Invitation",
-        "message": "You have been invited to join the \"{workspaceName}\" workspace.",
+        "message": "{inviterName} invited you to {workspaceName}.",
         "accept": "Accept invitation"
     },
     "activity": {
