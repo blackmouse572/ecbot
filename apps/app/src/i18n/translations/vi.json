@@ -603,20 +603,25 @@
       },
       "hints": {
         "handler": "Không gian làm việc của bạn sẽ ở"
-      }
+      },
+      "title": "Tạo không gian làm việc",
+      "description": "Tạo một không gian làm việc mới"
     },
     "join": {
+      "title": "Tham gia không gian làm việc",
+      "description": "Nhập mã tham gia mà chủ không gian làm việc gửi cho bạn.",
       "tabs": {
-        "join": "Không gian làm việc",
+        "join": "Tìm không gian làm việc",
         "success": "Thành công! 🎊",
         "confirm": "Xác nhận"
       },
       "fields": {
-        "code": "Nhập mã thần bí của Không gian làm việc ✨"
+        "code": "Mã tham gia",
+        "codeHelper": "Hãy xin mã từ chủ không gian làm việc. Bạn được mời qua email? Hãy chấp nhận lời mời trong email để nhận đúng vai trò họ đã chọn."
       },
       "success": {
-        "sentRequest": "Yêu cầu tham gia đã được gửi thành công! 🚀",
-        "description": "Yêu cầu tham gia của bạn đã được gửi thành công. Chúng tôi sẽ thông báo cho bạn khi có tin vui! 📬"
+        "sentRequest": "Đã gửi yêu cầu",
+        "description": "Chủ không gian làm việc sẽ xem xét yêu cầu của bạn. Bạn sẽ có quyền truy cập khi yêu cầu được duyệt."
       },
       "joinWorkspace": "Tham gia không gian làm việc"
     },
@@ -632,8 +637,8 @@
       },
       "other": "Khác",
       "submit": "Tạo agent đầu tiên",
-      "invited": "Được mời vào một không gian làm việc?",
-      "joinLink": "Tham gia bằng mã"
+      "invited": "Bạn có mã tham gia?",
+      "joinLink": "Tham gia không gian làm việc"
     }
   },
   "join": {
@@ -1507,13 +1512,18 @@
     },
     "inviteMember": {
       "action": "Mời",
-      "placeholder": "Tìm kiếm theo tên...",
-      "success": "Đã mời thành viên thành công.",
-      "loading": "Đang mời thành viên...",
+      "placeholder": "Nhập địa chỉ email",
+      "success": "Đã gửi lời mời tới {{email}}.",
+      "loading": "Đang gửi lời mời…",
       "searchResults": "Kết quả tìm kiếm",
       "inviteCode": {
-        "title": "Mã mời",
-        "copySuccess": "Mã mời đã được sao chép vào clipboard."
+        "title": "Mã tham gia",
+        "copySuccess": "Đã sao chép mã tham gia.",
+        "copy": "Sao chép mã tham gia"
+      },
+      "keyHints": {
+        "close": "Đóng",
+        "move": "Di chuyển"
       }
     },
     "invitedMember": {
@@ -1525,6 +1535,10 @@
       "revoke": {
         "success": "Đã hủy lời mời thành công.",
         "loading": "Đang hủy lời mời..."
+      },
+      "updateRole": {
+        "loading": "Đang cập nhật vai trò…",
+        "success": "Đã cập nhật vai trò."
       }
     },
     "assignRole": {
@@ -1542,7 +1556,14 @@
       "title": "Lời mời",
       "empty": "Lời mời bạn gửi từ trang Thành viên sẽ nằm ở đây cho tới khi được chấp nhận.",
       "emptyTitle": "Không có lời mời đang chờ",
-      "noReadPermission": "Bạn không thể xem lời mời trong workspace này. Hãy nhờ chủ workspace."
+      "noReadPermission": "Bạn không thể xem lời mời trong workspace này. Hãy nhờ chủ workspace.",
+      "defaultRole": "Member (mặc định)",
+      "status": {
+        "PENDING": "Đang chờ",
+        "ACCEPTED": "Đã chấp nhận",
+        "REVOKED": "Đã hủy",
+        "EXPIRED": "Hết hạn"
+      }
     },
     "joinRequests": {
       "title": "Yêu cầu tham gia",

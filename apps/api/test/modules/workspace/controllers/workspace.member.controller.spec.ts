@@ -1,3 +1,4 @@
+import { ENUM_POLICY_ROLE_TYPE } from '@app/modules/policy/enums/policy.enum';
 // Provide a complete workspace-decorator stub (the global setup only stubs a
 // subset) so importing the controller does not fail at decoration time.
 jest.mock('@app/modules/workspace/decorators/workspace.decorator', () => ({
