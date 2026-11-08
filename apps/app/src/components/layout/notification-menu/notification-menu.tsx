@@ -44,7 +44,7 @@ export const NotificationMenu: FC = () => {
   const markManyAsRead = useMarkNotificationsAsRead();
   const markAsRead = useMarkNotificationAsRead();
   const markAllAsRead = useMarkAllNotificationsAsRead();
-  const { invitations } = useMyInvitations();
+  const { invitations, isFetched: invitationsFetched } = useMyInvitations();
   const { accept, decline, busyId } = useMyInvitationActions();
   const [newIds, setNewIds] = useState<Set<string>>(() => new Set());
   const isOpen = useRef(false);
@@ -79,6 +79,8 @@ export const NotificationMenu: FC = () => {
     const seenIds = rows.flatMap((notification) =>
       notification.status === "unread" &&
       !isHandoffNotification(notification) &&
+      // Until my invitations load, any invitation may still be pending.
+      !(notification.type === "invitation" && !invitationsFetched) &&
       !pendingInvitation(notification)
         ? [notification.id]
         : [],

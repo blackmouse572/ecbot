@@ -152,6 +152,12 @@ describe('WorkspaceInvitationAcceptService', () => {
                 }),
                 { status: REQUEST_STATUS.CANCELLED }
             );
+            // The audit entry rolls back with the membership.
+            expect(
+                activityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(me, workspace, expect.anything(), {
+                em: tx,
+            });
             expect(tx.commit).toHaveBeenCalled();
             expect(memberJoinedEmail.send).toHaveBeenCalledWith(
                 'ws-1',

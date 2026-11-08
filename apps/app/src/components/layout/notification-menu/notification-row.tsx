@@ -13,8 +13,8 @@ type NotificationRowProps = {
   // Unread, or unread when the menu opened (highlighted until it closes).
   isNew: boolean;
   onClick?: () => void;
-  // Buttons under the text (Accept and Decline on an invitation). The row
-  // itself is then not clickable, so a click lands on one button only.
+  // Menu items under the row (Accept and Decline on an invitation). They sit
+  // beside the row's own item, never inside it, so each stays one menuitem.
   actions?: ReactNode;
 };
 
@@ -58,26 +58,27 @@ export const NotificationRow: FC<NotificationRowProps> = ({
         <Text size="xsmall" leading="compact" className="text-ui-fg-muted">
           {formatRelativeTime(notification.createdAt, i18n.language)}
         </Text>
-        {actions && <div className="flex gap-x-1 pt-1">{actions}</div>}
       </div>
     </div>
   );
 
-  if (actions) {
-    return <div onClick={onClick}>{content}</div>;
-  }
-
-  if (actionUrl) {
-    return (
-      <DropdownMenu.Item asChild className="p-0" onClick={onClick}>
-        <Link to={actionUrl}>{content}</Link>
-      </DropdownMenu.Item>
-    );
-  }
-
-  return (
+  const row = actionUrl ? (
+    <DropdownMenu.Item asChild className="p-0" onClick={onClick}>
+      <Link to={actionUrl}>{content}</Link>
+    </DropdownMenu.Item>
+  ) : (
     <DropdownMenu.Item className="p-0" onClick={onClick}>
       {content}
     </DropdownMenu.Item>
+  );
+
+  if (!actions) return row;
+
+  return (
+    <div className={clx({ "bg-ui-bg-highlight": isNew })}>
+      {row}
+      {/* pl-12 lines the buttons up with the text (px-2 + icon + gap). */}
+      <div className="flex gap-x-1 pb-2 pl-12">{actions}</div>
+    </div>
   );
 };

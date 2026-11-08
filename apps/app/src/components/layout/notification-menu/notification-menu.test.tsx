@@ -13,12 +13,16 @@ const api = vi.hoisted(() => ({
   fetchNextPage: vi.fn(),
   hasNextPage: false,
   invitations: [] as unknown[],
+  invitationsFetched: true,
   accepted: [] as string[],
   declined: [] as string[],
 }));
 
 vi.mock("@/hooks/api/workspace-member", () => ({
-  useMyInvitations: () => ({ invitations: api.invitations }),
+  useMyInvitations: () => ({
+    invitations: api.invitationsFetched ? api.invitations : [],
+    isFetched: api.invitationsFetched,
+  }),
   useAcceptMyInvitation: () => ({
     isPending: false,
     mutateAsync: async (id: string) => {
@@ -108,6 +112,7 @@ describe("NotificationMenu", () => {
     api.count = 0;
     api.notifications = [];
     api.invitations = [];
+    api.invitationsFetched = true;
     api.accepted = [];
     api.declined = [];
   });
@@ -294,6 +299,32 @@ describe("NotificationMenu", () => {
       await waitFor(() => expect(api.markMany).toHaveBeenCalledWith(["n-2"]));
       expect(screen.getByRole("menuitem", { name: "Decline" })).toBeTruthy();
       expect(screen.getByRole("menuitem", { name: "Accept" })).toBeTruthy();
+    });
+
+    it("keeps invitation rows unread while my invitations are still loading", async () => {
+      api.invitationsFetched = false;
+      api.invitations = [invitation];
+      api.notifications = [
+        invited({ invitationId: "inv-1" }),
+        item({ id: "n-2" }),
+      ];
+      open();
+
+      await waitFor(() => expect(api.markMany).toHaveBeenCalledWith(["n-2"]));
+    });
+
+    it("keeps the row a link to its invitation page beside the buttons", async () => {
+      api.invitations = [invitation];
+      api.notifications = [invited({ invitationId: "inv-1" })];
+      open();
+
+      const row = await screen.findByRole("menuitem", {
+        name: /Workspace invitation/,
+      });
+      expect(row.getAttribute("href")).toBe("/invitation?token=t");
+      expect(
+        row.contains(screen.getByRole("menuitem", { name: "Accept" })),
+      ).toBe(false);
     });
 
     it("Accept joins and opens that workspace's dashboard", async () => {

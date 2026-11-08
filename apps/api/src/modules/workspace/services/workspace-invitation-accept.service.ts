@@ -187,7 +187,8 @@ export class WorkspaceInvitationAcceptService {
                             roleId: accepted.role.id,
                         },
                     },
-                }
+                },
+                { em }
             );
             await em.commit();
         } catch (e) {

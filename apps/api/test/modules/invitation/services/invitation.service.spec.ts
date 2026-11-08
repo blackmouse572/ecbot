@@ -225,6 +225,7 @@ describe('InvitationService', () => {
                 Date.now()
             );
             expect(options.populate).toEqual(['workspace', 'inviter', 'role']);
+            expect(options.limit).toBe(50);
         });
 
         it('narrows to one invitation id or one workspace', async () => {

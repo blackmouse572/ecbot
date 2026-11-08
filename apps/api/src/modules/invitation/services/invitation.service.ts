@@ -22,6 +22,9 @@ import { InvitationEntity } from '../repository/entities/invitation.entity';
 import { InvitationRepository } from '../repository/repositories/invitation.repository';
 import { buildInvitationLink } from '../utils/invitation-link.util';
 
+/** Newest pending invitations returned to one invitee. */
+export const INVITATION_PENDING_FOR_EMAIL_LIMIT = 50;
+
 @Injectable()
 export class InvitationService implements IInvitationService {
     private readonly homeUrl: string;
@@ -135,6 +138,8 @@ export class InvitationService implements IInvitationService {
             {
                 populate: ['workspace', 'inviter', 'role'],
                 order: { createdAt: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC },
+                // Anyone who can invite can grow this list: keep it bounded.
+                limit: INVITATION_PENDING_FOR_EMAIL_LIMIT,
             }
         );
     }
