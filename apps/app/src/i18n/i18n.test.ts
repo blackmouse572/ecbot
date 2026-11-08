@@ -125,3 +125,36 @@ describe("invite and workspace copy", () => {
     );
   });
 });
+
+describe("join a workspace copy (QA run 7, D14)", () => {
+  it.each([
+    ["onboard.join.title", "Join a workspace", "Tham gia không gian làm việc"],
+    [
+      "onboard.join.description",
+      "Enter the join code from the workspace owner.",
+      "Nhập mã tham gia mà chủ không gian làm việc gửi cho bạn.",
+    ],
+    ["onboard.join.tabs.join", "Find workspace", "Tìm không gian làm việc"],
+    ["onboard.join.fields.code", "Join code", "Mã tham gia"],
+    [
+      "onboard.join.fields.codeHelper",
+      "Ask the workspace owner for it. Invited by email? Accept the invitation instead, so you get the role they chose.",
+      "Hãy xin mã từ chủ không gian làm việc. Bạn được mời qua email? Hãy chấp nhận lời mời trong email để nhận đúng vai trò họ đã chọn.",
+    ],
+    ["onboard.join.success.sentRequest", "Request sent", "Đã gửi yêu cầu"],
+    [
+      "onboard.join.success.description",
+      "The workspace owner will review your request. You'll get access once they approve it.",
+      "Chủ không gian làm việc sẽ xem xét yêu cầu của bạn. Bạn sẽ có quyền truy cập khi yêu cầu được duyệt.",
+    ],
+    ["onboard.welcome.invited", "Have a join code?", "Bạn có mã tham gia?"],
+    [
+      "onboard.welcome.joinLink",
+      "Join a workspace",
+      "Tham gia không gian làm việc",
+    ],
+  ])("%s reads well in en and vi", (key, en, vi) => {
+    expect(i18n.t(key, { lng: "en" })).toBe(en);
+    expect(i18n.t(key, { lng: "vi" })).toBe(vi);
+  });
+});

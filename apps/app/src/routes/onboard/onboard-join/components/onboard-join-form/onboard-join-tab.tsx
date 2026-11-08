@@ -23,6 +23,7 @@ export const OnboardJoinTab = () => {
                   type="both"
                 />
               </Form.Control>
+              <Form.Hint>{t("onboard.join.fields.codeHelper")}</Form.Hint>
               <Form.ErrorMessage />
             </Form.Item>
           )}

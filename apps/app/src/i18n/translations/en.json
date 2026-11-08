@@ -586,17 +586,20 @@
       "description": "Create a new workspace"
     },
     "join": {
+      "title": "Join a workspace",
+      "description": "Enter the join code from the workspace owner.",
       "tabs": {
-        "join": "Find Workspace",
+        "join": "Find workspace",
         "success": "Almost There!",
         "confirm": "Confirm"
       },
       "fields": {
-        "code": "Enter workspace invitation code"
+        "code": "Join code",
+        "codeHelper": "Ask the workspace owner for it. Invited by email? Accept the invitation instead, so you get the role they chose."
       },
       "success": {
-        "sentRequest": "Join request sent successfully!",
-        "description": "Your request has been sent to the workspace owner."
+        "sentRequest": "Request sent",
+        "description": "The workspace owner will review your request. You'll get access once they approve it."
       },
       "joinWorkspace": "Join Workspace"
     },
@@ -612,8 +615,8 @@
       },
       "other": "Other",
       "submit": "Create my first agent",
-      "invited": "Invited to a workspace?",
-      "joinLink": "Join with a code"
+      "invited": "Have a join code?",
+      "joinLink": "Join a workspace"
     }
   },
   "join": {

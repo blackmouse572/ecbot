@@ -7,10 +7,10 @@ export const OnboardJoin = () => {
   return (
     <RouteFocusModal>
       <RouteFocusModal.Title asChild>
-        <span className="sr-only">{t("accounts.create.title")}</span>
+        <span className="sr-only">{t("onboard.join.title")}</span>
       </RouteFocusModal.Title>
       <RouteFocusModal.Description asChild>
-        <span className="sr-only">{t("accounts.create.description")}</span>
+        <span className="sr-only">{t("onboard.join.description")}</span>
       </RouteFocusModal.Description>
       <OnboardJoinForm />
     </RouteFocusModal>

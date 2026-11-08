@@ -126,11 +126,11 @@ describe("OnboardWelcomeForm", () => {
     expect(state.bodies).toEqual([]);
   });
 
-  it("links invited people to joining an existing workspace", () => {
+  it("links people with a join code to joining a workspace", () => {
     renderForm();
 
     expect(
-      screen.getByRole("link", { name: /Join with a code/ }),
+      screen.getByRole("link", { name: /Join a workspace/ }),
     ).toHaveAttribute("href", "/onboard/join");
   });
 });
