@@ -39,7 +39,7 @@ const renderList = () =>
       <Toaster />
       <Command shouldFilter={false}>
         <CommandList>
-          <MemberInvitableList enabled />
+          <MemberInvitableList enabled search="lan" />
         </CommandList>
       </Command>
     </>,

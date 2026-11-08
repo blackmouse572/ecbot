@@ -84,3 +84,77 @@ describe("vi coverage", () => {
     expect(missing).toEqual([]);
   });
 });
+
+// QA gate run 6 (D9, D12): plain invite copy and real status words.
+describe("invite and workspace copy", () => {
+  it.each([
+    ["en", "Invitation sent to lan@example.com."],
+    ["vi", "Đã gửi lời mời tới lan@example.com."],
+  ])("%s invite toast names the invitee", (lng, expected) => {
+    expect(
+      i18n.t("members.inviteMember.success", {
+        lng,
+        email: "lan@example.com",
+      }),
+    ).toBe(expected);
+  });
+
+  it.each(["PENDING", "ACCEPTED", "REVOKED", "EXPIRED"])(
+    "has en and vi text for the %s invitation status",
+    (status) => {
+      for (const lng of ["en", "vi"]) {
+        const key = `members.invitations.status.${status}`;
+        expect(i18n.t(key, { lng })).not.toBe(key);
+      }
+    },
+  );
+
+  it("titles the create-workspace dialog as a workspace, not an account", () => {
+    expect(i18n.t("onboard.create.title", { lng: "en" })).toBe(
+      "Create workspace",
+    );
+    expect(i18n.t("onboard.create.description", { lng: "en" })).toBe(
+      "Create a new workspace",
+    );
+    expect(i18n.t("onboard.create.title", { lng: "vi" })).toBe(
+      "Tạo không gian làm việc",
+    );
+    // The platform-account screen keeps its own title.
+    expect(i18n.t("accounts.create.title", { lng: "en" })).toBe(
+      "Create Account",
+    );
+  });
+});
+
+describe("join a workspace copy (QA run 7, D14)", () => {
+  it.each([
+    ["onboard.join.title", "Join a workspace", "Tham gia không gian làm việc"],
+    [
+      "onboard.join.description",
+      "Enter the join code from the workspace owner.",
+      "Nhập mã tham gia mà chủ không gian làm việc gửi cho bạn.",
+    ],
+    ["onboard.join.tabs.join", "Find workspace", "Tìm không gian làm việc"],
+    ["onboard.join.fields.code", "Join code", "Mã tham gia"],
+    [
+      "onboard.join.fields.codeHelper",
+      "Ask the workspace owner for it. Invited by email? Accept the invitation instead, so you get the role they chose.",
+      "Hãy xin mã từ chủ không gian làm việc. Bạn được mời qua email? Hãy chấp nhận lời mời trong email để nhận đúng vai trò họ đã chọn.",
+    ],
+    ["onboard.join.success.sentRequest", "Request sent", "Đã gửi yêu cầu"],
+    [
+      "onboard.join.success.description",
+      "The workspace owner will review your request. You'll get access once they approve it.",
+      "Chủ không gian làm việc sẽ xem xét yêu cầu của bạn. Bạn sẽ có quyền truy cập khi yêu cầu được duyệt.",
+    ],
+    ["onboard.welcome.invited", "Have a join code?", "Bạn có mã tham gia?"],
+    [
+      "onboard.welcome.joinLink",
+      "Join a workspace",
+      "Tham gia không gian làm việc",
+    ],
+  ])("%s reads well in en and vi", (key, en, vi) => {
+    expect(i18n.t(key, { lng: "en" })).toBe(en);
+    expect(i18n.t(key, { lng: "vi" })).toBe(vi);
+  });
+});

@@ -28,9 +28,14 @@ export const WORKSPACE_INVITATION_CODE_LENGTH = 6;
 export const WORKSPACE_SLUG_MAX_LENGTH = 100;
 export const WORKSPACE_SLUG_PATTERN = /^[a-z0-9-]+$/;
 
+// The built-in role every workspace gets. It is what a member receives when an
+// invitation carries no role, or a join request is approved. "Admin" shares its
+// WORKSPACE_MEMBER type, so look it up by name too.
+export const WORKSPACE_DEFAULT_MEMBER_ROLE_NAME = 'Member';
+
 export const WORKSPACE_DEFAULT_MEMBER_ROLES: RoleCreateRequestDto[] = [
     {
-        name: 'Member',
+        name: WORKSPACE_DEFAULT_MEMBER_ROLE_NAME,
         permissions: [
             ...ALLOWED_MEMBER_WORKSPACE_POLICY_SUBJECT.map(subject => ({
                 action: [ENUM_POLICY_ACTION.MANAGE],

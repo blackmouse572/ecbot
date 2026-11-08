@@ -14,7 +14,28 @@ vi.mock("@/hooks/api/invitations", () => ({
 }));
 
 vi.mock("@/hooks/api/workspace-roles", () => ({
-  useWorkspaceRoles: vi.fn(() => ({ roles: [] })),
+  useWorkspaceRoles: vi.fn(() => ({
+    roles: [
+      {
+        id: "r-owner",
+        name: "Owner - Shop",
+        type: "WORKSPACE_OWNER",
+        isActive: true,
+      },
+      {
+        id: "r-admin",
+        name: "Admin",
+        type: "WORKSPACE_MEMBER",
+        isActive: true,
+      },
+      {
+        id: "r-member",
+        name: "Member",
+        type: "WORKSPACE_MEMBER",
+        isActive: true,
+      },
+    ],
+  })),
 }));
 
 vi.mock("../members-list/components/member-invite-dialog", () => ({
@@ -52,6 +73,60 @@ describe("Invitations page", () => {
 
     expect(screen.getByText("a@mail.com")).toBeInTheDocument();
   });
+
+  it("labels the role select and shows each invitation's role", () => {
+    vi.mocked(useInvitations).mockReturnValue({
+      invitations: [
+        {
+          id: "i1",
+          inviteeEmail: "a@mail.com",
+          role: "r-admin",
+          status: "PENDING",
+        },
+      ],
+      isLoading: false,
+    } as A);
+
+    render(<Invitations />, { wrapper: MemoryRouter });
+
+    expect(screen.getByText("fields.role")).toBeInTheDocument();
+    expect(
+      screen.getByRole("combobox", { name: "fields.role" }),
+    ).toHaveTextContent("Admin");
+  });
+
+  // Accept grants the built-in Member role when the invitation has none.
+  it("shows the Member default for an invitation with no role", () => {
+    vi.mocked(useInvitations).mockReturnValue({
+      invitations: [
+        { id: "i1", inviteeEmail: "a@mail.com", status: "PENDING" },
+      ],
+      isLoading: false,
+    } as A);
+
+    render(<Invitations />, { wrapper: MemoryRouter });
+
+    expect(
+      screen.getByRole("combobox", { name: "fields.role" }),
+    ).toHaveTextContent("members.invitations.defaultRole");
+  });
+
+  it.each(["PENDING", "ACCEPTED", "REVOKED", "EXPIRED"])(
+    "shows readable text for the %s status, not the raw enum",
+    (status) => {
+      vi.mocked(useInvitations).mockReturnValue({
+        invitations: [{ id: "i1", inviteeEmail: "a@mail.com", status }],
+        isLoading: false,
+      } as A);
+
+      render(<Invitations />, { wrapper: MemoryRouter });
+
+      expect(
+        screen.getByText(`members.invitations.status.${status}`),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(status)).not.toBeInTheDocument();
+    },
+  );
 
   it("renders empty state when there are no invitations", () => {
     vi.mocked(useInvitations).mockReturnValue({
@@ -102,6 +177,7 @@ describe("Invitations page", () => {
       invitations: undefined,
       isLoading: false,
     } as A);
+    vi.mocked(useWorkspaceRoles).mockClear();
 
     render(<Invitations />, { wrapper: MemoryRouter });
 
@@ -111,9 +187,8 @@ describe("Invitations page", () => {
     expect(vi.mocked(useInvitations).mock.lastCall?.[1]).toEqual({
       enabled: false,
     });
-    expect(vi.mocked(useWorkspaceRoles).mock.lastCall?.[1]).toEqual({
-      enabled: false,
-    });
+    // Roles load only inside a row's role select, and a member gets no rows.
+    expect(useWorkspaceRoles).not.toHaveBeenCalled();
     expect(
       screen.queryByRole("button", { name: "members.inviteMember.action" }),
     ).not.toBeInTheDocument();

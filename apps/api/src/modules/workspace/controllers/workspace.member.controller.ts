@@ -19,7 +19,11 @@ import {
 import { ENUM_ROLE_STATUS_CODE_ERROR } from '@app/modules/role/enums/role.status-code.enum';
 import { RoleEntity } from '@app/modules/role/repository/entities/role.entity';
 import { RoleService } from '@app/modules/role/services/role.service';
-import { WORKSPACE_MEMBER_AVAILABLE_SEARCH } from '@app/modules/workspace/constants/workspace.constant';
+import { defaultMemberRoleMissingException } from '@app/modules/workspace/utils/default-member-role-missing.util';
+import {
+    WORKSPACE_DEFAULT_MEMBER_ROLE_NAME,
+    WORKSPACE_MEMBER_AVAILABLE_SEARCH,
+} from '@app/modules/workspace/constants/workspace.constant';
 import { UserProtected } from '@app/modules/user/decorators/user.decorator';
 import { ENUM_USER_STATUS_CODE_ERROR } from '@app/modules/user/enums/user.status-code.enum';
 import { UserParsePipe } from '@app/modules/user/pipes/user.parse.pipe';
@@ -193,7 +197,11 @@ export class WorkspaceMemberController {
                 );
 
             if (!roleId) {
-                await this.assignDefaultRole(workspaceId, joinedWorkspace, user);
+                await this.assignDefaultRole(
+                    workspaceId,
+                    joinedWorkspace,
+                    user
+                );
             }
 
             await this.activityService.createByUserWithWorkspace(
@@ -239,8 +247,8 @@ export class WorkspaceMemberController {
         }
     }
 
-    // No roleId on the invitation: fall back to the workspace's default
-    // member role. Silently a no-op if that role doesn't exist.
+    // No role on the invitation: fall back to the workspace's built-in
+    // Member role (never Admin, which shares its type).
     private async assignDefaultRole(
         workspaceId: string,
         workspace: WorkspaceEntity,
@@ -249,11 +257,12 @@ export class WorkspaceMemberController {
         const memberRole = await this.roleService.findOne({
             workspace: workspaceId,
             type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
+            name: WORKSPACE_DEFAULT_MEMBER_ROLE_NAME,
             isActive: true,
         });
 
         if (!memberRole) {
-            return;
+            throw defaultMemberRoleMissingException();
         }
 
         try {
@@ -401,10 +410,12 @@ export class WorkspaceMemberController {
             email: email.toLowerCase(),
             id: { $nin: excludedMemberIds },
         };
-        const invitableUsers =
-            await this.userService.findAllWithRoleAndCountry(find, {
+        const invitableUsers = await this.userService.findAllWithRoleAndCountry(
+            find,
+            {
                 paging: { limit, offset },
-            });
+            }
+        );
         const total = await this.countInvitableUsers(find);
         const totalPage: number = this.paginationService.totalPage(
             total,
@@ -442,11 +453,13 @@ export class WorkspaceMemberController {
             ...nameSearch,
             id: { $in: coMemberIds, $nin: excludedMemberIds },
         };
-        const invitableUsers =
-            await this.userService.findAllWithRoleAndCountry(find, {
+        const invitableUsers = await this.userService.findAllWithRoleAndCountry(
+            find,
+            {
                 paging: { limit: paging.limit, offset: paging.offset },
                 order: paging.order,
-            });
+            }
+        );
         const total = await this.countInvitableUsers(find);
         const totalPage: number = this.paginationService.totalPage(
             total,

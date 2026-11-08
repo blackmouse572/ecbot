@@ -1,3 +1,4 @@
+import { ENUM_POLICY_ROLE_TYPE } from '@app/modules/policy/enums/policy.enum';
 // Provide a complete workspace-decorator stub (the global setup only stubs a
 // subset) so importing the controller does not fail at decoration time.
 jest.mock('@app/modules/workspace/decorators/workspace.decorator', () => ({
@@ -32,6 +33,7 @@ describe('WorkspaceMemberController', () => {
         isUserMemberOfWorkspace: jest.fn(),
         verifyInvitationToken: jest.fn(),
         joinWorkspaceViaInvitation: jest.fn(),
+        assignRoleToMember: jest.fn(),
         getUserWorkspaces: jest.fn(),
     };
     const mockRoleService = { findOne: jest.fn() };
@@ -275,6 +277,46 @@ describe('WorkspaceMemberController', () => {
             expect(
                 mockActivityService.createByUserWithWorkspace
             ).toHaveBeenCalled();
+        });
+
+        it('gives a null-role invitation the built-in Member role, not Admin', async () => {
+            mockMemberService.joinWorkspaceViaInvitation.mockResolvedValue({
+                workspace: targetWorkspace,
+                roleId: undefined,
+            });
+            mockRoleService.findOne.mockResolvedValue({ id: 'member-role' });
+
+            await joinController.joinWorkspace(caller, 'token');
+
+            expect(mockRoleService.findOne).toHaveBeenCalledWith({
+                workspace: targetWorkspace.id,
+                type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
+                name: 'Member',
+                isActive: true,
+            });
+            expect(mockMemberService.assignRoleToMember).toHaveBeenCalledWith(
+                targetWorkspace.id,
+                caller.id,
+                'member-role'
+            );
+        });
+
+        it('rolls back instead of joining with no role when the Member role is off', async () => {
+            mockMemberService.joinWorkspaceViaInvitation.mockResolvedValue({
+                workspace: targetWorkspace,
+                roleId: undefined,
+            });
+            mockRoleService.findOne.mockResolvedValue(null);
+
+            await expect(
+                joinController.joinWorkspace(caller, 'token')
+            ).rejects.toMatchObject({
+                response: {
+                    message: 'workspace.error.defaultMemberRoleMissing',
+                },
+            });
+            expect(mockEm.rollback).toHaveBeenCalled();
+            expect(mockEm.commit).not.toHaveBeenCalled();
         });
 
         it('rolls back and propagates a rejected invitation (e.g. caller mismatch)', async () => {

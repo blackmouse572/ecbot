@@ -1,3 +1,4 @@
+import { ENUM_POLICY_ROLE_TYPE } from '@app/modules/policy/enums/policy.enum';
 import { UnprocessableEntityException } from '@nestjs/common';
 import { HelperHashService } from '@app/common/helper/services/helper.hash.service';
 import { NotificationService } from '@app/modules/notification/services/notification.service';
@@ -52,6 +53,7 @@ describe('WorkspaceOwnerService', () => {
     const mockInvitationService = {
         checkExistingInvitation: jest.fn(),
         create: jest.fn().mockResolvedValue({ id: 'invitation-new' }),
+        regenerateToken: jest.fn(),
     };
 
     beforeEach(async () => {
@@ -173,7 +175,7 @@ describe('WorkspaceOwnerService', () => {
                 id: 'invitation-existing',
                 token: 'existing-token',
                 invitationLink: `${url}/join?tokens=existing-token`,
-                expiresAt: new Date('2026-08-30T00:00:00Z'),
+                expiresAt: new Date('2099-08-30T00:00:00Z'),
             });
 
             const result = await service.generateInvitationLinkWithDetails(
@@ -191,6 +193,43 @@ describe('WorkspaceOwnerService', () => {
             expect(mockInvitationService.create).not.toHaveBeenCalled();
         });
 
+        it('should send a fresh link when the existing PENDING invitation has expired', async () => {
+            mockInvitationService.checkExistingInvitation.mockResolvedValue({
+                id: 'invitation-expired',
+                token: 'expired-token',
+                role: { id: 'role-admin' },
+                expiresAt: new Date(Date.now() - 60_000),
+            });
+            mockJwtService.sign.mockReturnValue('fresh-token');
+
+            const result = await service.generateInvitationLinkWithDetails(
+                ownerId,
+                { invitedEmail: 'invitee@mail.com' },
+                url,
+                workspace as any
+            );
+
+            expect(result.token).toBe('fresh-token');
+            expect(result.invitationLink).toBe(
+                `${url}/join?tokens=fresh-token`
+            );
+            expect(result.invitationId).toBe('invitation-expired');
+            expect(result.expiresAt.getTime()).toBeGreaterThan(Date.now());
+            expect(mockJwtService.sign).toHaveBeenCalledWith(
+                expect.objectContaining({ roleId: 'role-admin' }),
+                expect.anything()
+            );
+            expect(mockInvitationService.regenerateToken).toHaveBeenCalledWith(
+                'invitation-expired',
+                'fresh-token',
+                result.expiresAt,
+                result.invitationLink
+            );
+            // Still the same invitation: no new seat, no new row.
+            expect(mockSeatQuota.assertCanInvite).not.toHaveBeenCalled();
+            expect(mockInvitationService.create).not.toHaveBeenCalled();
+        });
+
         it('should rebuild the idempotent link from the configured url + stored token, never the stored invitationLink column', async () => {
             // A pre-fix row (or any row with a bad/foreign stored link) must
             // not be trusted and re-emailed as-is.
@@ -198,7 +237,7 @@ describe('WorkspaceOwnerService', () => {
                 token: 'existing-token',
                 invitationLink:
                     'https://attacker.example.com/join?tokens=existing-token',
-                expiresAt: new Date('2026-08-30T00:00:00Z'),
+                expiresAt: new Date('2099-08-30T00:00:00Z'),
             });
 
             const result = await service.generateInvitationLinkWithDetails(
@@ -247,7 +286,7 @@ describe('WorkspaceOwnerService', () => {
             ).rejects.toThrow(NotFoundException);
         });
 
-        it('should fall back to the default WORKSPACE_MEMBER role when no roleId is given', async () => {
+        it('should fall back to the built-in Member role (not Admin) when no roleId is given', async () => {
             mockInvitationService.checkExistingInvitation.mockResolvedValue(
                 null
             );
@@ -264,12 +303,34 @@ describe('WorkspaceOwnerService', () => {
                 expect.objectContaining({
                     workspace: workspace.id,
                     isActive: true,
-                    type: expect.anything(),
+                    type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
+                    name: 'Member',
                 })
             );
             expect(mockInvitationService.create).toHaveBeenCalledWith(
                 expect.objectContaining({ role: 'default-member' })
             );
+        });
+
+        it('refuses with a clear error, not a 500, when the built-in Member role is off', async () => {
+            mockInvitationService.checkExistingInvitation.mockResolvedValue(
+                null
+            );
+            mockRoleService.findOne.mockResolvedValue(null);
+
+            await expect(
+                service.generateInvitationLinkWithDetails(
+                    ownerId,
+                    { invitedEmail: 'invitee@mail.com' },
+                    url,
+                    workspace as any
+                )
+            ).rejects.toMatchObject({
+                response: {
+                    message: 'workspace.error.defaultMemberRoleMissing',
+                },
+            });
+            expect(mockInvitationService.create).not.toHaveBeenCalled();
         });
 
         it('never re-looks-up the workspace by owner — the passed-in workspace is always the target, even for a caller who does not own it', async () => {
@@ -322,6 +383,31 @@ describe('WorkspaceOwnerService', () => {
 
             expect(mockWorkspaceMemberRepository.create).toHaveBeenCalledTimes(
                 1
+            );
+        });
+
+        it('refuses with a clear error when the built-in Member role is off', async () => {
+            mockRoleService.findOne.mockResolvedValue(null);
+
+            await expect(
+                service.addMemberToWorkspace(workspace.id, randomUUID())
+            ).rejects.toMatchObject({
+                response: {
+                    message: 'workspace.error.defaultMemberRoleMissing',
+                },
+            });
+            expect(mockWorkspaceMemberRepository.create).not.toHaveBeenCalled();
+        });
+
+        it('gives an approved join request the built-in Member role, not Admin', async () => {
+            await service.addMemberToWorkspace(workspace.id, randomUUID());
+
+            expect(mockRoleService.findOne).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    workspace: workspace.id,
+                    type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
+                    name: 'Member',
+                })
             );
         });
 
