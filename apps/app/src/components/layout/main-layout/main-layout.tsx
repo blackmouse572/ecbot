@@ -9,12 +9,18 @@ import { GuideMoments } from "@/components/guide";
 import { GettingStartedNav } from "@/routes/dashboard/components/getting-started-nav/getting-started-nav";
 import { RecentAgentsSection } from "./recent-agents-section";
 import { ScrollEdgeBlur } from "./scroll-edge-blur";
-import { Divider, DropdownMenu, Text, clx } from "@medusajs/ui";
+import { Badge, Divider, DropdownMenu, Text, clx } from "@medusajs/ui";
 import { useTranslation } from "react-i18next";
 
 import { LogoBoxSpinner } from "@repo/ui/common-components";
 import { Navigate, useLocation } from "react-router-dom";
-import { NavHintPopover, NavItem, Shell, type INavItem } from "@repo/ui/layout";
+import {
+  NavHintPopover,
+  NavItem,
+  Shell,
+  useNavAccess,
+  type INavItem,
+} from "@repo/ui/layout";
 import { UserMenu } from "../user-menu";
 import {
   CommandPalette,
@@ -22,6 +28,7 @@ import {
   commandPaletteShortcutLabel,
 } from "../command-palette";
 import { useCoreRoutes } from "./use-core-routes";
+import { useMarketingRoutes } from "./use-marketing-routes";
 import { useSetAtom } from "jotai";
 import { NotificationMenu } from "../notification-menu/notification-menu";
 
@@ -203,6 +210,44 @@ const DashboardItem = () => {
   );
 };
 
+const MarketingRouteSection = () => {
+  const { t } = useTranslation();
+  const can = useNavAccess();
+  const routes = useMarketingRoutes().filter(
+    (route) => !route.ability || can(route.ability),
+  );
+
+  if (routes.length === 0) return null;
+
+  return (
+    <>
+      <Divider orientation="horizontal" variant="dashed" />
+      <nav
+        aria-labelledby="nav-marketing"
+        className="flex flex-col gap-y-1 py-3"
+      >
+        <div className="flex items-center gap-x-1.5 px-4 pb-1">
+          <Text
+            id="nav-marketing"
+            size="xsmall"
+            weight="plus"
+            leading="compact"
+            className="text-ui-fg-muted"
+          >
+            {t("app.nav.marketing.title")}
+          </Text>
+          <Badge size="2xsmall" color="blue">
+            {t("app.nav.marketing.new")}
+          </Badge>
+        </div>
+        {routes.map((route) => (
+          <NavItem key={route.to} {...route} />
+        ))}
+      </nav>
+    </>
+  );
+};
+
 const CoreRouteSection = () => {
   const coreRoutes = useCoreRoutes();
 
@@ -216,6 +261,7 @@ const CoreRouteSection = () => {
           return <NavItem key={route.to} {...route} />;
         })}
       </nav>
+      <MarketingRouteSection />
       <Divider orientation="horizontal" variant="dashed" />
       <RecentAgentsSection />
     </div>

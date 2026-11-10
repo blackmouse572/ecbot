@@ -21,6 +21,9 @@ vi.mock("../main-layout/use-core-routes", () => ({
     { label: "Agents", to: "/acme/chatbot" },
   ],
 }));
+vi.mock("../main-layout/use-marketing-routes", () => ({
+  useMarketingRoutes: () => [],
+}));
 vi.mock("@/hooks/api/chatbot", () => ({
   useChatbots: (query: { search?: string }, options: { enabled: boolean }) => {
     if (!options.enabled) return { chatbots: [], isFetching: false };

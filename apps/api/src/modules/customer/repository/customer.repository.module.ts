@@ -6,12 +6,14 @@ import { CustomerTagAssignmentEntity } from './entities/customer-tag-assignment.
 import { CustomerTagEventEntity } from './entities/customer-tag-event.entity';
 import { CustomerTagEntity } from './entities/customer-tag.entity';
 import { CustomerEntity } from './entities/customer.entity';
+import { TrackedLinkEntity } from './entities/tracked-link.entity';
 import { ContactPointRepository } from './repositories/contact-point.repository';
 import { CustomerMergeSuggestionRepository } from './repositories/customer-merge-suggestion.repository';
 import { CustomerTagAssignmentRepository } from './repositories/customer-tag-assignment.repository';
 import { CustomerTagEventRepository } from './repositories/customer-tag-event.repository';
 import { CustomerTagRepository } from './repositories/customer-tag.repository';
 import { CustomerRepository } from './repositories/customer.repository';
+import { TrackedLinkRepository } from './repositories/tracked-link.repository';
 
 @Module({
     imports: [
@@ -22,6 +24,7 @@ import { CustomerRepository } from './repositories/customer.repository';
             CustomerTagAssignmentEntity,
             CustomerTagEventEntity,
             CustomerMergeSuggestionEntity,
+            TrackedLinkEntity,
         ]),
     ],
     providers: [
@@ -31,6 +34,7 @@ import { CustomerRepository } from './repositories/customer.repository';
         CustomerTagAssignmentRepository,
         CustomerTagEventRepository,
         CustomerMergeSuggestionRepository,
+        TrackedLinkRepository,
     ],
     exports: [
         CustomerRepository,
@@ -39,6 +43,7 @@ import { CustomerRepository } from './repositories/customer.repository';
         CustomerTagAssignmentRepository,
         CustomerTagEventRepository,
         CustomerMergeSuggestionRepository,
+        TrackedLinkRepository,
     ],
 })
 export class CustomerRepositoryModule {}

@@ -13,13 +13,15 @@ import { useNavAccess } from "@repo/ui/layout";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useCoreRoutes } from "../main-layout/use-core-routes";
+import { useMarketingRoutes } from "../main-layout/use-marketing-routes";
 import type { CommandPaletteItem } from "./types";
 
 /** Every page the sidebars link to, minus the ones the member may not open. */
 export const useCommandPalettePages = (): CommandPaletteItem[] => {
   const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
-  const coreRoutes = useCoreRoutes();
+  const navRoutes = useCoreRoutes();
+  const marketingRoutes = useMarketingRoutes();
   const can = useNavAccess();
 
   return useMemo(() => {
@@ -27,7 +29,7 @@ export const useCommandPalettePages = (): CommandPaletteItem[] => {
     const settingsBase = `${base}/${ROUTES.Settings}`;
     const settingsHint = t("app.nav.main.storeSettings");
 
-    const core = coreRoutes.flatMap((route) => {
+    const core = [...navRoutes, ...marketingRoutes].flatMap((route) => {
       if (route.ability && !can(route.ability)) return [];
       const children = (route.items ?? [])
         .filter((item) => !item.ability || can(item.ability))
@@ -88,5 +90,5 @@ export const useCommandPalettePages = (): CommandPaletteItem[] => {
         to: `/${ROUTES.Settings}/${ROUTES.Profile}`,
       },
     ];
-  }, [t, workspaceSlug, coreRoutes, can]);
+  }, [t, workspaceSlug, navRoutes, marketingRoutes, can]);
 };

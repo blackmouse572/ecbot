@@ -30,6 +30,7 @@ export const ROUTES = {
   ClientCredentials: "client-credentials",
   Customers: "customers",
   CustomerSuggestions: "customers/suggestions",
+  CustomerSources: "sources",
   Workspace: "workspace",
   WorkspaceMember: "members",
   WorkspaceRoles: "roles",
