@@ -344,6 +344,26 @@ describe('MessengerPlatformAdapter.parse', () => {
             expect(e.referral).toEqual({ source: 'ad', adId: '6045' });
         });
 
+        it('lowercases a hand-typed ref and drops one that is not our code', () => {
+            const ref = (value: string) =>
+                makeAdapter().parse(
+                    wrap({
+                        ...from,
+                        message: {
+                            mid: 'm5',
+                            text: 'hi',
+                            referral: { ref: value, source: 'SHORTLINK' },
+                        },
+                    })
+                )[0].referral;
+
+            expect(ref('To-Roi-Tet')).toEqual({
+                code: 'to-roi-tet',
+                source: 'link',
+            });
+            expect(ref('summer sale!')).toBeUndefined();
+        });
+
         it('has no referral on an ordinary message', () => {
             const [e] = makeAdapter().parse(
                 wrap({ ...from, message: { mid: 'm4', text: 'hi' } })

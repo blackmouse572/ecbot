@@ -111,6 +111,15 @@ describe('TelegramPlatformAdapter.parse', () => {
         });
     });
 
+    it('lowercases the /start code and drops one that is not ours', () => {
+        expect(a.parse(msg({ text: '/start To-Roi-Tet' }))[0].referral).toEqual(
+            { code: 'to-roi-tet', source: 'link' }
+        );
+        const [other] = a.parse(msg({ text: '/start deep_link_1' }));
+        expect(other.text).toBe('/start');
+        expect(other.referral).toBeUndefined();
+    });
+
     it('leaves a plain /start and other text without a referral', () => {
         expect(a.parse(msg({ text: '/start' }))[0].referral).toBeUndefined();
         const [spaced] = a.parse(msg({ text: '/start to roi tet' }));

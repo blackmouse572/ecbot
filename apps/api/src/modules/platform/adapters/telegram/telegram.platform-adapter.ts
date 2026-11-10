@@ -27,6 +27,7 @@ import {
     PlatformWebhookEvent,
 } from '../../interfaces/platform-adapter.interface';
 import { PlatformAdapter } from '../platform-adapter.base';
+import { trackedLinkCode } from '../../utils/referral.util';
 
 // ─── Telegram Bot API types ───────────────────────────────────────────────────
 
@@ -276,7 +277,8 @@ export class TelegramPlatformAdapter extends PlatformAdapter {
 
         // The bot gets a plain /start, as when the chat opens with no link;
         // the code is the referral.
-        const code = msg.text?.match(START_WITH_CODE)?.[1];
+        const start = msg.text?.match(START_WITH_CODE)?.[1];
+        const code = trackedLinkCode(start);
 
         return {
             kind: isEdit ? 'unknown' : 'message',
@@ -284,7 +286,7 @@ export class TelegramPlatformAdapter extends PlatformAdapter {
             senderId,
             recipientId,
             externalMessageId: msg.message_id.toString(),
-            text: code ? '/start' : (msg.text ?? msg.caption),
+            text: start ? '/start' : (msg.text ?? msg.caption),
             ...(code && { referral: { code, source: 'link' as const } }),
             timestamp: new Date(msg.date * 1000),
             raw: msg,

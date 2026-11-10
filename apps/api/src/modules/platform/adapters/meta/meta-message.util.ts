@@ -7,6 +7,7 @@ import {
     MessengerMessagePayload,
     MessengerMessagingEvent,
 } from '../messenger/messenger.types';
+import { trackedLinkCode } from '../../utils/referral.util';
 
 // Shared by Messenger and Instagram, which send the same message shape.
 
@@ -67,7 +68,7 @@ export function metaReferral(
         event.referral ?? event.message?.referral ?? event.postback?.referral;
     if (!r) return undefined;
 
-    const code = r.ref?.trim() || undefined;
+    const code = trackedLinkCode(r.ref);
     const isAd = !!r.ad_id || r.source === 'ADS';
     if (!code && !isAd) return undefined;
 

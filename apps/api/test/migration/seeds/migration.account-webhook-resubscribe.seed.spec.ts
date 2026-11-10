@@ -21,6 +21,7 @@ describe('MigrationAccountWebhookResubscribeSeed', () => {
         envelopeDecrypt: jest.fn((v: string) => `plain-${v}`),
     };
     const facebookWebhookService = {
+        registerWebhook: jest.fn(async () => true),
         subscribePageWebhook: jest.fn(async () => true),
     };
     const instagramOAuthService = {
@@ -52,6 +53,34 @@ describe('MigrationAccountWebhookResubscribeSeed', () => {
             'plain-enc-ig'
         );
         expect(counts).toEqual({ subscribed: 2, failed: 0 });
+    });
+
+    it('refreshes the app-level page subscription once, so Messenger sends the new field', async () => {
+        await seed().resubscribe();
+
+        expect(facebookWebhookService.registerWebhook).toHaveBeenCalledTimes(1);
+        expect(facebookWebhookService.registerWebhook).toHaveBeenCalledWith({
+            object: 'page',
+            fields: expect.arrayContaining(['messaging_referrals']),
+        });
+    });
+
+    it('logs which account failed and why', async () => {
+        helperEncryption.envelopeDecrypt.mockImplementationOnce(() => {
+            throw new Error('not an envelope');
+        });
+        const instance = seed();
+        const error = jest
+            .spyOn(instance['logger'], 'error')
+            .mockImplementation(() => undefined);
+
+        const counts = await instance.resubscribe();
+
+        expect(error).toHaveBeenCalledWith(
+            expect.stringContaining('PAGE-1'),
+            'not an envelope'
+        );
+        expect(counts).toEqual({ subscribed: 1, failed: 1 });
     });
 
     it('counts a failure and carries on with the rest', async () => {

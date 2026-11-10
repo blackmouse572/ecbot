@@ -60,6 +60,7 @@ describe("widget.js tracked link code", () => {
     sessionStorage.clear();
     window.history.replaceState(null, "", "/");
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it("passes the page's ecb_src to the widget frame", () => {
@@ -81,6 +82,19 @@ describe("widget.js tracked link code", () => {
     embed({}, false);
     document.body.innerHTML = "";
     window.history.replaceState(null, "", "/san-pham");
+    embed({}, false);
+    expect(frameSource()).toBe("trang-khuyen-mai");
+  });
+
+  it("keeps the page's code when storage is blocked", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("quota", "QuotaExceededError");
+    });
+    window.history.replaceState(
+      null,
+      "",
+      "/khuyen-mai?ecb_src=trang-khuyen-mai",
+    );
     embed({}, false);
     expect(frameSource()).toBe("trang-khuyen-mai");
   });

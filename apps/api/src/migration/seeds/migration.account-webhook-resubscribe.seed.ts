@@ -13,7 +13,7 @@ import {
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { AccountRepository } from '@app/modules/account/repository/repositories/account.repository';
 import { EntityManager } from '@mikro-orm/postgresql';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Command } from 'nestjs-command';
 
 export interface IAccountWebhookResubscribeCounts {
@@ -28,6 +28,10 @@ export interface IAccountWebhookResubscribeCounts {
  */
 @Injectable()
 export class MigrationAccountWebhookResubscribeSeed {
+    private readonly logger = new Logger(
+        MigrationAccountWebhookResubscribeSeed.name
+    );
+
     constructor(
         private readonly em: EntityManager,
         private readonly accountRepository: AccountRepository,
@@ -52,8 +56,26 @@ export class MigrationAccountWebhookResubscribeSeed {
             { em: this.em.fork() }
         );
 
+        // Messenger sends a field only when the app-level page subscription
+        // has it too, and only a new Page connect refreshes that list.
+        if (accounts.some(a => a.type === ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE)) {
+            await this.facebookWebhookService.registerWebhook({
+                object: ENUM_FACEBOOK_OBJECT_TO_SUBCRIBE.PAGE,
+                fields: FACEBOOK_SUBSCRIPTION_FIELD[
+                    ENUM_FACEBOOK_OBJECT_TO_SUBCRIBE.PAGE
+                ],
+            });
+        }
+
         for (const account of accounts) {
-            const ok = await this.subscribe(account).catch(() => false);
+            const ok = await this.subscribe(account).catch((error: Error) => {
+                this.logger.error(
+                    `webhook resubscribe failed for ${account.type} ${account.externalId}`,
+                    error.message
+                );
+
+                return false;
+            });
             counts[ok ? 'subscribed' : 'failed']++;
         }
 
