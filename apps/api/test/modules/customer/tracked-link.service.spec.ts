@@ -1,3 +1,4 @@
+import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import {
@@ -18,7 +19,11 @@ describe('TrackedLinkService', () => {
     };
 
     const trackedLinkRepository = {
-        create: jest.fn(async (data: any) => ({ id: 'tl-new', ...data })),
+        createLink: jest.fn(async (data: any) => ({
+            id: 'tl-new',
+            ...data,
+            account: page,
+        })),
         findInWorkspace: jest.fn(),
         findChildren: jest.fn(),
         findCodesStartingWith: jest.fn(),
@@ -53,10 +58,10 @@ describe('TrackedLinkService', () => {
             expect(accountRepository.findOne).toHaveBeenCalledWith(
                 expect.objectContaining({ id: 'acc-1', workspace: 'ws-1' })
             );
-            expect(trackedLinkRepository.create).toHaveBeenCalledWith(
+            expect(trackedLinkRepository.createLink).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    workspace: 'ws-1',
-                    account: 'acc-1',
+                    workspaceId: 'ws-1',
+                    accountId: 'acc-1',
                     name: 'Tờ rơi Tết',
                     code: 'to-roi-tet',
                     kind: ENUM_TRACKED_LINK_KIND.LINK,
@@ -78,8 +83,35 @@ describe('TrackedLinkService', () => {
                 accountId: 'acc-1',
             });
 
-            expect(trackedLinkRepository.create).toHaveBeenCalledWith(
+            expect(trackedLinkRepository.createLink).toHaveBeenCalledWith(
                 expect.objectContaining({ code: 'to-roi-tet-3' })
+            );
+        });
+
+        it('picks a new code when a create at the same moment took it', async () => {
+            trackedLinkRepository.findCodesStartingWith
+                .mockResolvedValueOnce([])
+                .mockResolvedValueOnce(['to-roi-tet']);
+            trackedLinkRepository.createLink.mockRejectedValueOnce(
+                new UniqueConstraintViolationException(new Error('23505'))
+            );
+
+            const link = await service.create('ws-1', {
+                name: 'Tờ rơi Tết',
+                accountId: 'acc-1',
+            });
+
+            expect(link.code).toBe('to-roi-tet-2');
+        });
+
+        it('returns the link ready to show, with its url', async () => {
+            const link = await service.create('ws-1', {
+                name: 'Tờ rơi Tết',
+                accountId: 'acc-1',
+            });
+
+            expect(service.mapGet(link).url).toBe(
+                'https://m.me/1234?ref=to-roi-tet'
             );
         });
 
@@ -145,11 +177,11 @@ describe('TrackedLinkService', () => {
                 kind: ENUM_TRACKED_LINK_KIND.KOL,
             });
 
-            expect(trackedLinkRepository.create).toHaveBeenCalledWith(
+            expect(trackedLinkRepository.createLink).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    workspace: 'ws-1',
-                    parent: 'tl-1',
-                    account: 'acc-1',
+                    workspaceId: 'ws-1',
+                    parentId: 'tl-1',
+                    accountId: 'acc-1',
                     kind: ENUM_TRACKED_LINK_KIND.KOL,
                     name: 'Linh Đan',
                     code: 'to-roi-tet-linh-dan',
@@ -169,11 +201,30 @@ describe('TrackedLinkService', () => {
                 kind: ENUM_TRACKED_LINK_KIND.KOL,
             });
 
-            const { code } = trackedLinkRepository.create.mock.calls[0][0];
+            const { code } = trackedLinkRepository.createLink.mock.calls[0][0];
             expect(code.length).toBeLessThanOrEqual(
                 TRACKED_LINK_CHILD_CODE_MAX_LENGTH
             );
             expect(code).toMatch(/^a{40}-9-b+$/);
+        });
+
+        it('gives a website QR code the source page, so it has a url', async () => {
+            trackedLinkRepository.findInWorkspace.mockResolvedValue({
+                ...parent,
+                account: { ...page, type: ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET },
+                targetUrl: 'https://lumi.vn/khuyen-mai',
+            });
+
+            await service.createChild('ws-1', 'tl-1', {
+                name: 'Quầy quận 1',
+                kind: ENUM_TRACKED_LINK_KIND.QR,
+            });
+
+            expect(trackedLinkRepository.createLink).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    targetUrl: 'https://lumi.vn/khuyen-mai',
+                })
+            );
         });
 
         it('only nests under a source, never under a child', async () => {
@@ -208,6 +259,24 @@ describe('TrackedLinkService', () => {
 
             expect(updated.status).toBe(ENUM_TRACKED_LINK_STATUS.STOPPED);
             expect(trackedLinkRepository.save).toHaveBeenCalledWith(link);
+        });
+
+        it('moves a website source and its codes to the new page', async () => {
+            trackedLinkRepository.findInWorkspace.mockResolvedValue({
+                id: 'tl-1',
+                kind: ENUM_TRACKED_LINK_KIND.LINK,
+                account: { ...page, type: ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET },
+                targetUrl: 'https://lumi.vn/a',
+            });
+
+            await service.update('ws-1', 'tl-1', {
+                targetUrl: 'https://lumi.vn/b',
+            });
+
+            expect(trackedLinkRepository.updateRaw).toHaveBeenCalledWith(
+                { parent: 'tl-1' },
+                { targetUrl: 'https://lumi.vn/b' }
+            );
         });
 
         it('404s for a link outside the workspace', async () => {

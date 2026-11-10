@@ -7,6 +7,7 @@ import {
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
+import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { plainToInstance } from 'class-transformer';
 import {
     TRACKED_LINK_ACCOUNT_TYPES,
@@ -88,23 +89,22 @@ export class TrackedLinkService {
         this.assertTargetUrl(account, dto.targetUrl);
         await this.assertTags(workspaceId, dto.tagIds);
 
-        const code = await this.freeCode(
+        return this.insertWithFreeCode(
             workspaceId,
-            trackedLinkCodeFromName(dto.name)
+            trackedLinkCodeFromName(dto.name),
+            code =>
+                this.trackedLinkRepository.createLink({
+                    workspaceId,
+                    accountId: account.id,
+                    kind: ENUM_TRACKED_LINK_KIND.LINK,
+                    name: dto.name,
+                    code,
+                    greeting: dto.greeting ?? null,
+                    tagIds: dto.tagIds ?? [],
+                    promisesOffer: dto.promisesOffer ?? false,
+                    targetUrl: dto.targetUrl ?? null,
+                })
         );
-        // SAFETY: MikroORM's create takes ids for relations; the account was
-        // just loaded from this workspace.
-        return this.trackedLinkRepository.create({
-            workspace: workspaceId,
-            account: account.id,
-            kind: ENUM_TRACKED_LINK_KIND.LINK,
-            name: dto.name,
-            code,
-            greeting: dto.greeting ?? null,
-            tagIds: dto.tagIds ?? [],
-            promisesOffer: dto.promisesOffer ?? false,
-            targetUrl: dto.targetUrl ?? null,
-        } as any);
     }
 
     async createChild(
@@ -121,16 +121,19 @@ export class TrackedLinkService {
         const base = `${parent.code}-${trackedLinkCodeFromName(dto.name)}`
             .slice(0, TRACKED_LINK_CHILD_CODE_MAX_LENGTH - 3)
             .replace(/-+$/, '');
-        const code = await this.freeCode(workspaceId, base);
-        // SAFETY: ids for relations, as above; the parent is in this workspace.
-        return this.trackedLinkRepository.create({
-            workspace: workspaceId,
-            parent: parent.id,
-            account: parent.account.id,
-            kind: dto.kind,
-            name: dto.name,
-            code,
-        } as any);
+
+        return this.insertWithFreeCode(workspaceId, base, code =>
+            this.trackedLinkRepository.createLink({
+                workspaceId,
+                accountId: parent.account.id,
+                parentId: parent.id,
+                kind: dto.kind,
+                name: dto.name,
+                code,
+                // A website code opens the source's page with its own code.
+                targetUrl: parent.targetUrl,
+            })
+        );
     }
 
     async update(
@@ -150,7 +153,16 @@ export class TrackedLinkService {
                 Object.entries(dto).filter(([, value]) => value !== undefined)
             )
         );
-        return this.trackedLinkRepository.save(link);
+        const saved = await this.trackedLinkRepository.save(link);
+        // Its QR and KOL codes open the same page.
+        if (dto.targetUrl !== undefined && !link.parent) {
+            await this.trackedLinkRepository.updateRaw(
+                { parent: id },
+                { targetUrl: dto.targetUrl }
+            );
+        }
+
+        return saved;
     }
 
     async delete(workspaceId: string, id: string): Promise<void> {
@@ -218,6 +230,24 @@ export class TrackedLinkService {
             throw new BadRequestException({
                 message: 'trackedLink.error.tagNotFound',
             });
+        }
+    }
+
+    /**
+     * Inserts with a free code. Two creates with the same name at once can
+     * pick the same code; the loser re-picks once instead of failing.
+     */
+    private async insertWithFreeCode(
+        workspaceId: string,
+        base: string,
+        insert: (code: string) => Promise<TrackedLinkEntity>
+    ): Promise<TrackedLinkEntity> {
+        try {
+            return await insert(await this.freeCode(workspaceId, base));
+        } catch (err) {
+            if (!(err instanceof UniqueConstraintViolationException)) throw err;
+
+            return insert(await this.freeCode(workspaceId, base));
         }
     }
 

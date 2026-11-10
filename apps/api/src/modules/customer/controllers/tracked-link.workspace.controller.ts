@@ -162,11 +162,7 @@ export class TrackedLinkWorkspaceController {
     ): Promise<IResponse<TrackedLinkGetResponseDto>> {
         const link = await this.trackedLinkService.create(workspace.id, dto);
         await this.log(user, workspace, ENUM_ACTIVITY_ACTION.CREATE, link);
-        const created = await this.trackedLinkService.findOneInWorkspace(
-            workspace.id,
-            link.id
-        );
-        return { data: this.trackedLinkService.mapGet(created) };
+        return { data: this.trackedLinkService.mapGet(link) };
     }
 
     @TrackedLinkWorkspaceCreateChildDoc()
@@ -191,11 +187,7 @@ export class TrackedLinkWorkspaceController {
             dto
         );
         await this.log(user, workspace, ENUM_ACTIVITY_ACTION.CREATE, link);
-        const created = await this.trackedLinkService.findOneInWorkspace(
-            workspace.id,
-            link.id
-        );
-        return { data: this.trackedLinkService.mapGet(created) };
+        return { data: this.trackedLinkService.mapGet(link) };
     }
 
     @TrackedLinkWorkspaceUpdateDoc()
