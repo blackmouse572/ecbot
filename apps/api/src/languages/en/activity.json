@@ -10,7 +10,7 @@
         "uploadProfile": "Perfect! Your new profile picture has been uploaded.",
         "signUp": "Welcome! Your account has been successfully created."
     },
-    "workspace": {
+    "workspace":{
         "createByAdmin": "Welcome! The workspace \"{workSpaceName}\" has been successfully created by our admin team.",
         "updateByAdmin": "The workspace \"{workSpaceName}\" details have been updated by our admin team.",
         "inactiveByAdmin": "The workspace \"{workspaceName}\" has been temporarily deactivated by our admin team.",
