@@ -5,6 +5,7 @@ import {
     ENUM_TRACKED_LINK_STATUS,
 } from '../../../src/modules/customer/enums/tracked-link.enum';
 import { TrackedLinkService } from '../../../src/modules/customer/services/tracked-link.service';
+import { TRACKED_LINK_CHILD_CODE_MAX_LENGTH } from '../../../src/modules/customer/constants/tracked-link.constant';
 
 describe('TrackedLinkService', () => {
     const page = {
@@ -154,6 +155,25 @@ describe('TrackedLinkService', () => {
                     code: 'to-roi-tet-linh-dan',
                 })
             );
+        });
+
+        it('keeps a long KOL code inside the 64 characters Telegram allows', async () => {
+            const long = 'a'.repeat(40);
+            trackedLinkRepository.findInWorkspace.mockResolvedValue({
+                ...parent,
+                code: `${long}-9`,
+            });
+
+            await service.createChild('ws-1', 'tl-1', {
+                name: 'b'.repeat(40),
+                kind: ENUM_TRACKED_LINK_KIND.KOL,
+            });
+
+            const { code } = trackedLinkRepository.create.mock.calls[0][0];
+            expect(code.length).toBeLessThanOrEqual(
+                TRACKED_LINK_CHILD_CODE_MAX_LENGTH
+            );
+            expect(code).toMatch(/^a{40}-9-b+$/);
         });
 
         it('only nests under a source, never under a child', async () => {

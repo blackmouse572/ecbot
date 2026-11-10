@@ -14,6 +14,9 @@ export const TrackedLinkDocParams = [
 /** Telegram allows 64 characters in a start payload; leave room for "-2". */
 export const TRACKED_LINK_CODE_MAX_LENGTH = 40;
 
+/** A QR or KOL code is the source's code plus its own; capped so "-2" still fits in 64. */
+export const TRACKED_LINK_CHILD_CODE_MAX_LENGTH = 60;
+
 /** The query parameter the website widget reads the code from. */
 export const TRACKED_LINK_WEBSITE_PARAM = 'ecb_src';
 

@@ -8,7 +8,10 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
-import { TRACKED_LINK_ACCOUNT_TYPES } from '../constants/tracked-link.constant';
+import {
+    TRACKED_LINK_ACCOUNT_TYPES,
+    TRACKED_LINK_CHILD_CODE_MAX_LENGTH,
+} from '../constants/tracked-link.constant';
 import { TrackedLinkCreateChildRequestDto } from '../dtos/request/tracked-link.create-child.request.dto';
 import { TrackedLinkCreateRequestDto } from '../dtos/request/tracked-link.create.request.dto';
 import { TrackedLinkUpdateRequestDto } from '../dtos/request/tracked-link.update.request.dto';
@@ -115,10 +118,10 @@ export class TrackedLinkService {
                 message: 'trackedLink.error.notASource',
             });
         }
-        const code = await this.freeCode(
-            workspaceId,
-            `${parent.code}-${trackedLinkCodeFromName(dto.name)}`
-        );
+        const base = `${parent.code}-${trackedLinkCodeFromName(dto.name)}`
+            .slice(0, TRACKED_LINK_CHILD_CODE_MAX_LENGTH - 3)
+            .replace(/-+$/, '');
+        const code = await this.freeCode(workspaceId, base);
         // SAFETY: ids for relations, as above; the parent is in this workspace.
         return this.trackedLinkRepository.create({
             workspace: workspaceId,
