@@ -1,3 +1,4 @@
+import { OrderEntity } from '@app/modules/order/repository/entities/order.entity';
 import { MessageService } from '@app/common/message/services/message.service';
 import { EntityManager } from '@mikro-orm/postgresql';
 import {
@@ -31,12 +32,7 @@ export interface IDetectAndUpsertInput {
 }
 
 export type CustomerFieldKey =
-    | 'name'
-    | 'phone'
-    | 'email'
-    | 'language'
-    | 'notes'
-    | 'profileSummary';
+    'name' | 'phone' | 'email' | 'language' | 'notes' | 'profileSummary';
 
 export type FieldResolutionSide = 'A' | 'B';
 
@@ -297,6 +293,24 @@ export class CustomerMergeSuggestionService {
                 } as any
             );
 
+            // 3b) Move the loser's orders to the survivor, so the merged
+            // profile has the whole purchase history.
+            const loserOrders = await tem.find(
+                OrderEntity,
+                { customer: loserId } as any,
+                { fields: ['id'] } as any
+            );
+            const loserOrderIds: string[] = loserOrders.map(o => o.id);
+            if (loserOrderIds.length) {
+                await tem.nativeUpdate(
+                    OrderEntity,
+                    { id: { $in: loserOrderIds } } as any,
+                    {
+                        customer: tem.getReference(CustomerEntity, survivorId),
+                    } as any
+                );
+            }
+
             // 4) Soft-delete loser and mark mergedIntoCustomerId
             const loserFieldsSnapshot: Record<string, unknown> = {};
             for (const key of COPYABLE_FIELDS) {
@@ -317,6 +331,7 @@ export class CustomerMergeSuggestionService {
             suggestion.mergedLoserId = loserId;
             suggestion.unmergeSnapshot = {
                 loserContactPointIds,
+                loserOrderIds,
                 loserTagAssignmentIds,
                 survivorTagAssignmentIds: createdSurvivorAssignments.map(
                     a => a.id
@@ -365,6 +380,7 @@ export class CustomerMergeSuggestionService {
             const loserId = suggestion.mergedLoserId!;
             const snapshot = (suggestion.unmergeSnapshot ?? {}) as {
                 loserContactPointIds?: string[];
+                loserOrderIds?: string[];
                 loserTagAssignmentIds?: string[];
                 survivorTagAssignmentIds?: string[];
                 loserFields?: Record<string, unknown>;
@@ -404,6 +420,17 @@ export class CustomerMergeSuggestionService {
                 await tem.nativeUpdate(
                     ContactPointEntity,
                     { id: { $in: snapshot.loserContactPointIds } } as any,
+                    {
+                        customer: tem.getReference(CustomerEntity, loserId),
+                    } as any
+                );
+            }
+
+            // 2b) Give the loser back the orders the merge moved.
+            if (snapshot.loserOrderIds?.length) {
+                await tem.nativeUpdate(
+                    OrderEntity,
+                    { id: { $in: snapshot.loserOrderIds } } as any,
                     {
                         customer: tem.getReference(CustomerEntity, loserId),
                     } as any
