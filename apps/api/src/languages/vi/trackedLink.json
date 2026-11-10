@@ -1,0 +1,18 @@
+{
+    "workspace": {
+        "list": "Lấy danh sách nguồn khách thành công.",
+        "get": "Lấy thông tin nguồn khách thành công.",
+        "create": "Đã tạo liên kết theo dõi.",
+        "createChild": "Đã tạo link.",
+        "update": "Đã lưu nguồn khách.",
+        "delete": "Đã xóa nguồn khách."
+    },
+    "error": {
+        "notFound": "Không tìm thấy nguồn khách.",
+        "accountNotFound": "Không tìm thấy kênh trong workspace này.",
+        "channelNotSupported": "Kênh này chưa dùng được liên kết theo dõi.",
+        "targetUrlRequired": "Thêm trang trên website của bạn có khung chat.",
+        "tagNotFound": "Có nhãn không thuộc workspace này.",
+        "notASource": "Chỉ thêm link vào một nguồn khách."
+    }
+}

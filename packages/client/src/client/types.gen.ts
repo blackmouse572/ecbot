@@ -6644,6 +6644,83 @@ export type CustomerMergeSuggestionConfirmRequestDto = {
     fieldResolutions?: CustomerMergeSuggestionFieldResolutionsDto;
 };
 
+export type TrackedLinkAccountResponseDto = {
+    id: string;
+    name: string;
+    type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
+};
+
+export type TrackedLinkGetResponseDto = {
+    id: string;
+    name: string;
+    code: string;
+    kind: 'LINK' | 'QR' | 'KOL' | 'POST' | 'AD';
+    status: 'ACTIVE' | 'STOPPED';
+    /**
+     * The link customers open; null when the channel cannot carry a code
+     */
+    url: string | null;
+    greeting?: string | null;
+    tagIds: Array<string>;
+    promisesOffer: boolean;
+    targetUrl?: string | null;
+    account: TrackedLinkAccountResponseDto;
+    createdAt: string;
+    updatedAt?: string;
+};
+
+export type TrackedLinkDetailResponseDto = {
+    id: string;
+    name: string;
+    code: string;
+    kind: 'LINK' | 'QR' | 'KOL' | 'POST' | 'AD';
+    status: 'ACTIVE' | 'STOPPED';
+    /**
+     * The link customers open; null when the channel cannot carry a code
+     */
+    url: string | null;
+    greeting?: string | null;
+    tagIds: Array<string>;
+    promisesOffer: boolean;
+    targetUrl?: string | null;
+    account: TrackedLinkAccountResponseDto;
+    createdAt: string;
+    updatedAt?: string;
+    children: Array<TrackedLinkGetResponseDto>;
+};
+
+export type TrackedLinkCreateRequestDto = {
+    name: string;
+    /**
+     * The channel account customers chat on
+     */
+    accountId: string;
+    greeting?: string | null;
+    tagIds?: Array<string>;
+    promisesOffer?: boolean;
+    /**
+     * Website widget only: the shop page the link opens
+     */
+    targetUrl?: string | null;
+};
+
+export type TrackedLinkCreateChildRequestDto = {
+    name: string;
+    kind: 'QR' | 'KOL';
+};
+
+export type TrackedLinkUpdateRequestDto = {
+    name?: string;
+    greeting?: string | null;
+    tagIds?: Array<string>;
+    promisesOffer?: boolean;
+    /**
+     * Website widget only: the shop page the link opens
+     */
+    targetUrl?: string | null;
+    status?: 'ACTIVE' | 'STOPPED';
+};
+
 export type OrderItemGetResponseDto = {
     id: string;
     name: string;
@@ -32738,6 +32815,495 @@ export type CustomerMergeSuggestionWorkspaceControllerDismissV1Data = {
 export type CustomerMergeSuggestionWorkspaceControllerDismissV1Responses = {
     200: unknown;
 };
+
+export type TrackedLinkWorkspaceControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/workspace/{workspace}/tracked-links';
+};
+
+export type TrackedLinkWorkspaceControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type TrackedLinkWorkspaceControllerListV1Error = TrackedLinkWorkspaceControllerListV1Errors[keyof TrackedLinkWorkspaceControllerListV1Errors];
+
+export type TrackedLinkWorkspaceControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<TrackedLinkGetResponseDto>;
+    };
+};
+
+export type TrackedLinkWorkspaceControllerListV1Response = TrackedLinkWorkspaceControllerListV1Responses[keyof TrackedLinkWorkspaceControllerListV1Responses];
+
+export type TrackedLinkWorkspaceControllerCreateV1Data = {
+    body: TrackedLinkCreateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/tracked-links';
+};
+
+export type TrackedLinkWorkspaceControllerCreateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type TrackedLinkWorkspaceControllerCreateV1Error = TrackedLinkWorkspaceControllerCreateV1Errors[keyof TrackedLinkWorkspaceControllerCreateV1Errors];
+
+export type TrackedLinkWorkspaceControllerCreateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: TrackedLinkGetResponseDto;
+    };
+};
+
+export type TrackedLinkWorkspaceControllerCreateV1Response = TrackedLinkWorkspaceControllerCreateV1Responses[keyof TrackedLinkWorkspaceControllerCreateV1Responses];
+
+export type TrackedLinkWorkspaceControllerDeleteV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the tracked link
+         */
+        trackedLink: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/tracked-links/{trackedLink}';
+};
+
+export type TrackedLinkWorkspaceControllerDeleteV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type TrackedLinkWorkspaceControllerDeleteV1Error = TrackedLinkWorkspaceControllerDeleteV1Errors[keyof TrackedLinkWorkspaceControllerDeleteV1Errors];
+
+export type TrackedLinkWorkspaceControllerDeleteV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type TrackedLinkWorkspaceControllerDeleteV1Response = TrackedLinkWorkspaceControllerDeleteV1Responses[keyof TrackedLinkWorkspaceControllerDeleteV1Responses];
+
+export type TrackedLinkWorkspaceControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the tracked link
+         */
+        trackedLink: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/tracked-links/{trackedLink}';
+};
+
+export type TrackedLinkWorkspaceControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type TrackedLinkWorkspaceControllerGetV1Error = TrackedLinkWorkspaceControllerGetV1Errors[keyof TrackedLinkWorkspaceControllerGetV1Errors];
+
+export type TrackedLinkWorkspaceControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: TrackedLinkDetailResponseDto;
+    };
+};
+
+export type TrackedLinkWorkspaceControllerGetV1Response = TrackedLinkWorkspaceControllerGetV1Responses[keyof TrackedLinkWorkspaceControllerGetV1Responses];
+
+export type TrackedLinkWorkspaceControllerUpdateV1Data = {
+    body: TrackedLinkUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the tracked link
+         */
+        trackedLink: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/tracked-links/{trackedLink}';
+};
+
+export type TrackedLinkWorkspaceControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type TrackedLinkWorkspaceControllerUpdateV1Error = TrackedLinkWorkspaceControllerUpdateV1Errors[keyof TrackedLinkWorkspaceControllerUpdateV1Errors];
+
+export type TrackedLinkWorkspaceControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: TrackedLinkGetResponseDto;
+    };
+};
+
+export type TrackedLinkWorkspaceControllerUpdateV1Response = TrackedLinkWorkspaceControllerUpdateV1Responses[keyof TrackedLinkWorkspaceControllerUpdateV1Responses];
+
+export type TrackedLinkWorkspaceControllerCreateChildV1Data = {
+    body: TrackedLinkCreateChildRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the tracked link
+         */
+        trackedLink: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/tracked-links/{trackedLink}/links';
+};
+
+export type TrackedLinkWorkspaceControllerCreateChildV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type TrackedLinkWorkspaceControllerCreateChildV1Error = TrackedLinkWorkspaceControllerCreateChildV1Errors[keyof TrackedLinkWorkspaceControllerCreateChildV1Errors];
+
+export type TrackedLinkWorkspaceControllerCreateChildV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: TrackedLinkGetResponseDto;
+    };
+};
+
+export type TrackedLinkWorkspaceControllerCreateChildV1Response = TrackedLinkWorkspaceControllerCreateChildV1Responses[keyof TrackedLinkWorkspaceControllerCreateChildV1Responses];
 
 export type OrderWorkspaceControllerListV1Data = {
     body?: never;
