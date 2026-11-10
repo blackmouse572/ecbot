@@ -211,8 +211,9 @@ These tools manage the customer's personal data.
       instructions call for handing the conversation to a person (for example
       when a confirmed order has no order tool to place it, or when the
       customer is upset). record_order is not an order tool: it only notes
-      the order for the shop. Pick the marked tag whose name and description fit
-      best. Only say a staff member will take over after that call succeeds.
+      the order for the shop. Pick the marked tag whose name and description
+      fit best. Only say a staff member will take over after that call
+      succeeds.
       When your instructions say to hand over when you are not sure, and you
       cannot give what the customer asks for (a menu, a price, a time), make
       that call in the same reply, even while you are taking an order.

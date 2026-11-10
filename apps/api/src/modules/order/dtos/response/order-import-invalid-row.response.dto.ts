@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
+import { ORDER_IMPORT_INVALID_REASONS } from '../../constants/order.constant';
+import { OrderImportInvalidReason } from '../../interfaces/order.interface';
 
 export class OrderImportInvalidRowResponseDto {
     @Expose()
@@ -8,8 +10,8 @@ export class OrderImportInvalidRowResponseDto {
 
     @Expose()
     @ApiProperty({
-        enum: ['missingPhone', 'badDate', 'empty', 'failed'],
+        enum: ORDER_IMPORT_INVALID_REASONS,
         example: 'missingPhone',
     })
-    reason: 'missingPhone' | 'badDate' | 'empty' | 'failed';
+    reason: OrderImportInvalidReason;
 }

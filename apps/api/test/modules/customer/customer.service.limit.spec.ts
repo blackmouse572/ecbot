@@ -106,3 +106,56 @@ describe('CustomerService.resolveContactPoint customer limit', () => {
         }
     });
 });
+
+describe('CustomerService.createFromImport', () => {
+    const customerRepository = {
+        create: jest.fn(),
+        countByWorkspace: jest.fn(),
+    };
+    const limit = { getCustomerLimit: jest.fn() };
+    const mergeSuggestions = { detectAndUpsert: jest.fn() };
+    const moduleRef = { get: jest.fn(() => mergeSuggestions) };
+    const service = new CustomerService(
+        customerRepository as any,
+        {} as any,
+        moduleRef as any,
+        limit as any
+    );
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        limit.getCustomerLimit.mockResolvedValue(100);
+        customerRepository.create.mockResolvedValue({ id: 'cust-new' });
+    });
+
+    it('creates the customer and runs the duplicate check on its phone', async () => {
+        customerRepository.countByWorkspace.mockResolvedValue(99);
+
+        const customer = await service.createFromImport('ws-2', {
+            phone: '0911222333',
+            name: 'Hà',
+        });
+
+        expect(customer).toEqual({ id: 'cust-new' });
+        expect(customerRepository.create).toHaveBeenCalledWith({
+            workspace: 'ws-2',
+            phone: '0911222333',
+            name: 'Hà',
+        });
+        expect(mergeSuggestions.detectAndUpsert).toHaveBeenCalledWith({
+            workspaceId: 'ws-2',
+            customerId: 'cust-new',
+            field: 'phone',
+            value: '0911222333',
+        });
+    });
+
+    it('creates nothing once the workspace is at its limit', async () => {
+        customerRepository.countByWorkspace.mockResolvedValue(100);
+
+        await expect(
+            service.createFromImport('ws-3', { phone: '0911222333' })
+        ).resolves.toBeNull();
+        expect(customerRepository.create).not.toHaveBeenCalled();
+    });
+});

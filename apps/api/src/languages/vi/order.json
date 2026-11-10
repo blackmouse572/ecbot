@@ -25,5 +25,8 @@
             "notFound": "Không tìm thấy nhóm hàng.",
             "duplicate": "Đã có nhóm hàng trùng tên."
         }
+    },
+    "system": {
+        "draft": "Đã ghi lại đơn để nhân viên xác nhận."
     }
 }

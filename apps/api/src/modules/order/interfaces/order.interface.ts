@@ -1,3 +1,4 @@
+import { ORDER_IMPORT_INVALID_REASONS } from '../constants/order.constant';
 import { ENUM_ORDER_SOURCE, ENUM_ORDER_STATUS } from '../enums/order.enum';
 
 export interface IOrderItemInput {
@@ -53,15 +54,15 @@ export interface IOrderImportRow {
     name?: string;
     item?: string;
     group?: string;
-    quantity?: number;
-    unitPrice?: number;
-    total?: number;
+    quantity?: string;
+    unitPrice?: string;
+    total?: string;
     orderedAt?: string;
     status?: ENUM_ORDER_STATUS.PENDING | ENUM_ORDER_STATUS.CONFIRMED;
 }
 
 export type OrderImportInvalidReason =
-    'missingPhone' | 'badDate' | 'empty' | 'failed';
+    (typeof ORDER_IMPORT_INVALID_REASONS)[number];
 
 export interface IOrderImportResult {
     dryRun: boolean;

@@ -1,13 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-    IsIn,
-    IsInt,
-    IsOptional,
-    IsString,
-    MaxLength,
-    Min,
-} from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 import { ENUM_ORDER_STATUS } from '../../enums/order.enum';
+
+// A client that already parsed the number may send it as one.
+const cellText = ({ value }: { value: unknown }) =>
+    typeof value === 'number' ? String(value) : value;
 
 // One CSV row after column mapping. Fields stay loose (phone and date as
 // text) so a bad row is reported back instead of failing the whole file.
@@ -42,31 +40,36 @@ export class OrderImportRowRequestDto {
     @ApiProperty({ required: false, example: 'Kem chống nắng' })
     group?: string;
 
+    // Numbers arrive as the cell text ("345.000", "1,500,000đ") and are
+    // parsed per row, so one bad cell is a bad row, not a rejected file.
     @IsOptional()
-    @IsInt()
-    @Min(1)
-    @ApiProperty({ required: false, example: 2 })
-    quantity?: number;
+    @Transform(cellText)
+    @IsString()
+    @MaxLength(32)
+    @ApiProperty({ required: false, example: '2' })
+    quantity?: string;
 
     @IsOptional()
-    @IsInt()
-    @Min(0)
+    @Transform(cellText)
+    @IsString()
+    @MaxLength(32)
     @ApiProperty({
         required: false,
-        description: 'Price of one unit in minor units',
-        example: 345000,
+        description: 'Price of one unit, a whole amount',
+        example: '345.000',
     })
-    unitPrice?: number;
+    unitPrice?: string;
 
     @IsOptional()
-    @IsInt()
-    @Min(0)
+    @Transform(cellText)
+    @IsString()
+    @MaxLength(32)
     @ApiProperty({
         required: false,
-        description: 'Order total in minor units',
-        example: 690000,
+        description: 'Order total, a whole amount',
+        example: '690.000',
     })
-    total?: number;
+    total?: string;
 
     @IsOptional()
     @IsString()

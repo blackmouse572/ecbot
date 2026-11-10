@@ -17,25 +17,26 @@ describe('OrderImportService', () => {
         refreshLearnedCycles: jest.fn(),
     };
     const orderRepository = { find: jest.fn() };
-    const customerRepository = { find: jest.fn(), create: jest.fn() };
+    const customerRepository = { findByWorkspace: jest.fn() };
+    const customerService = { createFromImport: jest.fn() };
 
     const service = new OrderImportService(
         orderService as any,
         productGroupService as any,
         orderRepository as any,
-        customerRepository as any
+        customerRepository as any,
+        customerService as any
     );
 
     beforeEach(() => {
         jest.clearAllMocks();
         orderRepository.find.mockResolvedValue([{ code: 'DH-OLD' }]);
-        customerRepository.find.mockResolvedValue([
+        customerRepository.findByWorkspace.mockResolvedValue([
             { id: 'c-lan', phone: '+84 903 412 885' },
         ]);
-        customerRepository.create.mockImplementation(async data => ({
-            id: `c-${data.phone}`,
-            ...data,
-        }));
+        customerService.createFromImport.mockImplementation(
+            async (_w, data) => ({ id: `c-${data.phone}`, ...data })
+        );
         productGroupService.findAll.mockResolvedValue([
             { id: 'g-serum', name: 'Serum' },
         ]);
@@ -63,8 +64,8 @@ describe('OrderImportService', () => {
             phone: '0903412885',
             item: 'Serum C',
             group: 'serum',
-            quantity: 2,
-            unitPrice: 100000,
+            quantity: '2',
+            unitPrice: '100.000',
             orderedAt: '03/10/2026 14:30',
         },
         {
@@ -75,13 +76,15 @@ describe('OrderImportService', () => {
         },
         // Already imported.
         { code: 'DH-OLD', phone: '0903412885', item: 'Serum' },
-        // A new customer, known by total only, no code.
-        { phone: '0911222333', name: ' Hà ', total: 450000 },
+        // A new customer, known by total only, no code, written +84.
+        { phone: '+84 911 222 333', name: ' Hà ', total: '450.000đ' },
         // Invalid rows.
         { code: 'DH-2', item: 'Serum' },
         { code: 'DH-3', phone: '0911', item: 'Serum', orderedAt: '31/02/2026' },
         { code: 'DH-4', phone: '0911' },
         { code: 'DH-5', phone: 'chưa có', item: 'Serum' },
+        { code: 'DH-6', phone: '0911', item: 'Serum', unitPrice: '12,5' },
+        { code: 'DH-7', phone: '0911', item: 'Serum', quantity: '0' },
     ];
 
     it('previews the counts without writing anything', async () => {
@@ -98,18 +101,22 @@ describe('OrderImportService', () => {
                 { row: 6, reason: 'badDate' },
                 { row: 7, reason: 'empty' },
                 { row: 8, reason: 'missingPhone' },
+                { row: 9, reason: 'badNumber' },
+                { row: 10, reason: 'badNumber' },
             ],
         });
         expect(orderRepository.find).toHaveBeenCalledWith(
             { workspace: workspaceId, code: { $in: ['DH-1', 'DH-OLD'] } },
             { populate: [] }
         );
-        const phones = customerRepository.find.mock.calls[0][0].phone.$in;
+        const [ws, filter] = customerRepository.findByWorkspace.mock.calls[0];
+        expect(ws).toBe(workspaceId);
+        const phones = filter.phone.$in;
         expect(phones).toEqual(
             expect.arrayContaining(['0903412885', '+84903412885', '911222333'])
         );
         expect(productGroupService.create).not.toHaveBeenCalled();
-        expect(customerRepository.create).not.toHaveBeenCalled();
+        expect(customerService.createFromImport).not.toHaveBeenCalled();
         expect(orderService.create).not.toHaveBeenCalled();
     });
 
@@ -120,9 +127,11 @@ describe('OrderImportService', () => {
         expect(productGroupService.create).toHaveBeenCalledWith(workspaceId, {
             name: 'Tẩy trang',
         });
-        expect(customerRepository.create).toHaveBeenCalledTimes(1);
-        expect(customerRepository.create).toHaveBeenCalledWith(
-            expect.objectContaining({ phone: '0911222333', name: 'Hà' })
+        // Stored as 0 + key, whatever the file wrote.
+        expect(customerService.createFromImport).toHaveBeenCalledTimes(1);
+        expect(customerService.createFromImport).toHaveBeenCalledWith(
+            workspaceId,
+            { phone: '0911222333', name: 'Hà' }
         );
 
         const [first, second] = orderService.create.mock.calls;
@@ -191,5 +200,17 @@ describe('OrderImportService', () => {
         expect(productGroupService.refreshLearnedCycles).toHaveBeenCalledWith(
             []
         );
+    });
+
+    it('reports the orders of new customers past the plan limit', async () => {
+        customerService.createFromImport.mockResolvedValue(null);
+
+        const result = await service.import(workspaceId, rows as any, false);
+
+        expect(result.orders).toBe(1);
+        expect(result.invalidRows).toContainEqual({
+            row: 4,
+            reason: 'customerLimit',
+        });
     });
 });

@@ -257,7 +257,7 @@ describe('E2E — workspace orders and product groups', () => {
                 item: 'Serum B5',
                 group: 'serum',
                 quantity: 1,
-                unitPrice: 200000,
+                unitPrice: '200.000',
                 orderedAt: '02/10/2026',
             },
             {
@@ -268,6 +268,12 @@ describe('E2E — workspace orders and product groups', () => {
             },
             { phone: '0988777666', name: 'Anh Minh', total: 450000 },
             { code: 'NO-PHONE', item: 'Serum' },
+            {
+                code: 'BAD-PRICE',
+                phone: '0988777666',
+                item: 'Serum',
+                unitPrice: '12,5',
+            },
         ];
         const importUrl = `${ordersUrl()}/import`;
 
@@ -282,7 +288,10 @@ describe('E2E — workspace orders and product groups', () => {
             skipped: 0,
             newCustomers: 1,
             newGroups: ['Phụ kiện'],
-            invalidRows: [{ row: 4, reason: 'missingPhone' }],
+            invalidRows: [
+                { row: 4, reason: 'missingPhone' },
+                { row: 5, reason: 'badNumber' },
+            ],
         });
 
         const imported = await http(ctx.app)
@@ -300,6 +309,7 @@ describe('E2E — workspace orders and product groups', () => {
         expect(order.source).toBe('IMPORT');
         expect(order.status).toBe('CONFIRMED');
         expect(order.orderedAt).toBe('2026-10-02T00:00:00.000Z');
+        expect(order.total).toBe(200000);
         expect(order.items.map((i: any) => i.productGroupName)).toEqual([
             'Serum',
             'Phụ kiện',
@@ -341,17 +351,17 @@ describe('E2E — workspace orders and product groups', () => {
             items: [{ name: 'Serum B5 30ml', quantity: 1, unitPrice: 150000 }],
         });
         expect(first.status).toBe(201);
-        expect(first.body.status).toBe('PENDING');
-        expect(first.body.source).toBe('CHAT');
-        expect(first.body.items[0].productGroupName).toBe('Serum');
+        expect(first.body.data.status).toBe('PENDING');
+        expect(first.body.data.source).toBe('CHAT');
+        expect(first.body.data.items[0].productGroupName).toBe('Serum');
 
         const second = await asBot().send({
             conversationId,
             items: [{ name: 'Serum B5 30ml', quantity: 2, unitPrice: 150000 }],
             note: 'Giao sau 18h',
         });
-        expect(second.body.id).toBe(first.body.id);
-        expect(second.body.total).toBe(300000);
-        expect(second.body.note).toBe('Giao sau 18h');
+        expect(second.body.data.id).toBe(first.body.data.id);
+        expect(second.body.data.total).toBe(300000);
+        expect(second.body.data.note).toBe('Giao sau 18h');
     });
 });

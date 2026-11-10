@@ -225,6 +225,30 @@ export class CustomerService implements ICustomerService {
         return true;
     }
 
+    /**
+     * A customer known only from an imported order. Like a new channel
+     * contact it counts toward the plan's limit (null once full) and its
+     * phone runs the duplicate check.
+     */
+    async createFromImport(
+        workspaceId: string,
+        data: { phone: string; name?: string }
+    ): Promise<CustomerEntity | null> {
+        if (await this.isAtCustomerLimit(workspaceId)) return null;
+        const customer = await this.customerRepository.create({
+            workspace: workspaceId as any,
+            phone: data.phone,
+            name: data.name,
+        } as any);
+        await this._onContactFieldChanged(
+            customer.id,
+            'phone',
+            data.phone,
+            workspaceId
+        );
+        return customer;
+    }
+
     async updateContactPointProfile(
         contactPointId: string,
         patch: {

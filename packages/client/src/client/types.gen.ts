@@ -1398,6 +1398,39 @@ export type CustomerTagSystemRemoveRequestDto = {
     tagName: string;
 };
 
+export type OrderItemGetResponseDto = {
+    id: string;
+    name: string;
+    productGroupId?: string | null;
+    productGroupName?: string | null;
+    quantity: number;
+    unitPrice?: number | null;
+};
+
+export type OrderGetResponseDto = {
+    id: string;
+    code: string;
+    customerId: string;
+    customerName?: string | null;
+    customerPhone?: string | null;
+    /**
+     * Minor units
+     */
+    total: number;
+    currency: string;
+    status: 'PENDING' | 'CONFIRMED' | 'CANCELLED';
+    source: 'CHAT' | 'MANUAL' | 'IMPORT';
+    orderedAt: string;
+    confirmedAt?: {
+        [key: string]: unknown;
+    } | null;
+    note?: string | null;
+    conversationId?: string | null;
+    items: Array<OrderItemGetResponseDto>;
+    createdAt: string;
+    updatedAt?: string;
+};
+
 export type OrderItemRequestDto = {
     name: string;
     productGroupId?: string | null;
@@ -6741,39 +6774,6 @@ export type TrackedLinkUpdateRequestDto = {
     status?: 'ACTIVE' | 'STOPPED';
 };
 
-export type OrderItemGetResponseDto = {
-    id: string;
-    name: string;
-    productGroupId?: string | null;
-    productGroupName?: string | null;
-    quantity: number;
-    unitPrice?: number | null;
-};
-
-export type OrderGetResponseDto = {
-    id: string;
-    code: string;
-    customerId: string;
-    customerName?: string | null;
-    customerPhone?: string | null;
-    /**
-     * Minor units
-     */
-    total: number;
-    currency: string;
-    status: 'PENDING' | 'CONFIRMED' | 'CANCELLED';
-    source: 'CHAT' | 'MANUAL' | 'IMPORT';
-    orderedAt: string;
-    confirmedAt?: {
-        [key: string]: unknown;
-    } | null;
-    note?: string | null;
-    conversationId?: string | null;
-    items: Array<OrderItemGetResponseDto>;
-    createdAt: string;
-    updatedAt?: string;
-};
-
 export type OrderCreateRequestDto = {
     customerId: string;
     /**
@@ -6799,7 +6799,7 @@ export type OrderImportInvalidRowResponseDto = {
      * Row number in the file, from 1
      */
     row: number;
-    reason: 'missingPhone' | 'badDate' | 'empty' | 'failed';
+    reason: 'missingPhone' | 'badDate' | 'badNumber' | 'empty' | 'customerLimit' | 'failed';
 };
 
 export type OrderImportResponseDto = {
@@ -6832,15 +6832,15 @@ export type OrderImportRowRequestDto = {
     name?: string;
     item?: string;
     group?: string;
-    quantity?: number;
+    quantity?: string;
     /**
-     * Price of one unit in minor units
+     * Price of one unit, a whole amount
      */
-    unitPrice?: number;
+    unitPrice?: string;
     /**
-     * Order total in minor units
+     * Order total, a whole amount
      */
-    total?: number;
+    total?: string;
     /**
      * ISO date or dd/mm/yyyy, optionally with hh:mm
      */
@@ -11593,6 +11593,12 @@ export type CustomerTagSystemControllerRemoveV1Responses = {
 
 export type OrderSystemControllerDraftV1Data = {
     body: OrderSystemDraftRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
     path: {
         customerId: string;
     };
@@ -11600,9 +11606,63 @@ export type OrderSystemControllerDraftV1Data = {
     url: '/api/v1/system/customers/{customerId}/orders/draft';
 };
 
-export type OrderSystemControllerDraftV1Responses = {
-    201: unknown;
+export type OrderSystemControllerDraftV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
 };
+
+export type OrderSystemControllerDraftV1Error = OrderSystemControllerDraftV1Errors[keyof OrderSystemControllerDraftV1Errors];
+
+export type OrderSystemControllerDraftV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: OrderGetResponseDto;
+    };
+};
+
+export type OrderSystemControllerDraftV1Response = OrderSystemControllerDraftV1Responses[keyof OrderSystemControllerDraftV1Responses];
 
 export type FollowupSystemControllerListV1Data = {
     body?: never;

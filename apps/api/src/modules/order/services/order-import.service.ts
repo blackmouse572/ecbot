@@ -1,5 +1,6 @@
 import { CustomerEntity } from '@app/modules/customer/repository/entities/customer.entity';
 import { CustomerRepository } from '@app/modules/customer/repository/repositories/customer.repository';
+import { CustomerService } from '@app/modules/customer/services/customer.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { ENUM_ORDER_SOURCE, ENUM_ORDER_STATUS } from '../enums/order.enum';
 import {
@@ -12,10 +13,21 @@ import { OrderRepository } from '../repository/repositories/order.repository';
 import { OrderService } from './order.service';
 import { ProductGroupService } from './product-group.service';
 
+// A row whose number cells parsed.
+interface IImportLine {
+    name?: string;
+    item?: string;
+    group?: string;
+    quantity?: number;
+    unitPrice?: number;
+    total?: number;
+    status?: IOrderImportRow['status'];
+}
+
 interface IImportOrder {
     code?: string;
     firstRow: number;
-    rows: IOrderImportRow[];
+    rows: IImportLine[];
     phone: string;
     orderedAt?: Date;
 }
@@ -36,7 +48,8 @@ export class OrderImportService {
         private readonly orderService: OrderService,
         private readonly productGroupService: ProductGroupService,
         private readonly orderRepository: OrderRepository,
-        private readonly customerRepository: CustomerRepository
+        private readonly customerRepository: CustomerRepository,
+        private readonly customerService: CustomerService
     ) {}
 
     async import(
@@ -60,21 +73,38 @@ export class OrderImportService {
                 ? this.parseDate(row.orderedAt)
                 : undefined;
             if (orderedAt === null) return invalid(rowNumber, 'badDate');
-            if (!row.item?.trim() && row.total === undefined) {
+            const [quantity, unitPrice, total] = [
+                row.quantity,
+                row.unitPrice,
+                row.total,
+            ].map(cell => this.parseAmount(cell));
+            if ([quantity, unitPrice, total].includes(null) || quantity === 0) {
+                return invalid(rowNumber, 'badNumber');
+            }
+            if (!row.item?.trim() && total === undefined) {
                 return invalid(rowNumber, 'empty');
             }
+            const line: IImportLine = {
+                name: row.name,
+                item: row.item,
+                group: row.group,
+                quantity: quantity ?? undefined,
+                unitPrice: unitPrice ?? undefined,
+                total: total ?? undefined,
+                status: row.status,
+            };
 
             const code = row.code?.trim() || undefined;
             const key = code ?? `#${rowNumber}`;
             const order = orders.get(key);
             if (order) {
-                order.rows.push(row);
+                order.rows.push(line);
                 return;
             }
             orders.set(key, {
                 code,
                 firstRow: rowNumber,
-                rows: [row],
+                rows: [line],
                 phone,
                 orderedAt,
             });
@@ -138,6 +168,10 @@ export class OrderImportService {
                     order,
                     customers
                 );
+                if (!customer) {
+                    invalid(order.firstRow, 'customerLimit');
+                    continue;
+                }
                 const saved = await this.orderService.create(
                     workspaceId,
                     {
@@ -215,14 +249,10 @@ export class OrderImportService {
         ];
         const byKey = new Map<string, CustomerEntity>();
         if (!variants.length) return byKey;
-        const found = await this.customerRepository.find(
-            {
-                workspace: workspaceId,
-                phone: { $in: variants },
-                mergedIntoCustomerId: null,
-                deletedAt: null,
-            } as any,
-            { populate: [] } as any
+        const found = await this.customerRepository.findByWorkspace(
+            workspaceId,
+            { phone: { $in: variants } },
+            { populate: [] }
         );
         for (const customer of found) {
             if (customer.phone)
@@ -231,20 +261,25 @@ export class OrderImportService {
         return byKey;
     }
 
+    /** Null when the workspace is at its plan's customer limit. */
     private async customerFor(
         workspaceId: string,
         order: IImportOrder,
         customers: Map<string, CustomerEntity>
-    ): Promise<CustomerEntity> {
+    ): Promise<CustomerEntity | null> {
         const key = this.phoneKey(order.phone);
         const known = customers.get(key);
         if (known) return known;
-        const customer = await this.customerRepository.create({
-            workspace: workspaceId as any,
-            phone: order.phone,
-            name: order.rows.find(row => row.name?.trim())?.name?.trim(),
-        } as any);
-        customers.set(key, customer);
+        // Stored as 0 + key so a later file, however it writes the number,
+        // finds this customer through phoneVariants.
+        const customer = await this.customerService.createFromImport(
+            workspaceId,
+            {
+                phone: key ? `0${key}` : order.phone,
+                name: order.rows.find(row => row.name?.trim())?.name?.trim(),
+            }
+        );
+        if (customer) customers.set(key, customer);
         return customer;
     }
 
@@ -265,6 +300,19 @@ export class OrderImportService {
         const key = this.phoneKey(phone);
         if (!key) return [phone.trim()];
         return [phone.trim(), key, `0${key}`, `84${key}`, `+84${key}`];
+    }
+
+    /**
+     * A whole amount as a shop writes it: "345.000", "1,500,000đ", "2".
+     * Undefined for an empty cell, null when it is not a whole number.
+     */
+    private parseAmount(cell?: string): number | null | undefined {
+        const text = cell?.trim();
+        if (!text) return undefined;
+        const digits = text
+            .replace(/\s|đ|₫|vnđ|vnd/gi, '')
+            .replace(/[.,](?=\d{3}(\D|$))/g, '');
+        return /^\d+$/.test(digits) ? Number(digits) : null;
     }
 
     private nameKey(name: string): string {

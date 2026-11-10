@@ -13,6 +13,7 @@ import {
     OrderDocQueryFilters,
 } from '../constants/order.doc.constant';
 import { OrderImportRequestDto } from '../dtos/request/order-import.request.dto';
+import { OrderSystemDraftRequestDto } from '../dtos/request/order.system-draft.request.dto';
 import { OrderCreateRequestDto } from '../dtos/request/order.create.request.dto';
 import { OrderUpdateRequestDto } from '../dtos/request/order.update.request.dto';
 import { OrderImportResponseDto } from '../dtos/response/order-import.response.dto';
@@ -112,6 +113,22 @@ export function OrderWorkspaceImportDoc(): MethodDecorator {
         auth(),
         DocResponse<OrderImportResponseDto>('order.workspace.import', {
             dto: OrderImportResponseDto,
+        })
+    );
+}
+
+export function OrderSystemDraftDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'Note an order the customer confirmed in chat (apps/ai)',
+        }),
+        DocAuth({ xApiKey: true }),
+        DocRequest({
+            dto: OrderSystemDraftRequestDto,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        }),
+        DocResponse<OrderGetResponseDto>('order.system.draft', {
+            dto: OrderGetResponseDto,
         })
     );
 }

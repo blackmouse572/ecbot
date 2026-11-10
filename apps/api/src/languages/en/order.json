@@ -25,5 +25,8 @@
             "notFound": "Product group not found.",
             "duplicate": "A product group with this name already exists."
         }
+    },
+    "system": {
+        "draft": "Order noted for staff to confirm."
     }
 }

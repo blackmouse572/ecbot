@@ -36,8 +36,19 @@ export const ORDER_ABILITY_DELETE = {
     action: [ENUM_POLICY_ACTION.DELETE],
 };
 
-// Rows per import request; a bigger file is sent in several requests.
-export const ORDER_IMPORT_MAX_ROWS = 1000;
+// Rows per import request; a bigger file is sent in several requests. Each
+// order is a few sequential queries, so this keeps one request to seconds.
+export const ORDER_IMPORT_MAX_ROWS = 200;
 
 // Items the bot may note on one chat order.
 export const ORDER_CHAT_MAX_ITEMS = 50;
+
+// Why an import row was not imported, as the preview and result report it.
+export const ORDER_IMPORT_INVALID_REASONS = [
+    'missingPhone',
+    'badDate',
+    'badNumber',
+    'empty',
+    'customerLimit',
+    'failed',
+] as const;
