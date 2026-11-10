@@ -3233,7 +3233,7 @@
       },
       "greeting": "First greeting",
       "greetingPlaceholder": "Hi, thanks for buying the Lumi Tết gift box. Here is 10% off your next order.",
-      "greetingHint": "The assistant sends this when the customer opens the link, then chats as usual.",
+      "greetingHint": "The agent sends this when the customer opens the link, then chats as usual.",
       "tags": "Tag the customer",
       "tagsPlaceholder": "Add tags",
       "tagsHint": "Customers who come through this link get these tags.",
@@ -3242,7 +3242,7 @@
     "preview": {
       "title": "Link and QR code",
       "description": "Ready to use as soon as it is created. Print the QR on flyers, or paste the link into a post or bio.",
-      "how": "Customers who open the link land in {{channel}} for {{account}}, the assistant sends the greeting above, and they are recorded as coming from \"{{name}}\".",
+      "how": "Customers who open the link land in {{channel}} for {{account}}, the agent sends the greeting above, and they are recorded as coming from \"{{name}}\".",
       "thisSource": "this source",
       "empty": "Name the source and pick a channel to see its link."
     },
