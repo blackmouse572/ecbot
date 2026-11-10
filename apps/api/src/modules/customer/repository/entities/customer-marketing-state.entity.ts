@@ -13,6 +13,7 @@ import {
     ENUM_CUSTOMER_MARKETING_PERMISSION,
 } from '../../enums/customer-marketing.enum';
 import { CustomerEntity } from './customer.entity';
+import { TrackedLinkEntity } from './tracked-link.entity';
 
 export const CustomerMarketingStateTableName = 'customer_marketing_states';
 
@@ -61,4 +62,15 @@ export class CustomerMarketingStateEntity extends DatabaseEntityBase {
     // For "Ngủ đông", computed when read.
     @Property({ type: 'timestamptz', nullable: true })
     lastInboundAt?: Date | null;
+
+    // Nguồn đầu tiên: the tracked link (a source, or one of its QR or KOL
+    // codes) the customer first arrived through. Set once.
+    @ManyToOne(() => TrackedLinkEntity, {
+        nullable: true,
+        deleteRule: 'set null',
+    })
+    firstTrackedLink?: TrackedLinkEntity | null;
+
+    @Property({ type: 'timestamptz', nullable: true })
+    firstSourceAt?: Date | null;
 }

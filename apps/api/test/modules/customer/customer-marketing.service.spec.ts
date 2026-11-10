@@ -31,7 +31,20 @@ function makeHarness(customers: Record<string, string> = {}) {
     const stateRepository = {
         findByCustomer: jest.fn(async (id: string) => states.get(id) ?? null),
     };
-    const eventRepository = { findWithPaging: jest.fn() };
+    const eventRepository = {
+        findWithPaging: jest.fn(),
+        getTotal: jest.fn(
+            async (where: any) =>
+                events.filter(
+                    e =>
+                        e.customer.id === where.customer &&
+                        e.kind === where.kind &&
+                        e.trackedLinkId === where.trackedLinkId &&
+                        (e.conversationId ?? null) ===
+                            (where.conversationId ?? null)
+                ).length
+        ),
+    };
     const customerRepository = {
         findOne: jest.fn(async (where: any) =>
             customers[where.id] === where.workspace
@@ -124,6 +137,83 @@ describe('CustomerMarketingService', () => {
             });
             expect(states.get('c1')?.permission).toBe(PERMISSION.PENDING);
             expect(states.get('c1')?.stage).toBe(STAGE.NEW);
+        });
+    });
+
+    describe('recordSource', () => {
+        const arrival = {
+            customerId: 'c1',
+            workspaceId: 'w1',
+            trackedLinkId: 'link-tet',
+            promisesOffer: false,
+            conversationId: 'conv-1',
+            messageId: 'msg-1',
+        };
+
+        it('keeps the first source and logs every arrival', async () => {
+            const { service, states, events } = makeHarness();
+            await service.recordInbound({
+                customerId: 'c1',
+                workspaceId: 'w1',
+            });
+
+            expect(await service.recordSource(arrival)).toBe(true);
+            const first = states.get('c1')!;
+            expect(first.firstTrackedLink).toEqual({ id: 'link-tet' });
+            expect(first.firstSourceAt).toBeInstanceOf(Date);
+
+            await service.recordSource({
+                ...arrival,
+                trackedLinkId: 'link-kol',
+                conversationId: 'conv-2',
+            });
+            expect(states.get('c1')!.firstTrackedLink).toEqual({
+                id: 'link-tet',
+            });
+            expect(
+                events
+                    .filter(e => e.kind === KIND.SOURCE)
+                    .map(e => [e.trackedLinkId, e.actor, e.messageId ?? null])
+            ).toEqual([
+                ['link-tet', ACTOR.RULE, 'msg-1'],
+                ['link-kol', ACTOR.RULE, 'msg-1'],
+            ]);
+        });
+
+        it('counts the same link once per conversation', async () => {
+            const { service, events } = makeHarness();
+            await service.recordSource(arrival);
+
+            expect(await service.recordSource(arrival)).toBe(false);
+            expect(events.filter(e => e.kind === KIND.SOURCE)).toHaveLength(1);
+        });
+
+        it('opts a pending customer in when the link promises an offer', async () => {
+            const { service, states, events } = makeHarness();
+            await service.recordSource({ ...arrival, promisesOffer: true });
+
+            expect(states.get('c1')!.permission).toBe(PERMISSION.GRANTED);
+            expect(events).toContainEqual(
+                expect.objectContaining({
+                    kind: KIND.PERMISSION,
+                    actor: ACTOR.RULE,
+                    newValue: PERMISSION.GRANTED,
+                    reason: 'tracked_link',
+                    trackedLinkId: 'link-tet',
+                })
+            );
+        });
+
+        it('never reopens a customer who said stop', async () => {
+            const { service, states } = makeHarness();
+            await service.recordInbound({
+                customerId: 'c1',
+                workspaceId: 'w1',
+                text: 'dừng',
+            });
+
+            await service.recordSource({ ...arrival, promisesOffer: true });
+            expect(states.get('c1')!.permission).toBe(PERMISSION.STOPPED);
         });
     });
 
@@ -271,6 +361,30 @@ describe('CustomerMarketingService', () => {
             );
             // The loser keeps its own row, so an unmerge gets it back.
             expect(states.get('zalo')?.permission).toBe(PERMISSION.STOPPED);
+        });
+
+        it('keeps the earlier first source', async () => {
+            const { service, states, em } = makeHarness();
+            const arrival = {
+                workspaceId: 'w1',
+                promisesOffer: false,
+            };
+            await service.recordSource({
+                ...arrival,
+                customerId: 'zalo',
+                trackedLinkId: 'link-early',
+            });
+            await service.recordSource({
+                ...arrival,
+                customerId: 'messenger',
+                trackedLinkId: 'link-late',
+            });
+            states.get('zalo')!.firstSourceAt = new Date('2026-01-01');
+
+            await service.mergeInto('zalo', 'messenger', 'w1', em);
+            expect(states.get('messenger')?.firstTrackedLink).toEqual({
+                id: 'link-early',
+            });
         });
 
         it('gives the survivor the loser state when it has none', async () => {

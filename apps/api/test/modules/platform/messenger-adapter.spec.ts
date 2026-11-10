@@ -326,6 +326,7 @@ describe('MessengerPlatformAdapter.parse', () => {
             expect(e).toMatchObject({
                 kind: 'referral',
                 senderId: 'S',
+                externalMessageId: 'referral:S:1',
                 referral: { code: 'to-roi-tet-linh-dan', source: 'link' },
             });
         });
