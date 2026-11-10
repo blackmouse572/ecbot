@@ -18,6 +18,7 @@ import { CustomerErasureService } from './services/customer-erasure.service';
 import { CustomerService } from './services/customer.service';
 import { CustomerAdminService } from './services/customer.admin.service';
 import { CustomerTagAdminService } from './services/customer-tag.admin.service';
+import { CustomerMarketingService } from './services/customer-marketing.service';
 
 @Module({
     imports: [
@@ -42,6 +43,7 @@ import { CustomerTagAdminService } from './services/customer-tag.admin.service';
         CustomerTagClassifierTaskService,
         CustomerAdminService,
         CustomerTagAdminService,
+        CustomerMarketingService,
     ],
     exports: [
         CustomerErasureService,
@@ -54,6 +56,7 @@ import { CustomerTagAdminService } from './services/customer-tag.admin.service';
         CustomerTagClassifierTaskService,
         CustomerAdminService,
         CustomerTagAdminService,
+        CustomerMarketingService,
         CustomerRepositoryModule,
     ],
 })

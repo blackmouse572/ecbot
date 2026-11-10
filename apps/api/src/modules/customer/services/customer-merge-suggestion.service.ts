@@ -22,6 +22,7 @@ import { ContactPointRepository } from '../repository/repositories/contact-point
 import { CustomerMergeSuggestionRepository } from '../repository/repositories/customer-merge-suggestion.repository';
 import { CustomerTagAssignmentRepository } from '../repository/repositories/customer-tag-assignment.repository';
 import { CustomerRepository } from '../repository/repositories/customer.repository';
+import { CustomerMarketingService } from './customer-marketing.service';
 
 export interface IDetectAndUpsertInput {
     workspaceId: string;
@@ -31,12 +32,7 @@ export interface IDetectAndUpsertInput {
 }
 
 export type CustomerFieldKey =
-    | 'name'
-    | 'phone'
-    | 'email'
-    | 'language'
-    | 'notes'
-    | 'profileSummary';
+    'name' | 'phone' | 'email' | 'language' | 'notes' | 'profileSummary';
 
 export type FieldResolutionSide = 'A' | 'B';
 
@@ -72,7 +68,8 @@ export class CustomerMergeSuggestionService {
         private readonly tagAssignmentRepository: CustomerTagAssignmentRepository,
         private readonly notificationService: NotificationService,
         private readonly workspaceMemberRepository: WorkspaceMemberRepository,
-        private readonly messageService: MessageService
+        private readonly messageService: MessageService,
+        private readonly customerMarketingService: CustomerMarketingService
     ) {}
 
     /**
@@ -280,6 +277,14 @@ export class CustomerMergeSuggestionService {
                 (assignment as any).deleted = true;
                 tem.persist(assignment);
             }
+
+            // 2b) Combine marketing labels: an opt-out on either side wins.
+            await this.customerMarketingService.mergeInto(
+                loserId,
+                survivorId,
+                workspaceId,
+                tem
+            );
 
             // 3) Reparent ContactPoints
             const loserContactPoints = await tem.find(ContactPointEntity, {

@@ -59,6 +59,7 @@ import {
 } from '../../modules/knowledge-base/controllers';
 import { KnowledgeBaseServicesModule } from '../../modules/knowledge-base/services/services.module';
 
+import { CustomerMarketingWorkspaceController } from '@app/modules/customer/controllers/customer-marketing.workspace.controller';
 @Module({
     controllers: [
         RoleWorkspaceController,
@@ -81,6 +82,7 @@ import { KnowledgeBaseServicesModule } from '../../modules/knowledge-base/servic
         ExportWorkspaceController,
         ContactPointWorkspaceController,
         CustomerTagWorkspaceController,
+        CustomerMarketingWorkspaceController,
         CustomerTagAssignmentWorkspaceController,
         CustomerMergeSuggestionWorkspaceController,
         NavCountWorkspaceController,

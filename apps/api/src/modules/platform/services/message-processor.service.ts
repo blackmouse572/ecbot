@@ -17,6 +17,7 @@ import {
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
 import { HandoffIntentService } from './handoff-intent.service';
 import { shouldHandOff } from '../utils/handoff-decision.util';
+import { CustomerMarketingService } from '@app/modules/customer/services/customer-marketing.service';
 import { ReplyGenerationService } from './reply-generation.service';
 import { ConversationService } from '@app/modules/conversation/services/conversation.service';
 import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
@@ -259,6 +260,14 @@ export class MessageProcessorService implements OnModuleInit {
 
         await this.conversationService.reopenIfResolved(conversation);
 
+        const optedOut = await this.recordMarketingInbound({
+            customerId,
+            workspaceId,
+            text: effectiveText,
+            conversationId: conversation.id,
+            messageId: inbound?.id,
+        });
+
         // A turned-off agent (a builder draft not activated yet, or one the
         // owner deactivated) or one in a suspended workspace keeps its inbox,
         // like a conversation with the bot disabled, but does not answer.
@@ -273,6 +282,20 @@ export class MessageProcessorService implements OnModuleInit {
             this.logger.debug(
                 `Conversation ${conversation.id} bot disabled — skipping bot reply`
             );
+            return;
+        }
+
+        // A message that is only "dừng" stopped offers above: confirm it once,
+        // in place of an agent reply.
+        if (optedOut) {
+            await this.moduleRef
+                .get(ReplyGenerationService)
+                .sendOptOutReply(
+                    chatbot,
+                    account,
+                    event.senderId,
+                    conversation.id
+                );
             return;
         }
 
@@ -363,6 +386,32 @@ export class MessageProcessorService implements OnModuleInit {
                     `messageDebounce.schedule failed for ${conversation.id}: ${err.message}`
                 )
             );
+    }
+
+    /**
+     * Journey stage, last message date and the "dừng" opt-out. A failure
+     * logs and lets the agent answer as usual: the turn must not be lost.
+     */
+    private async recordMarketingInbound(input: {
+        customerId?: string;
+        workspaceId: string;
+        text: string;
+        conversationId: string;
+        messageId?: string;
+    }): Promise<boolean> {
+        const { customerId, ...rest } = input;
+        if (!customerId) return false;
+        try {
+            const { optedOut } = await this.moduleRef
+                .get(CustomerMarketingService, { strict: false })
+                .recordInbound({ customerId, ...rest });
+            return optedOut;
+        } catch (err: unknown) {
+            this.logger.warn(
+                `Marketing state update failed for ${input.conversationId}: ${(err as Error)?.message}`
+            );
+            return false;
+        }
     }
 
     /**
