@@ -6644,6 +6644,109 @@ export type CustomerMergeSuggestionConfirmRequestDto = {
     fieldResolutions?: CustomerMergeSuggestionFieldResolutionsDto;
 };
 
+export type OrderItemGetResponseDto = {
+    id: string;
+    name: string;
+    productGroupId?: string | null;
+    productGroupName?: string | null;
+    quantity: number;
+    unitPrice?: number | null;
+};
+
+export type OrderGetResponseDto = {
+    id: string;
+    code: string;
+    customerId: string;
+    customerName?: string | null;
+    customerPhone?: string | null;
+    /**
+     * Minor units
+     */
+    total: number;
+    currency: string;
+    status: 'PENDING' | 'CONFIRMED' | 'CANCELLED';
+    source: 'CHAT' | 'MANUAL' | 'IMPORT';
+    orderedAt: string;
+    confirmedAt?: {
+        [key: string]: unknown;
+    } | null;
+    note?: string | null;
+    conversationId?: string | null;
+    items: Array<OrderItemGetResponseDto>;
+    createdAt: string;
+    updatedAt?: string;
+};
+
+export type OrderItemRequestDto = {
+    name: string;
+    productGroupId?: string | null;
+    quantity: number;
+    /**
+     * Price of one unit in minor units
+     */
+    unitPrice?: number | null;
+};
+
+export type OrderCreateRequestDto = {
+    customerId: string;
+    /**
+     * Generated as DH-YYMMDD-XXXX when left out
+     */
+    code?: string;
+    items: Array<OrderItemRequestDto>;
+    /**
+     * Order total in minor units. Left out, it is the sum of the items
+     */
+    total?: number;
+    currency?: string;
+    status?: 'PENDING' | 'CONFIRMED';
+    /**
+     * Defaults to now
+     */
+    orderedAt?: string;
+    note?: string;
+};
+
+export type OrderUpdateRequestDto = {
+    code?: string;
+    /**
+     * Replaces all items
+     */
+    items?: Array<OrderItemRequestDto>;
+    total?: number;
+    orderedAt?: string;
+    note?: string | null;
+};
+
+export type ProductGroupGetResponseDto = {
+    id: string;
+    name: string;
+    defaultRepurchaseDays?: number | null;
+    learnedRepurchaseDays?: number | null;
+    /**
+     * The cycle in use: the learned one when there is enough data, else the default
+     */
+    repurchaseDays?: number | null;
+    createdAt: string;
+    updatedAt?: string;
+};
+
+export type ProductGroupCreateRequestDto = {
+    name: string;
+    /**
+     * Days the owner expects between two purchases
+     */
+    defaultRepurchaseDays?: number | null;
+};
+
+export type ProductGroupUpdateRequestDto = {
+    name?: string;
+    /**
+     * Days the owner expects between two purchases
+     */
+    defaultRepurchaseDays?: number | null;
+};
+
 export type NavCountGetResponseDto = {
     /**
      * Pending customer merge suggestions
@@ -32635,6 +32738,835 @@ export type CustomerMergeSuggestionWorkspaceControllerDismissV1Data = {
 export type CustomerMergeSuggestionWorkspaceControllerDismissV1Responses = {
     200: unknown;
 };
+
+export type OrderWorkspaceControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        /**
+         * Order status, value with ',' delimiter
+         */
+        status?: string;
+        /**
+         * Where the order came from, value with ',' delimiter
+         */
+        source?: string;
+        /**
+         * Only the orders of this customer
+         */
+        customer?: string;
+        /**
+         * Only orders with an item in this product group
+         */
+        productGroup?: string;
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/workspace/{workspace}/orders';
+};
+
+export type OrderWorkspaceControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type OrderWorkspaceControllerListV1Error = OrderWorkspaceControllerListV1Errors[keyof OrderWorkspaceControllerListV1Errors];
+
+export type OrderWorkspaceControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<OrderGetResponseDto>;
+    };
+};
+
+export type OrderWorkspaceControllerListV1Response = OrderWorkspaceControllerListV1Responses[keyof OrderWorkspaceControllerListV1Responses];
+
+export type OrderWorkspaceControllerCreateV1Data = {
+    body: OrderCreateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/orders';
+};
+
+export type OrderWorkspaceControllerCreateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type OrderWorkspaceControllerCreateV1Error = OrderWorkspaceControllerCreateV1Errors[keyof OrderWorkspaceControllerCreateV1Errors];
+
+export type OrderWorkspaceControllerCreateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: OrderGetResponseDto;
+    };
+};
+
+export type OrderWorkspaceControllerCreateV1Response = OrderWorkspaceControllerCreateV1Responses[keyof OrderWorkspaceControllerCreateV1Responses];
+
+export type OrderWorkspaceControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the order
+         */
+        order: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/orders/{order}';
+};
+
+export type OrderWorkspaceControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type OrderWorkspaceControllerGetV1Error = OrderWorkspaceControllerGetV1Errors[keyof OrderWorkspaceControllerGetV1Errors];
+
+export type OrderWorkspaceControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: OrderGetResponseDto;
+    };
+};
+
+export type OrderWorkspaceControllerGetV1Response = OrderWorkspaceControllerGetV1Responses[keyof OrderWorkspaceControllerGetV1Responses];
+
+export type OrderWorkspaceControllerUpdateV1Data = {
+    body: OrderUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the order
+         */
+        order: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/orders/{order}';
+};
+
+export type OrderWorkspaceControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type OrderWorkspaceControllerUpdateV1Error = OrderWorkspaceControllerUpdateV1Errors[keyof OrderWorkspaceControllerUpdateV1Errors];
+
+export type OrderWorkspaceControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: OrderGetResponseDto;
+    };
+};
+
+export type OrderWorkspaceControllerUpdateV1Response = OrderWorkspaceControllerUpdateV1Responses[keyof OrderWorkspaceControllerUpdateV1Responses];
+
+export type OrderWorkspaceControllerConfirmV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the order
+         */
+        order: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/orders/{order}/confirm';
+};
+
+export type OrderWorkspaceControllerConfirmV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type OrderWorkspaceControllerConfirmV1Error = OrderWorkspaceControllerConfirmV1Errors[keyof OrderWorkspaceControllerConfirmV1Errors];
+
+export type OrderWorkspaceControllerConfirmV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: OrderGetResponseDto;
+    };
+};
+
+export type OrderWorkspaceControllerConfirmV1Response = OrderWorkspaceControllerConfirmV1Responses[keyof OrderWorkspaceControllerConfirmV1Responses];
+
+export type OrderWorkspaceControllerCancelV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the order
+         */
+        order: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/orders/{order}/cancel';
+};
+
+export type OrderWorkspaceControllerCancelV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type OrderWorkspaceControllerCancelV1Error = OrderWorkspaceControllerCancelV1Errors[keyof OrderWorkspaceControllerCancelV1Errors];
+
+export type OrderWorkspaceControllerCancelV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: OrderGetResponseDto;
+    };
+};
+
+export type OrderWorkspaceControllerCancelV1Response = OrderWorkspaceControllerCancelV1Responses[keyof OrderWorkspaceControllerCancelV1Responses];
+
+export type ProductGroupWorkspaceControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/workspace/{workspace}/product-groups';
+};
+
+export type ProductGroupWorkspaceControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ProductGroupWorkspaceControllerListV1Error = ProductGroupWorkspaceControllerListV1Errors[keyof ProductGroupWorkspaceControllerListV1Errors];
+
+export type ProductGroupWorkspaceControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<ProductGroupGetResponseDto>;
+    };
+};
+
+export type ProductGroupWorkspaceControllerListV1Response = ProductGroupWorkspaceControllerListV1Responses[keyof ProductGroupWorkspaceControllerListV1Responses];
+
+export type ProductGroupWorkspaceControllerCreateV1Data = {
+    body: ProductGroupCreateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/product-groups';
+};
+
+export type ProductGroupWorkspaceControllerCreateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ProductGroupWorkspaceControllerCreateV1Error = ProductGroupWorkspaceControllerCreateV1Errors[keyof ProductGroupWorkspaceControllerCreateV1Errors];
+
+export type ProductGroupWorkspaceControllerCreateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ProductGroupGetResponseDto;
+    };
+};
+
+export type ProductGroupWorkspaceControllerCreateV1Response = ProductGroupWorkspaceControllerCreateV1Responses[keyof ProductGroupWorkspaceControllerCreateV1Responses];
+
+export type ProductGroupWorkspaceControllerDeleteV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the product group
+         */
+        productGroup: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/product-groups/{productGroup}';
+};
+
+export type ProductGroupWorkspaceControllerDeleteV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ProductGroupWorkspaceControllerDeleteV1Error = ProductGroupWorkspaceControllerDeleteV1Errors[keyof ProductGroupWorkspaceControllerDeleteV1Errors];
+
+export type ProductGroupWorkspaceControllerDeleteV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ProductGroupWorkspaceControllerDeleteV1Response = ProductGroupWorkspaceControllerDeleteV1Responses[keyof ProductGroupWorkspaceControllerDeleteV1Responses];
+
+export type ProductGroupWorkspaceControllerUpdateV1Data = {
+    body: ProductGroupUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the product group
+         */
+        productGroup: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/product-groups/{productGroup}';
+};
+
+export type ProductGroupWorkspaceControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ProductGroupWorkspaceControllerUpdateV1Error = ProductGroupWorkspaceControllerUpdateV1Errors[keyof ProductGroupWorkspaceControllerUpdateV1Errors];
+
+export type ProductGroupWorkspaceControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ProductGroupGetResponseDto;
+    };
+};
+
+export type ProductGroupWorkspaceControllerUpdateV1Response = ProductGroupWorkspaceControllerUpdateV1Responses[keyof ProductGroupWorkspaceControllerUpdateV1Responses];
 
 export type NavCountWorkspaceControllerGetV1Data = {
     body?: never;
