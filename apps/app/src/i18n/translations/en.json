@@ -146,6 +146,10 @@
       "roles": {
         "header": "Roles",
         "description": "Manage workspace roles."
+      },
+      "marketing": {
+        "title": "Marketing",
+        "new": "New"
       }
     },
     "search": {
@@ -1923,6 +1927,7 @@
     "ascending": "Ascending",
     "descending": "Descending",
     "countSelected": "{{count}} items selected",
+    "selected": "selected",
     "loadMore": "Load More",
     "timeAgo": {
       "seconds": "{{count}} seconds ago",
@@ -3177,5 +3182,146 @@
       "undo": "Undo",
       "redo": "Redo"
     }
+  },
+  "customerSources": {
+    "title": "Customer sources",
+    "description": "Each link or QR code tells you which post, counter or KOL a customer came from.",
+    "create": "Create link",
+    "comingSoon": "Coming soon",
+    "list": {
+      "noRecordsTitle": "No customer sources yet",
+      "noRecordsMessage": "Create a tracked link or QR code, then put it on a flyer, a post or a KOL's bio."
+    },
+    "columns": {
+      "source": "Source",
+      "channel": "Channel",
+      "status": "Status",
+      "kind": "Type"
+    },
+    "status": {
+      "ACTIVE": "In use",
+      "STOPPED": "Stopped"
+    },
+    "kind": {
+      "LINK": "Tracked link",
+      "QR": "QR code",
+      "KOL": "KOL link",
+      "POST": "Post",
+      "AD": "Meta ad"
+    },
+    "steps": {
+      "create": "Create link",
+      "share": "Share"
+    },
+    "form": {
+      "title": "Create a tracked link",
+      "description": "Every customer who opens this link or scans its QR code is recorded with this source, so you know which flyer, post or ad brings orders.",
+      "name": "Source name",
+      "namePlaceholder": "Flyer in the Tết gift box",
+      "nameHint": "Only you and your team see this name.",
+      "channel": "Customers will chat on",
+      "channelHint": "Only connected channels that can open a chat from a link (not Threads or API).",
+      "noChannels": "Connect Messenger, Instagram, Telegram, WhatsApp or the website chat first.",
+      "targetUrl": "Page on your website",
+      "targetUrlHint": "The page where your chat widget runs. The link opens it with the source code added.",
+      "submit": "Create link",
+      "created": "Tracked link created",
+      "errors": {
+        "name": "Enter a name for this source",
+        "channel": "Pick the channel customers will chat on",
+        "targetUrl": "Enter the full page address, starting with https://"
+      },
+      "greeting": "First greeting",
+      "greetingPlaceholder": "Hi, thanks for buying the Lumi Tết gift box. Here is 10% off your next order.",
+      "greetingHint": "The assistant sends this when the customer opens the link, then chats as usual.",
+      "tags": "Tag the customer",
+      "tagsPlaceholder": "Add tags",
+      "tagsHint": "Customers who come through this link get these tags.",
+      "noTags": "No tags yet. Create them under Customers, Customer tags."
+    },
+    "preview": {
+      "title": "Link and QR code",
+      "description": "Ready to use as soon as it is created. Print the QR on flyers, or paste the link into a post or bio.",
+      "how": "Customers who open the link land in {{channel}} for {{account}}, the assistant sends the greeting above, and they are recorded as coming from \"{{name}}\".",
+      "thisSource": "this source",
+      "empty": "Name the source and pick a channel to see its link."
+    },
+    "share": {
+      "title": "Share the link",
+      "description": "Put the link where customers will see it. Each QR code and KOL link has its own code, so Customer sources shows which one brought customers in.",
+      "created": "Created",
+      "copy": "Copy",
+      "copied": "Link copied",
+      "downloadPng": "Download QR (PNG)",
+      "downloadSvg": "Download QR (SVG)",
+      "qrAlt": "QR code for {{name}}",
+      "noUrl": "This channel cannot open a chat from a link yet.",
+      "kolTitle": "Create a KOL link",
+      "kolHint": "Each KOL gets their own link, so you see who brings customers.",
+      "qrTitle": "Add a QR code",
+      "qrHint": "One QR code per place, such as a counter or a standee.",
+      "later": "You can come back to this from Customer sources.",
+      "done": "Done",
+      "downloadFailed": "Could not save the QR code. Try again.",
+      "quick": "Quick share",
+      "qrDownloadTitle": "Download QR code",
+      "qrDownloadHint": "PNG for print, SVG for your designer.",
+      "action": "Share",
+      "copyName": "Copy the link for {{name}}"
+    },
+    "detail": {
+      "links": "Links in this source",
+      "linksDescription": "Each QR code and KOL has its own code, so you see which one brings customers.",
+      "tabs": {
+        "all": "All"
+      },
+      "noLinks": "No QR codes or KOL links yet.",
+      "settings": "Settings",
+      "channel": "Channel",
+      "code": "Code",
+      "targetUrl": "Website page",
+      "createdAt": "Created",
+      "stop": "Stop using",
+      "resume": "Use again",
+      "stopped": "Source stopped",
+      "resumed": "Source in use again",
+      "summary": "{{kind}} on {{channel}}. Created {{date}}.",
+      "none": "None"
+    },
+    "child": {
+      "kolName": "KOL name",
+      "kolPlaceholder": "Linh Đan",
+      "kolDescription": "Each KOL gets their own link. Customers who come through it are recorded under that KOL's name.",
+      "qrName": "Where it goes",
+      "qrPlaceholder": "Standee at the counter",
+      "qrDescription": "Give each place its own QR code to see which one brings customers.",
+      "submit": "Create link",
+      "created": "Link created",
+      "errors": {
+        "name": "Enter a name"
+      },
+      "nameHint": "Shown on Customer sources only, customers do not see it.",
+      "kolLink": "This KOL's link",
+      "qrLink": "This QR code's link",
+      "sameAs": "Same greeting and tags as the main link \"{{name}}\". The code is made when you click Create link.",
+      "made": "Created",
+      "count": {
+        "QR_one": "{{count}} QR code",
+        "QR_other": "{{count}} QR codes",
+        "KOL_one": "{{count}} KOL",
+        "KOL_other": "{{count}} KOLs"
+      }
+    },
+    "edit": {
+      "title": "Edit customer source",
+      "description": "Change the name, greeting, tags or website page of this source.",
+      "saved": "Customer source saved"
+    },
+    "delete": {
+      "title": "Delete {{name}}?",
+      "description": "The link and its QR and KOL codes stop being tracked.",
+      "deleted": "Customer source deleted"
+    },
+    "error": "Something went wrong. Try again."
   }
 }

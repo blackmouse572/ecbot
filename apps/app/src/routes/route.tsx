@@ -430,6 +430,55 @@ function getRouteMaps(): RouteObject[] {
               ],
             },
             {
+              path: ROUTES.CustomerSources,
+              handle: {
+                breadcrumb: () => t("customerSources.title"),
+              },
+              ErrorBoundary: ErrorBoundary,
+              children: [
+                {
+                  path: "",
+                  lazy: () => import("./sources/source-list"),
+                  children: [
+                    {
+                      path: "create",
+                      ErrorBoundary: ErrorBoundary,
+                      lazy: () => import("./sources/source-create"),
+                    },
+                  ],
+                },
+                {
+                  path: ":sourceId",
+                  ErrorBoundary: ErrorBoundary,
+                  lazy: async function () {
+                    const { loader, Breadcrumb, Component } =
+                      await import("./sources/source-detail");
+                    return {
+                      Component,
+                      loader,
+                      handle: {
+                        breadcrumb: (match: UIMatch) => (
+                          <Breadcrumb {...match} />
+                        ),
+                      },
+                    };
+                  },
+                  children: [
+                    {
+                      path: "edit",
+                      ErrorBoundary: ErrorBoundary,
+                      lazy: () => import("./sources/source-edit"),
+                    },
+                    {
+                      path: "share",
+                      ErrorBoundary: ErrorBoundary,
+                      lazy: () => import("./sources/source-share"),
+                    },
+                  ],
+                },
+              ],
+            },
+            {
               path: ROUTES.Customers,
               handle: {
                 private: true,
