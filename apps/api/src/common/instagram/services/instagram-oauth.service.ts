@@ -10,7 +10,7 @@ const GRAPH_API_VERSION = 'v23.0';
 // Instagram documents long-lived tokens as 60 days.
 const DEFAULT_EXPIRES_IN = 60 * 24 * 60 * 60;
 const SUBSCRIBED_FIELDS =
-    'messages,messaging_postbacks,message_reactions,messaging_seen';
+    'messages,messaging_postbacks,messaging_referral,message_reactions,messaging_seen';
 
 interface InstagramProfile {
     /** The professional account id: webhooks carry it as `entry.id`. */
@@ -169,7 +169,8 @@ export class InstagramOAuthService implements IOAuthPlatformService {
         return response.data;
     }
 
-    private async subscribeWebhooks(accessToken: string): Promise<void> {
+    /** Also run again for connected accounts by account:resubscribe-webhooks. */
+    async subscribeWebhooks(accessToken: string): Promise<void> {
         try {
             await this.httpService.axiosRef.post(
                 `${this.graphUrl}/${GRAPH_API_VERSION}/me/subscribed_apps`,

@@ -51,6 +51,13 @@ export function Widget() {
     }
   }, []);
 
+  // Set by widget.js when the visitor came through a tracked link.
+  const source = useMemo(
+    () =>
+      new URLSearchParams(window.location.search).get("ecb_src") ?? undefined,
+    [],
+  );
+
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["widget-meta", key],
     queryFn: async () => {
@@ -90,8 +97,9 @@ export function Widget() {
         visitorId,
         parentOrigin,
         () => turnstileTokenRef.current,
+        source,
       ),
-    [key, visitorId, parentOrigin],
+    [key, visitorId, parentOrigin, source],
   );
 
   // Tell the loader the frame is alive so it can stop showing a spinner.

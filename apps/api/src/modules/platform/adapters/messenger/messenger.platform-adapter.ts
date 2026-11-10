@@ -29,7 +29,11 @@ import {
     verifyMetaChallenge,
     verifyMetaSignature,
 } from '../meta/meta-webhook.util';
-import { metaAttachments, metaReplyTo } from '../meta/meta-message.util';
+import {
+    metaAttachments,
+    metaReferral,
+    metaReplyTo,
+} from '../meta/meta-message.util';
 import { PlatformAdapter } from '../platform-adapter.base';
 import {
     MessengerMessagingEvent,
@@ -191,6 +195,8 @@ export class MessengerPlatformAdapter extends PlatformAdapter {
             kind = 'delivery';
         } else if (event.read) {
             kind = 'read';
+        } else if (event.referral) {
+            kind = 'referral';
         }
 
         // On an echo the page is the sender and the customer the recipient.
@@ -219,6 +225,7 @@ export class MessengerPlatformAdapter extends PlatformAdapter {
             action,
             attachments,
             replyTo,
+            referral: metaReferral(event),
             reaction,
         };
     }

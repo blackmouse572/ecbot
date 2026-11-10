@@ -1,8 +1,12 @@
 import {
     PlatformAttachment,
+    PlatformReferral,
     PlatformReplyTo,
 } from '../../interfaces/platform-adapter.interface';
-import { MessengerMessagePayload } from '../messenger/messenger.types';
+import {
+    MessengerMessagePayload,
+    MessengerMessagingEvent,
+} from '../messenger/messenger.types';
 
 // Shared by Messenger and Instagram, which send the same message shape.
 
@@ -51,4 +55,25 @@ export function metaReplyTo(
     if (replyTo?.mid)
         return { kind: 'message', externalMessageId: replyTo.mid };
     return undefined;
+}
+
+/** Where the chat came from: an m.me / ig.me `ref`, or a Meta ad. Meta puts
+ *  it on the event itself (an existing chat), the message, or the postback
+ *  (Get Started, an ice breaker). */
+export function metaReferral(
+    event: MessengerMessagingEvent
+): PlatformReferral | undefined {
+    const r =
+        event.referral ?? event.message?.referral ?? event.postback?.referral;
+    if (!r) return undefined;
+
+    const code = r.ref?.trim() || undefined;
+    const isAd = !!r.ad_id || r.source === 'ADS';
+    if (!code && !isAd) return undefined;
+
+    return {
+        code,
+        source: isAd ? 'ad' : 'link',
+        ...(r.ad_id && { adId: String(r.ad_id) }),
+    };
 }

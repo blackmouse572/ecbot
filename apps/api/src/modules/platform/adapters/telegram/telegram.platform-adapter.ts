@@ -54,6 +54,10 @@ interface TelegramChat {
     photo?: { small_file_id: string };
 }
 
+/** `/start <payload>` from a t.me/<bot>?start= link; Telegram allows
+ *  A-Z, a-z, 0-9, _ and - up to 64 characters. */
+const START_WITH_CODE = /^\/start(?:@\w+)?\s+([A-Za-z0-9_-]{1,64})\s*$/;
+
 interface TelegramMessage {
     message_id: number;
     from?: TelegramUser;
@@ -270,13 +274,18 @@ export class TelegramPlatformAdapter extends PlatformAdapter {
             attachments = [{ type: 'location', raw: msg.location }];
         }
 
+        // The bot gets a plain /start, as when the chat opens with no link;
+        // the code is the referral.
+        const code = msg.text?.match(START_WITH_CODE)?.[1];
+
         return {
             kind: isEdit ? 'unknown' : 'message',
             accountKey: recipientId,
             senderId,
             recipientId,
             externalMessageId: msg.message_id.toString(),
-            text: msg.text ?? msg.caption,
+            text: code ? '/start' : (msg.text ?? msg.caption),
+            ...(code && { referral: { code, source: 'link' as const } }),
             timestamp: new Date(msg.date * 1000),
             raw: msg,
             attachments,

@@ -87,7 +87,7 @@ describe('Instagram Login over HTTP', () => {
             .post('/v23.0/me/subscribed_apps')
             .query({
                 subscribed_fields:
-                    'messages,messaging_postbacks,message_reactions,messaging_seen',
+                    'messages,messaging_postbacks,messaging_referral,message_reactions,messaging_seen',
                 access_token: 'LONG_TOKEN',
             })
             .reply(200, { success: true });

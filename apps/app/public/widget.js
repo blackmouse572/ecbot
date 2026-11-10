@@ -46,6 +46,17 @@
         : "light";
   }
 
+  // A tracked link opens this site with ?ecb_src=<code>. Kept for the visit,
+  // so a chat started on a later page still knows where the visitor came from.
+  var source;
+  try {
+    source = new URLSearchParams(location.search).get("ecb_src");
+    if (source) sessionStorage.setItem("ecb_src", source);
+    else source = sessionStorage.getItem("ecb_src");
+  } catch (e) {
+    source = null;
+  }
+
   var open = false;
   var unread = 0;
 
@@ -101,7 +112,8 @@
     "/widget/" +
     encodeURIComponent(widgetKey) +
     "?theme=" +
-    encodeURIComponent(theme);
+    encodeURIComponent(theme) +
+    (source ? "&ecb_src=" + encodeURIComponent(source) : "");
   frame.allow = "clipboard-write";
   applyStyles(frame, {
     position: "fixed",

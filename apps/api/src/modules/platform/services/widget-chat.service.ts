@@ -37,6 +37,7 @@ import { handoffReplyText } from '../utils/handoff-reply.util';
 import { fallbackReplyText } from '../utils/fallback-reply.util';
 import { shouldHandOff } from '../utils/handoff-decision.util';
 import type { ReplyMedia } from '../interfaces/message-model';
+import type { PlatformReferral } from '../interfaces/platform-adapter.interface';
 
 export interface IWidgetTurn {
     /** WEBSITE_WIDGET account with `chatbot` and `workspace` populated. */
@@ -48,6 +49,8 @@ export interface IWidgetTurn {
     messageId: string;
     /** Uploads staged for this message (WidgetSessionService.mediaFolder). */
     attachments?: { key: string; name?: string }[];
+    /** The tracked link the visitor arrived through (`ecb_src`). */
+    referral?: PlatformReferral;
 }
 
 /**

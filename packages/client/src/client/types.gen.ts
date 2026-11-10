@@ -837,6 +837,10 @@ export type WidgetSendMessageRequestDto = {
      */
     parentOrigin?: string;
     /**
+     * The tracked link code (ecb_src) the visitor arrived with. An unknown or malformed code is ignored.
+     */
+    source?: string;
+    /**
      * Turnstile token. Required once per visitor session.
      */
     turnstileToken?: string;
