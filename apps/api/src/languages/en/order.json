@@ -1,0 +1,28 @@
+{
+    "workspace": {
+        "list": "Orders retrieved successfully.",
+        "get": "Order retrieved successfully.",
+        "create": "Order added.",
+        "update": "Order updated.",
+        "confirm": "Order confirmed.",
+        "cancel": "Order cancelled."
+    },
+    "error": {
+        "notFound": "Order not found.",
+        "codeExists": "Another order already uses this code.",
+        "notPending": "Only an order waiting for confirmation can be confirmed.",
+        "cancelled": "This order is cancelled."
+    },
+    "productGroup": {
+        "workspace": {
+            "list": "Product groups retrieved successfully.",
+            "create": "Product group created.",
+            "update": "Product group updated.",
+            "delete": "Product group deleted."
+        },
+        "error": {
+            "notFound": "Product group not found.",
+            "duplicate": "A product group with this name already exists."
+        }
+    }
+}

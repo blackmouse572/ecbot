@@ -1,6 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ENUM_CUSTOMER_MERGE_SUGGESTION_STATUS } from '../../../src/modules/customer/enums/customer.enum';
 import { CustomerMergeSuggestionService } from '../../../src/modules/customer/services/customer-merge-suggestion.service';
+import { ProductGroupRepository } from '../../../src/modules/order/repository/repositories/product-group.repository';
 
 // Unit tests for the CustomerMergeSuggestionService. We mock the EntityManager
 // and the per-aggregate repositories so the test stays at the service level —
@@ -8,6 +9,15 @@ import { CustomerMergeSuggestionService } from '../../../src/modules/customer/se
 // that should hold independently of the ORM.
 
 type Where = Record<string, any>;
+
+// Moving orders between customers recomputes the learned repurchase cycles;
+// that SQL is covered by the order e2e, so here we only check the call.
+const refreshCycles = jest
+    .spyOn(
+        ProductGroupRepository.prototype,
+        'refreshLearnedRepurchaseDaysOfOrders'
+    )
+    .mockResolvedValue(undefined);
 
 function makeEm() {
     // Simple recorded-calls mock for the MikroORM EntityManager surface the
@@ -347,7 +357,8 @@ describe('CustomerMergeSuggestionService', () => {
             // Loser tag assignments
             tem.find
                 .mockResolvedValueOnce([{ id: 'assn-1', tag: { id: 'tag-1' } }]) // loserAssignments
-                .mockResolvedValueOnce([{ id: 'cp-1' }, { id: 'cp-2' }]); // loserContactPoints
+                .mockResolvedValueOnce([{ id: 'cp-1' }, { id: 'cp-2' }]) // loserContactPoints
+                .mockResolvedValueOnce([{ id: 'ord-1' }]); // loserOrders
 
             const { service, customerMarketing } = makeService(em, {});
 
@@ -375,6 +386,16 @@ describe('CustomerMergeSuggestionService', () => {
             );
             expect(cpUpdate).toBeDefined();
 
+            // 1b) The loser's orders move to the survivor and are remembered
+            // for unmerge.
+            const orderMove = tem.nativeUpdate.mock.calls.find(
+                ([, where, patch]: any) =>
+                    where?.id?.$in?.includes?.('ord-1') &&
+                    patch?.customer?.id === 'cust-A'
+            );
+            expect(orderMove).toBeDefined();
+            expect(refreshCycles).toHaveBeenCalledWith(['ord-1']);
+
             // 2) A new survivor-side assignment is persisted for the loser's tag.
             const persistedAssignments = tem.persist.mock.calls.filter(
                 ([arg]: any) =>
@@ -400,6 +421,9 @@ describe('CustomerMergeSuggestionService', () => {
             expect(
                 (suggestion as any).unmergeSnapshot.loserTagAssignmentIds
             ).toEqual(['assn-1']);
+            expect((suggestion as any).unmergeSnapshot.loserOrderIds).toEqual([
+                'ord-1',
+            ]);
             expect((suggestion as any).unmergeSnapshot.loserFields.name).toBe(
                 'Loser'
             );
@@ -436,6 +460,7 @@ describe('CustomerMergeSuggestionService', () => {
 
             tem.find.mockResolvedValueOnce([]); // no loser tags
             tem.find.mockResolvedValueOnce([]); // no contact points
+            tem.find.mockResolvedValueOnce([]); // no orders
 
             const { service } = makeService(em, {});
 
@@ -478,6 +503,7 @@ describe('CustomerMergeSuggestionService', () => {
                 mergedLoserId: 'cust-B',
                 unmergeSnapshot: {
                     loserContactPointIds: ['cp-1'],
+                    loserOrderIds: ['ord-1'],
                     loserTagAssignmentIds: ['assn-1'],
                     loserFields: {
                         name: 'Loser was here',
@@ -515,6 +541,15 @@ describe('CustomerMergeSuggestionService', () => {
                     patch?.customer?.id === 'cust-B'
             );
             expect(cpReparent).toBeDefined();
+
+            // Orders moved BACK to loser
+            const orderReparent = tem.nativeUpdate.mock.calls.find(
+                ([, where, patch]: any) =>
+                    where?.id?.$in?.includes?.('ord-1') &&
+                    patch?.customer?.id === 'cust-B'
+            );
+            expect(orderReparent).toBeDefined();
+            expect(refreshCycles).toHaveBeenCalledWith(['ord-1']);
 
             // Tag assignments un-soft-deleted
             const tagRestore = tem.nativeUpdate.mock.calls.find(
