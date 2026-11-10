@@ -1927,6 +1927,7 @@
     "ascending": "Ascending",
     "descending": "Descending",
     "countSelected": "{{count}} items selected",
+    "selected": "selected",
     "loadMore": "Load More",
     "timeAgo": {
       "seconds": "{{count}} seconds ago",

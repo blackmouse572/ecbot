@@ -1962,6 +1962,7 @@
     "loadMore": "Xem thêm",
     "descending": "Giảm dần",
     "countSelected": "Đã chọn {{count}} mục",
+    "selected": "đã chọn",
     "timeAgo": {
       "seconds": "{{count}} giây trước",
       "minutes": "{{count}} phút trước",
