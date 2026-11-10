@@ -8,10 +8,16 @@ import {
     ENUM_ORDER_STATUS,
 } from 'src/modules/order/enums/order.enum';
 import { OrderService } from 'src/modules/order/services/order.service';
+import { ProductGroupService } from 'src/modules/order/services/product-group.service';
 
 describe('OrderService', () => {
     const workspaceId = 'w1';
-    const customer = { id: 'c1', name: 'Lan', phone: '0901234567' };
+    const customer = {
+        id: 'c1',
+        name: 'Lan',
+        phone: '0901234567',
+        workspace: { id: workspaceId },
+    };
 
     const orderRepository = {
         find: jest.fn(),
@@ -24,7 +30,11 @@ describe('OrderService', () => {
     };
     const productGroupRepository = { find: jest.fn() };
     const customerRepository = { findOne: jest.fn() };
-    const productGroupService = { refreshLearnedCycles: jest.fn() };
+    const productGroupService = {
+        refreshLearnedCycles: jest.fn(),
+        findAll: jest.fn(),
+        matchItemName: ProductGroupService.prototype.matchItemName,
+    };
 
     const service = new OrderService(
         orderRepository as any,
@@ -57,6 +67,9 @@ describe('OrderService', () => {
             items: { getItems: () => [{ productGroup: { id: 'g1' } }] },
         }));
         orderRepository.save.mockImplementation(async e => e);
+        productGroupService.findAll.mockResolvedValue([
+            { id: 'g1', name: 'Kem chống nắng' },
+        ]);
     });
 
     describe('create', () => {
@@ -226,6 +239,75 @@ describe('OrderService', () => {
                 items: [{ name: 'Serum', quantity: 2 }],
             });
             expect(existing.total).toBe(500000);
+        });
+    });
+
+    describe('recordChatDraft', () => {
+        const draft = {
+            items: [
+                {
+                    name: 'Kem chống nắng SPF50',
+                    quantity: 2,
+                    unitPrice: 150000,
+                },
+                { name: 'Túi quà', quantity: 1 },
+            ],
+            note: 'Giao giờ hành chính',
+            conversationId: 'conv-1',
+        };
+
+        it('creates a PENDING chat order with groups matched by name', async () => {
+            orderRepository.findOne.mockResolvedValue(null);
+            const created = await service.recordChatDraft('c1', draft);
+
+            expect(orderRepository.findOne).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    workspace: workspaceId,
+                    conversationId: 'conv-1',
+                    status: ENUM_ORDER_STATUS.PENDING,
+                    source: ENUM_ORDER_SOURCE.CHAT,
+                })
+            );
+            const data = orderRepository.create.mock.calls[0][0];
+            expect(data.status).toBe(ENUM_ORDER_STATUS.PENDING);
+            expect(data.source).toBe(ENUM_ORDER_SOURCE.CHAT);
+            expect(data.conversationId).toBe('conv-1');
+            expect(data.total).toBe(300000);
+            expect(data.items.map((i: any) => i.productGroup)).toEqual([
+                'g1',
+                undefined,
+            ]);
+            expect(created.status).toBe(ENUM_ORDER_STATUS.PENDING);
+        });
+
+        it('replaces the draft already noted in the same conversation', async () => {
+            const existing = order({ conversationId: 'conv-1' });
+            orderRepository.findOne.mockResolvedValue(existing);
+
+            await service.recordChatDraft('c1', draft);
+
+            expect(orderRepository.create).not.toHaveBeenCalled();
+            expect(orderRepository.replaceItems).toHaveBeenCalledWith(
+                existing,
+                expect.arrayContaining([
+                    expect.objectContaining({ productGroupId: 'g1' }),
+                ])
+            );
+            expect(existing.total).toBe(300000);
+        });
+
+        it('creates a new order without a conversation to match', async () => {
+            const { conversationId: _, ...noConversation } = draft;
+            await service.recordChatDraft('c1', noConversation);
+            expect(orderRepository.findOne).not.toHaveBeenCalled();
+            expect(orderRepository.create).toHaveBeenCalled();
+        });
+
+        it('rejects an unknown customer', async () => {
+            customerRepository.findOne.mockResolvedValue(null);
+            await expect(
+                service.recordChatDraft('c9', draft)
+            ).rejects.toBeInstanceOf(NotFoundException);
         });
     });
 });

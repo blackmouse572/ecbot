@@ -28,16 +28,34 @@ export class ProductGroupRepository extends DatabaseRepository<ProductGroupEntit
         orderIds: string[]
     ): Promise<void> {
         if (!orderIds.length) return;
+        await this.refreshLearnedRepurchaseDays(
+            await this.groupIdsOfItems({ order: { $in: orderIds } })
+        );
+    }
+
+    /** Groups these customers bought from, read before erasing them. */
+    groupIdsOfCustomers(customerIds: string[]): Promise<string[]> {
+        if (!customerIds.length) return Promise.resolve([]);
+        return this.groupIdsOfItems({
+            order: { customer: { $in: customerIds } },
+        });
+    }
+
+    private async groupIdsOfItems(
+        where: Record<string, unknown>
+    ): Promise<string[]> {
         const items = await this.em.find(
             OrderItemEntity,
-            { order: { $in: orderIds }, productGroup: { $ne: null } },
+            { ...where, productGroup: { $ne: null } },
             { fields: ['productGroup'] }
         );
-        await this.refreshLearnedRepurchaseDays(
-            items.flatMap(item =>
-                item.productGroup ? [item.productGroup.id] : []
-            )
-        );
+        return [
+            ...new Set(
+                items.flatMap(item =>
+                    item.productGroup ? [item.productGroup.id] : []
+                )
+            ),
+        ];
     }
 
     /**

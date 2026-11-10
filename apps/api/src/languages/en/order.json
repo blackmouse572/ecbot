@@ -5,7 +5,8 @@
         "create": "Order added.",
         "update": "Order updated.",
         "confirm": "Order confirmed.",
-        "cancel": "Order cancelled."
+        "cancel": "Order cancelled.",
+        "import": "Orders imported."
     },
     "error": {
         "notFound": "Order not found.",

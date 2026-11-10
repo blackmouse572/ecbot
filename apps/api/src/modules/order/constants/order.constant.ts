@@ -35,3 +35,9 @@ export const ORDER_ABILITY_DELETE = {
     subject: ENUM_POLICY_SUBJECT.CUSTOMER,
     action: [ENUM_POLICY_ACTION.DELETE],
 };
+
+// Rows per import request; a bigger file is sent in several requests.
+export const ORDER_IMPORT_MAX_ROWS = 1000;
+
+// Items the bot may note on one chat order.
+export const ORDER_CHAT_MAX_ITEMS = 50;

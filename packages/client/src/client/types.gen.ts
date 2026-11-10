@@ -1398,6 +1398,26 @@ export type CustomerTagSystemRemoveRequestDto = {
     tagName: string;
 };
 
+export type OrderItemRequestDto = {
+    name: string;
+    productGroupId?: string | null;
+    quantity: number;
+    /**
+     * Price of one unit in minor units
+     */
+    unitPrice?: number | null;
+};
+
+export type OrderSystemDraftRequestDto = {
+    items: Array<OrderItemRequestDto>;
+    /**
+     * Total the customer agreed to, in minor units
+     */
+    total?: number;
+    note?: string;
+    conversationId?: string;
+};
+
 export type FollowupScheduleRequestDto = {
     [key: string]: unknown;
 };
@@ -6677,16 +6697,6 @@ export type OrderGetResponseDto = {
     updatedAt?: string;
 };
 
-export type OrderItemRequestDto = {
-    name: string;
-    productGroupId?: string | null;
-    quantity: number;
-    /**
-     * Price of one unit in minor units
-     */
-    unitPrice?: number | null;
-};
-
 export type OrderCreateRequestDto = {
     customerId: string;
     /**
@@ -6705,6 +6715,71 @@ export type OrderCreateRequestDto = {
      */
     orderedAt?: string;
     note?: string;
+};
+
+export type OrderImportInvalidRowResponseDto = {
+    /**
+     * Row number in the file, from 1
+     */
+    row: number;
+    reason: 'missingPhone' | 'badDate' | 'empty' | 'failed';
+};
+
+export type OrderImportResponseDto = {
+    /**
+     * True when nothing was written
+     */
+    dryRun: boolean;
+    /**
+     * Orders imported, or that would be
+     */
+    orders: number;
+    /**
+     * Orders whose code already exists
+     */
+    skipped: number;
+    /**
+     * Customers created from unknown phones
+     */
+    newCustomers: number;
+    /**
+     * Product groups created
+     */
+    newGroups: Array<string>;
+    invalidRows: Array<OrderImportInvalidRowResponseDto>;
+};
+
+export type OrderImportRowRequestDto = {
+    code?: string;
+    phone?: string;
+    name?: string;
+    item?: string;
+    group?: string;
+    quantity?: number;
+    /**
+     * Price of one unit in minor units
+     */
+    unitPrice?: number;
+    /**
+     * Order total in minor units
+     */
+    total?: number;
+    /**
+     * ISO date or dd/mm/yyyy, optionally with hh:mm
+     */
+    orderedAt?: string;
+    /**
+     * Defaults to CONFIRMED
+     */
+    status?: 'PENDING' | 'CONFIRMED';
+};
+
+export type OrderImportRequestDto = {
+    rows: Array<OrderImportRowRequestDto>;
+    /**
+     * Count what would be imported without writing anything
+     */
+    dryRun?: boolean;
 };
 
 export type OrderUpdateRequestDto = {
@@ -11436,6 +11511,19 @@ export type CustomerTagSystemControllerRemoveV1Data = {
 };
 
 export type CustomerTagSystemControllerRemoveV1Responses = {
+    201: unknown;
+};
+
+export type OrderSystemControllerDraftV1Data = {
+    body: OrderSystemDraftRequestDto;
+    path: {
+        customerId: string;
+    };
+    query?: never;
+    url: '/api/v1/system/customers/{customerId}/orders/draft';
+};
+
+export type OrderSystemControllerDraftV1Responses = {
     201: unknown;
 };
 
@@ -33085,6 +33173,85 @@ export type OrderWorkspaceControllerUpdateV1Responses = {
 };
 
 export type OrderWorkspaceControllerUpdateV1Response = OrderWorkspaceControllerUpdateV1Responses[keyof OrderWorkspaceControllerUpdateV1Responses];
+
+export type OrderWorkspaceControllerImportV1Data = {
+    body: OrderImportRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/orders/import';
+};
+
+export type OrderWorkspaceControllerImportV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type OrderWorkspaceControllerImportV1Error = OrderWorkspaceControllerImportV1Errors[keyof OrderWorkspaceControllerImportV1Errors];
+
+export type OrderWorkspaceControllerImportV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: OrderImportResponseDto;
+    };
+};
+
+export type OrderWorkspaceControllerImportV1Response = OrderWorkspaceControllerImportV1Responses[keyof OrderWorkspaceControllerImportV1Responses];
 
 export type OrderWorkspaceControllerConfirmV1Data = {
     body?: never;

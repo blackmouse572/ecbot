@@ -19,7 +19,8 @@ export enum ENUM_POLICY_SUBJECT {
     UTILITIES = 'UTILITIES',
     WORKSPACE = 'WORKSPACE',
     CHATBOT = 'CHATBOT',
-    /** @deprecated Order module removed; retained so historical activity rows stay typed. */
+    // Order and product group events (#498). Older rows from the removed
+    // first order module carry it too.
     ORDER = 'ORDER',
     MEMBER = 'MEMBER',
     RAG = 'RAG',

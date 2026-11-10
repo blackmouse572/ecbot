@@ -1,4 +1,7 @@
-import { EntityManager } from '@mikro-orm/postgresql';
+import { EntityManager, RequestContext } from '@mikro-orm/postgresql';
+import request from 'supertest';
+import { ENUM_API_KEY_TYPE } from '@app/modules/api-key/enums/api-key.enum';
+import { ApiKeyService } from '@app/modules/api-key/services/api-key.service';
 import { CustomerEntity } from '@app/modules/customer/repository/entities/customer.entity';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { http } from './utils/http';
@@ -243,5 +246,112 @@ describe('E2E — workspace orders and product groups', () => {
             .set(...auth(strangerToken));
         expect(res.status).toBeGreaterThanOrEqual(403);
         expect(res.status).toBeLessThan(500);
+    });
+
+    it('previews a CSV import, imports it, and skips it the second time', async () => {
+        const code = `SP-${Date.now()}`;
+        const rows = [
+            {
+                code,
+                phone: '+84 901 234 567',
+                item: 'Serum B5',
+                group: 'serum',
+                quantity: 1,
+                unitPrice: 200000,
+                orderedAt: '02/10/2026',
+            },
+            {
+                code,
+                phone: '0901234567',
+                item: 'Bông tẩy trang',
+                group: 'Phụ kiện',
+            },
+            { phone: '0988777666', name: 'Anh Minh', total: 450000 },
+            { code: 'NO-PHONE', item: 'Serum' },
+        ];
+        const importUrl = `${ordersUrl()}/import`;
+
+        const preview = await http(ctx.app)
+            .post(importUrl)
+            .set(...auth(ownerToken))
+            .send({ rows, dryRun: true });
+        expect(preview.status).toBe(200);
+        expect(preview.body.data).toEqual({
+            dryRun: true,
+            orders: 2,
+            skipped: 0,
+            newCustomers: 1,
+            newGroups: ['Phụ kiện'],
+            invalidRows: [{ row: 4, reason: 'missingPhone' }],
+        });
+
+        const imported = await http(ctx.app)
+            .post(importUrl)
+            .set(...auth(ownerToken))
+            .send({ rows });
+        expect(imported.status).toBe(200);
+        expect(imported.body.data.orders).toBe(2);
+
+        const list = await http(ctx.app)
+            .get(`${ordersUrl()}?search=${code}`)
+            .set(...auth(ownerToken));
+        const order = list.body.data.find((o: any) => o.code === code);
+        expect(order.customerId).toBe(customerId);
+        expect(order.source).toBe('IMPORT');
+        expect(order.status).toBe('CONFIRMED');
+        expect(order.orderedAt).toBe('2026-10-02T00:00:00.000Z');
+        expect(order.items.map((i: any) => i.productGroupName)).toEqual([
+            'Serum',
+            'Phụ kiện',
+        ]);
+
+        const again = await http(ctx.app)
+            .post(importUrl)
+            .set(...auth(ownerToken))
+            .send({ rows: rows.slice(0, 2) });
+        expect(again.body.data).toMatchObject({ orders: 0, skipped: 1 });
+    });
+
+    it('lets the bot note a chat order as a pending draft, replaced on the next note', async () => {
+        // The bot calls with a SYSTEM key; mint one for this run.
+        const system = await RequestContext.create(
+            ctx.app.get(EntityManager).fork(),
+            () =>
+                ctx.app.get(ApiKeyService).create({
+                    name: `e2e-system-${Date.now()}`,
+                    type: ENUM_API_KEY_TYPE.SYSTEM,
+                } as any)
+        );
+        const draftUrl = `${ctx.base}/system/customers/${customerId}/orders/draft`;
+        const asBot = () =>
+            request(ctx.app.getHttpServer())
+                .post(draftUrl)
+                .set('x-api-key', `${system.key}:${system.secret}`);
+        const conversationId = '0b8f6f0e-6c1a-4d5e-9c43-2a7f3f1d9b11';
+
+        const denied = await http(ctx.app)
+            .post(draftUrl)
+            .send({ items: [{ name: 'Serum', quantity: 1 }] });
+        // A DEFAULT key is refused by the key type guard.
+        expect(denied.status).toBeGreaterThanOrEqual(400);
+        expect(denied.status).toBeLessThan(500);
+
+        const first = await asBot().send({
+            conversationId,
+            items: [{ name: 'Serum B5 30ml', quantity: 1, unitPrice: 150000 }],
+        });
+        expect(first.status).toBe(201);
+        expect(first.body.status).toBe('PENDING');
+        expect(first.body.source).toBe('CHAT');
+        expect(first.body.items[0].productGroupName).toBe('Serum');
+
+        const second = await asBot().send({
+            conversationId,
+            items: [{ name: 'Serum B5 30ml', quantity: 2, unitPrice: 150000 }],
+            note: 'Giao sau 18h',
+        });
+        expect(second.body.id).toBe(first.body.id);
+        expect(second.body.total).toBe(300000);
+        expect(second.body.note).toBe('Giao sau 18h');
     });
 });

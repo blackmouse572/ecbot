@@ -70,3 +70,14 @@ def test_unsure_handoff_is_made_in_the_same_reply():
     assert "cannot give what the customer asks for (a menu, a price, a time)" in block
     assert "make that call in the same reply, even while you are taking an order" in block
     assert "Never say you will check with, pass something to, or have the team confirm" in block
+
+
+def test_recording_an_order_does_not_count_as_placing_it():
+    # #498: record_order only notes a pending order for staff, so a confirmed
+    # order with no real order tool must still be handed over.
+    block = " ".join(_escalation_block().split())
+    assert "record_order is not an order tool" in block
+    start = AGENT_MD.index("<orders>")
+    orders = " ".join(AGENT_MD[start : AGENT_MD.index("</orders>", start)].split())
+    assert "clearly says yes to an order you read back" in orders
+    assert "never tell the customer the order is placed" in orders
