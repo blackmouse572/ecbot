@@ -1,4 +1,8 @@
-import { buildRefreshCookieOptions } from '../../../src/modules/auth/utils/auth.refresh-cookie.util';
+import { ENUM_APP_ENVIRONMENT } from '../../../src/app/enums/app.enum';
+import {
+    buildRefreshCookieOptions,
+    refreshCookieSameSite,
+} from '../../../src/modules/auth/utils/auth.refresh-cookie.util';
 
 describe('buildRefreshCookieOptions', () => {
     it('sets maxAge (in ms) when rememberMe is true, for a persistent cookie', () => {
@@ -33,5 +37,23 @@ describe('buildRefreshCookieOptions', () => {
             secure: true,
             sameSite: 'none',
         });
+    });
+});
+
+describe('refreshCookieSameSite', () => {
+    it('is strict in production, where the app and the API share ecbot.dev', () => {
+        expect(refreshCookieSameSite(ENUM_APP_ENVIRONMENT.PRODUCTION)).toBe(
+            'strict'
+        );
+    });
+
+    it('is none on staging, whose app (workers.dev) and API (run.app) are different sites', () => {
+        expect(refreshCookieSameSite(ENUM_APP_ENVIRONMENT.STAGING)).toBe(
+            'none'
+        );
+    });
+
+    it('is none locally, where the app and the API run on different ports', () => {
+        expect(refreshCookieSameSite(ENUM_APP_ENVIRONMENT.LOCAL)).toBe('none');
     });
 });

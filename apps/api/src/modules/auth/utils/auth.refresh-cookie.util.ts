@@ -1,4 +1,5 @@
 import { CookieOptions } from 'express';
+import { ENUM_APP_ENVIRONMENT } from 'src/app/enums/app.enum';
 
 export interface IRefreshCookieOptionsInput {
     sameSite: CookieOptions['sameSite'];
@@ -23,4 +24,20 @@ export function buildRefreshCookieOptions({
         sameSite,
         ...(rememberMe ? { maxAge: maxAgeSeconds * 1000 } : {}),
     };
+}
+
+/**
+ * SameSite for the refresh-token cookie. Strict needs the app and the API on
+ * the same site, as in production (ecbot.dev). Locally they run on different
+ * ports and on staging on different sites (*.workers.dev and *.run.app), so a
+ * strict cookie never reaches /auth/refresh and every session ends when the
+ * access token expires.
+ */
+export function refreshCookieSameSite(
+    env: ENUM_APP_ENVIRONMENT
+): CookieOptions['sameSite'] {
+    return env === ENUM_APP_ENVIRONMENT.LOCAL ||
+        env === ENUM_APP_ENVIRONMENT.STAGING
+        ? 'none'
+        : 'strict';
 }
