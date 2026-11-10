@@ -22,7 +22,10 @@ import {
     IAuthSocialGooglePayload,
 } from 'src/modules/auth/interfaces/auth.interface';
 import { IAuthService } from 'src/modules/auth/interfaces/auth.service.interface';
-import { buildRefreshCookieOptions } from 'src/modules/auth/utils/auth.refresh-cookie.util';
+import {
+    buildRefreshCookieOptions,
+    refreshCookieSameSite,
+} from 'src/modules/auth/utils/auth.refresh-cookie.util';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 import verifyAppleToken from 'verify-apple-id-token';
 
@@ -550,8 +553,9 @@ export class AuthService implements IAuthService {
     }
 
     private getRefreshCookieSameSite(): CookieOptions['sameSite'] {
-        const env = this.configService.get<ENUM_APP_ENVIRONMENT>('app.env');
-        return env === ENUM_APP_ENVIRONMENT.LOCAL ? 'none' : 'strict';
+        return refreshCookieSameSite(
+            this.configService.get<ENUM_APP_ENVIRONMENT>('app.env')
+        );
     }
 }
 
