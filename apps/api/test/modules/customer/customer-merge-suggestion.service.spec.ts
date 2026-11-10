@@ -43,6 +43,9 @@ function makeService(em: any, suggestionRepo: any) {
     const workspaceMemberRepo = {
         findActiveByWorkspace: jest.fn().mockResolvedValue([]),
     };
+    const customerMarketing = {
+        mergeInto: jest.fn().mockResolvedValue(undefined),
+    };
     const service = new CustomerMergeSuggestionService(
         em,
         suggestionRepo,
@@ -51,9 +54,15 @@ function makeService(em: any, suggestionRepo: any) {
         tagAssignmentRepo,
         notificationService as any,
         workspaceMemberRepo as any,
-        { setMessage: jest.fn((key: string) => key) } as any
+        { setMessage: jest.fn((key: string) => key) } as any,
+        customerMarketing as any
     );
-    return { service, notificationService, workspaceMemberRepo };
+    return {
+        service,
+        notificationService,
+        workspaceMemberRepo,
+        customerMarketing,
+    };
 }
 
 describe('CustomerMergeSuggestionService', () => {
@@ -351,7 +360,7 @@ describe('CustomerMergeSuggestionService', () => {
                 .mockResolvedValueOnce([{ id: 'cp-1' }, { id: 'cp-2' }]) // loserContactPoints
                 .mockResolvedValueOnce([{ id: 'ord-1' }]); // loserOrders
 
-            const { service } = makeService(em, {});
+            const { service, customerMarketing } = makeService(em, {});
 
             const result = await service.confirmMerge('sugg-1', 'ws-1', {
                 survivorId: 'cust-A',
@@ -361,6 +370,13 @@ describe('CustomerMergeSuggestionService', () => {
                 survivorId: 'cust-A',
                 loserId: 'cust-B',
             });
+            // Marketing labels combine in the same transaction.
+            expect(customerMarketing.mergeInto).toHaveBeenCalledWith(
+                'cust-B',
+                'cust-A',
+                'ws-1',
+                tem
+            );
 
             // 1) ContactPoints reparented via nativeUpdate from loser -> survivor.
             const cpUpdate = tem.nativeUpdate.mock.calls.find(

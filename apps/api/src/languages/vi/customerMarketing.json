@@ -1,0 +1,12 @@
+{
+    "workspace": {
+        "get": "Lấy nhãn tiếp thị thành công.",
+        "update": "Đã cập nhật nhãn tiếp thị.",
+        "listEvents": "Lấy lịch sử tiếp thị thành công."
+    },
+    "error": {
+        "reasonRequired": "Cần ghi lý do để gửi ưu đãi lại cho khách đã nói dừng.",
+        "hostile": "Khách này đang có nhãn Khó chịu. Chỉ thành viên của shop mới mở lại ưu đãi được.",
+        "pauseNeedsDate": "Chọn một ngày trong tương lai để tạm ngưng ưu đãi đến ngày đó."
+    }
+}

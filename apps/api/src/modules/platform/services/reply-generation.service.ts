@@ -15,6 +15,7 @@ import { ModuleRef } from '@nestjs/core';
 import { randomUUID } from 'crypto';
 import { MESSAGE_TYPING_REFRESH_MS } from '../constants/message-debounce.constant';
 import { handoffReplyText } from '../utils/handoff-reply.util';
+import { optOutReplyText } from '@app/modules/customer/utils/customer-marketing-opt-out.util';
 import { fallbackReplyText } from '../utils/fallback-reply.util';
 import { text as toText } from '../interfaces/message-model';
 import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
@@ -497,6 +498,22 @@ export class ReplyGenerationService {
             senderId,
             conversationId,
             handoffReplyText(chatbot)
+        );
+    }
+
+    /** Confirm a "dừng" opt-out, in the chatbot's language. */
+    async sendOptOutReply(
+        chatbot: any,
+        account: any,
+        senderId: string,
+        conversationId: string
+    ): Promise<boolean> {
+        return this.sendBotText(
+            chatbot,
+            account,
+            senderId,
+            conversationId,
+            optOutReplyText(chatbot)
         );
     }
 

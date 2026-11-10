@@ -19,6 +19,7 @@ import { CustomerErasureService } from './services/customer-erasure.service';
 import { CustomerService } from './services/customer.service';
 import { CustomerAdminService } from './services/customer.admin.service';
 import { CustomerTagAdminService } from './services/customer-tag.admin.service';
+import { CustomerMarketingService } from './services/customer-marketing.service';
 import { TrackedLinkService } from './services/tracked-link.service';
 
 @Module({
@@ -45,6 +46,7 @@ import { TrackedLinkService } from './services/tracked-link.service';
         CustomerTagClassifierTaskService,
         CustomerAdminService,
         CustomerTagAdminService,
+        CustomerMarketingService,
         TrackedLinkService,
     ],
     exports: [
@@ -58,6 +60,7 @@ import { TrackedLinkService } from './services/tracked-link.service';
         CustomerTagClassifierTaskService,
         CustomerAdminService,
         CustomerTagAdminService,
+        CustomerMarketingService,
         TrackedLinkService,
         CustomerRepositoryModule,
     ],
