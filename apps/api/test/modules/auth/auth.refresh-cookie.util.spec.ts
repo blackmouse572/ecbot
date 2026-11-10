@@ -53,7 +53,7 @@ describe('refreshCookieSameSite', () => {
         );
     });
 
-    it('is none locally, where the app and the API run on different ports', () => {
+    it('stays none locally, as before', () => {
         expect(refreshCookieSameSite(ENUM_APP_ENVIRONMENT.LOCAL)).toBe('none');
     });
 });

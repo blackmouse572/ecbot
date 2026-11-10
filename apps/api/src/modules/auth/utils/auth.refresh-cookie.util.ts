@@ -28,10 +28,10 @@ export function buildRefreshCookieOptions({
 
 /**
  * SameSite for the refresh-token cookie. Strict needs the app and the API on
- * the same site, as in production (ecbot.dev). Locally they run on different
- * ports and on staging on different sites (*.workers.dev and *.run.app), so a
+ * the same site (scheme + registrable domain), as in production (ecbot.dev).
+ * On staging they are different sites (*.workers.dev and *.run.app), so a
  * strict cookie never reaches /auth/refresh and every session ends when the
- * access token expires.
+ * access token expires. Local keeps the `none` it already had.
  */
 export function refreshCookieSameSite(
     env: ENUM_APP_ENVIRONMENT
