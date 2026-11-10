@@ -58,6 +58,9 @@ import {
     KnowledgeItemFolderController,
     ChatbotKnowledgeItemWorkspaceController,
 } from '../../modules/knowledge-base/controllers';
+import { OrderWorkspaceController } from '@app/modules/order/controllers/order.workspace.controller';
+import { ProductGroupWorkspaceController } from '@app/modules/order/controllers/product-group.workspace.controller';
+import { OrderModule } from '@app/modules/order/order.module';
 import { KnowledgeBaseServicesModule } from '../../modules/knowledge-base/services/services.module';
 
 @Module({
@@ -85,6 +88,8 @@ import { KnowledgeBaseServicesModule } from '../../modules/knowledge-base/servic
         CustomerTagAssignmentWorkspaceController,
         CustomerMergeSuggestionWorkspaceController,
         TrackedLinkWorkspaceController,
+        OrderWorkspaceController,
+        ProductGroupWorkspaceController,
         NavCountWorkspaceController,
         AnalyticsWorkspaceController,
         FollowupWorkspaceController,
@@ -118,6 +123,7 @@ import { KnowledgeBaseServicesModule } from '../../modules/knowledge-base/servic
         ToolModule,
         SkillModule,
         CustomerModule,
+        OrderModule,
         ExportModule,
         NavCountModule,
         AnalyticsModule,

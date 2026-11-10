@@ -1,0 +1,28 @@
+{
+    "workspace": {
+        "list": "Đã tải danh sách đơn hàng.",
+        "get": "Đã tải đơn hàng.",
+        "create": "Đã thêm đơn hàng.",
+        "update": "Đã cập nhật đơn hàng.",
+        "confirm": "Đã xác nhận đơn hàng.",
+        "cancel": "Đã huỷ đơn hàng."
+    },
+    "error": {
+        "notFound": "Không tìm thấy đơn hàng.",
+        "codeExists": "Mã đơn này đã được dùng cho một đơn khác.",
+        "notPending": "Chỉ xác nhận được đơn đang chờ xác nhận.",
+        "cancelled": "Đơn hàng này đã bị huỷ."
+    },
+    "productGroup": {
+        "workspace": {
+            "list": "Đã tải danh sách nhóm hàng.",
+            "create": "Đã tạo nhóm hàng.",
+            "update": "Đã cập nhật nhóm hàng.",
+            "delete": "Đã xoá nhóm hàng."
+        },
+        "error": {
+            "notFound": "Không tìm thấy nhóm hàng.",
+            "duplicate": "Đã có nhóm hàng trùng tên."
+        }
+    }
+}
