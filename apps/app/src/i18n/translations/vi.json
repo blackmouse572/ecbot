@@ -3217,5 +3217,115 @@
       "undo": "Hoàn tác",
       "redo": "Làm lại"
     }
+  },
+  "customerSources": {
+    "title": "Nguồn khách",
+    "description": "Mỗi liên kết hoặc mã QR cho biết khách đến từ bài đăng, quầy hay KOL nào.",
+    "create": "Tạo liên kết",
+    "comingSoon": "Sắp có",
+    "list": {
+      "noRecordsTitle": "Chưa có nguồn khách nào",
+      "noRecordsMessage": "Tạo liên kết theo dõi hoặc mã QR, rồi đặt lên tờ rơi, bài đăng hay bio của KOL."
+    },
+    "columns": {
+      "source": "Nguồn",
+      "channel": "Kênh",
+      "link": "Liên kết",
+      "status": "Trạng thái"
+    },
+    "status": {
+      "ACTIVE": "Đang dùng",
+      "STOPPED": "Đã dừng"
+    },
+    "kind": {
+      "LINK": "Liên kết theo dõi",
+      "QR": "Mã QR",
+      "KOL": "Link KOL",
+      "POST": "Bài đăng",
+      "AD": "Quảng cáo Meta"
+    },
+    "steps": {
+      "create": "Tạo liên kết",
+      "share": "Chia sẻ"
+    },
+    "form": {
+      "title": "Tạo liên kết theo dõi",
+      "description": "Mỗi khách mở liên kết hoặc quét mã QR này sẽ được ghi nguồn, để bạn biết tờ rơi, bài đăng hay quảng cáo nào mang lại đơn.",
+      "name": "Tên nguồn",
+      "namePlaceholder": "Tờ rơi trong hộp quà Tết",
+      "nameHint": "Chỉ bạn và nhân viên thấy tên này.",
+      "channel": "Khách sẽ nhắn qua",
+      "channelHint": "Chỉ hiện các kênh đã kết nối và mở chat được bằng liên kết (không có Threads, API).",
+      "noChannels": "Kết nối Messenger, Instagram, Telegram, WhatsApp hoặc khung chat website trước.",
+      "targetUrl": "Trang trên website của bạn",
+      "targetUrlHint": "Trang có khung chat của bạn. Liên kết mở trang này kèm mã nguồn.",
+      "submit": "Tạo liên kết",
+      "created": "Đã tạo liên kết theo dõi",
+      "errors": {
+        "name": "Nhập tên cho nguồn này",
+        "channel": "Chọn kênh khách sẽ nhắn",
+        "targetUrl": "Nhập đầy đủ địa chỉ trang, bắt đầu bằng https://"
+      }
+    },
+    "share": {
+      "title": "Chia sẻ liên kết",
+      "description": "Đưa liên kết tới nơi khách sẽ thấy. In mã QR lên tờ rơi, thẻ để bàn hoặc bao bì.",
+      "created": "Đã tạo",
+      "copy": "Sao chép",
+      "copied": "Đã sao chép liên kết",
+      "downloadPng": "Tải mã QR (PNG)",
+      "downloadSvg": "Tải mã QR (SVG)",
+      "qrAlt": "Mã QR cho {{name}}",
+      "noUrl": "Kênh này chưa mở chat được bằng liên kết.",
+      "kolTitle": "Tạo link cho KOL",
+      "kolHint": "Mỗi KOL một link riêng, xem ai mang khách về.",
+      "qrTitle": "Thêm mã QR",
+      "qrHint": "Mỗi nơi một mã QR riêng, như quầy hay thẻ để bàn.",
+      "later": "Bạn có thể quay lại bước này từ trang Nguồn khách.",
+      "done": "Xong",
+      "downloadFailed": "Không lưu được mã QR. Bạn thử lại nhé."
+    },
+    "detail": {
+      "links": "Các link trong nguồn",
+      "linksDescription": "Mỗi mã QR và KOL có mã riêng, nên bạn biết chỗ nào mang khách về.",
+      "tabs": {
+        "all": "Tất cả"
+      },
+      "noLinks": "Chưa có mã QR hay link KOL nào.",
+      "settings": "Cài đặt",
+      "channel": "Kênh",
+      "code": "Mã",
+      "targetUrl": "Trang website",
+      "createdAt": "Ngày tạo",
+      "stop": "Ngừng dùng",
+      "resume": "Dùng lại",
+      "stopped": "Đã ngừng nguồn khách",
+      "resumed": "Đã dùng lại nguồn khách"
+    },
+    "child": {
+      "kolName": "Tên KOL",
+      "kolPlaceholder": "Linh Đan",
+      "kolHint": "Tên này hiện trên trang Nguồn khách, khách không thấy.",
+      "kolDescription": "Mỗi KOL nhận một link riêng. Khách đến từ link nào sẽ được ghi đúng tên KOL đó.",
+      "qrName": "Đặt ở đâu",
+      "qrPlaceholder": "Thẻ để bàn tại quầy",
+      "qrDescription": "Mỗi nơi đặt một mã QR riêng để biết nơi nào mang khách về.",
+      "submit": "Tạo link",
+      "created": "Đã tạo link",
+      "errors": {
+        "name": "Nhập tên"
+      }
+    },
+    "edit": {
+      "title": "Sửa nguồn khách",
+      "description": "Đổi tên hoặc trang website của nguồn này.",
+      "saved": "Đã lưu nguồn khách"
+    },
+    "delete": {
+      "title": "Xóa {{name}}?",
+      "description": "Liên kết cùng các mã QR và link KOL của nó sẽ ngừng được theo dõi.",
+      "deleted": "Đã xóa nguồn khách"
+    },
+    "error": "Có lỗi xảy ra. Bạn thử lại nhé."
   }
 }

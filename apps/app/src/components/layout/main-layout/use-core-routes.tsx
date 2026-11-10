@@ -4,6 +4,7 @@ import {
   BellAlert,
   ChatBubbleLeftRight,
   FolderOpen,
+  Link,
   Puzzle,
   Sparkles,
   SquaresPlus,
@@ -61,6 +62,15 @@ export const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
           badge: <PendingSuggestionsBadge />,
         },
       ],
+    },
+    {
+      label: t("customerSources.title"),
+      to: `${baseUrl}/${ROUTES.CustomerSources}`,
+      icon: <Link />,
+      ability: {
+        action: "manage",
+        subject: "CUSTOMER",
+      },
     },
     {
       label: t("conversations.title"),
