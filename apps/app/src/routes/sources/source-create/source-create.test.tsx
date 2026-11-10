@@ -10,8 +10,18 @@ const api = vi.hoisted(() => ({
   created: new Array<unknown>(),
   handleSuccess: vi.fn(),
   accounts: [
-    { id: "acc-page", name: "Lumi Skincare", type: "FACEBOOK_PAGE" },
-    { id: "acc-site", name: "lumi.vn", type: "WEBSITE_WIDGET" },
+    {
+      id: "acc-page",
+      name: "Lumi Skincare",
+      type: "FACEBOOK_PAGE",
+      link: "https://www.facebook.com/1234",
+    },
+    {
+      id: "acc-site",
+      name: "lumi.vn",
+      type: "WEBSITE_WIDGET",
+      link: "https://lumi.vn",
+    },
     { id: "acc-zalo", name: "Lumi OA", type: "ZALO_PAGE" },
     { id: "acc-api", name: "POS", type: "API_CHANNEL" },
   ],
@@ -30,7 +40,16 @@ vi.mock("@/hooks/api/accounts", () => ({
   useAccounts: () => ({ accounts: api.accounts }),
 }));
 
+vi.mock("@/hooks/api/customer-tags", () => ({
+  useCustomerTagList: () => ({
+    tags: [{ id: "tag-tet", name: "Tờ rơi Tết" }],
+    isLoading: false,
+  }),
+}));
+
 vi.mock("@/hooks/api/tracked-links", () => ({
+  useTrackedLink: () => ({ link: undefined }),
+  useCreateTrackedLinkChild: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useCreateTrackedLink: () => ({
     mutateAsync: async (body: { name: string }) => {
       api.created.push(body);
@@ -125,13 +144,27 @@ describe("SourceCreate", () => {
       target: { value: "Tờ rơi Tết" },
     });
     fireEvent.click(screen.getByRole("radio", { name: /Lumi Skincare/ }));
+    fireEvent.change(container.querySelector('textarea[name="greeting"]')!, {
+      target: { value: "Chào bạn" },
+    });
+
+    // The preview shows the link before it is saved.
+    expect(screen.getByText("m.me/1234?ref=to-roi-tet")).toBeTruthy();
+
     fireEvent.submit(container.querySelector("form")!);
 
+    await waitFor(() => expect(api.created).toHaveLength(1));
     await waitFor(() =>
       expect(screen.getByText("m.me/1234?ref=to-roi-tet")).toBeTruthy(),
     );
     expect(api.created).toEqual([
-      { name: "Tờ rơi Tết", accountId: "acc-page", targetUrl: undefined },
+      {
+        name: "Tờ rơi Tết",
+        accountId: "acc-page",
+        targetUrl: undefined,
+        greeting: "Chào bạn",
+        tagIds: [],
+      },
     ]);
     expect(toast.success).toHaveBeenCalledWith("Tracked link created");
     expect(

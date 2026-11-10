@@ -15,6 +15,7 @@ import {
   Input,
   ProgressTabs,
   Text,
+  Textarea,
   toast,
   type ProgressStatus,
 } from "@medusajs/ui";
@@ -23,7 +24,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { SourceChannelPicker } from "../components/source-channel-picker";
+import { SourcePreviewCard } from "../components/source-preview-card";
 import { SourceShareStep } from "../components/source-share-step";
+import { SourceTagsField } from "../components/source-tags-field";
 import { sourceCreateSchema, type SourceCreateFormData } from "../schemas";
 
 type Step = "CREATE" | "SHARE";
@@ -50,10 +53,24 @@ const SourceCreateForm = () => {
 
   const form = useForm<SourceCreateFormData>({
     resolver: zodResolver(sourceCreateSchema),
-    defaultValues: { name: "", accountId: "", isWebsite: false, targetUrl: "" },
+    defaultValues: {
+      name: "",
+      accountId: "",
+      isWebsite: false,
+      targetUrl: "",
+      greeting: "",
+      tagIds: [],
+    },
   });
 
-  const isWebsite = form.watch("isWebsite");
+  const [name, accountId, isWebsite, targetUrl] = form.watch([
+    "name",
+    "accountId",
+    "isWebsite",
+    "targetUrl",
+  ]);
+
+  const account = accounts?.find((item) => item.id === accountId);
 
   const detailPath = created
     ? `/${workspaceSlug}/${ROUTES.CustomerSources}/${created.id}`
@@ -71,6 +88,8 @@ const SourceCreateForm = () => {
         name: data.name,
         accountId: data.accountId,
         targetUrl: data.isWebsite ? data.targetUrl : undefined,
+        greeting: data.greeting || undefined,
+        tagIds: data.tagIds,
       });
 
       toast.success(t("customerSources.form.created"));
@@ -92,8 +111,8 @@ const SourceCreateForm = () => {
           className="flex h-full flex-col overflow-hidden"
         >
           <RouteFocusModal.Header>
-            <RouteFocusModal.Title className="sr-only">
-              {t("customerSources.form.title")}
+            <RouteFocusModal.Title asChild>
+              <span className="sr-only">{t("customerSources.form.title")}</span>
             </RouteFocusModal.Title>
             <div className="-my-2 w-full min-w-0 border-l">
               <ProgressTabs.List>
@@ -203,16 +222,65 @@ const SourceCreateForm = () => {
                       )}
                     />
                   )}
+                  <Form.Field
+                    control={form.control}
+                    name="greeting"
+                    render={({ field }) => (
+                      <Form.Item>
+                        <Form.Label optional>
+                          {t("customerSources.form.greeting")}
+                        </Form.Label>
+                        <Form.Control>
+                          <Textarea
+                            {...field}
+                            rows={3}
+                            placeholder={t(
+                              "customerSources.form.greetingPlaceholder",
+                            )}
+                          />
+                        </Form.Control>
+                        <Form.Hint>
+                          {t("customerSources.form.greetingHint")}
+                        </Form.Hint>
+                        <Form.ErrorMessage />
+                      </Form.Item>
+                    )}
+                  />
+                  <Form.Field
+                    control={form.control}
+                    name="tagIds"
+                    render={({ field }) => (
+                      <Form.Item>
+                        <Form.Label optional>
+                          {t("customerSources.form.tags")}
+                        </Form.Label>
+                        <Form.Control>
+                          <SourceTagsField
+                            ref={field.ref}
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                        </Form.Control>
+                        <Form.Hint>
+                          {t("customerSources.form.tagsHint")}
+                        </Form.Hint>
+                        <Form.ErrorMessage />
+                      </Form.Item>
+                    )}
+                  />
                 </div>
+                <SourcePreviewCard
+                  account={account}
+                  name={name}
+                  targetUrl={isWebsite ? targetUrl : ""}
+                />
               </div>
             </ProgressTabs.Content>
             <ProgressTabs.Content
               value="SHARE"
               className="flex w-full justify-center"
             >
-              {created && (
-                <SourceShareStep link={created} detailPath={detailPath} />
-              )}
+              {created && <SourceShareStep link={created} />}
             </ProgressTabs.Content>
           </RouteFocusModal.Body>
 

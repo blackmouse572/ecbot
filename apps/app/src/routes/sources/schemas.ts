@@ -9,6 +9,9 @@ const targetUrl = zod
     t("customerSources.form.errors.targetUrl"),
   );
 
+const greeting = zod.string().trim().max(1000);
+const tagIds = zod.array(zod.string());
+
 export const sourceCreateSchema = zod
   .object({
     name: zod
@@ -19,6 +22,8 @@ export const sourceCreateSchema = zod
     accountId: zod.string().min(1, t("customerSources.form.errors.channel")),
     isWebsite: zod.boolean(),
     targetUrl,
+    greeting,
+    tagIds,
   })
   .refine((value) => !value.isWebsite || value.targetUrl !== "", {
     path: ["targetUrl"],
@@ -36,6 +41,8 @@ export const sourceEditSchema = zod
       .max(120),
     isWebsite: zod.boolean(),
     targetUrl,
+    greeting,
+    tagIds,
   })
   .refine((value) => !value.isWebsite || value.targetUrl !== "", {
     path: ["targetUrl"],

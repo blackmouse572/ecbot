@@ -1,13 +1,10 @@
-import type {
-  TrackedLinkDetailResponseDto,
-  TrackedLinkGetResponseDto,
-} from "@/hooks/api/tracked-links";
+import type { TrackedLinkDetailResponseDto } from "@/hooks/api/tracked-links";
 import { PlusMini } from "@medusajs/icons";
 import { Button, Container, Heading, Tabs, Text } from "@medusajs/ui";
 import { useState, type FC } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
-import { SourceLinkField } from "./source-link-field";
+import { SourceChildRow } from "./source-child-row";
+import { SourceLinkDialog, type SourceChildKind } from "./source-link-dialog";
 
 const TABS = ["ALL", "QR", "KOL"] as const;
 
@@ -17,10 +14,11 @@ type SourceLinksSectionProps = {
   source: TrackedLinkDetailResponseDto;
 };
 
-/** The source's own QR and KOL codes, by type. */
+/** The source's own QR and KOL codes, by type (frame 11). */
 export const SourceLinksSection: FC<SourceLinksSectionProps> = ({ source }) => {
   const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>("ALL");
+  const [adding, setAdding] = useState<SourceChildKind | null>(null);
 
   const count = (kind: Tab) =>
     kind === "ALL"
@@ -44,11 +42,11 @@ export const SourceLinksSection: FC<SourceLinksSectionProps> = ({ source }) => {
         <Tabs
           value={tab}
           onValueChange={(value) =>
-            setTab(TABS.find((t) => t === value) ?? "ALL")
+            setTab(TABS.find((item) => item === value) ?? "ALL")
           }
         >
           <Tabs.List>
-            {(["ALL", "QR", "KOL"] as const).map((kind) => (
+            {TABS.map((kind) => (
               <Tabs.Trigger key={kind} value={kind}>
                 {kind === "ALL"
                   ? t("customerSources.detail.tabs.all")
@@ -67,43 +65,58 @@ export const SourceLinksSection: FC<SourceLinksSectionProps> = ({ source }) => {
           {t("customerSources.detail.noLinks")}
         </Text>
       ) : (
-        shown.map((child) => <LinkRow key={child.id} link={child} />)
+        <div className="divide-y">
+          <div className="hidden items-center gap-x-3 px-4 py-2 sm:flex">
+            <Text
+              size="small"
+              weight="plus"
+              className="flex-1 pl-10 text-ui-fg-subtle"
+            >
+              {t("customerSources.columns.source")}
+            </Text>
+            <Text
+              size="small"
+              weight="plus"
+              className="w-24 shrink-0 text-ui-fg-subtle"
+            >
+              {t("customerSources.columns.kind")}
+            </Text>
+            <span className="w-[60px] shrink-0" />
+          </div>
+          {shown.map((child) => (
+            <SourceChildRow key={child.id} link={child} showKind />
+          ))}
+        </div>
       )}
 
-      <div className="flex flex-wrap gap-2 px-6 py-4">
-        <Button size="small" variant="secondary" asChild>
-          <Link to="links/QR">
+      {source.url && (
+        <div className="flex flex-wrap gap-2 px-6 py-4">
+          <Button
+            size="small"
+            variant="secondary"
+            type="button"
+            onClick={() => setAdding("QR")}
+          >
             <PlusMini />
             {t("customerSources.share.qrTitle")}
-          </Link>
-        </Button>
-        <Button size="small" variant="secondary" asChild>
-          <Link to="links/KOL">
+          </Button>
+          <Button
+            size="small"
+            variant="secondary"
+            type="button"
+            onClick={() => setAdding("KOL")}
+          >
             <PlusMini />
             {t("customerSources.share.kolTitle")}
-          </Link>
-        </Button>
-      </div>
+          </Button>
+        </div>
+      )}
+
+      <SourceLinkDialog
+        source={source}
+        kind={adding}
+        onClose={() => setAdding(null)}
+      />
     </Container>
-  );
-};
-
-const LinkRow: FC<{ link: TrackedLinkGetResponseDto }> = ({ link }) => {
-  const { t } = useTranslation();
-
-  return (
-    <div className="flex flex-col gap-2 px-6 py-3 sm:flex-row sm:items-center">
-      <div className="min-w-0 sm:w-1/3">
-        <Text size="small" weight="plus" className="truncate">
-          {link.name}
-        </Text>
-        <Text size="xsmall" className="text-ui-fg-subtle">
-          {t(`customerSources.kind.${link.kind}`)}
-        </Text>
-      </div>
-      <div className="min-w-0 flex-1">
-        <SourceLinkField url={link.url} />
-      </div>
-    </div>
   );
 };

@@ -8,12 +8,13 @@ import {
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { readApiError } from "@/libs/api-error";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Heading, Input, toast } from "@medusajs/ui";
+import { Button, Heading, Input, Textarea, toast } from "@medusajs/ui";
 import { Form, FormSkeleton } from "@repo/ui/common-components";
 import type { FC } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
+import { SourceTagsField } from "../components/source-tags-field";
 import { sourceEditSchema, type SourceEditFormData } from "../schemas";
 
 export const SourceEdit = () => {
@@ -71,6 +72,8 @@ const SourceEditForm: FC<{ link: TrackedLinkDetailResponseDto }> = ({
       name: link.name,
       isWebsite,
       targetUrl: link.targetUrl ?? "",
+      greeting: link.greeting ?? "",
+      tagIds: link.tagIds,
     },
   });
 
@@ -78,6 +81,8 @@ const SourceEditForm: FC<{ link: TrackedLinkDetailResponseDto }> = ({
     try {
       await mutateAsync({
         name: data.name,
+        greeting: data.greeting || null,
+        tagIds: data.tagIds,
         ...(isWebsite && { targetUrl: data.targetUrl }),
       });
       toast.success(t("customerSources.edit.saved"));
@@ -126,6 +131,42 @@ const SourceEditForm: FC<{ link: TrackedLinkDetailResponseDto }> = ({
               )}
             />
           )}
+          <Form.Field
+            control={form.control}
+            name="greeting"
+            render={({ field }) => (
+              <Form.Item>
+                <Form.Label optional>
+                  {t("customerSources.form.greeting")}
+                </Form.Label>
+                <Form.Control>
+                  <Textarea {...field} rows={3} />
+                </Form.Control>
+                <Form.Hint>{t("customerSources.form.greetingHint")}</Form.Hint>
+                <Form.ErrorMessage />
+              </Form.Item>
+            )}
+          />
+          <Form.Field
+            control={form.control}
+            name="tagIds"
+            render={({ field }) => (
+              <Form.Item>
+                <Form.Label optional>
+                  {t("customerSources.form.tags")}
+                </Form.Label>
+                <Form.Control>
+                  <SourceTagsField
+                    ref={field.ref}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                </Form.Control>
+                <Form.Hint>{t("customerSources.form.tagsHint")}</Form.Hint>
+                <Form.ErrorMessage />
+              </Form.Item>
+            )}
+          />
         </RouteDrawer.Body>
         <RouteDrawer.Footer>
           <div className="flex items-center justify-end gap-x-2">

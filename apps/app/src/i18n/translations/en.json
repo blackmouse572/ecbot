@@ -146,6 +146,10 @@
       "roles": {
         "header": "Roles",
         "description": "Manage workspace roles."
+      },
+      "marketing": {
+        "title": "Marketing",
+        "new": "New"
       }
     },
     "search": {
@@ -3190,8 +3194,8 @@
     "columns": {
       "source": "Source",
       "channel": "Channel",
-      "link": "Link",
-      "status": "Status"
+      "status": "Status",
+      "kind": "Type"
     },
     "status": {
       "ACTIVE": "In use",
@@ -3225,11 +3229,25 @@
         "name": "Enter a name for this source",
         "channel": "Pick the channel customers will chat on",
         "targetUrl": "Enter the full page address, starting with https://"
-      }
+      },
+      "greeting": "First greeting",
+      "greetingPlaceholder": "Hi, thanks for buying the Lumi Tết gift box. Here is 10% off your next order.",
+      "greetingHint": "The assistant sends this when the customer opens the link, then chats as usual.",
+      "tags": "Tag the customer",
+      "tagsPlaceholder": "Add tags",
+      "tagsHint": "Customers who come through this link get these tags.",
+      "noTags": "No tags yet. Create them under Customers, Customer tags."
+    },
+    "preview": {
+      "title": "Link and QR code",
+      "description": "Ready to use as soon as it is created. Print the QR on flyers, or paste the link into a post or bio.",
+      "how": "Customers who open the link land in {{channel}} for {{account}}, the assistant sends the greeting above, and they are recorded as coming from \"{{name}}\".",
+      "thisSource": "this source",
+      "empty": "Name the source and pick a channel to see its link."
     },
     "share": {
       "title": "Share the link",
-      "description": "Put the link where customers will see it. Print the QR code on flyers, standees or packaging.",
+      "description": "Put the link where customers will see it. Each QR code and KOL link has its own code, so Customer sources shows which one brought customers in.",
       "created": "Created",
       "copy": "Copy",
       "copied": "Link copied",
@@ -3243,7 +3261,12 @@
       "qrHint": "One QR code per place, such as a counter or a standee.",
       "later": "You can come back to this from Customer sources.",
       "done": "Done",
-      "downloadFailed": "Could not save the QR code. Try again."
+      "downloadFailed": "Could not save the QR code. Try again.",
+      "quick": "Quick share",
+      "qrDownloadTitle": "Download QR code",
+      "qrDownloadHint": "PNG for print, SVG for your designer.",
+      "action": "Share",
+      "copyName": "Copy the link for {{name}}"
     },
     "detail": {
       "links": "Links in this source",
@@ -3260,12 +3283,13 @@
       "stop": "Stop using",
       "resume": "Use again",
       "stopped": "Source stopped",
-      "resumed": "Source in use again"
+      "resumed": "Source in use again",
+      "summary": "{{kind}} on {{channel}}. Created {{date}}.",
+      "none": "None"
     },
     "child": {
       "kolName": "KOL name",
       "kolPlaceholder": "Linh Đan",
-      "kolHint": "Shown on Customer sources, customers don't see it.",
       "kolDescription": "Each KOL gets their own link. Customers who come through it are recorded under that KOL's name.",
       "qrName": "Where it goes",
       "qrPlaceholder": "Standee at the counter",
@@ -3274,11 +3298,22 @@
       "created": "Link created",
       "errors": {
         "name": "Enter a name"
+      },
+      "nameHint": "Shown on Customer sources only, customers do not see it.",
+      "kolLink": "This KOL's link",
+      "qrLink": "This QR code's link",
+      "sameAs": "Same greeting and tags as the main link \"{{name}}\". The code is made when you click Create link.",
+      "made": "Created",
+      "count": {
+        "QR_one": "{{count}} QR code",
+        "QR_other": "{{count}} QR codes",
+        "KOL_one": "{{count}} KOL",
+        "KOL_other": "{{count}} KOLs"
       }
     },
     "edit": {
       "title": "Edit customer source",
-      "description": "Change the name or the website page of this source.",
+      "description": "Change the name, greeting, tags or website page of this source.",
       "saved": "Customer source saved"
     },
     "delete": {

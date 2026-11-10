@@ -1,4 +1,3 @@
-import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import { channelOf } from "@/components/platform-icon/channel-catalog";
 import {
   useDeleteTrackedLink,
@@ -9,8 +8,15 @@ import { useDate } from "@/hooks/use-date";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { readApiError } from "@/libs/api-error";
 import { ROUTES } from "@/routes/constants";
-import { PauseSolid, PencilSquare, PlaySolid, Trash } from "@medusajs/icons";
 import {
+  PauseSolid,
+  PencilSquare,
+  PlaySolid,
+  Share,
+  Trash,
+} from "@medusajs/icons";
+import {
+  Button,
   Container,
   Heading,
   StatusBadge,
@@ -18,18 +24,13 @@ import {
   toast,
   usePrompt,
 } from "@medusajs/ui";
-import {
-  ActionMenu,
-  Section,
-  SectionRow,
-  SingleColumnPageSkeleton,
-} from "@repo/ui/common-components";
-import { SingleColumnPage } from "@repo/ui/layout";
+import { ActionMenu, TwoColumnPageSkeleton } from "@repo/ui/common-components";
+import { TwoColumnPage } from "@repo/ui/layout";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { SourceLinkField } from "../components/source-link-field";
 import { SourceLinksSection } from "../components/source-links-section";
-import { SourceQr } from "../components/source-qr";
+import { SourceSettingsSection } from "../components/source-settings-section";
 import { SOURCE_STATUS_COLOR } from "../constants";
 
 export function SourceDetail() {
@@ -53,7 +54,7 @@ export function SourceDetail() {
   }
 
   if (isLoading || !link) {
-    return <SingleColumnPageSkeleton sections={3} showJSON={false} />;
+    return <TwoColumnPageSkeleton mainSections={2} sidebarSections={1} />;
   }
 
   const stopped = link.status === "STOPPED";
@@ -96,10 +97,10 @@ export function SourceDetail() {
   };
 
   return (
-    <SingleColumnPage>
-      <div className="flex flex-col gap-y-3">
-        <Container className="divide-y p-0">
-          <div className="flex items-start justify-between gap-x-3 px-6 py-4">
+    <TwoColumnPage hasOutlet>
+      <TwoColumnPage.Main>
+        <Container className="flex flex-col gap-y-3 px-6 py-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-y-1">
               <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                 <Heading level="h1" className="min-w-0 break-words">
@@ -113,83 +114,66 @@ export function SourceDetail() {
                 </StatusBadge>
               </div>
               <Text size="small" className="text-ui-fg-subtle">
-                {t(`customerSources.kind.${link.kind}`)} ·{" "}
-                {channelOf(link.account.type).label}
+                {t("customerSources.detail.summary", {
+                  kind: t(`customerSources.kind.${link.kind}`),
+                  channel: channelOf(link.account.type).label,
+                  date: getFullDate(new Date(link.createdAt)),
+                })}
               </Text>
             </div>
-            <ActionMenu
-              groups={[
-                {
-                  actions: [
-                    {
-                      icon: <PencilSquare />,
-                      label: t("actions.edit"),
-                      onClick: () => navigate("edit"),
-                    },
-                    {
-                      icon: stopped ? <PlaySolid /> : <PauseSolid />,
-                      label: t(
-                        stopped
-                          ? "customerSources.detail.resume"
-                          : "customerSources.detail.stop",
-                      ),
-                      onClick: toggleStatus,
-                    },
-                  ],
-                },
-                {
-                  actions: [
-                    {
-                      icon: <Trash />,
-                      label: t("actions.delete"),
-                      onClick: handleDelete,
-                    },
-                  ],
-                },
-              ]}
-            />
+            <div className="flex items-center gap-x-2">
+              {link.url && (
+                <Button size="small" variant="secondary" asChild>
+                  <Link to="share">
+                    <Share />
+                    {t("customerSources.share.action")}
+                  </Link>
+                </Button>
+              )}
+              <Button size="small" variant="secondary" asChild>
+                <Link to="edit">
+                  <PencilSquare />
+                  {t("actions.edit")}
+                </Link>
+              </Button>
+              <ActionMenu
+                groups={[
+                  {
+                    actions: [
+                      {
+                        icon: stopped ? <PlaySolid /> : <PauseSolid />,
+                        label: t(
+                          stopped
+                            ? "customerSources.detail.resume"
+                            : "customerSources.detail.stop",
+                        ),
+                        onClick: toggleStatus,
+                      },
+                    ],
+                  },
+                  {
+                    actions: [
+                      {
+                        icon: <Trash />,
+                        label: t("actions.delete"),
+                        onClick: handleDelete,
+                      },
+                    ],
+                  },
+                ]}
+              />
+            </div>
           </div>
-          <div className="flex flex-col gap-y-4 px-6 py-4">
-            <SourceLinkField url={link.url} />
-            {link.url && (
-              <SourceQr url={link.url} code={link.code} name={link.name} />
-            )}
+          <div className="max-w-[480px]">
+            <SourceLinkField url={link.url} channel={link.account.type} />
           </div>
         </Container>
 
         <SourceLinksSection source={link} />
-
-        <Container className="p-0">
-          <div className="px-6 py-4">
-            <Heading level="h2">{t("customerSources.detail.settings")}</Heading>
-          </div>
-          <Section variant="spaced">
-            <SectionRow
-              title={t("customerSources.detail.channel")}
-              value={
-                <span className="flex min-w-0 items-center gap-x-2">
-                  <PlatformIcon type={link.account.type} aria-hidden />
-                  <span className="truncate">{link.account.name}</span>
-                </span>
-              }
-            />
-            <SectionRow
-              title={t("customerSources.detail.code")}
-              value={<span className="font-mono">{link.code}</span>}
-            />
-            {link.targetUrl && (
-              <SectionRow
-                title={t("customerSources.detail.targetUrl")}
-                value={link.targetUrl}
-              />
-            )}
-            <SectionRow
-              title={t("customerSources.detail.createdAt")}
-              value={getFullDate(new Date(link.createdAt))}
-            />
-          </Section>
-        </Container>
-      </div>
-    </SingleColumnPage>
+      </TwoColumnPage.Main>
+      <TwoColumnPage.Sidebar>
+        <SourceSettingsSection source={link} />
+      </TwoColumnPage.Sidebar>
+    </TwoColumnPage>
   );
 }

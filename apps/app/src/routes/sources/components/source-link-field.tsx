@@ -1,3 +1,5 @@
+import { PlatformIcon } from "@/components/platform-icon/platform-icon";
+import type { TrackedLinkGetResponseDto } from "@/hooks/api/tracked-links";
 import { CheckCircleSolid, SquareTwoStack } from "@medusajs/icons";
 import { Button, Text, toast } from "@medusajs/ui";
 import { useState, type FC } from "react";
@@ -5,10 +7,18 @@ import { useTranslation } from "react-i18next";
 
 type SourceLinkFieldProps = {
   url: string | null;
+  /** False for a preview of a link that is not saved yet. */
+  copyable?: boolean;
+  /** The channel the link opens, shown as its logo. */
+  channel?: TrackedLinkGetResponseDto["account"]["type"];
 };
 
 /** The link customers open, with a copy button. */
-export const SourceLinkField: FC<SourceLinkFieldProps> = ({ url }) => {
+export const SourceLinkField: FC<SourceLinkFieldProps> = ({
+  url,
+  copyable = true,
+  channel,
+}) => {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
@@ -31,19 +41,22 @@ export const SourceLinkField: FC<SourceLinkFieldProps> = ({ url }) => {
   };
 
   return (
-    <div className="flex min-w-0 items-center gap-x-2 rounded-md border border-ui-border-base bg-ui-bg-subtle py-1 pl-3 pr-1">
+    <div className="flex min-h-9 min-w-0 items-center gap-x-2 rounded-md border border-ui-border-base bg-ui-bg-subtle py-1 pl-3 pr-1">
+      {channel && <PlatformIcon type={channel} aria-hidden />}
       <code className="code-label min-w-0 flex-1 truncate font-mono text-ui-fg-base">
         {url.replace(/^https:\/\//, "")}
       </code>
-      <Button
-        size="small"
-        variant="secondary"
-        type="button"
-        onClick={handleCopy}
-      >
-        {copied ? <CheckCircleSolid /> : <SquareTwoStack />}
-        {t("customerSources.share.copy")}
-      </Button>
+      {copyable && (
+        <Button
+          size="small"
+          variant="secondary"
+          type="button"
+          onClick={handleCopy}
+        >
+          {copied ? <CheckCircleSolid /> : <SquareTwoStack />}
+          {t("customerSources.share.copy")}
+        </Button>
+      )}
     </div>
   );
 };

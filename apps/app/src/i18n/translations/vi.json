@@ -146,6 +146,10 @@
       "roles": {
         "header": "Vai trò",
         "description": "Quản lý vai trò trong không gian làm việc (ai cũng đặc biệt cả!)"
+      },
+      "marketing": {
+        "title": "Tiếp thị",
+        "new": "Mới"
       }
     },
     "search": {
@@ -3230,8 +3234,8 @@
     "columns": {
       "source": "Nguồn",
       "channel": "Kênh",
-      "link": "Liên kết",
-      "status": "Trạng thái"
+      "status": "Trạng thái",
+      "kind": "Loại"
     },
     "status": {
       "ACTIVE": "Đang dùng",
@@ -3265,11 +3269,25 @@
         "name": "Nhập tên cho nguồn này",
         "channel": "Chọn kênh khách sẽ nhắn",
         "targetUrl": "Nhập đầy đủ địa chỉ trang, bắt đầu bằng https://"
-      }
+      },
+      "greeting": "Lời chào đầu tiên",
+      "greetingPlaceholder": "Chào bạn, cảm ơn bạn đã mua hộp quà Tết của Lumi. Shop tặng bạn mã giảm 10% cho lần mua tiếp theo.",
+      "greetingHint": "Trợ lý gửi câu này khi khách mở liên kết, rồi trò chuyện như bình thường.",
+      "tags": "Gắn nhãn cho khách",
+      "tagsPlaceholder": "Thêm nhãn",
+      "tagsHint": "Khách đến từ liên kết này được gắn các nhãn này.",
+      "noTags": "Chưa có nhãn nào. Tạo nhãn trong Khách hàng, Nhãn khách hàng."
+    },
+    "preview": {
+      "title": "Liên kết và mã QR",
+      "description": "Tạo xong là dùng được ngay. In mã QR lên tờ rơi, dán liên kết vào bài đăng hoặc bio.",
+      "how": "Khách mở liên kết sẽ vào {{channel}} của {{account}}, trợ lý gửi lời chào ở trên và khách được ghi nguồn \"{{name}}\".",
+      "thisSource": "nguồn này",
+      "empty": "Đặt tên và chọn kênh để xem liên kết."
     },
     "share": {
       "title": "Chia sẻ liên kết",
-      "description": "Đưa liên kết tới nơi khách sẽ thấy. In mã QR lên tờ rơi, thẻ để bàn hoặc bao bì.",
+      "description": "Đưa liên kết tới nơi khách sẽ thấy. Mỗi mã QR và link KOL có mã riêng, nên trang Nguồn khách cho biết chỗ nào mang khách về.",
       "created": "Đã tạo",
       "copy": "Sao chép",
       "copied": "Đã sao chép liên kết",
@@ -3283,7 +3301,12 @@
       "qrHint": "Mỗi nơi một mã QR riêng, như quầy hay thẻ để bàn.",
       "later": "Bạn có thể quay lại bước này từ trang Nguồn khách.",
       "done": "Xong",
-      "downloadFailed": "Không lưu được mã QR. Bạn thử lại nhé."
+      "downloadFailed": "Không lưu được mã QR. Bạn thử lại nhé.",
+      "quick": "Chia sẻ nhanh",
+      "qrDownloadTitle": "Tải mã QR",
+      "qrDownloadHint": "PNG để in, SVG cho người thiết kế.",
+      "action": "Chia sẻ",
+      "copyName": "Sao chép liên kết của {{name}}"
     },
     "detail": {
       "links": "Các link trong nguồn",
@@ -3300,12 +3323,13 @@
       "stop": "Ngừng dùng",
       "resume": "Dùng lại",
       "stopped": "Đã ngừng nguồn khách",
-      "resumed": "Đã dùng lại nguồn khách"
+      "resumed": "Đã dùng lại nguồn khách",
+      "summary": "{{kind}} trên {{channel}}. Tạo ngày {{date}}.",
+      "none": "Chưa có"
     },
     "child": {
       "kolName": "Tên KOL",
       "kolPlaceholder": "Linh Đan",
-      "kolHint": "Tên này hiện trên trang Nguồn khách, khách không thấy.",
       "kolDescription": "Mỗi KOL nhận một link riêng. Khách đến từ link nào sẽ được ghi đúng tên KOL đó.",
       "qrName": "Đặt ở đâu",
       "qrPlaceholder": "Thẻ để bàn tại quầy",
@@ -3314,11 +3338,20 @@
       "created": "Đã tạo link",
       "errors": {
         "name": "Nhập tên"
+      },
+      "nameHint": "Tên này hiện trên trang Nguồn khách, khách không thấy.",
+      "kolLink": "Link của KOL này",
+      "qrLink": "Link của mã QR này",
+      "sameAs": "Cùng lời chào và nhãn với liên kết gốc \"{{name}}\". Mã được tạo khi bạn bấm Tạo link.",
+      "made": "Đã tạo",
+      "count": {
+        "QR_other": "{{count}} mã QR",
+        "KOL_other": "{{count}} KOL"
       }
     },
     "edit": {
       "title": "Sửa nguồn khách",
-      "description": "Đổi tên hoặc trang website của nguồn này.",
+      "description": "Đổi tên, lời chào, nhãn hoặc trang website của nguồn này.",
       "saved": "Đã lưu nguồn khách"
     },
     "delete": {

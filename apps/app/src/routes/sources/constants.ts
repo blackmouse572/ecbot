@@ -6,7 +6,7 @@ export const SOURCE_CONSTANTS = {
   PAGE_SIZE: 20,
 } as const;
 
-export const SOURCE_QUERY_PARAMS = ["page", "search", "status"];
+export const SOURCE_QUERY_PARAMS = ["page", "search", "status", "account"];
 
 /** Channels whose links can open a chat carrying a code (matches the API). */
 export const SOURCE_ACCOUNT_TYPES: AccountType[] = [

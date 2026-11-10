@@ -1,4 +1,6 @@
+import { channelOf } from "@/components/platform-icon/channel-catalog";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
+import { useAccounts } from "@/hooks/api/accounts";
 import { _DataTable, type Filter } from "@/components/table/data-table";
 import {
   useTrackedLinks,
@@ -15,10 +17,12 @@ import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { Link, Outlet } from "react-router-dom";
 import {
+  SOURCE_ACCOUNT_TYPES,
   SOURCE_CONSTANTS,
   SOURCE_QUERY_PARAMS,
   SOURCE_STATUS_COLOR,
 } from "../constants";
+import { SourceRowActions } from "./source-row-actions";
 
 const columnHelper = createColumnHelper<TrackedLinkGetResponseDto>();
 
@@ -34,6 +38,7 @@ export const SourceList = () => {
       page: raw.page ? Number(raw.page) : 1,
       search: raw.search || undefined,
       status: raw.status || undefined,
+      account: raw.account || undefined,
     },
   );
 
@@ -66,7 +71,7 @@ export const SourceList = () => {
               {t("customerSources.description")}
             </Text>
           </div>
-          <Button size="small" variant="secondary" asChild>
+          <Button size="small" asChild>
             <Link to="create">
               <PlusMini />
               {t("customerSources.create")}
@@ -122,18 +127,12 @@ const useColumns = () => {
           <div className="flex min-w-0 items-center gap-x-2">
             <PlatformIcon type={row.original.account.type} aria-hidden />
             <span className="txt-compact-small truncate">
+              {channelOf(row.original.account.type).label}
+            </span>
+            <span className="txt-compact-small hidden truncate text-ui-fg-muted lg:inline">
               {row.original.account.name}
             </span>
           </div>
-        ),
-      }),
-      columnHelper.display({
-        id: "code",
-        header: () => t("customerSources.columns.link"),
-        cell: ({ row }) => (
-          <span className="code-label truncate font-mono text-ui-fg-subtle">
-            {row.original.code}
-          </span>
         ),
       }),
       columnHelper.display({
@@ -148,6 +147,10 @@ const useColumns = () => {
           </StatusBadge>
         ),
       }),
+      columnHelper.display({
+        id: "actions",
+        cell: ({ row }) => <SourceRowActions link={row.original} />,
+      }),
     ],
     [t],
   );
@@ -155,9 +158,25 @@ const useColumns = () => {
 
 const useFilters = (): Filter[] => {
   const { t } = useTranslation();
+  // SAFETY: the API reads perPage on the account list, the generated query
+  // type leaves it out (same as the conversation list).
+  const { accounts } = useAccounts({ perPage: 100 } as never);
 
   return useMemo<Filter[]>(
     () => [
+      {
+        key: "account",
+        label: t("customerSources.columns.channel"),
+        type: "select",
+        options: (accounts ?? [])
+          .filter((account) => SOURCE_ACCOUNT_TYPES.includes(account.type))
+          .map((account) => ({
+            label: `${account.name} (${channelOf(account.type).label})`,
+            value: account.id,
+          })),
+        multiple: false,
+        searchable: true,
+      },
       {
         key: "status",
         label: t("customerSources.columns.status"),
@@ -170,6 +189,6 @@ const useFilters = (): Filter[] => {
         searchable: false,
       },
     ],
-    [t],
+    [t, accounts],
   );
 };

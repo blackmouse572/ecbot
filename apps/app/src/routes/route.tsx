@@ -470,9 +470,9 @@ function getRouteMaps(): RouteObject[] {
                       lazy: () => import("./sources/source-edit"),
                     },
                     {
-                      path: "links/:kind",
+                      path: "share",
                       ErrorBoundary: ErrorBoundary,
-                      lazy: () => import("./sources/source-link-create"),
+                      lazy: () => import("./sources/source-share"),
                     },
                   ],
                 },
