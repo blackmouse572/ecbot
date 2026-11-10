@@ -1,0 +1,18 @@
+{
+    "workspace": {
+        "list": "Customer sources listed.",
+        "get": "Customer source loaded.",
+        "create": "Tracked link created.",
+        "createChild": "Link created.",
+        "update": "Customer source saved.",
+        "delete": "Customer source deleted."
+    },
+    "error": {
+        "notFound": "Customer source not found.",
+        "accountNotFound": "Channel not found in this workspace.",
+        "channelNotSupported": "This channel cannot carry a tracked link yet.",
+        "targetUrlRequired": "Add the page on your website where the chat widget runs.",
+        "tagNotFound": "One of the tags is not in this workspace.",
+        "notASource": "Links can only be added to a customer source."
+    }
+}

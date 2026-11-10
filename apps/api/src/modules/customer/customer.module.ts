@@ -1,3 +1,4 @@
+import { AccountRepositoryModule } from '@app/modules/account/repository/account.repository.module';
 import { ActivityModule } from '@app/modules/activity/activity.module';
 import { AwsModule } from '@app/modules/aws/aws.module';
 import { NotificationModule } from '@app/modules/notification/notification.module';
@@ -19,6 +20,7 @@ import { CustomerService } from './services/customer.service';
 import { CustomerAdminService } from './services/customer.admin.service';
 import { CustomerTagAdminService } from './services/customer-tag.admin.service';
 import { CustomerMarketingService } from './services/customer-marketing.service';
+import { TrackedLinkService } from './services/tracked-link.service';
 
 @Module({
     imports: [
@@ -31,6 +33,7 @@ import { CustomerMarketingService } from './services/customer-marketing.service'
         CloudTasksQueueModule,
         AwsModule,
         ActivityModule,
+        AccountRepositoryModule,
     ],
     providers: [
         CustomerErasureService,
@@ -44,6 +47,7 @@ import { CustomerMarketingService } from './services/customer-marketing.service'
         CustomerAdminService,
         CustomerTagAdminService,
         CustomerMarketingService,
+        TrackedLinkService,
     ],
     exports: [
         CustomerErasureService,
@@ -57,6 +61,7 @@ import { CustomerMarketingService } from './services/customer-marketing.service'
         CustomerAdminService,
         CustomerTagAdminService,
         CustomerMarketingService,
+        TrackedLinkService,
         CustomerRepositoryModule,
     ],
 })

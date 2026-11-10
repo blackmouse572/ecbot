@@ -16,6 +16,7 @@ import { CustomerTagAssignmentWorkspaceController } from '@app/modules/customer/
 import { CustomerTagWorkspaceController } from '@app/modules/customer/controllers/customer-tag.workspace.controller';
 import { CustomerWorkspaceController } from '@app/modules/customer/controllers/customer.workspace.controller';
 import { CustomerModule } from '@app/modules/customer/customer.module';
+import { TrackedLinkWorkspaceController } from '@app/modules/customer/controllers/tracked-link.workspace.controller';
 import { ExportWorkspaceController } from '@app/modules/export/controllers/export.workspace.controller';
 import { ExportModule } from '@app/modules/export/export.module';
 import { InvitationWorkspaceController } from '@app/modules/invitation/controllers/invitation.workspace.controller';
@@ -88,6 +89,7 @@ import { CustomerMarketingWorkspaceController } from '@app/modules/customer/cont
         CustomerMarketingWorkspaceController,
         CustomerTagAssignmentWorkspaceController,
         CustomerMergeSuggestionWorkspaceController,
+        TrackedLinkWorkspaceController,
         OrderWorkspaceController,
         ProductGroupWorkspaceController,
         NavCountWorkspaceController,
