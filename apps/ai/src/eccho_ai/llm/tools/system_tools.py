@@ -387,11 +387,13 @@ async def set_marketing_permission(
     if normalized not in _MARKETING_ACTIONS:
         _log_call("set_marketing_permission", _truncate(action), "bad_action", 0)
         return {"error": f"action must be one of {sorted(_MARKETING_ACTIONS)}"}
-    payload: dict[str, Any] = {"action": normalized, "reason": reason}
+    # The API caps reason at 500 chars and pauseDays at 1..365; an
+    # out-of-range pause falls back to the API's default.
+    payload: dict[str, Any] = {"action": normalized, "reason": reason[:500]}
     conversation_id = _get_session_id()
     if conversation_id:
         payload["conversationId"] = conversation_id
-    if pause_days is not None:
+    if pause_days is not None and 1 <= pause_days <= 365:
         payload["pauseDays"] = pause_days
     try:
         result = await ApiClient.get_instance().post(

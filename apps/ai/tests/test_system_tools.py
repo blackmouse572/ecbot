@@ -469,6 +469,23 @@ async def test_set_marketing_permission_posts_action_reason_and_conversation(mon
     ]
 
 
+async def test_set_marketing_permission_drops_an_out_of_range_pause(monkeypatch):
+    # The API takes 1..365 days; anything else falls back to its default.
+    _patch_runtime(monkeypatch, customer_id="cust-1")
+    calls = _stub_api_client(monkeypatch, response={"ok": True})
+
+    await set_marketing_permission.ainvoke(
+        {"action": "PAUSED", "reason": "x" * 600, "pause_days": 0}
+    )
+
+    assert calls == [
+        (
+            "/system/customers/cust-1/marketing/permission",
+            {"action": "PAUSED", "reason": "x" * 500},
+        )
+    ]
+
+
 async def test_set_marketing_permission_refuses_an_unknown_action(monkeypatch):
     _patch_runtime(monkeypatch, customer_id="cust-1")
     calls = _stub_api_client(monkeypatch, response={"ok": True})

@@ -170,10 +170,18 @@ async def build_customer_context_block(customer_id: str | None) -> str:
             )
             catalog_rows = (await session.exec(catalog_stmt)).all()  # type: ignore[attr-defined]
 
-            marketing_stmt = select(CustomerMarketingStates).where(
-                col(CustomerMarketingStates.customer_id) == customer.id
-            )
-            marketing = (await session.exec(marketing_stmt)).scalars().first()  # type: ignore[attr-defined]
+            # Last read, on its own: if the API's marketing tables lag this
+            # deploy, only the marketing lines go missing.
+            try:
+                marketing_stmt = select(CustomerMarketingStates).where(
+                    col(CustomerMarketingStates.customer_id) == customer.id
+                )
+                marketing = (await session.exec(marketing_stmt)).scalars().first()  # type: ignore[attr-defined]
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(
+                    "marketing context unavailable for customer=%s: %s", customer_id, exc
+                )
+                marketing = None
     except Exception as exc:
         logger.warning("build_customer_context_block failed for customer=%s: %s", customer_id, exc)
         return ""
