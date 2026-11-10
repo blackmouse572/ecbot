@@ -9,10 +9,7 @@ import {
     AuthJwtAccessProtected,
     AuthJwtPayload,
 } from '@app/modules/auth/decorators/auth.jwt.decorator';
-import {
-    ENUM_POLICY_ACTION,
-    ENUM_POLICY_SUBJECT,
-} from '@app/modules/policy/enums/policy.enum';
+import { ENUM_POLICY_SUBJECT } from '@app/modules/policy/enums/policy.enum';
 import { UserProtected } from '@app/modules/user/decorators/user.decorator';
 import { UserParsePipe } from '@app/modules/user/pipes/user.parse.pipe';
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
@@ -44,6 +41,11 @@ import {
     Response,
     ResponsePaging,
 } from 'src/common/response/decorators/response.decorator';
+import {
+    ORDER_ABILITY_CREATE,
+    ORDER_ABILITY_READ,
+    ORDER_ABILITY_UPDATE,
+} from '../constants/order.constant';
 import { ORDER_PARAM } from '../constants/order.doc.constant';
 import {
     ORDER_DEFAULT_AVAILABLE_ORDER_BY,
@@ -66,16 +68,6 @@ import { ENUM_ORDER_SOURCE, ENUM_ORDER_STATUS } from '../enums/order.enum';
 import { OrderEntity } from '../repository/entities/order.entity';
 import { OrderService } from '../services/order.service';
 
-// Orders are customer data, so they share the CUSTOMER permission.
-const READ = {
-    subject: ENUM_POLICY_SUBJECT.CUSTOMER,
-    action: [ENUM_POLICY_ACTION.READ],
-};
-const WRITE = {
-    subject: ENUM_POLICY_SUBJECT.CUSTOMER,
-    action: [ENUM_POLICY_ACTION.UPDATE],
-};
-
 @ApiTags('modules.workspace.order')
 @Controller({
     version: '1',
@@ -90,7 +82,7 @@ export class OrderWorkspaceController {
 
     @OrderWorkspaceListDoc()
     @ResponsePaging('order.workspace.list')
-    @WorkspaceScopedProtected(READ)
+    @WorkspaceScopedProtected(ORDER_ABILITY_READ)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -151,7 +143,7 @@ export class OrderWorkspaceController {
 
     @OrderWorkspaceGetDoc()
     @Response('order.workspace.get')
-    @WorkspaceScopedProtected(READ)
+    @WorkspaceScopedProtected(ORDER_ABILITY_READ)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -169,7 +161,7 @@ export class OrderWorkspaceController {
 
     @OrderWorkspaceCreateDoc()
     @Response('order.workspace.create')
-    @WorkspaceScopedProtected(WRITE)
+    @WorkspaceScopedProtected(ORDER_ABILITY_CREATE)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -192,7 +184,7 @@ export class OrderWorkspaceController {
 
     @OrderWorkspaceUpdateDoc()
     @Response('order.workspace.update')
-    @WorkspaceScopedProtected(WRITE)
+    @WorkspaceScopedProtected(ORDER_ABILITY_UPDATE)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -213,7 +205,7 @@ export class OrderWorkspaceController {
 
     @OrderWorkspaceConfirmDoc()
     @Response('order.workspace.confirm')
-    @WorkspaceScopedProtected(WRITE)
+    @WorkspaceScopedProtected(ORDER_ABILITY_UPDATE)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -231,7 +223,7 @@ export class OrderWorkspaceController {
 
     @OrderWorkspaceCancelDoc()
     @Response('order.workspace.cancel')
-    @WorkspaceScopedProtected(WRITE)
+    @WorkspaceScopedProtected(ORDER_ABILITY_UPDATE)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()

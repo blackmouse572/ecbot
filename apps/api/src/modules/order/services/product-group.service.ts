@@ -88,17 +88,8 @@ export class ProductGroupService {
     }
 
     /** Recompute the learned repurchase cycle of each group from its orders. */
-    async refreshLearnedCycles(ids: string[]): Promise<void> {
-        for (const id of new Set(ids)) {
-            const days =
-                await this.productGroupRepository.computeLearnedRepurchaseDays(
-                    id
-                );
-            await this.productGroupRepository.updateRaw(
-                { id },
-                { learnedRepurchaseDays: days }
-            );
-        }
+    refreshLearnedCycles(ids: string[]): Promise<void> {
+        return this.productGroupRepository.refreshLearnedRepurchaseDays(ids);
     }
 
     mapGet(group: ProductGroupEntity): ProductGroupGetResponseDto {

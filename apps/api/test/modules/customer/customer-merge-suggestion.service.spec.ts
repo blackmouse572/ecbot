@@ -1,6 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ENUM_CUSTOMER_MERGE_SUGGESTION_STATUS } from '../../../src/modules/customer/enums/customer.enum';
 import { CustomerMergeSuggestionService } from '../../../src/modules/customer/services/customer-merge-suggestion.service';
+import { ProductGroupRepository } from '../../../src/modules/order/repository/repositories/product-group.repository';
 
 // Unit tests for the CustomerMergeSuggestionService. We mock the EntityManager
 // and the per-aggregate repositories so the test stays at the service level —
@@ -8,6 +9,15 @@ import { CustomerMergeSuggestionService } from '../../../src/modules/customer/se
 // that should hold independently of the ORM.
 
 type Where = Record<string, any>;
+
+// Moving orders between customers recomputes the learned repurchase cycles;
+// that SQL is covered by the order e2e, so here we only check the call.
+const refreshCycles = jest
+    .spyOn(
+        ProductGroupRepository.prototype,
+        'refreshLearnedRepurchaseDaysOfOrders'
+    )
+    .mockResolvedValue(undefined);
 
 function makeEm() {
     // Simple recorded-calls mock for the MikroORM EntityManager surface the
@@ -368,6 +378,7 @@ describe('CustomerMergeSuggestionService', () => {
                     patch?.customer?.id === 'cust-A'
             );
             expect(orderMove).toBeDefined();
+            expect(refreshCycles).toHaveBeenCalledWith(['ord-1']);
 
             // 2) A new survivor-side assignment is persisted for the loser's tag.
             const persistedAssignments = tem.persist.mock.calls.filter(
@@ -522,6 +533,7 @@ describe('CustomerMergeSuggestionService', () => {
                     patch?.customer?.id === 'cust-B'
             );
             expect(orderReparent).toBeDefined();
+            expect(refreshCycles).toHaveBeenCalledWith(['ord-1']);
 
             // Tag assignments un-soft-deleted
             const tagRestore = tem.nativeUpdate.mock.calls.find(

@@ -1,4 +1,5 @@
 import { OrderEntity } from '@app/modules/order/repository/entities/order.entity';
+import { ProductGroupRepository } from '@app/modules/order/repository/repositories/product-group.repository';
 import { MessageService } from '@app/common/message/services/message.service';
 import { EntityManager } from '@mikro-orm/postgresql';
 import {
@@ -309,6 +310,11 @@ export class CustomerMergeSuggestionService {
                         customer: tem.getReference(CustomerEntity, survivorId),
                     } as any
                 );
+                // The learned repurchase cycle is per customer, so joining two
+                // histories changes it. Built on `tem` to run in this transaction.
+                await new ProductGroupRepository(
+                    tem
+                ).refreshLearnedRepurchaseDaysOfOrders(loserOrderIds);
             }
 
             // 4) Soft-delete loser and mark mergedIntoCustomerId
@@ -435,6 +441,9 @@ export class CustomerMergeSuggestionService {
                         customer: tem.getReference(CustomerEntity, loserId),
                     } as any
                 );
+                await new ProductGroupRepository(
+                    tem
+                ).refreshLearnedRepurchaseDaysOfOrders(snapshot.loserOrderIds);
             }
 
             // 3) Restore the loser's tag assignments that the merge soft-deleted.

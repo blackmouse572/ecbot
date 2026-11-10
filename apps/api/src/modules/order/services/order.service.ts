@@ -9,6 +9,8 @@ import {
 import { plainToInstance } from 'class-transformer';
 import { randomInt } from 'node:crypto';
 import {
+    ORDER_CODE_ALPHABET,
+    ORDER_CODE_ATTEMPTS,
     ORDER_CODE_PREFIX,
     ORDER_DEFAULT_CURRENCY,
 } from '../constants/order.constant';
@@ -23,9 +25,6 @@ import { OrderEntity } from '../repository/entities/order.entity';
 import { OrderRepository } from '../repository/repositories/order.repository';
 import { ProductGroupRepository } from '../repository/repositories/product-group.repository';
 import { ProductGroupService } from './product-group.service';
-
-const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const CODE_ATTEMPTS = 5;
 
 @Injectable()
 export class OrderService {
@@ -146,11 +145,12 @@ export class OrderService {
             await this.assertGroupsInWorkspace(workspaceId, input.items);
             await this.orderRepository.replaceItems(order, input.items);
         }
-        if (input.items || input.total !== undefined) {
-            order.total = this.resolveTotal(
-                input.items ?? [],
-                input.total ?? (input.items ? undefined : order.total)
-            );
+        // New items recompute the total only when they carry prices, so
+        // replacing the items of an order known by its total keeps it.
+        if (input.total !== undefined) {
+            order.total = input.total;
+        } else if (input.items?.some(item => item.unitPrice !== undefined)) {
+            order.total = this.resolveTotal(input.items);
         }
 
         const saved = await this.orderRepository.save(order);
@@ -296,10 +296,10 @@ export class OrderService {
 
     private async generateCode(workspaceId: string): Promise<string> {
         const date = new Date().toISOString().slice(2, 10).replace(/-/g, '');
-        for (let attempt = 0; attempt < CODE_ATTEMPTS; attempt++) {
+        for (let attempt = 0; attempt < ORDER_CODE_ATTEMPTS; attempt++) {
             const suffix = Array.from(
                 { length: 4 },
-                () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]
+                () => ORDER_CODE_ALPHABET[randomInt(ORDER_CODE_ALPHABET.length)]
             ).join('');
             const code = `${ORDER_CODE_PREFIX}-${date}-${suffix}`;
             const taken = await this.orderRepository.exists({

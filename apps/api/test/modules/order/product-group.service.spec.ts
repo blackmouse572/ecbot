@@ -9,8 +9,7 @@ describe('ProductGroupService', () => {
         create: jest.fn(),
         save: jest.fn(),
         delete: jest.fn(),
-        updateRaw: jest.fn(),
-        computeLearnedRepurchaseDays: jest.fn(),
+        refreshLearnedRepurchaseDays: jest.fn(),
     };
     const service = new ProductGroupService(productGroupRepository as any);
 
@@ -50,19 +49,10 @@ describe('ProductGroupService', () => {
         );
     });
 
-    it('stores the learned cycle for each group, clearing it below 5 pairs', async () => {
-        productGroupRepository.computeLearnedRepurchaseDays
-            .mockResolvedValueOnce(38)
-            .mockResolvedValueOnce(null);
-        await service.refreshLearnedCycles(['g1', 'g2', 'g1']);
-        expect(productGroupRepository.updateRaw).toHaveBeenCalledTimes(2);
-        expect(productGroupRepository.updateRaw).toHaveBeenCalledWith(
-            { id: 'g1' },
-            { learnedRepurchaseDays: 38 }
-        );
-        expect(productGroupRepository.updateRaw).toHaveBeenCalledWith(
-            { id: 'g2' },
-            { learnedRepurchaseDays: null }
-        );
+    it('refreshes the learned cycles through the repository', async () => {
+        await service.refreshLearnedCycles(['g1', 'g2']);
+        expect(
+            productGroupRepository.refreshLearnedRepurchaseDays
+        ).toHaveBeenCalledWith(['g1', 'g2']);
     });
 });

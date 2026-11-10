@@ -105,12 +105,67 @@ describe('E2E — workspace orders and product groups', () => {
         expect(serum.learnedRepurchaseDays).toBe(30);
         expect(serum.repurchaseDays).toBe(30);
 
-        const filtered = await http(ctx.app)
+        // One more order holding two items of the group: the filter must
+        // count and page orders, not item rows.
+        const twoItems = await http(ctx.app)
+            .post(ordersUrl())
+            .set(...auth(ownerToken))
+            .send({
+                customerId,
+                items: [
+                    { name: 'Serum B5', productGroupId: groupId, quantity: 1 },
+                    { name: 'Serum C', productGroupId: groupId, quantity: 1 },
+                ],
+            });
+        expect(twoItems.status).toBe(201);
+
+        const page1 = await http(ctx.app)
             .get(`${ordersUrl()}?productGroup=${groupId}&perPage=4`)
             .set(...auth(ownerToken));
-        expect(filtered.status).toBe(200);
-        expect(filtered.body.data).toHaveLength(4);
-        expect(filtered.body._metadata.pagination.total).toBe(6);
+        expect(page1.status).toBe(200);
+        expect(page1.body.data).toHaveLength(4);
+        expect(page1.body._metadata.pagination.total).toBe(7);
+        const page2 = await http(ctx.app)
+            .get(`${ordersUrl()}?productGroup=${groupId}&perPage=4&page=2`)
+            .set(...auth(ownerToken));
+        expect(page2.body.data).toHaveLength(3);
+        const ids = [...page1.body.data, ...page2.body.data].map(
+            (o: any) => o.id
+        );
+        expect(new Set(ids).size).toBe(7);
+    });
+
+    it('does not learn a 0-day cycle from orders on the same day', async () => {
+        const group = await http(ctx.app)
+            .post(groupsUrl())
+            .set(...auth(ownerToken))
+            .send({ name: 'Mặt nạ ngủ', defaultRepurchaseDays: 40 });
+        const groupId = group.body.data.id;
+        const orderedAt = new Date().toISOString();
+        for (let i = 0; i < 6; i++) {
+            const res = await http(ctx.app)
+                .post(ordersUrl())
+                .set(...auth(ownerToken))
+                .send({
+                    customerId,
+                    orderedAt,
+                    items: [
+                        {
+                            name: 'Mặt nạ',
+                            productGroupId: groupId,
+                            quantity: 1,
+                        },
+                    ],
+                });
+            expect(res.status).toBe(201);
+        }
+
+        const list = await http(ctx.app)
+            .get(`${groupsUrl()}?search=${encodeURIComponent('Mặt nạ')}`)
+            .set(...auth(ownerToken));
+        const mask = list.body.data.find((g: any) => g.id === groupId);
+        expect(mask.learnedRepurchaseDays ?? null).toBeNull();
+        expect(mask.repurchaseDays).toBe(40);
     });
 
     it('confirms a pending draft once, then cancels it', async () => {

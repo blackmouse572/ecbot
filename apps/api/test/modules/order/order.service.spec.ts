@@ -218,5 +218,14 @@ describe('OrderService', () => {
             expect(orderRepository.replaceItems).toHaveBeenCalled();
             expect(existing.total).toBe(300000);
         });
+
+        it('keeps the total when the new items carry no prices', async () => {
+            const existing = order({ total: 500000 });
+            orderRepository.findOne.mockResolvedValue(existing);
+            await service.update('o1', workspaceId, {
+                items: [{ name: 'Serum', quantity: 2 }],
+            });
+            expect(existing.total).toBe(500000);
+        });
     });
 });

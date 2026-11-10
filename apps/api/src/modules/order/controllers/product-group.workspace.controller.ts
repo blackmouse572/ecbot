@@ -9,10 +9,7 @@ import {
     AuthJwtAccessProtected,
     AuthJwtPayload,
 } from '@app/modules/auth/decorators/auth.jwt.decorator';
-import {
-    ENUM_POLICY_ACTION,
-    ENUM_POLICY_SUBJECT,
-} from '@app/modules/policy/enums/policy.enum';
+import { ENUM_POLICY_SUBJECT } from '@app/modules/policy/enums/policy.enum';
 import { UserProtected } from '@app/modules/user/decorators/user.decorator';
 import { UserParsePipe } from '@app/modules/user/pipes/user.parse.pipe';
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
@@ -41,6 +38,12 @@ import {
     Response,
     ResponsePaging,
 } from 'src/common/response/decorators/response.decorator';
+import {
+    ORDER_ABILITY_CREATE,
+    ORDER_ABILITY_DELETE,
+    ORDER_ABILITY_READ,
+    ORDER_ABILITY_UPDATE,
+} from '../constants/order.constant';
 import { PRODUCT_GROUP_PARAM } from '../constants/order.doc.constant';
 import {
     PRODUCT_GROUP_DEFAULT_AVAILABLE_ORDER_BY,
@@ -58,16 +61,6 @@ import { ProductGroupGetResponseDto } from '../dtos/response/product-group.get.r
 import { ProductGroupEntity } from '../repository/entities/product-group.entity';
 import { ProductGroupService } from '../services/product-group.service';
 
-// Product groups belong with orders, which share the CUSTOMER permission.
-const READ = {
-    subject: ENUM_POLICY_SUBJECT.CUSTOMER,
-    action: [ENUM_POLICY_ACTION.READ],
-};
-const WRITE = {
-    subject: ENUM_POLICY_SUBJECT.CUSTOMER,
-    action: [ENUM_POLICY_ACTION.UPDATE],
-};
-
 @ApiTags('modules.workspace.productGroup')
 @Controller({
     version: '1',
@@ -82,7 +75,7 @@ export class ProductGroupWorkspaceController {
 
     @ProductGroupWorkspaceListDoc()
     @ResponsePaging('order.productGroup.workspace.list')
-    @WorkspaceScopedProtected(READ)
+    @WorkspaceScopedProtected(ORDER_ABILITY_READ)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -116,7 +109,7 @@ export class ProductGroupWorkspaceController {
 
     @ProductGroupWorkspaceCreateDoc()
     @Response('order.productGroup.workspace.create')
-    @WorkspaceScopedProtected(WRITE)
+    @WorkspaceScopedProtected(ORDER_ABILITY_CREATE)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -133,7 +126,7 @@ export class ProductGroupWorkspaceController {
 
     @ProductGroupWorkspaceUpdateDoc()
     @Response('order.productGroup.workspace.update')
-    @WorkspaceScopedProtected(WRITE)
+    @WorkspaceScopedProtected(ORDER_ABILITY_UPDATE)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -155,7 +148,7 @@ export class ProductGroupWorkspaceController {
 
     @ProductGroupWorkspaceDeleteDoc()
     @Response('order.productGroup.workspace.delete')
-    @WorkspaceScopedProtected(WRITE)
+    @WorkspaceScopedProtected(ORDER_ABILITY_DELETE)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
