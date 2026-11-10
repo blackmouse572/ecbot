@@ -3236,7 +3236,22 @@
       "source": "Nguồn",
       "channel": "Kênh",
       "status": "Trạng thái",
-      "kind": "Loại"
+      "kind": "Loại",
+      "newCustomers": "Khách mới",
+      "potentialCustomers": "Tiềm năng",
+      "orders": "Đơn hàng",
+      "closeRate": "Tỉ lệ chốt",
+      "ordersShort": "Đơn",
+      "rateShort": "Tỉ lệ"
+    },
+    "stats": {
+      "newCustomers": "Khách mới",
+      "since": "Từ {{date}} đến nay",
+      "potentialCustomers": "Khách tiềm năng",
+      "potentialHint": "Đã hỏi giá hoặc đã đặt đơn",
+      "orders": "Đơn hàng",
+      "ordersHint": "Đơn đã xác nhận, kể từ khi khách đến",
+      "closeRateHint": "Số đơn trên mỗi khách mới"
     },
     "status": {
       "ACTIVE": "Đang dùng",

@@ -20,6 +20,8 @@ import { TrackedLinkDetailResponseDto } from '../dtos/response/tracked-link.deta
 import { TrackedLinkGetResponseDto } from '../dtos/response/tracked-link.get.response.dto';
 import { ENUM_TRACKED_LINK_KIND } from '../enums/tracked-link.enum';
 import { TrackedLinkEntity } from '../repository/entities/tracked-link.entity';
+import { ITrackedLinkStats } from '../interfaces/tracked-link.interface';
+import { CustomerMarketingStateRepository } from '../repository/repositories/customer-marketing-state.repository';
 import { CustomerTagRepository } from '../repository/repositories/customer-tag.repository';
 import { TrackedLinkRepository } from '../repository/repositories/tracked-link.repository';
 import { trackedLinkCodeFromName } from '../utils/tracked-link-code.util';
@@ -30,7 +32,8 @@ export class TrackedLinkService {
     constructor(
         private readonly trackedLinkRepository: TrackedLinkRepository,
         private readonly accountRepository: AccountRepository,
-        private readonly customerTagRepository: CustomerTagRepository
+        private readonly customerTagRepository: CustomerTagRepository,
+        private readonly marketingStateRepository: CustomerMarketingStateRepository
     ) {}
 
     async findAll(
@@ -179,22 +182,81 @@ export class TrackedLinkService {
         });
     }
 
-    mapList(links: TrackedLinkEntity[]): TrackedLinkGetResponseDto[] {
-        return links.map(link => this.mapGet(link));
+    /** The list page: each source with its own and its codes' counts. */
+    async mapListWithStats(
+        workspaceId: string,
+        sources: TrackedLinkEntity[]
+    ): Promise<TrackedLinkGetResponseDto[]> {
+        const children = sources.length
+            ? await this.trackedLinkRepository.find({
+                  parent: { $in: sources.map(source => source.id) },
+                  deletedAt: null,
+              })
+            : [];
+        const stats = await this.statsByLink(workspaceId, [
+            ...sources,
+            ...children,
+        ]);
+        return sources.map(source =>
+            plainToInstance(
+                TrackedLinkGetResponseDto,
+                { ...this.toPlain(source), stats: stats(source, children) },
+                { excludeExtraneousValues: true }
+            )
+        );
     }
 
-    mapDetail(
+    /** The detail page: the source's total, and each code on its own. */
+    async mapDetailWithStats(
+        workspaceId: string,
         link: TrackedLinkEntity,
         children: TrackedLinkEntity[]
-    ): TrackedLinkDetailResponseDto {
+    ): Promise<TrackedLinkDetailResponseDto> {
+        const stats = await this.statsByLink(workspaceId, [link, ...children]);
         return plainToInstance(
             TrackedLinkDetailResponseDto,
             {
                 ...this.toPlain(link),
-                children: children.map(child => this.toPlain(child)),
+                stats: stats(link, children),
+                children: children.map(child => ({
+                    ...this.toPlain(child),
+                    stats: stats(child, []),
+                })),
             },
             { excludeExtraneousValues: true }
         );
+    }
+
+    /** Loads the counts once, then sums a link with the children under it. */
+    private async statsByLink(
+        workspaceId: string,
+        links: TrackedLinkEntity[]
+    ): Promise<
+        (
+            link: TrackedLinkEntity,
+            children: TrackedLinkEntity[]
+        ) => ITrackedLinkStats
+    > {
+        const rows = await this.marketingStateRepository.statsByFirstSource(
+            workspaceId,
+            links.map(link => link.id)
+        );
+        const byId = new Map(rows.map(row => [row.linkId, row]));
+        return (link, children) =>
+            [link, ...children.filter(c => c.parent?.id === link.id)].reduce(
+                (sum, { id }) => {
+                    const row = byId.get(id);
+                    return {
+                        newCustomers:
+                            sum.newCustomers + (row?.newCustomers ?? 0),
+                        potentialCustomers:
+                            sum.potentialCustomers +
+                            (row?.potentialCustomers ?? 0),
+                        orders: sum.orders + (row?.orders ?? 0),
+                    };
+                },
+                { newCustomers: 0, potentialCustomers: 0, orders: 0 }
+            );
     }
 
     private toPlain(link: TrackedLinkEntity): Record<string, unknown> {

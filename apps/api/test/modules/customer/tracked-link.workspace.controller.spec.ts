@@ -8,7 +8,7 @@ describe('TrackedLinkWorkspaceController.list', () => {
     const trackedLinkService = {
         findAll: jest.fn(async () => []),
         getTotal: jest.fn(async () => 0),
-        mapList: jest.fn(() => []),
+        mapListWithStats: jest.fn(async () => []),
     };
     const paginationService = { totalPage: jest.fn(() => 0) };
     const controller = new TrackedLinkWorkspaceController(

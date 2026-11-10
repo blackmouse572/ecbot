@@ -81,6 +81,27 @@ export const SourceLinksSection: FC<SourceLinksSectionProps> = ({ source }) => {
             >
               {t("customerSources.columns.kind")}
             </Text>
+            <Text
+              size="small"
+              weight="plus"
+              className="hidden w-20 shrink-0 text-right text-ui-fg-subtle md:block"
+            >
+              {t("customerSources.columns.newCustomers")}
+            </Text>
+            <Text
+              size="small"
+              weight="plus"
+              className="hidden w-14 shrink-0 text-right text-ui-fg-subtle md:block"
+            >
+              {t("customerSources.columns.ordersShort")}
+            </Text>
+            <Text
+              size="small"
+              weight="plus"
+              className="hidden w-16 shrink-0 text-right text-ui-fg-subtle md:block"
+            >
+              {t("customerSources.columns.rateShort")}
+            </Text>
             <span className="w-[60px] shrink-0" />
           </div>
           {shown.map((child) => (

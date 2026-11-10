@@ -6807,6 +6807,18 @@ export type TrackedLinkAccountResponseDto = {
     type: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
 };
 
+export type TrackedLinkStatsResponseDto = {
+    newCustomers: number;
+    /**
+     * Asked the price or bought (stage ASKED_PRICE or later)
+     */
+    potentialCustomers: number;
+    /**
+     * Confirmed orders since the customer arrived
+     */
+    orders: number;
+};
+
 export type TrackedLinkGetResponseDto = {
     id: string;
     name: string;
@@ -6824,6 +6836,7 @@ export type TrackedLinkGetResponseDto = {
     account: TrackedLinkAccountResponseDto;
     createdAt: string;
     updatedAt?: string;
+    stats?: TrackedLinkStatsResponseDto;
 };
 
 export type TrackedLinkDetailResponseDto = {
@@ -6843,6 +6856,7 @@ export type TrackedLinkDetailResponseDto = {
     account: TrackedLinkAccountResponseDto;
     createdAt: string;
     updatedAt?: string;
+    stats?: TrackedLinkStatsResponseDto;
     children: Array<TrackedLinkGetResponseDto>;
 };
 
