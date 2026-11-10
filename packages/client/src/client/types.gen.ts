@@ -6705,7 +6705,7 @@ export type MarketingEventGetResponseDto = {
      * Delete by
      */
     deletedBy?: UserMetaResponseDto;
-    kind: 'STAGE' | 'PERMISSION' | 'CONSENT_ASKED' | 'HOSTILE';
+    kind: 'STAGE' | 'PERMISSION' | 'CONSENT_ASKED' | 'HOSTILE' | 'REACTION' | 'INTENT';
     actor: 'BOT' | 'CLASSIFIER' | 'OPERATOR' | 'CLIENT' | 'RULE';
     oldValue?: {
         [key: string]: unknown;
@@ -6722,6 +6722,35 @@ export type MarketingEventGetResponseDto = {
     messageId?: {
         [key: string]: unknown;
     } | null;
+    /**
+     * The confirmed order behind a Mua 1 lần / Mua nhiều lần.
+     */
+    orderId?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * The product group of a REACTION or INTENT event.
+     */
+    productGroupId?: {
+        [key: string]: unknown;
+    } | null;
+};
+
+export type CustomerProductReactionGetResponseDto = {
+    productGroupId: string;
+    productGroupName: string;
+    until: string;
+    reason?: {
+        [key: string]: unknown;
+    } | null;
+};
+
+export type CustomerProductReactionUpdateRequestDto = {
+    /**
+     * Do not offer this group before this date.
+     */
+    until: string;
+    reason: string;
 };
 
 export type CustomerTagAssignmentGetResponseDto = {
@@ -32879,6 +32908,160 @@ export type CustomerMarketingWorkspaceControllerListEventsV1Responses = {
 };
 
 export type CustomerMarketingWorkspaceControllerListEventsV1Response = CustomerMarketingWorkspaceControllerListEventsV1Responses[keyof CustomerMarketingWorkspaceControllerListEventsV1Responses];
+
+export type CustomerProductReactionWorkspaceControllerRemoveV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+        productGroupId: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/customers/{id}/marketing/reactions/{productGroupId}';
+};
+
+export type CustomerProductReactionWorkspaceControllerRemoveV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerProductReactionWorkspaceControllerRemoveV1Error = CustomerProductReactionWorkspaceControllerRemoveV1Errors[keyof CustomerProductReactionWorkspaceControllerRemoveV1Errors];
+
+export type CustomerProductReactionWorkspaceControllerRemoveV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerProductReactionWorkspaceControllerRemoveV1Response = CustomerProductReactionWorkspaceControllerRemoveV1Responses[keyof CustomerProductReactionWorkspaceControllerRemoveV1Responses];
+
+export type CustomerProductReactionWorkspaceControllerUpdateV1Data = {
+    body: CustomerProductReactionUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+        productGroupId: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/customers/{id}/marketing/reactions/{productGroupId}';
+};
+
+export type CustomerProductReactionWorkspaceControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerProductReactionWorkspaceControllerUpdateV1Error = CustomerProductReactionWorkspaceControllerUpdateV1Errors[keyof CustomerProductReactionWorkspaceControllerUpdateV1Errors];
+
+export type CustomerProductReactionWorkspaceControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: CustomerProductReactionGetResponseDto;
+    };
+};
+
+export type CustomerProductReactionWorkspaceControllerUpdateV1Response = CustomerProductReactionWorkspaceControllerUpdateV1Responses[keyof CustomerProductReactionWorkspaceControllerUpdateV1Responses];
 
 export type CustomerTagAssignmentWorkspaceControllerListV1Data = {
     body?: never;

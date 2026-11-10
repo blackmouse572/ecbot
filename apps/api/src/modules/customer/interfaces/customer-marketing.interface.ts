@@ -1,4 +1,7 @@
-import { ENUM_MARKETING_EVENT_ACTOR } from '../enums/customer-marketing.enum';
+import {
+    ENUM_CUSTOMER_JOURNEY_STAGE,
+    ENUM_MARKETING_EVENT_ACTOR,
+} from '../enums/customer-marketing.enum';
 
 /** Who made a marketing label change and why; written on its event. */
 export interface ICustomerMarketingChangeContext {
@@ -8,6 +11,27 @@ export interface ICustomerMarketingChangeContext {
     messageId?: string | null;
     /** The member, for OPERATOR and CLIENT changes. */
     userId?: string;
+}
+
+/** What an event links to, besides the conversation and message. */
+export interface IMarketingEventInput extends ICustomerMarketingChangeContext {
+    oldValue: string | null;
+    newValue: string | null;
+    orderId?: string;
+    productGroupId?: string | null;
+    /** When it happened, if not now (a message read by the backfill). */
+    at?: Date;
+}
+
+/** A dated intent from the classifier. */
+export interface ICustomerProductIntentInput {
+    stage:
+        | ENUM_CUSTOMER_JOURNEY_STAGE.INTERESTED
+        | ENUM_CUSTOMER_JOURNEY_STAGE.ASKED_PRICE;
+    /** Null when the customer asked about the shop in general. */
+    productGroupId?: string | null;
+    /** The customer's message time. */
+    occurredAt: Date;
 }
 
 export interface ICustomerMarketingInbound {

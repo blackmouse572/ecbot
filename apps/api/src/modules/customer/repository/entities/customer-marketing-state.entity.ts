@@ -61,4 +61,8 @@ export class CustomerMarketingStateEntity extends DatabaseEntityBase {
     // For "Ngủ đông", computed when read.
     @Property({ type: 'timestamptz', nullable: true })
     lastInboundAt?: Date | null;
+
+    // The latest confirmed order, also for "Ngủ đông".
+    @Property({ type: 'timestamptz', nullable: true })
+    lastOrderAt?: Date | null;
 }

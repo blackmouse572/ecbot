@@ -7,6 +7,9 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
+import { ENUM_ORDER_STATUS } from 'src/modules/order/enums/order.enum';
+import { OrderEntity } from 'src/modules/order/repository/entities/order.entity';
+import { ProductGroupEntity } from 'src/modules/order/repository/entities/product-group.entity';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
 import {
@@ -17,6 +20,7 @@ import {
     CUSTOMER_MARKETING_REASON_HOSTILE,
     CUSTOMER_MARKETING_REASON_MERGE,
     CUSTOMER_MARKETING_REASON_OPT_OUT_KEYWORD,
+    CUSTOMER_MARKETING_REASON_ORDER_CONFIRMED,
 } from '../constants/customer-marketing.constant';
 import { CustomerMarketingStateGetResponseDto } from '../dtos/response/customer-marketing-state.get.response.dto';
 import { MarketingEventGetResponseDto } from '../dtos/response/marketing-event.get.response.dto';
@@ -29,8 +33,10 @@ import {
 import {
     ICustomerMarketingChangeContext,
     ICustomerMarketingInbound,
+    IMarketingEventInput,
 } from '../interfaces/customer-marketing.interface';
 import { CustomerMarketingStateEntity } from '../repository/entities/customer-marketing-state.entity';
+import { CustomerProductReactionEntity } from '../repository/entities/customer-product-reaction.entity';
 import { CustomerEntity } from '../repository/entities/customer.entity';
 import { MarketingEventEntity } from '../repository/entities/marketing-event.entity';
 import { CustomerMarketingStateRepository } from '../repository/repositories/customer-marketing-state.repository';
@@ -41,9 +47,9 @@ import { isMarketingOptOutMessage } from '../utils/customer-marketing-opt-out.ut
 const DAY_MS = 86_400_000;
 
 /**
- * A Customer's three marketing layers (journey stage, messaging permission,
- * the "Khó chịu" flag; product reactions come with orders) and the event
- * behind every change. The merged Customer owns all its ContactPoints, so a
+ * A Customer's marketing labels (journey stage, messaging permission, the
+ * "Khó chịu" flag) and the event behind every change. Product reactions and
+ * intents are in CustomerProductMarketingService. The merged Customer owns all its ContactPoints, so a
  * "dừng" on one channel stops offers on every channel.
  */
 @Injectable()
@@ -97,21 +103,32 @@ export class CustomerMarketingService {
             workspaceId,
             context
         );
-        const from = CUSTOMER_JOURNEY_STAGE_ORDER.indexOf(state.stage);
-        const to = CUSTOMER_JOURNEY_STAGE_ORDER.indexOf(stage);
-        const allowed =
-            to > from ||
-            (to < from &&
-                context.actor === ENUM_MARKETING_EVENT_ACTOR.OPERATOR);
-        if (allowed) {
-            this.recordEvent(state, ENUM_MARKETING_EVENT_KIND.STAGE, {
-                ...context,
-                oldValue: state.stage,
-                newValue: stage,
-            });
-            state.stage = stage;
-        }
+        this.moveStage(state, stage, context);
         return this.save(state);
+    }
+
+    /**
+     * Runs after an order becomes CONFIRMED: the first confirmed order is
+     * Mua 1 lần, the second Mua nhiều lần. Cancelling one never moves the
+     * stage back.
+     */
+    async onOrderConfirmed(order: OrderEntity): Promise<void> {
+        const customerId = order.customer.id;
+        const workspaceId = order.workspace.id;
+        const context = {
+            actor: ENUM_MARKETING_EVENT_ACTOR.RULE,
+            reason: CUSTOMER_MARKETING_REASON_ORDER_CONFIRMED,
+            orderId: order.id,
+        };
+        const state = await this.loadForChange(
+            customerId,
+            workspaceId,
+            context
+        );
+        const confirmed = await this.countConfirmedOrders([customerId]);
+        this.moveStage(state, this.boughtStage(confirmed), context);
+        state.lastOrderAt = this.latest(state.lastOrderAt, order.orderedAt);
+        await this.save(state);
     }
 
     async setPermission(
@@ -181,7 +198,7 @@ export class CustomerMarketingService {
             return { alreadyAsked: true };
         }
         state.consentAskedAt = new Date();
-        this.recordEvent(state, ENUM_MARKETING_EVENT_KIND.CONSENT_ASKED, {
+        this.addEvent(state, ENUM_MARKETING_EVENT_KIND.CONSENT_ASKED, {
             ...context,
             oldValue: null,
             newValue: state.permission,
@@ -203,7 +220,7 @@ export class CustomerMarketingService {
             context
         );
         if (state.hostile !== hostile) {
-            this.recordEvent(state, ENUM_MARKETING_EVENT_KIND.HOSTILE, {
+            this.addEvent(state, ENUM_MARKETING_EVENT_KIND.HOSTILE, {
                 ...context,
                 oldValue: String(state.hostile),
                 newValue: String(hostile),
@@ -248,7 +265,7 @@ export class CustomerMarketingService {
         const stageOf = (s: CustomerMarketingStateEntity) =>
             CUSTOMER_JOURNEY_STAGE_ORDER.indexOf(s.stage);
         if (stageOf(loser) > stageOf(survivor)) {
-            this.recordEvent(
+            this.addEvent(
                 survivor,
                 ENUM_MARKETING_EVENT_KIND.STAGE,
                 { ...context, oldValue: survivor.stage, newValue: loser.stage },
@@ -257,7 +274,7 @@ export class CustomerMarketingService {
             survivor.stage = loser.stage;
         }
         if (loser.hostile && !survivor.hostile) {
-            this.recordEvent(
+            this.addEvent(
                 survivor,
                 ENUM_MARKETING_EVENT_KIND.HOSTILE,
                 { ...context, oldValue: 'false', newValue: 'true' },
@@ -276,15 +293,25 @@ export class CustomerMarketingService {
                 em
             );
         }
+        // The loser's orders move to the survivor, so count both.
+        const confirmed = await this.countConfirmedOrders(
+            [loserId, survivorId],
+            em
+        );
+        if (confirmed) {
+            this.moveStage(survivor, this.boughtStage(confirmed), context, em);
+        }
+        survivor.lastOrderAt = this.latest(
+            survivor.lastOrderAt,
+            loser.lastOrderAt
+        );
+        await this.mergeReactions(loserId, survivorId, em);
         survivor.consentAskedAt =
             survivor.consentAskedAt ?? loser.consentAskedAt ?? null;
-        if (
-            loser.lastInboundAt &&
-            (!survivor.lastInboundAt ||
-                loser.lastInboundAt > survivor.lastInboundAt)
-        ) {
-            survivor.lastInboundAt = loser.lastInboundAt;
-        }
+        survivor.lastInboundAt = this.latest(
+            survivor.lastInboundAt,
+            loser.lastInboundAt
+        );
         em.persist(survivor);
     }
 
@@ -304,9 +331,10 @@ export class CustomerMarketingService {
     mapGet(
         state: CustomerMarketingStateEntity
     ): CustomerMarketingStateGetResponseDto {
+        const lastActive = this.latest(state.lastInboundAt, state.lastOrderAt);
         const dormant =
-            !!state.lastInboundAt &&
-            Date.now() - state.lastInboundAt.getTime() >
+            !!lastActive &&
+            Date.now() - lastActive.getTime() >
                 CUSTOMER_MARKETING_DORMANT_DAYS * DAY_MS;
         return plainToInstance(
             CustomerMarketingStateGetResponseDto,
@@ -316,9 +344,15 @@ export class CustomerMarketingService {
     }
 
     mapEvents(events: MarketingEventEntity[]): MarketingEventGetResponseDto[] {
-        return plainToInstance(MarketingEventGetResponseDto, events, {
-            excludeExtraneousValues: true,
-        });
+        return plainToInstance(
+            MarketingEventGetResponseDto,
+            events.map(event => ({
+                ...event,
+                orderId: event.order?.id ?? null,
+                productGroupId: event.productGroup?.id ?? null,
+            })),
+            { excludeExtraneousValues: true }
+        );
     }
 
     private async applyInbound(
@@ -367,7 +401,7 @@ export class CustomerMarketingService {
         );
         if (existing) return existing;
         const state = this.newState(customerId, workspaceId, em);
-        this.recordEvent(
+        this.addEvent(
             state,
             ENUM_MARKETING_EVENT_KIND.STAGE,
             {
@@ -391,7 +425,7 @@ export class CustomerMarketingService {
     }
 
     // BOLA guard: a customer of another workspace is a 404.
-    private async assertCustomer(
+    async assertCustomer(
         customerId: string,
         workspaceId: string
     ): Promise<void> {
@@ -429,7 +463,7 @@ export class CustomerMarketingService {
             (state.permissionUntil?.getTime() ?? null) ===
             (until?.getTime() ?? null);
         if (state.permission === permission && sameUntil) return;
-        this.recordEvent(
+        this.addEvent(
             state,
             ENUM_MARKETING_EVENT_KIND.PERMISSION,
             { ...context, oldValue: state.permission, newValue: permission },
@@ -442,18 +476,16 @@ export class CustomerMarketingService {
                 : null;
     }
 
-    private recordEvent(
-        state: CustomerMarketingStateEntity,
+    /** Persists, without flushing, one event for the Customer. */
+    addEvent(
+        target: Pick<CustomerMarketingStateEntity, 'workspace' | 'customer'>,
         kind: ENUM_MARKETING_EVENT_KIND,
-        context: ICustomerMarketingChangeContext & {
-            oldValue: string | null;
-            newValue: string | null;
-        },
+        context: IMarketingEventInput,
         em: EntityManager = this.em
     ): void {
         const event = new MarketingEventEntity();
-        event.workspace = state.workspace;
-        event.customer = state.customer;
+        event.workspace = target.workspace;
+        event.customer = target.customer;
         event.kind = kind;
         event.actor = context.actor;
         event.oldValue = context.oldValue;
@@ -461,10 +493,100 @@ export class CustomerMarketingService {
         event.reason = context.reason ?? null;
         event.conversationId = context.conversationId ?? null;
         event.messageId = context.messageId ?? null;
+        if (context.orderId) {
+            event.order = em.getReference(OrderEntity, context.orderId);
+        }
+        if (context.productGroupId) {
+            event.productGroup = em.getReference(
+                ProductGroupEntity,
+                context.productGroupId
+            );
+        }
+        if (context.at) event.createdAt = context.at;
         if (context.userId) {
             event.createdBy = em.getReference(UserEntity, context.userId);
         }
         em.persist(event);
+    }
+
+    /** Forward only, except for an operator. */
+    private moveStage(
+        state: CustomerMarketingStateEntity,
+        stage: ENUM_CUSTOMER_JOURNEY_STAGE,
+        context: ICustomerMarketingChangeContext &
+            Pick<IMarketingEventInput, 'orderId' | 'productGroupId'>,
+        em: EntityManager = this.em
+    ): void {
+        const from = CUSTOMER_JOURNEY_STAGE_ORDER.indexOf(state.stage);
+        const to = CUSTOMER_JOURNEY_STAGE_ORDER.indexOf(stage);
+        const allowed =
+            to > from ||
+            (to < from &&
+                context.actor === ENUM_MARKETING_EVENT_ACTOR.OPERATOR);
+        if (!allowed) return;
+        this.addEvent(
+            state,
+            ENUM_MARKETING_EVENT_KIND.STAGE,
+            { ...context, oldValue: state.stage, newValue: stage },
+            em
+        );
+        state.stage = stage;
+    }
+
+    private countConfirmedOrders(
+        customerIds: string[],
+        em: EntityManager = this.em
+    ): Promise<number> {
+        return em.count(OrderEntity, {
+            customer: { $in: customerIds },
+            status: ENUM_ORDER_STATUS.CONFIRMED,
+            deletedAt: null,
+        });
+    }
+
+    private boughtStage(confirmedOrders: number): ENUM_CUSTOMER_JOURNEY_STAGE {
+        return confirmedOrders >= 2
+            ? ENUM_CUSTOMER_JOURNEY_STAGE.BOUGHT_REPEAT
+            : ENUM_CUSTOMER_JOURNEY_STAGE.BOUGHT_ONCE;
+    }
+
+    private latest(a?: Date | null, b?: Date | null): Date | null {
+        if (!a || !b) return a ?? b ?? null;
+        return a > b ? a : b;
+    }
+
+    /**
+     * The survivor gets the loser's "Tạm hoãn" rows; on the same group the
+     * later date wins. The loser keeps its rows for an unmerge.
+     */
+    private async mergeReactions(
+        loserId: string,
+        survivorId: string,
+        em: EntityManager
+    ): Promise<void> {
+        const rows = await em.find(CustomerProductReactionEntity, {
+            customer: { $in: [loserId, survivorId] },
+        });
+        const survivorRows = rows.filter(r => r.customer.id === survivorId);
+        for (const row of rows.filter(r => r.customer.id === loserId)) {
+            const existing = survivorRows.find(
+                r => r.productGroup.id === row.productGroup.id
+            );
+            if (existing) {
+                if (row.until > existing.until) {
+                    existing.until = row.until;
+                    existing.reason = row.reason;
+                }
+                continue;
+            }
+            const copy = new CustomerProductReactionEntity();
+            copy.workspace = row.workspace;
+            copy.customer = em.getReference(CustomerEntity, survivorId);
+            copy.productGroup = row.productGroup;
+            copy.until = row.until;
+            copy.reason = row.reason;
+            em.persist(copy);
+        }
     }
 
     private async save(
