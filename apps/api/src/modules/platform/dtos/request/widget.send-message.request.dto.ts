@@ -50,7 +50,8 @@ export class WidgetSendMessageRequestDto {
     @ApiPropertyOptional({
         type: () => ChatAttachmentRequestDto,
         isArray: true,
-        description: 'Files uploaded for this message with the attachments endpoint',
+        description:
+            'Files uploaded for this message with the attachments endpoint',
     })
     @IsOptional()
     @IsArray()
@@ -68,6 +69,16 @@ export class WidgetSendMessageRequestDto {
     @IsString()
     @MaxLength(2000)
     parentOrigin?: string;
+
+    @ApiPropertyOptional({
+        description:
+            'The tracked link code (ecb_src) the visitor arrived with. An unknown or malformed code is ignored.',
+        example: 'trang-khuyen-mai',
+    })
+    @IsOptional()
+    @IsString()
+    @MaxLength(255)
+    source?: string;
 
     @ApiPropertyOptional({
         description: 'Turnstile token. Required once per visitor session.',

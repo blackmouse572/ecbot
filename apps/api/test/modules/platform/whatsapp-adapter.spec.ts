@@ -109,6 +109,37 @@ describe('WhatsAppPlatformAdapter.parse', () => {
         });
     });
 
+    it('finds the tracked link code in the prefilled text', () => {
+        const [e] = makeAdapter().parse(
+            inbound({
+                type: 'text',
+                text: { body: 'Xin chào shop (mã to-roi-tet-quay-quan-1)' },
+            })
+        );
+        expect(e.referral).toEqual({
+            code: 'to-roi-tet-quay-quan-1',
+            source: 'link',
+        });
+    });
+
+    it('marks a click-to-WhatsApp ad with its ad id', () => {
+        const [e] = makeAdapter().parse(
+            inbound({
+                type: 'text',
+                text: { body: 'Tôi muốn hỏi giá' },
+                referral: { source_type: 'ad', source_id: '1203' },
+            })
+        );
+        expect(e.referral).toEqual({ source: 'ad', adId: '1203' });
+    });
+
+    it('has no referral on an ordinary message', () => {
+        const [e] = makeAdapter().parse(
+            inbound({ type: 'text', text: { body: 'hi' } })
+        );
+        expect(e.referral).toBeUndefined();
+    });
+
     it('normalizes an image with caption into an attachment', () => {
         const [e] = makeAdapter().parse(
             inbound({

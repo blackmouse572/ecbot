@@ -6151,6 +6151,38 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "first_tracked_link_id": {
+          "name": "first_tracked_link_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "first_source_at": {
+          "name": "first_source_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
         }
       },
       "name": "customer_marketing_states",
@@ -6274,6 +6306,19 @@
           "constraintName": "customer_marketing_states_deleted_by_id_foreign",
           "localTableName": "public.customer_marketing_states",
           "referencedTableName": "public.users",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "set null"
+        },
+        "customer_marketing_states_first_tracked_link_id_foreign": {
+          "columnNames": [
+            "first_tracked_link_id"
+          ],
+          "constraintName": "customer_marketing_states_first_tracked_link_id_foreign",
+          "localTableName": "public.customer_marketing_states",
+          "referencedTableName": "public.tracked_links",
           "referencedColumnNames": [
             "id"
           ],
@@ -11957,7 +12002,8 @@
             "STAGE",
             "PERMISSION",
             "CONSENT_ASKED",
-            "HOSTILE"
+            "HOSTILE",
+            "SOURCE"
           ],
           "mappedType": "enum"
         },
@@ -12110,6 +12156,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "uuid"
+        },
+        "tracked_link_id": {
+          "name": "tracked_link_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
         }
       },
       "name": "marketing_events",
@@ -12165,6 +12227,16 @@
           "keyName": "marketing_events_pkey",
           "unique": true,
           "primary": true
+        },
+        {
+          "columnNames": [
+            "tracked_link_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "marketing_events_tracked_link_id_index",
+          "unique": false,
+          "primary": false
         },
         {
           "columnNames": [

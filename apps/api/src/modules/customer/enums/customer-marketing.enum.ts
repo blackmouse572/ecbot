@@ -35,6 +35,8 @@ export enum ENUM_MARKETING_EVENT_KIND {
     CONSENT_ASKED = 'CONSENT_ASKED',
     /** The "Khó chịu" flag. */
     HOSTILE = 'HOSTILE',
+    /** The customer arrived through a tracked link: `trackedLinkId`. */
+    SOURCE = 'SOURCE',
 }
 
 /** Who made a marketing label change. */

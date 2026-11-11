@@ -20,9 +20,11 @@ from eccho_ai.llm.tools.system_tools import (
     get_customer_field,
     list_customer_fields,
     list_pending_followups,
+    record_order,
     remove_customer_tag,
     schedule_followup,
     set_customer_field,
+    set_marketing_permission,
     update_customer_profile,
 )
 
@@ -183,13 +185,14 @@ def _stub_api_client_all(monkeypatch, *, post=None, get=None, delete=None):
     return calls
 
 
-def test_twelve_system_tools_registered():
-    assert len(SYSTEM_TOOLS) == 12
+def test_fourteen_system_tools_registered():
+    assert len(SYSTEM_TOOLS) == 14
     names = {t.name for t in SYSTEM_TOOLS}
     assert {
         "schedule_followup",
         "list_pending_followups",
         "cancel_followup",
+        "record_order",
         "send_image",
         "send_media",
         "end_without_reply",
@@ -427,3 +430,142 @@ async def test_the_shared_agent_stops_at_end_without_reply():
 
     assert isinstance(result["messages"][-1], ToolMessage)
     assert all(m.content != "No reply needed." for m in result["messages"])
+
+
+# ─── set_marketing_permission ────────────────────────────────────────────────
+
+
+def test_set_marketing_permission_is_a_system_tool():
+    assert "set_marketing_permission" in {t.name for t in SYSTEM_TOOLS}
+
+
+async def test_set_marketing_permission_errors_when_no_context(monkeypatch):
+    monkeypatch.setattr(system_tools_module, "_get_customer_id", lambda: None)
+    result = await set_marketing_permission.ainvoke(
+        {"action": "ASKED", "reason": "order confirmed"}
+    )
+    assert result == {"error": "no customer context"}
+
+
+async def test_set_marketing_permission_posts_action_reason_and_conversation(monkeypatch):
+    _patch_runtime(monkeypatch, customer_id="cust-1", session_id="conv-1")
+    calls = _stub_api_client(
+        monkeypatch, response={"ok": True, "permission": "PAUSED"}
+    )
+
+    result = await set_marketing_permission.ainvoke(
+        {"action": "paused", "reason": "busy until Tet", "pause_days": 60}
+    )
+
+    assert result == {"ok": True, "permission": "PAUSED"}
+    assert calls == [
+        (
+            "/system/customers/cust-1/marketing/permission",
+            {
+                "action": "PAUSED",
+                "reason": "busy until Tet",
+                "conversationId": "conv-1",
+                "pauseDays": 60,
+            },
+        )
+    ]
+
+
+async def test_set_marketing_permission_drops_an_out_of_range_pause(monkeypatch):
+    # The API takes 1..365 days; anything else falls back to its default.
+    _patch_runtime(monkeypatch, customer_id="cust-1")
+    calls = _stub_api_client(monkeypatch, response={"ok": True})
+
+    await set_marketing_permission.ainvoke(
+        {"action": "PAUSED", "reason": "x" * 600, "pause_days": 0}
+    )
+
+    assert calls == [
+        (
+            "/system/customers/cust-1/marketing/permission",
+            {"action": "PAUSED", "reason": "x" * 500},
+        )
+    ]
+
+
+async def test_set_marketing_permission_refuses_an_unknown_action(monkeypatch):
+    _patch_runtime(monkeypatch, customer_id="cust-1")
+    calls = _stub_api_client(monkeypatch, response={"ok": True})
+
+    result = await set_marketing_permission.ainvoke(
+        {"action": "maybe", "reason": "x"}
+    )
+
+    assert "error" in result
+    assert calls == []
+
+
+# ─── Orders (#498) ───────────────────────────────────────────────────────────
+
+
+async def test_record_order_posts_a_draft_for_the_conversation(monkeypatch):
+    conversation = "0b8f6f0e-6c1a-4d5e-9c43-2a7f3f1d9b11"
+    _patch_runtime(monkeypatch, customer_id="cust-1", session_id=conversation)
+    calls = _stub_api_client(
+        monkeypatch, response={"id": "o1", "code": "DH-261110-AB12", "status": "PENDING"}
+    )
+
+    result = await record_order.ainvoke(
+        {
+            "items": [
+                {"name": "Kem chống nắng SPF50", "quantity": 2, "unit_price": 150000},
+                {"name": "Túi quà"},
+            ],
+            "total": 300000,
+            "note": "Giao sau 18h",
+        }
+    )
+
+    # No order code: the model must not read the note as a placed order.
+    assert result == {"recorded": True}
+    assert calls == [
+        (
+            "/system/customers/cust-1/orders/draft",
+            {
+                "items": [
+                    {"name": "Kem chống nắng SPF50", "quantity": 2, "unitPrice": 150000},
+                    {"name": "Túi quà", "quantity": 1},
+                ],
+                "total": 300000,
+                "note": "Giao sau 18h",
+                "conversationId": conversation,
+            },
+        )
+    ]
+
+
+async def test_record_order_leaves_out_a_session_that_is_not_a_conversation(monkeypatch):
+    _patch_runtime(monkeypatch, customer_id="cust-1", session_id="playground-42")
+    calls = _stub_api_client(monkeypatch, response={"id": "o1"})
+
+    await record_order.ainvoke({"items": [{"name": "Serum"}]})
+
+    assert calls == [
+        ("/system/customers/cust-1/orders/draft", {"items": [{"name": "Serum", "quantity": 1}]})
+    ]
+
+
+async def test_record_order_without_customer_tells_the_model_to_carry_on(monkeypatch):
+    _patch_runtime(monkeypatch, customer_id=None)
+    result = await record_order.ainvoke({"items": [{"name": "Serum"}]})
+    assert result["error"] == "no customer context"
+    assert "keep following your instructions" in result["instruction"]
+
+
+async def test_record_order_api_error_is_not_shown_to_the_customer(monkeypatch):
+    _patch_runtime(monkeypatch, customer_id="cust-1")
+
+    class _Failing:
+        async def post(self, path, json):
+            raise system_tools_module.ApiClientError("boom", status_code=422)
+
+    monkeypatch.setattr(
+        system_tools_module.ApiClient, "get_instance", staticmethod(lambda: _Failing())
+    )
+    result = await record_order.ainvoke({"items": [{"name": "Serum"}]})
+    assert "do not mention it" in result["instruction"]

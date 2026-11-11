@@ -12,6 +12,7 @@ export const FACEBOOK_SUBSCRIPTION_FIELD: Record<
     [ENUM_FACEBOOK_OBJECT_TO_SUBCRIBE.PAGE]: [
         'messages',
         'messaging_postbacks',
+        'messaging_referrals',
         'messaging_optins',
         'messaging_handovers',
         'messaging_policy_enforcement',

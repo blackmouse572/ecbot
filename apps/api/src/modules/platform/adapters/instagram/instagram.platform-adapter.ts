@@ -33,7 +33,11 @@ import {
     verifyMetaChallenge,
     verifyMetaSignature,
 } from '../meta/meta-webhook.util';
-import { metaAttachments, metaReplyTo } from '../meta/meta-message.util';
+import {
+    metaAttachments,
+    metaReferral,
+    metaReplyTo,
+} from '../meta/meta-message.util';
 import { PlatformAdapter } from '../platform-adapter.base';
 
 const GRAPH_API_BASE = 'https://graph.instagram.com';
@@ -196,6 +200,14 @@ export class InstagramPlatformAdapter extends PlatformAdapter {
             };
         } else if (event.read) {
             kind = 'read';
+        } else if (event.referral) {
+            kind = 'referral';
+            // No mid on a reopened chat: the sender and time make the
+            // dedupe key, so a redelivery is still logged once. Without a
+            // time there is no stable key, so the inbox drops the event.
+            if (event.timestamp) {
+                externalMessageId = `referral:${event.sender.id}:${event.timestamp}`;
+            }
         }
 
         // On an echo the account is the sender; keep the customer as senderId
@@ -219,6 +231,7 @@ export class InstagramPlatformAdapter extends PlatformAdapter {
             action,
             attachments,
             replyTo,
+            referral: metaReferral(event),
             reaction,
         };
     }

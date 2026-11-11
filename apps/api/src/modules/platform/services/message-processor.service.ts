@@ -18,6 +18,7 @@ import { MessageRepository } from '@app/modules/conversation/repository/reposito
 import { HandoffIntentService } from './handoff-intent.service';
 import { shouldHandOff } from '../utils/handoff-decision.util';
 import { CustomerMarketingService } from '@app/modules/customer/services/customer-marketing.service';
+import { TrackedLinkAttributionService } from '@app/modules/customer/services/tracked-link-attribution.service';
 import { ReplyGenerationService } from './reply-generation.service';
 import { ConversationService } from '@app/modules/conversation/services/conversation.service';
 import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
@@ -43,6 +44,7 @@ import {
     SENDER_PROFILE_STALE_MS,
 } from '../constants/sender-profile.constant';
 import { ConversationEntity } from '@app/modules/conversation/repository/entities/conversation.entity';
+import { opensChatOnly } from '../utils/referral.util';
 
 @Injectable()
 export class MessageProcessorService implements OnModuleInit {
@@ -90,11 +92,19 @@ export class MessageProcessorService implements OnModuleInit {
             return;
         }
 
-        // Allow action events (postback/quick_reply) through even when kind != 'message'
-        if (event.kind !== 'message' && !event.action) return;
+        // Allow action events (postback/quick_reply) through even when kind
+        // != 'message', and a reopened chat that only carries a tracked link.
+        const isReferral = event.kind === 'referral' && !!event.referral?.code;
+        if (event.kind !== 'message' && !event.action && !isReferral) return;
         // A photo, sticker or voice message with no caption is still a
         // customer turn: the agent reads a note on what arrived.
-        if (!event.text && !event.action && !event.attachments?.length) return;
+        if (
+            !event.text &&
+            !event.action &&
+            !event.attachments?.length &&
+            !isReferral
+        )
+            return;
 
         const account = await this.accountService.findOne(
             { externalId: event.accountKey },
@@ -174,6 +184,37 @@ export class MessageProcessorService implements OnModuleInit {
             senderId: event.senderId,
             contactPointId: contactPoint?.id,
         });
+
+        // A reopened chat (m.me / ig.me link on an existing thread) has no
+        // message to save or answer: reopen the thread, count it as the
+        // customer coming back, log the source and send its greeting.
+        if (event.kind === 'referral') {
+            await this.conversationService.reopenIfResolved(conversation);
+            await this.recordMarketingInbound({
+                customerId,
+                workspaceId,
+                text: '',
+                conversationId: conversation.id,
+            });
+            const greeting = await this.recordArrival(
+                event,
+                customerId,
+                workspaceId,
+                conversation.id
+            );
+            if (greeting && this.botMayReply(chatbot, conversation)) {
+                await this.moduleRef
+                    .get(ReplyGenerationService)
+                    .sendGreeting(
+                        chatbot,
+                        account,
+                        event.senderId,
+                        conversation.id,
+                        greeting
+                    );
+            }
+            return;
+        }
 
         // For action events (postback/quick_reply), use the action value as the
         // effective message text so persistence + debounce work unchanged.
@@ -267,6 +308,13 @@ export class MessageProcessorService implements OnModuleInit {
             conversationId: conversation.id,
             messageId: inbound?.id,
         });
+        const greeting = await this.recordArrival(
+            event,
+            customerId,
+            workspaceId,
+            conversation.id,
+            inbound?.id
+        );
 
         // A turned-off agent (a builder draft not activated yet, or one the
         // owner deactivated) or one in a suspended workspace keeps its inbox,
@@ -297,6 +345,21 @@ export class MessageProcessorService implements OnModuleInit {
                     conversation.id
                 );
             return;
+        }
+
+        // The source's greeting, then the agent, unless the message only
+        // carried the link (Get Started, /start): the greeting is the reply.
+        if (greeting) {
+            await this.moduleRef
+                .get(ReplyGenerationService)
+                .sendGreeting(
+                    chatbot,
+                    account,
+                    event.senderId,
+                    conversation.id,
+                    greeting
+                );
+            if (opensChatOnly(event)) return;
         }
 
         let typing = false;
@@ -412,6 +475,47 @@ export class MessageProcessorService implements OnModuleInit {
             );
             return false;
         }
+    }
+
+    /** #503: the tracked link code the customer arrived with becomes their
+     *  source. Returns the greeting to send for a new visit. Never throws: a
+     *  failure here must not cost the customer a reply. */
+    private async recordArrival(
+        event: PlatformWebhookEvent,
+        customerId: string | undefined,
+        workspaceId: string,
+        conversationId: string,
+        messageId?: string
+    ): Promise<string | null> {
+        const code = event.referral?.code;
+        if (!code || !customerId) return null;
+        try {
+            const arrival = await this.moduleRef
+                .get(TrackedLinkAttributionService, { strict: false })
+                .recordArrival({
+                    customerId,
+                    workspaceId,
+                    code,
+                    conversationId,
+                    messageId,
+                });
+            return arrival?.greeting ?? null;
+        } catch (err: unknown) {
+            this.logger.warn(
+                `Tracked link arrival failed for ${conversationId}: ${(err as Error)?.message}`
+            );
+            return null;
+        }
+    }
+
+    private botMayReply(
+        chatbot: AccountEntity['chatbot'],
+        conversation: { botEnabled: boolean }
+    ): boolean {
+        return (
+            !isAgentSilenced(chatbot, chatbot.workspace) &&
+            conversation.botEnabled
+        );
     }
 
     /**

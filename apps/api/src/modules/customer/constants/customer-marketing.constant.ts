@@ -47,6 +47,7 @@ export const CUSTOMER_MARKETING_REASON_OPT_OUT_KEYWORD = 'opt_out_keyword';
 export const CUSTOMER_MARKETING_REASON_FIRST_MESSAGE = 'first_message';
 export const CUSTOMER_MARKETING_REASON_MERGE = 'customer_merge';
 export const CUSTOMER_MARKETING_REASON_HOSTILE = 'hostile';
+export const CUSTOMER_MARKETING_REASON_TRACKED_LINK = 'tracked_link';
 
 /** "Not now" from the agent pauses offers this long unless it says otherwise. */
 export const CUSTOMER_MARKETING_AGENT_PAUSE_DAYS = 30;

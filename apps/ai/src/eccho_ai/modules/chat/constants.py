@@ -30,9 +30,11 @@ SYSTEM_TOOL_KINDS = {
     "update_customer_profile": "customer",
     "apply_customer_tag": "tag",
     "remove_customer_tag": "tag",
+    "set_marketing_permission": "customer",
     "schedule_followup": "followup",
     "list_pending_followups": "followup",
     "cancel_followup": "followup",
+    "record_order": "customer",
     "send_image": "image",
     "send_media": "image",
 }

@@ -539,6 +539,24 @@ describe("chat transport configs", () => {
     ]);
     expect(request.body).toMatchObject({ text: "hello", visitorId: "v1" });
   });
+
+  it("sends the tracked link code the visitor arrived with", () => {
+    const request = buildChatStreamRequest({
+      transport: widgetChatTransport(
+        "wk",
+        "v1",
+        undefined,
+        undefined,
+        "trang-khuyen-mai",
+      ),
+      clientConfig,
+      token: null,
+      id: "s",
+      messages: messages as never,
+    });
+
+    expect(request.body).toMatchObject({ source: "trang-khuyen-mai" });
+  });
 });
 
 describe("tool kinds", () => {

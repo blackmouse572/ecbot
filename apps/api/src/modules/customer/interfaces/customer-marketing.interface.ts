@@ -13,6 +13,8 @@ export interface ICustomerMarketingChangeContext {
     messageId?: string | null;
     /** The member, for OPERATOR and CLIENT changes. */
     userId?: string;
+    /** The tracked link behind a SOURCE event or an offer opt-in. */
+    trackedLinkId?: string;
 }
 
 export interface ICustomerMarketingInbound {
@@ -36,4 +38,15 @@ export interface ICustomerMarketingListFilter {
     stages?: ENUM_CUSTOMER_JOURNEY_STAGE[];
     permissions?: ENUM_CUSTOMER_MARKETING_PERMISSION[];
     dormant?: boolean;
+}
+
+/** A customer arriving through a tracked link (`link` is the code they used). */
+export interface ICustomerMarketingArrival {
+    customerId: string;
+    workspaceId: string;
+    trackedLinkId: string;
+    /** The source's "promises an offer" flag: opts a PENDING customer in. */
+    promisesOffer: boolean;
+    conversationId?: string;
+    messageId?: string;
 }

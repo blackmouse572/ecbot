@@ -25,6 +25,15 @@ export interface MessengerReplyTo {
     story?: { id?: string; url?: string };
 }
 
+/** Sent when a chat opens from an m.me / ig.me link with `ref`, or a Meta ad. */
+export interface MessengerReferral {
+    ad_id?: string;
+    ref?: string;
+    /** SHORTLINK (m.me), SHORTLINKS (ig.me), ADS, MESSENGER_CODE, ... */
+    source?: string;
+    type?: string;
+}
+
 export interface MessengerMessagePayload {
     /** Echoes only: set when an app sent the message via the Send API. */
     app_id?: number;
@@ -32,6 +41,7 @@ export interface MessengerMessagePayload {
     is_echo?: boolean;
     mid: string;
     quick_reply?: { payload: string };
+    referral?: MessengerReferral;
     reply_to?: MessengerReplyTo;
     text?: string;
 }
@@ -39,6 +49,7 @@ export interface MessengerMessagePayload {
 export interface MessengerPostback {
     mid?: string;
     payload: string;
+    referral?: MessengerReferral;
     title: string;
 }
 
@@ -55,6 +66,8 @@ export interface MessengerMessagingEvent {
     postback?: MessengerPostback;
     reaction?: MessengerReaction;
     read?: { watermark: number };
+    /** messaging_referrals: the customer reopened a chat they already had. */
+    referral?: MessengerReferral;
     recipient: MessengerRecipient;
     sender: MessengerSender;
     timestamp: number;

@@ -4,6 +4,7 @@ import { AccountEntity } from '@app/modules/account/repository/entities/account.
 import { AccountService } from '@app/modules/account/services/account.service';
 import { IMessageMedia } from '@app/modules/conversation/interfaces/message-media.interface';
 import { MESSAGE_MEDIA_MAX_BYTES } from '@app/modules/conversation/constants/message-media.constant';
+import { TRACKED_LINK_WHATSAPP_CODE } from '@app/modules/customer/constants/tracked-link.constant';
 import { HttpService } from '@nestjs/axios';
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -191,6 +192,7 @@ export class WhatsAppPlatformAdapter extends PlatformAdapter {
             senderName: names.get(msg.from),
             timestamp: new Date(Number(msg.timestamp) * 1000),
             raw: msg,
+            referral: this.referral(msg),
         }));
 
         const statuses = (value.statuses ?? [])
@@ -205,6 +207,24 @@ export class WhatsAppPlatformAdapter extends PlatformAdapter {
             }));
 
         return [...messages, ...statuses];
+    }
+
+    /** WhatsApp has no ref field: a tracked link's code rides in the text it
+     *  prefills, and an ad says so on the message. */
+    private referral(
+        msg: WhatsAppInboundMessage
+    ): PlatformWebhookEvent['referral'] {
+        if (msg.referral?.source_type === 'ad') {
+            return {
+                source: 'ad',
+                ...(msg.referral.source_id && {
+                    adId: msg.referral.source_id,
+                }),
+            };
+        }
+        const code = msg.text?.body.match(TRACKED_LINK_WHATSAPP_CODE)?.[1];
+
+        return code ? { code, source: 'link' } : undefined;
     }
 
     private normalizeMessage(

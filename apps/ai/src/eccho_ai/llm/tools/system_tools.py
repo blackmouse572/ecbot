@@ -14,6 +14,8 @@ import time
 from typing import Annotated, Any
 from uuid import UUID
 
+from pydantic import BaseModel, Field
+
 from langchain.tools import ToolRuntime
 from langchain_core.messages import HumanMessage, ToolMessage
 from langchain_core.tools import tool
@@ -32,6 +34,7 @@ from eccho_ai.llm.tools.constants import (
     FOLLOWUP_UNAVAILABLE,
     HANDOFF_FAILED,
     HANDOFF_UNAVAILABLE,
+    ORDER_NOT_RECORDED,
 )
 from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.retrievers.vector_store import PgVectorStore
@@ -366,6 +369,57 @@ async def remove_customer_tag(name: str) -> dict[str, Any]:
         return {"error": str(exc)}
 
 
+_MARKETING_ACTIONS = {"ASKED", "GRANTED", "PAUSED", "STOPPED"}
+
+
+@tool
+async def set_marketing_permission(
+    action: str, reason: str, pause_days: int | None = None
+) -> dict[str, Any]:
+    """Record the one-time question about sending the customer offers, or
+    their answer. `action`: ASKED right when you ask (if the result says
+    alreadyAsked, do not ask), GRANTED when they say yes, PAUSED when they say
+    not now (`pause_days`, default 30), STOPPED when they refuse for good.
+    `reason`: a few words on what the customer said."""
+    started = time.perf_counter()
+    customer_id = _get_customer_id()
+    if not customer_id:
+        _log_call("set_marketing_permission", _truncate(action), "no_context", 0)
+        return {"error": "no customer context"}
+    normalized = action.strip().upper()
+    if normalized not in _MARKETING_ACTIONS:
+        _log_call("set_marketing_permission", _truncate(action), "bad_action", 0)
+        return {"error": f"action must be one of {sorted(_MARKETING_ACTIONS)}"}
+    # The API caps reason at 500 chars and pauseDays at 1..365; an
+    # out-of-range pause falls back to the API's default.
+    payload: dict[str, Any] = {"action": normalized, "reason": reason[:500]}
+    conversation_id = _get_session_id()
+    if conversation_id:
+        payload["conversationId"] = conversation_id
+    if pause_days is not None and 1 <= pause_days <= 365:
+        payload["pauseDays"] = pause_days
+    try:
+        result = await ApiClient.get_instance().post(
+            f"/system/customers/{customer_id}/marketing/permission",
+            payload,
+        )
+        _log_call(
+            "set_marketing_permission",
+            normalized,
+            "ok",
+            (time.perf_counter() - started) * 1000,
+        )
+        return result if isinstance(result, dict) else {"data": result}
+    except ApiClientError as exc:
+        _log_call(
+            "set_marketing_permission",
+            normalized,
+            "error",
+            (time.perf_counter() - started) * 1000,
+        )
+        return {"error": str(exc)}
+
+
 @tool
 async def schedule_followup(
     prompt: str,
@@ -557,6 +611,77 @@ async def end_without_reply(reason: str = "") -> dict[str, Any]:
     return {"ok": True}
 
 
+class OrderLine(BaseModel):
+    name: str = Field(description="The product as agreed, e.g. 'Kem chống nắng SPF50'")
+    quantity: int = Field(default=1, ge=1)
+    unit_price: int | None = Field(
+        default=None,
+        ge=0,
+        description="Price of one unit as a whole number (150000 for 150.000đ), if known",
+    )
+
+
+def _as_uuid(value: str | None) -> str | None:
+    try:
+        return str(UUID(str(value))) if value else None
+    except ValueError:
+        return None
+
+
+@tool
+async def record_order(
+    items: list[OrderLine],
+    total: int | None = None,
+    note: str | None = None,
+) -> dict[str, Any]:
+    """Note the order the customer just confirmed in the shop's order list,
+    for staff to check and confirm. Call it once the customer clearly says
+    yes to the items you read back; call it again with the whole order if
+    they change it later in this chat.
+
+    It only keeps a record. It does not place, pay for or ship the order, and
+    it is not an order tool: keep following your instructions for orders
+    (skills, handing over, tags) exactly as before, and never tell the
+    customer the order is placed because of this call.
+
+    `total` is the agreed total as a whole number, if one was given. `note` is
+    anything staff need (delivery time, gift wrap), never payment details.
+    """
+    started = time.perf_counter()
+    customer_id = _get_customer_id()
+    if not customer_id:
+        _log_call("record_order", "-", "no_context", 0)
+        return {"error": "no customer context", "instruction": ORDER_NOT_RECORDED}
+    payload: dict[str, Any] = {
+        "items": [
+            {
+                "name": line.name,
+                "quantity": line.quantity,
+                **({"unitPrice": line.unit_price} if line.unit_price is not None else {}),
+            }
+            for line in items
+        ],
+    }
+    if total is not None:
+        payload["total"] = total
+    if note:
+        payload["note"] = note
+    conversation_id = _as_uuid(_get_session_id())
+    if conversation_id:
+        payload["conversationId"] = conversation_id
+    summary = _truncate(",".join(line.name for line in items))
+    try:
+        await ApiClient.get_instance().post(
+            f"/system/customers/{customer_id}/orders/draft",
+            payload,
+        )
+        _log_call("record_order", summary, "ok", (time.perf_counter() - started) * 1000)
+        return {"recorded": True}
+    except ApiClientError as exc:
+        _log_call("record_order", summary, "error", (time.perf_counter() - started) * 1000)
+        return {"error": str(exc), "instruction": ORDER_NOT_RECORDED}
+
+
 SYSTEM_TOOLS: list[Any] = [
     get_customer_field,
     list_customer_fields,
@@ -564,9 +689,11 @@ SYSTEM_TOOLS: list[Any] = [
     update_customer_profile,
     apply_customer_tag,
     remove_customer_tag,
+    set_marketing_permission,
     schedule_followup,
     list_pending_followups,
     cancel_followup,
+    record_order,
     send_image,
     send_media,
     end_without_reply,
