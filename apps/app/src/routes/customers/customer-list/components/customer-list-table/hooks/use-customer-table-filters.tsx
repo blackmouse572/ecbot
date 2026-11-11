@@ -3,7 +3,10 @@ import {
   CUSTOMER_STAGES,
 } from "@/components/customer-marketing";
 import type { Filter } from "@/components/table/data-table";
-import { useTrackedLinks } from "@/hooks/api/tracked-links";
+import {
+  useTrackedLinks,
+  type TrackedLinkGetResponseDto,
+} from "@/hooks/api/tracked-links";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,6 +17,8 @@ export const useCustomerTableFilters = (): Filter[] => {
   const { workspaceSlug } = useWorkspaceParams();
   // The API's largest page: enough sources for one shop's picker.
   const { links } = useTrackedLinks(workspaceSlug, { perPage: 100 });
+  // The paging envelope types each row loosely; narrow to the link shape.
+  const sources: TrackedLinkGetResponseDto[] = links;
 
   return useMemo<Filter[]>(
     () => [
@@ -50,9 +55,9 @@ export const useCustomerTableFilters = (): Filter[] => {
         key: "source",
         label: t("customers.list.source"),
         type: "select",
-        options: links.map((link) => ({ value: link.id, label: link.name })),
+        options: sources.map((link) => ({ value: link.id, label: link.name })),
       },
     ],
-    [t, links],
+    [t, sources],
   );
 };
