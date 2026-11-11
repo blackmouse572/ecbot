@@ -38,6 +38,10 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
                 `${date ? date.toISOString() : 'null'}:${status}`
         ),
     };
+    const marketingSignalService = {
+        listProductGroups: jest.fn(),
+        apply: jest.fn(),
+    };
     const httpService = { post: jest.fn() };
     const configService = {
         get: jest.fn((key: string) =>
@@ -87,6 +91,8 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
         ]);
         customerTagService.findAllByWorkspace.mockResolvedValue([]);
         customerTagAssignmentService.listByCustomer.mockResolvedValue([]);
+        marketingSignalService.listProductGroups.mockResolvedValue([]);
+        marketingSignalService.apply.mockResolvedValue(0);
         httpService.post.mockReturnValue(
             classifierResponse({
                 tags_to_add: [],
@@ -101,6 +107,7 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
             customerTagService as any,
             customerTagAssignmentService as any,
             classifierService as any,
+            marketingSignalService as any,
             httpService as any,
             configService as any
         );
@@ -115,6 +122,64 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
             'X-Internal-Token': 'test-token',
             'Content-Type': 'application/json',
         });
+    });
+
+    // #500: marketing signals come back from the same call.
+    it('sends the product groups and applies the signals against the messages sent', async () => {
+        const sentAt = new Date('2026-06-15T11:55:00Z');
+        messageRepository.findByConversation.mockResolvedValue([
+            {
+                id: 'msg-1',
+                authorType: ENUM_MESSAGE_AUTHOR.USER,
+                direction: ENUM_MESSAGE_DIRECTION.INBOUND,
+                text: 'serum để sau nha',
+                dateSent: sentAt,
+            },
+        ]);
+        marketingSignalService.listProductGroups.mockResolvedValue([
+            { id: 'pg-serum', name: 'Serum' },
+        ]);
+        const signals = [
+            {
+                kind: 'later',
+                product_group: 'Serum',
+                product_group_id: 'pg-serum',
+                defer_days: 60,
+                message_index: 0,
+                quote: 'serum để sau nha',
+            },
+        ];
+        httpService.post.mockReturnValue(
+            classifierResponse({ marketing_signals: signals })
+        );
+
+        await service.handle(dto() as any, 0);
+
+        const [, body] = httpService.post.mock.calls[0];
+        expect(body.product_groups).toEqual([
+            { id: 'pg-serum', name: 'Serum' },
+        ]);
+        expect(marketingSignalService.listProductGroups).toHaveBeenCalledWith(
+            'ws-1'
+        );
+        expect(marketingSignalService.apply).toHaveBeenCalledWith(
+            {
+                customerId: 'cust-1',
+                workspaceId: 'ws-1',
+                conversationId: 'conv-1',
+                messages: [{ id: 'msg-1', dateSent: sentAt }],
+            },
+            signals
+        );
+    });
+
+    it('applies no signals when an older AI service returns none', async () => {
+        await service.handle(dto() as any, 0);
+
+        expect(marketingSignalService.apply).toHaveBeenCalledWith(
+            expect.anything(),
+            []
+        );
     });
 
     it('skips all classifier side effects when the live snapshot is stale', async () => {
@@ -132,6 +197,7 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
         expect(customerTagAssignmentService.apply).not.toHaveBeenCalled();
         expect(customerTagAssignmentService.remove).not.toHaveBeenCalled();
         expect(customerRepository.updateEntity).not.toHaveBeenCalled();
+        expect(marketingSignalService.apply).not.toHaveBeenCalled();
     });
 
     it('filters handoff tags before calling the classifier and never assigns them', async () => {
@@ -419,6 +485,7 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
                 customerTagService as any,
                 customerTagAssignmentService as any,
                 classifierService as any,
+                marketingSignalService as any,
                 httpService as any,
                 configService as any,
                 meter as any

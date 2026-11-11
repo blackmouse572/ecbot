@@ -22,6 +22,8 @@ import { CustomerTagAdminService } from './services/customer-tag.admin.service';
 import { CustomerMarketingService } from './services/customer-marketing.service';
 import { CustomerProductMarketingService } from './services/customer-product-marketing.service';
 import { TrackedLinkAttributionService } from './services/tracked-link-attribution.service';
+import { CustomerMarketingSignalService } from './services/customer-marketing-signal.service';
+import { OrderRepositoryModule } from '@app/modules/order/repository/order.repository.module';
 import { TrackedLinkService } from './services/tracked-link.service';
 
 @Module({
@@ -36,6 +38,7 @@ import { TrackedLinkService } from './services/tracked-link.service';
         AwsModule,
         ActivityModule,
         AccountRepositoryModule,
+        OrderRepositoryModule,
     ],
     providers: [
         CustomerErasureService,
@@ -50,6 +53,7 @@ import { TrackedLinkService } from './services/tracked-link.service';
         CustomerTagAdminService,
         CustomerMarketingService,
         CustomerProductMarketingService,
+        CustomerMarketingSignalService,
         TrackedLinkService,
         TrackedLinkAttributionService,
     ],

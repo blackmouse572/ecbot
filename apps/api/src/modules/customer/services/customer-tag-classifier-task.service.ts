@@ -20,6 +20,11 @@ import { CustomerTagAssignmentService } from './customer-tag-assignment.service'
 import { CustomerTagService } from './customer-tag.service';
 import { CustomerRepository } from '../repository/repositories/customer.repository';
 import { CustomerTagClassifierService } from './customer-tag-classifier.service';
+import { CustomerMarketingSignalService } from './customer-marketing-signal.service';
+import {
+    ICustomerMarketingSignal,
+    ICustomerMarketingSignalProductGroup,
+} from '../interfaces/customer-marketing-signal.interface';
 import { getInternalAuthHeader } from '@app/common/utils/gcp-id-token.util';
 import { getInternalTokenHeader } from '@app/common/utils/ai-internal-headers.util';
 import {
@@ -45,6 +50,7 @@ interface IClassifierResponse {
     tags_to_add?: string[];
     tags_to_remove?: string[];
     profile_summary?: string;
+    marketing_signals?: ICustomerMarketingSignal[];
     usage?: unknown;
     model?: string;
 }
@@ -61,6 +67,7 @@ export class CustomerTagClassifierTaskService {
         private readonly customerTagService: CustomerTagService,
         private readonly customerTagAssignmentService: CustomerTagAssignmentService,
         private readonly classifierService: CustomerTagClassifierService,
+        private readonly marketingSignalService: CustomerMarketingSignalService,
         private readonly httpService: HttpService,
         private readonly configService: ConfigService,
         @Optional()
@@ -201,6 +208,9 @@ export class CustomerTagClassifierTaskService {
             .map(a => (a.tag as any)?.name)
             .filter((n: string | undefined): n is string => Boolean(n));
 
+        const productGroups =
+            await this.marketingSignalService.listProductGroups(workspaceId);
+
         if (availableTags.length === 0) {
             this.logger.debug(
                 `classify: workspace ${workspaceId} has no analytical tags — only updating summary`
@@ -219,6 +229,7 @@ export class CustomerTagClassifierTaskService {
             // The recent messages stop at the newest 50; the conversation
             // summary carries what came before them.
             conversation_summary: conversation.memorySummary ?? '',
+            product_groups: productGroups,
         });
         const usage = parseWireTokenUsage(result.usage);
         if (usage) {
@@ -306,10 +317,24 @@ export class CustomerTagClassifierTaskService {
             } as any);
         }
 
+        // Journey stage, "Tạm hoãn" and Khó chịu from the same call (#500).
+        const signals = await this.marketingSignalService.apply(
+            {
+                customerId,
+                workspaceId,
+                conversationId,
+                messages: messages.map(m => ({
+                    id: m.id,
+                    dateSent: m.dateSent,
+                })),
+            },
+            result.marketing_signals ?? []
+        );
+
         this.logger.log(
             `classify done conv=${conversationId} customer=${customerId} ` +
                 `+${(result.tags_to_add ?? []).length}/-${(result.tags_to_remove ?? []).length} ` +
-                `summary=${summary ? 'yes' : 'no'}`
+                `summary=${summary ? 'yes' : 'no'} signals=${signals}`
         );
     }
 
@@ -332,6 +357,7 @@ export class CustomerTagClassifierTaskService {
         current_tags: string[];
         current_summary: string;
         conversation_summary: string;
+        product_groups: ICustomerMarketingSignalProductGroup[];
     }): Promise<IClassifierResponse> {
         const resp = await firstValueFrom(
             this.httpService.post(
