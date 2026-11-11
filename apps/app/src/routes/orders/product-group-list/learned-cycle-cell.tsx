@@ -18,7 +18,7 @@ export const LearnedCycleCell: FC<{ group: ProductGroupGetResponseDto }> = ({
 
   if (group.learnedRepurchaseDays) {
     return (
-      <span className="flex items-center gap-x-1.5">
+      <span className="flex items-center gap-x-1.5 whitespace-nowrap">
         <Badge size="2xsmall" color="green" className="tabular-nums">
           {t("orders.groups.days", { count: group.learnedRepurchaseDays })}
         </Badge>
@@ -41,9 +41,14 @@ export const LearnedCycleCell: FC<{ group: ProductGroupGetResponseDto }> = ({
   const needed = t("orders.groups.needPairs", { count: min - pairs });
 
   return (
-    <span className="flex items-center gap-x-2">
-      <Meter value={pairs} max={min} aria-label={needed} className="w-16">
-        <Meter.Track className="h-1">
+    <span className="flex items-center gap-x-2 whitespace-nowrap">
+      <Meter
+        value={pairs}
+        max={min}
+        aria-label={needed}
+        className="w-12 shrink-0"
+      >
+        <Meter.Track className="bg-ui-border-base h-1">
           <Meter.Indicator className="bg-ui-fg-muted" />
         </Meter.Track>
       </Meter>
