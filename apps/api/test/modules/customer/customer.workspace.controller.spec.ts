@@ -1,4 +1,8 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+    BadRequestException,
+    ForbiddenException,
+    NotFoundException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthImpersonationReadOnlyInterceptor } from '../../../src/modules/auth/interceptors/auth.impersonation-read-only.interceptor';
 import { CustomerWorkspaceController } from '../../../src/modules/customer/controllers/customer.workspace.controller';
@@ -68,6 +72,8 @@ function buildController(): CustomerWorkspaceController {
     );
 }
 
+const SOURCE_ID = '0193a5d2-7c1e-7b3a-9f1e-2b8c4d6e8f10';
+
 describe('CustomerWorkspaceController', () => {
     let controller: CustomerWorkspaceController;
 
@@ -80,7 +86,6 @@ describe('CustomerWorkspaceController', () => {
         notes: 'VIP',
         createdAt: new Date('2026-06-15T00:00:00Z'),
     };
-
     const mappedDto = {
         id: 'cust-1',
         name: 'Alice',
@@ -90,7 +95,6 @@ describe('CustomerWorkspaceController', () => {
         notes: 'VIP',
         createdAt: customerEntity.createdAt,
     };
-
     const user = { id: 'user-1', email: 'op@acme.test' } as any;
 
     beforeEach(() => {
@@ -148,7 +152,6 @@ describe('CustomerWorkspaceController', () => {
                     { conversationCount: 2, channels: ['FACEBOOK_PAGE'] },
                 ],
             ]);
-
             mockCustomerService.findByWorkspace.mockResolvedValue([
                 customerEntity,
             ]);
@@ -181,11 +184,9 @@ describe('CustomerWorkspaceController', () => {
         it('filters by the marketing labels and returns them on each row', async () => {
             const labelFind = { $and: [{ label: true }] };
             mockMarketingService.customerListFilter.mockReturnValue(labelFind);
-
             const marketing = new Map([
                 ['cust-1', { stage: 'ASKED_PRICE', permission: 'GRANTED' }],
             ]);
-
             mockMarketingService.summarize.mockResolvedValue(marketing as any);
             mockCustomerService.findByWorkspace.mockResolvedValue([
                 customerEntity,
@@ -203,7 +204,7 @@ describe('CustomerWorkspaceController', () => {
                 { stage: { $in: ['NEW', 'ASKED_PRICE'] } },
                 { permission: { $in: ['STOPPED'] } },
                 { dormant: { $in: [true] } },
-                { source: 'link-1' }
+                { source: SOURCE_ID }
             );
 
             expect(
@@ -212,7 +213,7 @@ describe('CustomerWorkspaceController', () => {
                 stages: ['NEW', 'ASKED_PRICE'],
                 permissions: ['STOPPED'],
                 dormant: true,
-                sourceId: 'link-1',
+                sourceId: SOURCE_ID,
             });
             const find = { ...search, ...labelFind };
             expect(mockCustomerService.findByWorkspace).toHaveBeenCalledWith(
@@ -259,6 +260,22 @@ describe('CustomerWorkspaceController', () => {
                 sourceId: undefined,
             });
         });
+        it.each([
+            ['a repeated source', [SOURCE_ID, SOURCE_ID]],
+            ['a source that is not an id', 'not-a-uuid'],
+        ])('rejects %s', async (_case, value) => {
+            await expect(
+                controller.list(
+                    { id: 'ws-1' } as any,
+                    { _search: {}, _limit: 20, _offset: 0, _order: {} } as any,
+                    undefined,
+                    undefined,
+                    undefined,
+                    { source: value }
+                )
+            ).rejects.toBeInstanceOf(BadRequestException);
+            expect(mockCustomerService.findByWorkspace).not.toHaveBeenCalled();
+        });
     });
 
     describe('GET /:workspace/customers/:id', () => {
@@ -303,7 +320,6 @@ describe('CustomerWorkspaceController', () => {
                 language: 'en',
                 notes: 'Updated notes',
             };
-
             const updated = { ...customerEntity, ...dto };
             mockCustomerService.update.mockResolvedValue(updated);
             mockCustomerService.mapWorkspaceGet.mockReturnValue({
@@ -423,7 +439,6 @@ describe('CustomerWorkspaceController', () => {
             const interceptor = new AuthImpersonationReadOnlyInterceptor(
                 new Reflector()
             );
-
             const context = {
                 getType: () => 'http',
                 getHandler: () => CustomerWorkspaceController.prototype.erase,

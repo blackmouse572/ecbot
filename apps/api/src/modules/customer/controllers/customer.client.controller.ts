@@ -156,7 +156,6 @@ export class CustomerClientController {
             id,
             workspace.id
         );
-
         if (!customer) {
             throw new NotFoundException({
                 message: 'customer.error.notFound',
@@ -186,7 +185,6 @@ export class CustomerClientController {
             dto,
             workspace.id
         );
-
         await this.activityService.createByUserWithWorkspace(
             credential.createdBy,
             workspace,

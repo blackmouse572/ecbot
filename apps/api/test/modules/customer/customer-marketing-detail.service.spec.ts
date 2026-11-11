@@ -24,7 +24,6 @@ function state(patch: Partial<CustomerMarketingStateEntity> = {}) {
     s.customer = { id: 'c1' } as any;
     s.workspace = { id: 'w1' } as any;
     Object.assign(s, patch);
-
     return s;
 }
 
@@ -41,30 +40,25 @@ function makeHarness(opts: {
         flush: jest.fn().mockResolvedValue(undefined),
         fork: jest.fn(() => em),
     };
-
     const stateRepository = {
         findByCustomer: jest.fn(async () => opts.state ?? null),
         find: jest.fn(async () => opts.states ?? []),
         customerListFilter: jest.fn(() => ({ marker: true })),
         populateFirstSource: jest.fn(async () => undefined),
     };
-
     const eventRepository = {
         findOne: jest.fn(
             async (where: any) => opts.events?.[where.kind] ?? null
         ),
     };
-
     const customerRepository = {
         findOne: jest.fn(async (where: any) =>
             where.id === 'c1' && where.workspace === 'w1' ? { id: 'c1' } : null
         ),
     };
-
     const conversationRepository = {
         lastInboundByChannel: jest.fn(async () => opts.lastInbound ?? []),
     };
-
     // Only Messenger has a free window in these tests.
     const platformRegistry = {
         has: (type: ENUM_ACCOUNT_TYPE) =>
@@ -85,7 +79,6 @@ function makeHarness(opts: {
                   : null
         ),
     };
-
     const service = new CustomerMarketingService(
         em,
         stateRepository as any,
@@ -94,7 +87,6 @@ function makeHarness(opts: {
         reactionRepository as any,
         moduleRef as any
     );
-
     return {
         service,
         stateRepository,
@@ -125,7 +117,6 @@ describe('CustomerMarketingService.getDetail', () => {
             messageId: 'm-1',
             createdAt: new Date('2026-11-10T12:50:00Z'),
         };
-
         const permissionEvent = {
             id: 'e2',
             kind: KIND.PERMISSION,
@@ -135,7 +126,6 @@ describe('CustomerMarketingService.getDetail', () => {
             reason: 'opt_out_keyword',
             createdAt: new Date('2026-11-10T13:00:00Z'),
         };
-
         const { service, eventRepository } = makeHarness({
             state: state({
                 stage: STAGE.ASKED_PRICE,
@@ -178,7 +168,6 @@ describe('CustomerMarketingService.getDetail', () => {
         // PATCH { hostile: true, permission: GRANTED } writes STOPPED then
         // GRANTED in the same millisecond, so the sort alone cannot tell them apart.
         const at = new Date('2026-11-10T13:00:00Z');
-
         const rows = [
             {
                 id: 'e9',
@@ -209,14 +198,12 @@ describe('CustomerMarketingService.getDetail', () => {
                 createdAt: at,
             },
         ];
-
         const { service, eventRepository } = makeHarness({
             state: state({
                 stage: STAGE.INTERESTED,
                 permission: PERMISSION.GRANTED,
             }),
         });
-
         eventRepository.findOne.mockImplementation(
             async (where: any) =>
                 rows.find(
@@ -239,11 +226,9 @@ describe('CustomerMarketingService.getDetail', () => {
 
     it('falls back to the newest event of the kind when none set the current value', async () => {
         const fallback = { id: 'e5', kind: KIND.STAGE, newValue: STAGE.NEW };
-
         const { service, eventRepository } = makeHarness({
             state: state({ stage: STAGE.BOUGHT_ONCE }),
         });
-
         eventRepository.findOne.mockImplementation(async (where: any) =>
             where.kind === KIND.STAGE && where.newValue === undefined
                 ? fallback
@@ -266,12 +251,10 @@ describe('CustomerMarketingService.getDetail', () => {
             reason: 'nhầm',
             createdAt: new Date(),
         };
-
         const off = makeHarness({
             state: state({ hostile: false }),
             events: { [KIND.HOSTILE]: hostileEvent },
         });
-
         expect((await off.service.getDetail('c1', 'w1')).hostileEvent).toBe(
             null
         );
@@ -280,7 +263,6 @@ describe('CustomerMarketingService.getDetail', () => {
             state: state({ hostile: true }),
             events: { [KIND.HOSTILE]: { ...hostileEvent, newValue: 'true' } },
         });
-
         expect((await on.service.getDetail('c1', 'w1')).hostileEvent).toEqual(
             expect.objectContaining({ id: 'e3' })
         );
@@ -288,7 +270,6 @@ describe('CustomerMarketingService.getDetail', () => {
 
     it('gives the free-message window per channel', async () => {
         const last = new Date(Date.now() - 18 * HOUR);
-
         const { service, conversationRepository } = makeHarness({
             state: state(),
             lastInbound: [
@@ -425,7 +406,6 @@ describe('CustomerMarketingService.getDetail, Với nhóm hàng and Nguồn đ�
 describe('CustomerMarketingService.summarize', () => {
     it('gives each customer its labels, defaults when it has no row', async () => {
         const old = new Date(Date.now() - 200 * 24 * HOUR);
-
         const { service, stateRepository } = makeHarness({
             states: [
                 state({
@@ -494,21 +474,17 @@ describe('CustomerMarketingService.applyChange', () => {
         const calls: string[] = [];
         jest.spyOn(service, 'setHostile').mockImplementation(async () => {
             calls.push('hostile');
-
             return state();
         });
         jest.spyOn(service, 'setStage').mockImplementation(async () => {
             calls.push('stage');
-
             return state();
         });
         jest.spyOn(service, 'setPermission').mockImplementation(async () => {
             calls.push('permission');
-
             return state();
         });
         const until = new Date('2026-12-01T00:00:00Z');
-
         const context = {
             actor: ACTOR.CLIENT,
             reason: 'from MCP',
@@ -573,7 +549,6 @@ describe('CustomerMarketingService.customerListFilter', () => {
 
 const NOW = new Date('2026-11-11T10:00:00Z');
 const ago = (hours: number) => new Date(NOW.getTime() - hours * HOUR);
-
 // Stands in for each channel adapter's freeMessageWindowHours.
 const HOURS: Partial<Record<ENUM_ACCOUNT_TYPE, number | null>> = {
     [ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE]: 24,
@@ -582,7 +557,6 @@ const HOURS: Partial<Record<ENUM_ACCOUNT_TYPE, number | null>> = {
     [ENUM_ACCOUNT_TYPE.ZALO_PAGE]: 48,
     [ENUM_ACCOUNT_TYPE.TELEGRAM_BOT]: null,
 };
-
 const windowHours = (channel: ENUM_ACCOUNT_TYPE) => HOURS[channel];
 
 describe('customerMarketingFreeWindows', () => {

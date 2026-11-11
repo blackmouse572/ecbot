@@ -95,7 +95,6 @@ export class CustomerMarketingService {
             // so this run finds it.
             if (!(error instanceof UniqueConstraintViolationException))
                 throw error;
-
             return this.applyInbound(input, this.em.fork());
         }
     }
@@ -110,7 +109,6 @@ export class CustomerMarketingService {
         input: ICustomerMarketingArrival
     ): Promise<CustomerMarketingStateEntity | null> {
         const em = this.em.fork();
-
         const visits = await this.eventRepository.getTotal(
             {
                 customer: input.customerId,
@@ -120,7 +118,6 @@ export class CustomerMarketingService {
             },
             { em }
         );
-
         if (visits > 0) return null;
 
         const context: ICustomerMarketingChangeContext = {
@@ -129,21 +126,18 @@ export class CustomerMarketingService {
             messageId: input.messageId,
             trackedLinkId: input.trackedLinkId,
         };
-
         const state = await this.ensureState(
             input.customerId,
             input.workspaceId,
             context,
             em
         );
-
         this.addEvent(
             state,
             ENUM_MARKETING_EVENT_KIND.SOURCE,
             { ...context, oldValue: null, newValue: null },
             em
         );
-
         if (!state.firstTrackedLink) {
             state.firstTrackedLink = em.getReference(
                 TrackedLinkEntity,
@@ -151,7 +145,6 @@ export class CustomerMarketingService {
             );
             state.firstSourceAt = new Date();
         }
-
         if (
             input.promisesOffer &&
             state.permission === ENUM_CUSTOMER_MARKETING_PERMISSION.PENDING
@@ -164,10 +157,8 @@ export class CustomerMarketingService {
                 em
             );
         }
-
         em.persist(state);
         await em.flush();
-
         return state;
     }
 
@@ -176,7 +167,6 @@ export class CustomerMarketingService {
         workspaceId: string
     ): Promise<CustomerMarketingStateEntity> {
         await this.assertCustomer(customerId, workspaceId);
-
         return (
             (await this.stateRepository.findByCustomer(customerId)) ??
             this.newState(customerId, workspaceId)
@@ -199,8 +189,6 @@ export class CustomerMarketingService {
             ConversationRepository,
             { strict: false }
         );
-
-        await this.stateRepository.populateFirstSource([state]);
 
         const [
             stageEvent,
@@ -233,6 +221,7 @@ export class CustomerMarketingService {
                 workspaceId
             ),
             this.reactionRepository.findActiveByCustomer(customerId),
+            this.stateRepository.populateFirstSource([state]),
         ]);
 
         return plainToInstance(
@@ -272,11 +261,9 @@ export class CustomerMarketingService {
                 context
             );
         }
-
         if (change.stage) {
             await this.setStage(customerId, workspaceId, change.stage, context);
         }
-
         if (change.permission) {
             await this.setPermission(
                 customerId,
@@ -293,19 +280,16 @@ export class CustomerMarketingService {
         customerIds: string[]
     ): Promise<Map<string, CustomerMarketingSummaryResponseDto>> {
         if (customerIds.length === 0) return new Map();
-
         const states = await this.stateRepository.find({
             customer: { $in: customerIds },
         });
 
         await this.stateRepository.populateFirstSource(states);
         const byCustomer = new Map(states.map(s => [s.customer.id, s]));
-
         return new Map(
             customerIds.map(id => {
                 const state =
                     byCustomer.get(id) ?? new CustomerMarketingStateEntity();
-
                 return [
                     id,
                     plainToInstance(
@@ -341,9 +325,7 @@ export class CustomerMarketingService {
             workspaceId,
             context
         );
-
         this.moveStage(state, stage, context);
-
         return this.save(state);
     }
 
@@ -355,19 +337,16 @@ export class CustomerMarketingService {
     async onOrderConfirmed(order: OrderEntity): Promise<void> {
         const customerId = order.customer.id;
         const workspaceId = order.workspace.id;
-
         const context = {
             actor: ENUM_MARKETING_EVENT_ACTOR.RULE,
             reason: CUSTOMER_MARKETING_REASON_ORDER_CONFIRMED,
             orderId: order.id,
         };
-
         const state = await this.loadForChange(
             customerId,
             workspaceId,
             context
         );
-
         const confirmed = await this.countConfirmedOrders([customerId]);
         this.moveStage(state, this.boughtStage(confirmed), context);
         state.lastOrderAt = this.latest(state.lastOrderAt, order.orderedAt);
@@ -386,18 +365,15 @@ export class CustomerMarketingService {
             workspaceId,
             context
         );
-
         const leavingStop =
             state.permission === ENUM_CUSTOMER_MARKETING_PERMISSION.STOPPED &&
             permission !== ENUM_CUSTOMER_MARKETING_PERMISSION.STOPPED;
-
         if (leavingStop && !context.reason?.trim()) {
             throw new BadRequestException({
                 statusCode: 400,
                 message: 'customerMarketing.error.reasonRequired',
             });
         }
-
         if (
             leavingStop &&
             state.hostile &&
@@ -408,7 +384,6 @@ export class CustomerMarketingService {
                 message: 'customerMarketing.error.hostile',
             });
         }
-
         if (
             permission === ENUM_CUSTOMER_MARKETING_PERMISSION.PAUSED &&
             !(until && until.getTime() > Date.now())
@@ -418,9 +393,7 @@ export class CustomerMarketingService {
                 message: 'customerMarketing.error.pauseNeedsDate',
             });
         }
-
         this.applyPermission(state, permission, until ?? null, context);
-
         return this.save(state);
     }
 
@@ -439,7 +412,6 @@ export class CustomerMarketingService {
             workspaceId,
             context
         );
-
         if (
             state.consentAskedAt ||
             state.hostile ||
@@ -447,7 +419,6 @@ export class CustomerMarketingService {
         ) {
             return { alreadyAsked: true };
         }
-
         state.consentAskedAt = new Date();
         this.addEvent(state, ENUM_MARKETING_EVENT_KIND.CONSENT_ASKED, {
             ...context,
@@ -455,7 +426,6 @@ export class CustomerMarketingService {
             newValue: state.permission,
         });
         await this.save(state);
-
         return { alreadyAsked: false };
     }
 
@@ -471,7 +441,6 @@ export class CustomerMarketingService {
             workspaceId,
             context
         );
-
         if (state.hostile !== hostile) {
             this.addEvent(state, ENUM_MARKETING_EVENT_KIND.HOSTILE, {
                 ...context,
@@ -480,7 +449,6 @@ export class CustomerMarketingService {
             });
             state.hostile = hostile;
         }
-
         if (hostile) {
             this.applyPermission(
                 state,
@@ -492,7 +460,6 @@ export class CustomerMarketingService {
                 }
             );
         }
-
         return this.save(state);
     }
 
@@ -513,7 +480,6 @@ export class CustomerMarketingService {
             actor: ENUM_MARKETING_EVENT_ACTOR.RULE,
             reason: CUSTOMER_MARKETING_REASON_MERGE,
         };
-
         const result = await this.mergeReactions(
             loserId,
             survivorId,
@@ -521,29 +487,21 @@ export class CustomerMarketingService {
             context,
             em
         );
-
         const loser = await this.stateRepository.findByCustomer(loserId, em);
-
         // The loser's orders move to the survivor, so count both.
         const confirmed = await this.countConfirmedOrders(
             [loserId, survivorId],
             em
         );
-
         if (!loser && !confirmed) return result;
-
         const survivor =
             (await this.stateRepository.findByCustomer(survivorId, em)) ??
             this.newState(survivorId, workspaceId, em);
-
         if (loser) this.mergeLabels(loser, survivor, context, em);
-
         if (confirmed) {
             this.moveStage(survivor, this.boughtStage(confirmed), context, em);
         }
-
         em.persist(survivor);
-
         return result;
     }
 
@@ -557,7 +515,6 @@ export class CustomerMarketingService {
                 id: { $in: undo.createdReactionIds },
             });
         }
-
         for (const row of undo.replacedReactions ?? []) {
             await em.nativeUpdate(
                 CustomerProductReactionEntity,
@@ -574,7 +531,6 @@ export class CustomerMarketingService {
     ): Promise<[MarketingEventEntity[], number]> {
         await this.assertCustomer(customerId, workspaceId);
         const find = { customer: customerId, workspace: workspaceId };
-
         return Promise.all([
             this.eventRepository.find(find, options),
             this.eventRepository.getTotal(find),
@@ -602,17 +558,14 @@ export class CustomerMarketingService {
             conversationId: input.conversationId,
             messageId: input.messageId,
         };
-
         const state = await this.ensureState(
             input.customerId,
             input.workspaceId,
             context,
             em
         );
-
         state.lastInboundAt = new Date();
         const optedOut = isMarketingOptOutMessage(input.text);
-
         if (optedOut) {
             this.applyPermission(
                 state,
@@ -625,10 +578,8 @@ export class CustomerMarketingService {
                 em
             );
         }
-
         em.persist(state);
         await em.flush();
-
         return { optedOut };
     }
 
@@ -642,7 +593,6 @@ export class CustomerMarketingService {
             customerId,
             em
         );
-
         if (existing) return existing;
         const state = this.newState(customerId, workspaceId, em);
         this.addEvent(
@@ -656,7 +606,6 @@ export class CustomerMarketingService {
             },
             em
         );
-
         return state;
     }
 
@@ -668,7 +617,6 @@ export class CustomerMarketingService {
         const registry = this.moduleRef.get(PlatformAdapterRegistry, {
             strict: false,
         });
-
         return registry.has(channel)
             ? registry.get(channel).capabilities.freeMessageWindowHours
             : undefined;
@@ -677,7 +625,6 @@ export class CustomerMarketingService {
     // No message and no order in 120 days; never dormant with neither.
     private isDormant(state: CustomerMarketingStateEntity): boolean {
         const lastActive = this.latest(state.lastInboundAt, state.lastOrderAt);
-
         return (
             !!lastActive &&
             Date.now() - lastActive.getTime() >
@@ -699,11 +646,9 @@ export class CustomerMarketingService {
         currentValue?: string
     ): Promise<MarketingEventEntity | null> {
         const where = { customer: customerId, workspace: workspaceId, kind };
-
         const options = {
             order: { createdAt: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC },
         };
-
         const matching =
             currentValue === undefined
                 ? null
@@ -711,7 +656,6 @@ export class CustomerMarketingService {
                       { ...where, newValue: currentValue },
                       options
                   );
-
         return matching ?? this.eventRepository.findOne(where, options);
     }
 
@@ -721,7 +665,6 @@ export class CustomerMarketingService {
         context: ICustomerMarketingChangeContext
     ): Promise<CustomerMarketingStateEntity> {
         await this.assertCustomer(customerId, workspaceId);
-
         return this.ensureState(customerId, workspaceId, context);
     }
 
@@ -734,7 +677,6 @@ export class CustomerMarketingService {
             id: customerId,
             workspace: workspaceId,
         } as any);
-
         if (!customer) {
             throw new NotFoundException({
                 statusCode: 404,
@@ -751,7 +693,6 @@ export class CustomerMarketingService {
         const state = new CustomerMarketingStateEntity();
         state.customer = em.getReference(CustomerEntity, customerId);
         state.workspace = em.getReference(WorkspaceEntity, workspaceId);
-
         return state;
     }
 
@@ -765,7 +706,6 @@ export class CustomerMarketingService {
         const sameUntil =
             (state.permissionUntil?.getTime() ?? null) ===
             (until?.getTime() ?? null);
-
         if (state.permission === permission && sameUntil) return;
         this.addEvent(
             state,
@@ -797,25 +737,20 @@ export class CustomerMarketingService {
         event.reason = context.reason ?? null;
         event.conversationId = context.conversationId ?? null;
         event.messageId = context.messageId ?? null;
-
         if (context.orderId) {
             event.order = em.getReference(OrderEntity, context.orderId);
         }
-
         if (context.productGroupId) {
             event.productGroup = em.getReference(
                 ProductGroupEntity,
                 context.productGroupId
             );
         }
-
         if (context.at) event.createdAt = context.at;
         event.trackedLinkId = context.trackedLinkId ?? null;
-
         if (context.userId) {
             event.createdBy = em.getReference(UserEntity, context.userId);
         }
-
         em.persist(event);
     }
 
@@ -829,12 +764,10 @@ export class CustomerMarketingService {
     ): void {
         const from = CUSTOMER_JOURNEY_STAGE_ORDER.indexOf(state.stage);
         const to = CUSTOMER_JOURNEY_STAGE_ORDER.indexOf(stage);
-
         const allowed =
             to > from ||
             (to < from &&
                 context.actor === ENUM_MARKETING_EVENT_ACTOR.OPERATOR);
-
         if (!allowed) return;
         this.addEvent(
             state,
@@ -864,7 +797,6 @@ export class CustomerMarketingService {
 
     private latest(a?: Date | null, b?: Date | null): Date | null {
         if (!a || !b) return a ?? b ?? null;
-
         return a > b ? a : b;
     }
 
@@ -876,7 +808,6 @@ export class CustomerMarketingService {
     ): void {
         const stageOf = (s: CustomerMarketingStateEntity) =>
             CUSTOMER_JOURNEY_STAGE_ORDER.indexOf(s.stage);
-
         if (stageOf(loser) > stageOf(survivor)) {
             this.addEvent(
                 survivor,
@@ -886,7 +817,6 @@ export class CustomerMarketingService {
             );
             survivor.stage = loser.stage;
         }
-
         if (loser.hostile && !survivor.hostile) {
             this.addEvent(
                 survivor,
@@ -896,10 +826,8 @@ export class CustomerMarketingService {
             );
             survivor.hostile = true;
         }
-
         const rank = (p: ENUM_CUSTOMER_MARKETING_PERMISSION) =>
             CUSTOMER_MARKETING_PERMISSION_MERGE_ORDER.indexOf(p);
-
         if (rank(loser.permission) < rank(survivor.permission)) {
             this.applyPermission(
                 survivor,
@@ -909,7 +837,6 @@ export class CustomerMarketingService {
                 em
             );
         }
-
         survivor.consentAskedAt =
             survivor.consentAskedAt ?? loser.consentAskedAt ?? null;
         survivor.lastInboundAt = this.latest(
@@ -920,7 +847,6 @@ export class CustomerMarketingService {
             survivor.lastOrderAt,
             loser.lastOrderAt
         );
-
         if (
             loser.firstTrackedLink &&
             (!survivor.firstSourceAt ||
@@ -947,26 +873,20 @@ export class CustomerMarketingService {
             createdReactions: [],
             replacedReactions: [],
         };
-
         const rows = await em.find(CustomerProductReactionEntity, {
             customer: { $in: [loserId, survivorId] },
         });
-
         const target = {
             workspace: em.getReference(WorkspaceEntity, workspaceId),
             customer: em.getReference(CustomerEntity, survivorId),
         };
-
         const day = (date?: Date | null) =>
             date?.toISOString().slice(0, 10) ?? null;
-
         const survivorRows = rows.filter(r => r.customer.id === survivorId);
-
         for (const row of rows.filter(r => r.customer.id === loserId)) {
             const existing = survivorRows.find(
                 r => r.productGroup.id === row.productGroup.id
             );
-
             if (existing && row.until <= existing.until) continue;
             this.addEvent(
                 target,
@@ -979,7 +899,6 @@ export class CustomerMarketingService {
                 },
                 em
             );
-
             if (existing) {
                 result.replacedReactions.push({
                     id: existing.id,
@@ -990,7 +909,6 @@ export class CustomerMarketingService {
                 existing.reason = row.reason;
                 continue;
             }
-
             const copy = new CustomerProductReactionEntity();
             copy.workspace = row.workspace;
             copy.customer = target.customer;
@@ -1000,7 +918,6 @@ export class CustomerMarketingService {
             em.persist(copy);
             result.createdReactions.push(copy);
         }
-
         return result;
     }
 
@@ -1009,7 +926,6 @@ export class CustomerMarketingService {
     ): Promise<CustomerMarketingStateEntity> {
         this.em.persist(state);
         await this.em.flush();
-
         return state;
     }
 }

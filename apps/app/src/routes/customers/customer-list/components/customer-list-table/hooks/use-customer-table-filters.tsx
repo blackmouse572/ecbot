@@ -17,7 +17,8 @@ export const useCustomerTableFilters = (): Filter[] => {
   const { workspaceSlug } = useWorkspaceParams();
   // The API's largest page: enough sources for one shop's picker.
   const { links } = useTrackedLinks(workspaceSlug, { perPage: 100 });
-  // The paging envelope types each row loosely; narrow to the link shape.
+  // ResponsePagingDto types `data` as loose records, and `.map` on the
+  // intersected array keeps that element type; narrow to the link shape.
   const sources: TrackedLinkGetResponseDto[] = links;
 
   return useMemo<Filter[]>(
@@ -55,6 +56,7 @@ export const useCustomerTableFilters = (): Filter[] => {
         key: "source",
         label: t("customers.list.source"),
         type: "select",
+        searchable: true,
         options: sources.map((link) => ({ value: link.id, label: link.name })),
       },
     ],

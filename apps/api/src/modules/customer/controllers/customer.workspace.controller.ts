@@ -150,7 +150,6 @@ export class CustomerWorkspaceController {
         ]);
 
         const ids = customers.map(c => c.id);
-
         const [summaries, marketing] = await Promise.all([
             this.customerService.summarizeConversations(ids, workspace.id),
             this.marketingService.summarize(ids),
@@ -185,14 +184,12 @@ export class CustomerWorkspaceController {
             id,
             workspace.id
         );
-
         if (!customer) {
             throw new NotFoundException({
                 message: 'customer.error.notFound',
                 statusCode: 404,
             });
         }
-
         return { data: this.customerService.mapWorkspaceGet(customer) };
     }
 
@@ -219,14 +216,12 @@ export class CustomerWorkspaceController {
             dto,
             workspace.id
         );
-
         await this.activityService.createByUserWithWorkspace(user, workspace, {
             action: ENUM_ACTIVITY_ACTION.UPDATE,
             subject: ENUM_POLICY_SUBJECT.CUSTOMER,
             // The audit log is append-only, so it keeps ids, not names.
             metadata: { id: updated.id },
         });
-
         return { data: this.customerService.mapWorkspaceGet(updated) };
     }
 
@@ -249,7 +244,6 @@ export class CustomerWorkspaceController {
             id,
             workspace.id
         );
-
         await this.activityService.createByUserWithWorkspace(user, workspace, {
             action: ENUM_ACTIVITY_ACTION.CUSTOMER_UNMERGE,
             subject: ENUM_POLICY_SUBJECT.CUSTOMER,
@@ -258,7 +252,6 @@ export class CustomerWorkspaceController {
                 suggestionId: suggestion.id,
             },
         });
-
         return { data: { suggestionId: suggestion.id } };
     }
 
@@ -284,7 +277,6 @@ export class CustomerWorkspaceController {
         // conversations, messages and stored media, plus the audit row, in
         // one transaction scoped to this workspace.
         const summary = await this.erasureService.erase(id, workspace, user);
-
         return { data: summary };
     }
 }

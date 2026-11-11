@@ -135,7 +135,7 @@ describe("MarketingSection", () => {
       ...(state.marketing as object),
       dormant: true,
       permission: "PAUSED",
-      permissionUntil: "2026-04-15T16:59:59Z",
+      permissionUntil: "2026-04-15T09:00:00Z",
       permissionEvent: null,
     };
     renderSection();
@@ -224,7 +224,7 @@ describe("MarketingSection", () => {
         {
           productGroupId: "g-1",
           productGroupName: "Serum",
-          until: "2026-04-15T16:59:59Z",
+          until: "2026-04-15T09:00:00Z",
           reason: "để sau nha, giờ chưa cần",
         },
       ],

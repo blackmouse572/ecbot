@@ -36,7 +36,6 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
         filter: ICustomerMarketingListFilter
     ): Record<string, any> {
         const conditions: Record<string, any>[] = [];
-
         if (filter.stages?.length) {
             conditions.push(
                 this.withMissing(
@@ -45,7 +44,6 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
                 )
             );
         }
-
         if (filter.permissions?.length) {
             conditions.push(
                 this.withMissing(
@@ -56,13 +54,11 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
                 )
             );
         }
-
         if (filter.dormant !== undefined) {
             // No message and no order since the cutoff, and at least one of them.
             const cutoff = new Date(
                 Date.now() - CUSTOMER_MARKETING_DORMANT_DAYS * DAY_MS
             );
-
             const dormantIds = this.customerIds({
                 $and: [
                     {
@@ -85,7 +81,6 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
                     },
                 ],
             });
-
             conditions.push({
                 id: filter.dormant ? { $in: dormantIds } : { $nin: dormantIds },
             });
@@ -124,7 +119,6 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
         includeMissing: boolean
     ): Record<string, any> {
         const matching = { id: { $in: this.customerIds(where) } };
-
         return includeMissing
             ? { $or: [matching, { id: { $nin: this.customerIds({}) } }] }
             : matching;

@@ -48,7 +48,6 @@ export class CustomerProductMarketingService {
         await this.marketingService.assertCustomer(customerId, workspaceId);
         await this.assertProductGroup(productGroupId, workspaceId);
         const args = [customerId, workspaceId, productGroupId, until] as const;
-
         try {
             return await this.applyDefer(...args, context, this.em.fork());
         } catch (error: unknown) {
@@ -56,7 +55,6 @@ export class CustomerProductMarketingService {
             // other one won, so this run finds it and updates it.
             if (!(error instanceof UniqueConstraintViolationException))
                 throw error;
-
             return this.applyDefer(...args, context, this.em.fork());
         }
     }
@@ -70,7 +68,6 @@ export class CustomerProductMarketingService {
     ): Promise<void> {
         await this.marketingService.assertCustomer(customerId, workspaceId);
         const reaction = await this.findReaction(customerId, productGroupId);
-
         if (!reaction) return;
         this.marketingService.addEvent(
             reaction,
@@ -98,11 +95,9 @@ export class CustomerProductMarketingService {
     ): Promise<void> {
         await this.marketingService.assertCustomer(customerId, workspaceId);
         const productGroupId = input.productGroupId ?? null;
-
         if (productGroupId) {
             await this.assertProductGroup(productGroupId, workspaceId);
         }
-
         if (
             await this.alreadyRecorded(
                 customerId,
@@ -113,7 +108,6 @@ export class CustomerProductMarketingService {
         ) {
             return;
         }
-
         this.marketingService.addEvent(
             {
                 workspace: this.em.getReference(WorkspaceEntity, workspaceId),
@@ -146,7 +140,6 @@ export class CustomerProductMarketingService {
             { mergedIntoCustomerId: customerId },
             { fields: ['id'] }
         );
-
         const events = await this.em.find(
             MarketingEventEntity,
             {
@@ -155,9 +148,7 @@ export class CustomerProductMarketingService {
             },
             { populate: ['productGroup'], orderBy: { createdAt: 'DESC' } }
         );
-
         if (!events.length) return [];
-
         const items = await this.em.find(
             OrderItemEntity,
             {
@@ -169,7 +160,6 @@ export class CustomerProductMarketingService {
             },
             { populate: ['order'] }
         );
-
         return activeProductIntents(
             events,
             items.map(item => ({
@@ -197,9 +187,7 @@ export class CustomerProductMarketingService {
             { customer: customerId, productGroup: productGroupId },
             { populate: [], em }
         );
-
         if (until.getTime() <= Date.now()) return existing;
-
         if (
             await this.alreadyRecorded(
                 customerId,
@@ -213,7 +201,6 @@ export class CustomerProductMarketingService {
         }
 
         const reaction = existing ?? new CustomerProductReactionEntity();
-
         if (!existing) {
             reaction.workspace = em.getReference(WorkspaceEntity, workspaceId);
             reaction.customer = em.getReference(CustomerEntity, customerId);
@@ -222,7 +209,6 @@ export class CustomerProductMarketingService {
                 productGroupId
             );
         }
-
         const before = existing?.until ?? null;
         reaction.until = until;
         reaction.reason = context.reason ?? null;
@@ -239,7 +225,6 @@ export class CustomerProductMarketingService {
         );
         em.persist(reaction);
         await em.flush();
-
         return reaction;
     }
 
@@ -261,14 +246,12 @@ export class CustomerProductMarketingService {
         em: EntityManager = this.em
     ): Promise<boolean> {
         if (!context.messageId) return false;
-
         const count = await em.count(MarketingEventEntity, {
             customer: customerId,
             kind,
             messageId: context.messageId,
             productGroup: productGroupId,
         });
-
         return count > 0;
     }
 
@@ -281,7 +264,6 @@ export class CustomerProductMarketingService {
             id: productGroupId,
             workspace: workspaceId,
         });
-
         if (!group) {
             throw new NotFoundException({
                 statusCode: 404,

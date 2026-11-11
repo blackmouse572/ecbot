@@ -22,15 +22,12 @@ function makeHarness(
     // customer id -> workspace id
     const states = new Map<string, CustomerMarketingStateEntity>();
     const events: MarketingEventEntity[] = [];
-
     const em: any = {
         getReference: jest.fn((_e: any, id: string) => ({ id })),
         persist: jest.fn((entity: any) => {
             if (entity instanceof MarketingEventEntity) events.push(entity);
-
             if (entity instanceof CustomerMarketingStateEntity)
                 states.set(entity.customer.id, entity);
-
             return em;
         }),
         flush: jest.fn().mockResolvedValue(undefined),
@@ -45,12 +42,10 @@ function makeHarness(
             )
         ),
     };
-
     const stateRepository = {
         findByCustomer: jest.fn(async (id: string) => states.get(id) ?? null),
         populateFirstSource: jest.fn(async () => undefined),
     };
-
     const eventRepository = {
         findWithPaging: jest.fn(),
         getTotal: jest.fn(
@@ -65,7 +60,6 @@ function makeHarness(
                 ).length
         ),
     };
-
     const customerRepository = {
         findOne: jest.fn(async (where: any) =>
             customers[where.id] === where.workspace
@@ -73,7 +67,6 @@ function makeHarness(
                 : null
         ),
     };
-
     const service = new CustomerMarketingService(
         em,
         stateRepository as any,
@@ -82,7 +75,6 @@ function makeHarness(
         {} as any,
         { get: jest.fn() } as any
     );
-
     return { service, states, events, em };
 }
 
@@ -93,14 +85,12 @@ describe('CustomerMarketingService', () => {
     describe('recordInbound', () => {
         it('starts a new customer at Mới biết, with an event', async () => {
             const { service, states, events } = makeHarness();
-
             const result = await service.recordInbound({
                 customerId: 'c1',
                 workspaceId: 'w1',
                 text: 'shop ơi còn hàng không',
                 conversationId: 'conv-1',
             });
-
             expect(result).toEqual({ optedOut: false });
             expect(states.get('c1')?.stage).toBe(STAGE.NEW);
             expect(states.get('c1')?.permission).toBe(PERMISSION.PENDING);
@@ -123,7 +113,6 @@ describe('CustomerMarketingService', () => {
                 workspaceId: 'w1',
                 text: 'hi',
             });
-
             const result = await service.recordInbound({
                 customerId: 'c1',
                 workspaceId: 'w1',
@@ -131,7 +120,6 @@ describe('CustomerMarketingService', () => {
                 conversationId: 'conv-1',
                 messageId: 'msg-1',
             });
-
             expect(result).toEqual({ optedOut: true });
             expect(states.get('c1')?.permission).toBe(PERMISSION.STOPPED);
             expect(events.at(-1)).toEqual(
@@ -287,7 +275,6 @@ describe('CustomerMarketingService', () => {
             ).rejects.toBeInstanceOf(BadRequestException);
 
             const until = new Date(Date.now() + 86_400_000);
-
             const state = await service.setPermission(
                 'c1',
                 'w1',
@@ -295,7 +282,6 @@ describe('CustomerMarketingService', () => {
                 bot,
                 until
             );
-
             expect(state.permissionUntil).toEqual(until);
         });
 
@@ -362,7 +348,6 @@ describe('CustomerMarketingService', () => {
                 zalo: 'w1',
                 messenger: 'w1',
             });
-
             // Zalo customer said "dừng"; Messenger customer bought once.
             await service.recordInbound({
                 customerId: 'zalo',
@@ -397,12 +382,10 @@ describe('CustomerMarketingService', () => {
 
         it('keeps the earlier first source', async () => {
             const { service, states, em } = makeHarness();
-
             const arrival = {
                 workspaceId: 'w1',
                 promisesOffer: false,
             };
-
             await service.recordSource({
                 ...arrival,
                 customerId: 'zalo',
@@ -449,7 +432,6 @@ describe('CustomerMarketingService', () => {
                 { c1: 'w1' },
                 { c1: 1 }
             );
-
             const orderedAt = new Date('2026-11-01T00:00:00Z');
             await service.onOrderConfirmed(confirmed('o1', orderedAt));
             expect(states.get('c1')?.stage).toBe(STAGE.BOUGHT_ONCE);
@@ -490,7 +472,6 @@ describe('CustomerMarketingService', () => {
                 { zalo: 'w1', messenger: 'w1' },
                 { zalo: 1, messenger: 1 }
             );
-
             await service.setStage('zalo', 'w1', STAGE.BOUGHT_ONCE, bot);
             await service.setStage('messenger', 'w1', STAGE.BOUGHT_ONCE, bot);
             await service.mergeInto('zalo', 'messenger', 'w1', em);
@@ -500,7 +481,6 @@ describe('CustomerMarketingService', () => {
         it('carries "Tạm hoãn" over, the later date winning, with events', async () => {
             const soon = new Date(Date.now() + 10 * 86_400_000);
             const later = new Date(Date.now() + 80 * 86_400_000);
-
             const row = (customer: string, group: string, until: Date) => ({
                 id: `${customer}-${group}`,
                 workspace: { id: 'w1' },
@@ -509,9 +489,7 @@ describe('CustomerMarketingService', () => {
                 until,
                 reason: customer,
             });
-
             const survivorSerum = row('messenger', 'serum', soon);
-
             const { service, em, events } = makeHarness(
                 { zalo: 'w1', messenger: 'w1' },
                 {},
@@ -521,7 +499,6 @@ describe('CustomerMarketingService', () => {
                     survivorSerum,
                 ]
             );
-
             // The loser never messaged, so it has no state row.
             const result = await service.mergeInto(
                 'zalo',
@@ -529,7 +506,6 @@ describe('CustomerMarketingService', () => {
                 'w1',
                 em
             );
-
             expect(survivorSerum.until).toEqual(later);
             expect(result.replacedReactions).toEqual([
                 {
@@ -563,7 +539,6 @@ describe('CustomerMarketingService', () => {
                 { zalo: 'w1', messenger: 'w1' },
                 { zalo: 1, messenger: 1 }
             );
-
             await service.setStage('messenger', 'w1', STAGE.BOUGHT_ONCE, bot);
             await service.mergeInto('zalo', 'messenger', 'w1', em);
             expect(states.get('messenger')?.stage).toBe(STAGE.BOUGHT_REPEAT);
@@ -604,7 +579,6 @@ describe('CustomerMarketingService', () => {
             (service as any).stateRepository.find = jest.fn(async () => [
                 state,
             ]);
-
             return (await service.summarize(['c1'])).get('c1');
         };
 
