@@ -27,6 +27,7 @@ import {
     Param,
     Patch,
     Post,
+    Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
@@ -58,6 +59,7 @@ import {
     OrderWorkspaceConfirmDoc,
     OrderWorkspaceCreateDoc,
     OrderWorkspaceGetDoc,
+    OrderWorkspaceSummaryDoc,
     OrderWorkspaceImportDoc,
     OrderWorkspaceListDoc,
     OrderWorkspaceUpdateDoc,
@@ -66,7 +68,9 @@ import { OrderImportRequestDto } from '../dtos/request/order-import.request.dto'
 import { OrderCreateRequestDto } from '../dtos/request/order.create.request.dto';
 import { OrderUpdateRequestDto } from '../dtos/request/order.update.request.dto';
 import { OrderImportResponseDto } from '../dtos/response/order-import.response.dto';
+import { OrderSummaryRequestDto } from '../dtos/request/order.summary.request.dto';
 import { OrderGetResponseDto } from '../dtos/response/order.get.response.dto';
+import { OrderSummaryResponseDto } from '../dtos/response/order.summary.response.dto';
 import { ENUM_ORDER_SOURCE, ENUM_ORDER_STATUS } from '../enums/order.enum';
 import { OrderEntity } from '../repository/entities/order.entity';
 import { OrderImportService } from '../services/order-import.service';
@@ -143,6 +147,26 @@ export class OrderWorkspaceController {
                 totalPage: this.paginationService.totalPage(total, _limit),
             },
             data: this.orderService.mapList(orders),
+        };
+    }
+
+    // Declared before /:order, which would take "summary" as an id.
+    @OrderWorkspaceSummaryDoc()
+    @Response('order.workspace.summary')
+    @WorkspaceScopedProtected(ORDER_ABILITY_READ)
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Get('/summary')
+    async summary(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Query() { customer }: OrderSummaryRequestDto
+    ): Promise<IResponse<OrderSummaryResponseDto>> {
+        return {
+            data: await this.orderService.summaryOfCustomer(
+                workspace.id,
+                customer
+            ),
         };
     }
 

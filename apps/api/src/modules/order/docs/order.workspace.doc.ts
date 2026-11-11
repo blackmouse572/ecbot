@@ -18,6 +18,7 @@ import { OrderCreateRequestDto } from '../dtos/request/order.create.request.dto'
 import { OrderUpdateRequestDto } from '../dtos/request/order.update.request.dto';
 import { OrderImportResponseDto } from '../dtos/response/order-import.response.dto';
 import { OrderGetResponseDto } from '../dtos/response/order.get.response.dto';
+import { OrderSummaryResponseDto } from '../dtos/response/order.summary.response.dto';
 
 const auth = () => DocAuth({ xApiKey: true, jwtAccessToken: true });
 
@@ -31,6 +32,27 @@ export function OrderWorkspaceListDoc(): MethodDecorator {
         auth(),
         DocResponsePaging<OrderGetResponseDto>('order.workspace.list', {
             dto: OrderGetResponseDto,
+        })
+    );
+}
+
+export function OrderWorkspaceSummaryDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({ summary: "Sum a customer's confirmed orders" }),
+        DocRequest({
+            params: [...WorkspaceDocParamsId],
+            queries: [
+                {
+                    name: 'customer',
+                    required: true,
+                    type: 'string',
+                    description: 'The ID of the customer',
+                },
+            ],
+        }),
+        auth(),
+        DocResponse<OrderSummaryResponseDto>('order.workspace.summary', {
+            dto: OrderSummaryResponseDto,
         })
     );
 }

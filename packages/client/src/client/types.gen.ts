@@ -6980,6 +6980,17 @@ export type TrackedLinkUpdateRequestDto = {
     status?: 'ACTIVE' | 'STOPPED';
 };
 
+export type OrderSummaryResponseDto = {
+    confirmedOrders: number;
+    /**
+     * Sum of the confirmed totals, a whole amount
+     */
+    totalSpent: number;
+    lastOrderedAt?: {
+        [key: string]: unknown;
+    } | null;
+};
+
 export type OrderCreateRequestDto = {
     customerId: string;
     /**
@@ -34503,6 +34514,83 @@ export type OrderWorkspaceControllerCreateV1Responses = {
 };
 
 export type OrderWorkspaceControllerCreateV1Response = OrderWorkspaceControllerCreateV1Responses[keyof OrderWorkspaceControllerCreateV1Responses];
+
+export type OrderWorkspaceControllerSummaryV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query: {
+        /**
+         * The ID of the customer
+         */
+        customer: string;
+    };
+    url: '/api/v1/workspace/{workspace}/orders/summary';
+};
+
+export type OrderWorkspaceControllerSummaryV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type OrderWorkspaceControllerSummaryV1Error = OrderWorkspaceControllerSummaryV1Errors[keyof OrderWorkspaceControllerSummaryV1Errors];
+
+export type OrderWorkspaceControllerSummaryV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: OrderSummaryResponseDto;
+    };
+};
+
+export type OrderWorkspaceControllerSummaryV1Response = OrderWorkspaceControllerSummaryV1Responses[keyof OrderWorkspaceControllerSummaryV1Responses];
 
 export type OrderWorkspaceControllerGetV1Data = {
     body?: never;
