@@ -109,4 +109,5 @@ def test_classify_response_accepts_string_lists_round_trip() -> None:
         "tags_to_add": ["VIP"],
         "tags_to_remove": ["Cold lead"],
         "profile_summary": "Engaged.",
+        "marketing_signals": [],
     }
