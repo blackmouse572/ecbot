@@ -8,6 +8,7 @@ from the shop's list, a known number of days.
 
 from __future__ import annotations
 
+import json
 import unicodedata
 from typing import Any
 
@@ -171,6 +172,13 @@ async def test_product_group_matches_ignoring_case_and_spaces(async_client, answ
     assert signal["product_group_id"] == "pg-serum"
 
 
+async def test_product_group_matches_with_extra_inner_spaces(async_client, answer):
+    answer(MarketingSignal(kind="later", product_group="kem  chống   nắng", message_index=2, quote="x"))
+
+    [signal] = await _signals(async_client)
+    assert signal["product_group_id"] == "pg-kem"
+
+
 async def test_quote_falls_back_to_the_message_and_is_capped(async_client, answer):
     answer(
         MarketingSignal(kind="interest", product_group="Serum", message_index=0, quote="  "),
@@ -200,6 +208,34 @@ async def test_no_signals_when_the_model_returns_none(async_client, answer):
     answer()
 
     assert await _signals(async_client) == []
+
+
+def test_a_malformed_signal_costs_only_itself():
+    # One item the model fills wrong must not fail the whole answer: the
+    # conversation would lose its tags and summary too.
+    resp = ClassifyResponse.model_validate(
+        {
+            "tags_to_add": ["VIP"],
+            "profile_summary": "x",
+            "marketing_signals": [
+                {"kind": "interest", "message_index": 0, "quote": "ok"},
+                {"kind": "price", "message_index": 0},
+                {"kind": "later"},
+                "not an object",
+            ],
+        }
+    )
+
+    assert resp.tags_to_add == ["VIP"]
+    assert [(s.kind, s.message_index) for s in resp.marketing_signals] == [("interest", 0)]
+
+
+def test_the_response_never_offers_complaint():
+    from eccho_ai.modules.customer.models import ClassifyResult
+
+    schema = json.dumps(ClassifyResult.model_json_schema())
+    assert '"complaint"' not in schema
+    assert '"hostile"' in schema
 
 
 # ---------- prompt ----------

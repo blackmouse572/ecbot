@@ -1,7 +1,7 @@
 """Pydantic schemas for the analytical Customer-tag classifier (#170)."""
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from eccho_ai.llm.usage import TokenUsage
 
@@ -119,10 +119,27 @@ class ClassifyResponse(BaseModel):
         description="What the customer said that moves their marketing labels.",
     )
 
+    @field_validator("marketing_signals", mode="before")
+    @classmethod
+    def _drop_malformed_signals(cls, items: object) -> object:
+        # One item the model fills wrong costs only itself, not the tags and
+        # summary of the whole answer.
+        if not isinstance(items, list):
+            return items
+        kept = []
+        for item in items:
+            try:
+                kept.append(MarketingSignal.model_validate(item))
+            except ValidationError:
+                continue
+        return kept
+
 
 class MarketingSignalResult(MarketingSignal):
-    """A checked signal, with the product group's id for apps/api."""
+    """A checked signal, with the product group's id for apps/api. A
+    complaint never gets this far."""
 
+    kind: Literal["interest", "asked_price", "later", "hostile"]
     product_group_id: str | None = None
 
 

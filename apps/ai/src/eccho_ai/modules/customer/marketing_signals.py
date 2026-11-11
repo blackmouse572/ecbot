@@ -105,5 +105,6 @@ def _defer_days(signal: MarketingSignal) -> int:
 
 
 def _key(name: str) -> str:
-    # Vietnamese names may come back decomposed (NFD) or in another case.
-    return unicodedata.normalize("NFC", name).strip().casefold()
+    # Vietnamese names may come back decomposed (NFD), in another case or
+    # with extra spaces.
+    return " ".join(unicodedata.normalize("NFC", name).split()).casefold()
