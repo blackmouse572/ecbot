@@ -372,13 +372,17 @@ describe('TrackedLinkService', () => {
         });
 
         it('adds the codes into their source on the list, and zero for none', async () => {
-            trackedLinkRepository.find.mockResolvedValue([qr, kol]);
+            trackedLinkRepository.findChildren.mockResolvedValue([qr, kol]);
 
             const rows = await service.mapListWithStats('ws-1', [
                 tet,
                 blackFriday,
             ] as any);
 
+            expect(trackedLinkRepository.findChildren).toHaveBeenCalledWith([
+                'tet',
+                'black-friday',
+            ]);
             expect(
                 marketingStateRepository.statsByFirstSource
             ).toHaveBeenCalledWith('ws-1', [

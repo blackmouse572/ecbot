@@ -188,10 +188,9 @@ export class TrackedLinkService {
         sources: TrackedLinkEntity[]
     ): Promise<TrackedLinkGetResponseDto[]> {
         const children = sources.length
-            ? await this.trackedLinkRepository.find({
-                  parent: { $in: sources.map(source => source.id) },
-                  deletedAt: null,
-              })
+            ? await this.trackedLinkRepository.findChildren(
+                  sources.map(source => source.id)
+              )
             : [];
         const stats = await this.statsByLink(workspaceId, [
             ...sources,

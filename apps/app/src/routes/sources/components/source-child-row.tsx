@@ -6,7 +6,7 @@ import {
 } from "@medusajs/icons";
 import { IconButton, Text, Tooltip, toast } from "@medusajs/ui";
 import { IconLink, IconQrcode } from "@tabler/icons-react";
-import { useState, type FC } from "react";
+import { useMemo, useState, type FC } from "react";
 import { useTranslation } from "react-i18next";
 import { SourceCloseRate } from "./source-close-rate";
 import { useQrDownload } from "./use-qr-download";
@@ -20,7 +20,10 @@ type SourceChildRowProps = {
 /** One QR code or KOL link under a source: its name and code, copy, and QR download. */
 export const SourceChildRow: FC<SourceChildRowProps> = ({ link, showKind }) => {
   const { t, i18n } = useTranslation();
-  const number = new Intl.NumberFormat(i18n.language);
+  const number = useMemo(
+    () => new Intl.NumberFormat(i18n.language),
+    [i18n.language],
+  );
   const [copied, setCopied] = useState(false);
   const { qr, downloadPng } = useQrDownload(link.url, link.code);
   const isQr = link.kind === "QR";
