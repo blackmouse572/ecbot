@@ -286,6 +286,92 @@ describe('MessengerPlatformAdapter.parse', () => {
         });
     });
 
+    describe('referral', () => {
+        const from = {
+            sender: { id: 'S' },
+            recipient: { id: 'PAGE' },
+            timestamp: 1,
+        };
+
+        it('reads the m.me ref on Get Started', () => {
+            const [e] = makeAdapter().parse(
+                wrap({
+                    ...from,
+                    postback: {
+                        mid: 'm3',
+                        title: 'Get Started',
+                        payload: 'GET_STARTED',
+                        referral: {
+                            ref: 'to-roi-tet',
+                            source: 'SHORTLINK',
+                            type: 'OPEN_THREAD',
+                        },
+                    },
+                })
+            );
+            expect(e.referral).toEqual({ code: 'to-roi-tet', source: 'link' });
+        });
+
+        it('reads a standalone messaging_referrals event from an existing chat', () => {
+            const [e] = makeAdapter().parse(
+                wrap({
+                    ...from,
+                    referral: {
+                        ref: 'to-roi-tet-linh-dan',
+                        source: 'SHORTLINK',
+                        type: 'OPEN_THREAD',
+                    },
+                })
+            );
+            expect(e).toMatchObject({
+                kind: 'referral',
+                senderId: 'S',
+                referral: { code: 'to-roi-tet-linh-dan', source: 'link' },
+            });
+        });
+
+        it('marks a click-to-Messenger ad with its ad id', () => {
+            const [e] = makeAdapter().parse(
+                wrap({
+                    ...from,
+                    referral: {
+                        ad_id: '6045',
+                        source: 'ADS',
+                        type: 'OPEN_THREAD',
+                    },
+                })
+            );
+            expect(e.referral).toEqual({ source: 'ad', adId: '6045' });
+        });
+
+        it('lowercases a hand-typed ref and drops one that is not our code', () => {
+            const ref = (value: string) =>
+                makeAdapter().parse(
+                    wrap({
+                        ...from,
+                        message: {
+                            mid: 'm5',
+                            text: 'hi',
+                            referral: { ref: value, source: 'SHORTLINK' },
+                        },
+                    })
+                )[0].referral;
+
+            expect(ref('To-Roi-Tet')).toEqual({
+                code: 'to-roi-tet',
+                source: 'link',
+            });
+            expect(ref('summer sale!')).toBeUndefined();
+        });
+
+        it('has no referral on an ordinary message', () => {
+            const [e] = makeAdapter().parse(
+                wrap({ ...from, message: { mid: 'm4', text: 'hi' } })
+            );
+            expect(e.referral).toBeUndefined();
+        });
+    });
+
     it('returns [] for parse("null") without throwing', () => {
         const a = makeAdapter();
         expect(a.parse('null')).toEqual([]);

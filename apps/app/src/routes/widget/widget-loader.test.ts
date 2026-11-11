@@ -48,3 +48,59 @@ describe("widget.js theme", () => {
     expect(embed({}, true)).toBe("light");
   });
 });
+
+// #503: a tracked link opens the shop's page with ?ecb_src=<code>; the loader
+// hands the code to the widget, even after the visitor moves to another page.
+describe("widget.js tracked link code", () => {
+  const frameSource = () =>
+    new URL(document.querySelector("iframe")!.src).searchParams.get("ecb_src");
+
+  afterEach(() => {
+    document.body.innerHTML = "";
+    sessionStorage.clear();
+    window.history.replaceState(null, "", "/");
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it("passes the page's ecb_src to the widget frame", () => {
+    window.history.replaceState(
+      null,
+      "",
+      "/khuyen-mai?ecb_src=trang-khuyen-mai",
+    );
+    embed({}, false);
+    expect(frameSource()).toBe("trang-khuyen-mai");
+  });
+
+  it("keeps the code for the rest of the visit", () => {
+    window.history.replaceState(
+      null,
+      "",
+      "/khuyen-mai?ecb_src=trang-khuyen-mai",
+    );
+    embed({}, false);
+    document.body.innerHTML = "";
+    window.history.replaceState(null, "", "/san-pham");
+    embed({}, false);
+    expect(frameSource()).toBe("trang-khuyen-mai");
+  });
+
+  it("keeps the page's code when storage is blocked", () => {
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("quota", "QuotaExceededError");
+    });
+    window.history.replaceState(
+      null,
+      "",
+      "/khuyen-mai?ecb_src=trang-khuyen-mai",
+    );
+    embed({}, false);
+    expect(frameSource()).toBe("trang-khuyen-mai");
+  });
+
+  it("adds nothing when the visit has no code", () => {
+    embed({}, false);
+    expect(frameSource()).toBeNull();
+  });
+});

@@ -5,6 +5,8 @@ import { CommandModule } from 'nestjs-command';
 import { loadEnterpriseSeedModules } from 'src/app/enterprise.loader';
 import { CommonModule } from 'src/common/common.module';
 import { MigrationAccountTokenReencryptSeed } from 'src/migration/seeds/migration.account-token-reencrypt.seed';
+import { MigrationAccountWebhookResubscribeSeed } from 'src/migration/seeds/migration.account-webhook-resubscribe.seed';
+import { OAuthModule } from '@app/common/oauth/oauth.module';
 import { MigrationApiKeySeed } from 'src/migration/seeds/migration.api-key.seed';
 import { MigrationCountrySeed } from 'src/migration/seeds/migration.country.seed';
 import { MigrationRagPrivateBucketSeed } from 'src/migration/seeds/migration.rag-private-bucket.seed';
@@ -34,6 +36,7 @@ import { MigrationUserCreateSeed } from './seeds/migration.user-create.seed';
         CommonModule,
         CommandModule,
         AccountRepositoryModule,
+        OAuthModule,
         ApiKeyModule,
         CountryModule,
         EmailModule.register(),
@@ -55,6 +58,7 @@ import { MigrationUserCreateSeed } from './seeds/migration.user-create.seed';
     ],
     providers: [
         MigrationAccountTokenReencryptSeed,
+        MigrationAccountWebhookResubscribeSeed,
         MigrationApiKeySeed,
         MigrationCountrySeed,
         MigrationRagPrivateBucketSeed,

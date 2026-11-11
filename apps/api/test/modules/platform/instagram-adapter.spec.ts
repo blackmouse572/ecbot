@@ -117,6 +117,45 @@ describe('InstagramPlatformAdapter.parse', () => {
         expect(e.timestamp).toEqual(new Date(1700000000000));
     });
 
+    it('reads the ig.me ref on the first message', () => {
+        const [e] = makeAdapter().parse(
+            payload([
+                {
+                    ...base,
+                    message: {
+                        mid: 'm9',
+                        text: 'xin chào',
+                        referral: {
+                            ref: 'bio-instagram',
+                            source: 'SHORTLINKS',
+                            type: 'OPEN_THREAD',
+                        },
+                    },
+                },
+            ])
+        );
+        expect(e.referral).toEqual({ code: 'bio-instagram', source: 'link' });
+    });
+
+    it('reads a messaging_referral event from an existing chat', () => {
+        const [e] = makeAdapter().parse(
+            payload([
+                {
+                    ...base,
+                    referral: {
+                        ref: 'bio-instagram',
+                        source: 'SHORTLINKS',
+                        type: 'OPEN_THREAD',
+                    },
+                },
+            ])
+        );
+        expect(e).toMatchObject({
+            kind: 'referral',
+            referral: { code: 'bio-instagram', source: 'link' },
+        });
+    });
+
     it('decodes a quick reply into an action', () => {
         const [e] = makeAdapter().parse(
             payload([

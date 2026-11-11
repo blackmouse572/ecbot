@@ -3273,7 +3273,7 @@
       },
       "greeting": "Lời chào đầu tiên",
       "greetingPlaceholder": "Chào bạn, cảm ơn bạn đã mua hộp quà Tết của Lumi. Shop tặng bạn mã giảm 10% cho lần mua tiếp theo.",
-      "greetingHint": "Trợ lý gửi câu này khi khách mở liên kết, rồi trò chuyện như bình thường.",
+      "greetingHint": "Agent gửi câu này khi khách mở liên kết, rồi trò chuyện như bình thường.",
       "tags": "Gắn nhãn cho khách",
       "tagsPlaceholder": "Thêm nhãn",
       "tagsHint": "Khách đến từ liên kết này được gắn các nhãn này.",
@@ -3282,7 +3282,7 @@
     "preview": {
       "title": "Liên kết và mã QR",
       "description": "Tạo xong là dùng được ngay. In mã QR lên tờ rơi, dán liên kết vào bài đăng hoặc bio.",
-      "how": "Khách mở liên kết sẽ vào {{channel}} của {{account}}, trợ lý gửi lời chào ở trên và khách được ghi nguồn \"{{name}}\".",
+      "how": "Khách mở liên kết sẽ vào {{channel}} của {{account}}, agent gửi lời chào ở trên và khách được ghi nguồn \"{{name}}\".",
       "thisSource": "nguồn này",
       "empty": "Đặt tên và chọn kênh để xem liên kết."
     },
