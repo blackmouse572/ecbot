@@ -8,6 +8,7 @@ const CUSTOMER_TABLE_PARAMS = [
   "stage",
   "permission",
   "dormant",
+  "source",
 ];
 
 /** Shapes the URL params into the customer list endpoint query. */
@@ -23,6 +24,7 @@ export const useCustomerTableQuery = (pageSize = CUSTOMER_LIST_PAGE_SIZE) => {
       stage: raw.stage || undefined,
       permission: raw.permission || undefined,
       dormant: raw.dormant ? raw.dormant === "true" : undefined,
+      source: raw.source || undefined,
     },
   };
 };

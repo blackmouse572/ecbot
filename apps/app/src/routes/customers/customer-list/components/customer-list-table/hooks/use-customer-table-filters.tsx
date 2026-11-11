@@ -3,12 +3,17 @@ import {
   CUSTOMER_STAGES,
 } from "@/components/customer-marketing";
 import type { Filter } from "@/components/table/data-table";
+import { useTrackedLinks } from "@/hooks/api/tracked-links";
+import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-/** Giai đoạn, Nhận ưu đãi and Lâu không nhắn facets above the customer table. */
+/** Giai đoạn, Nhận ưu đãi, Lâu không nhắn and Nguồn facets above the customer table. */
 export const useCustomerTableFilters = (): Filter[] => {
   const { t } = useTranslation();
+  const { workspaceSlug } = useWorkspaceParams();
+  // The API's largest page: enough sources for one shop's picker.
+  const { links } = useTrackedLinks(workspaceSlug, { perPage: 100 });
 
   return useMemo<Filter[]>(
     () => [
@@ -41,7 +46,13 @@ export const useCustomerTableFilters = (): Filter[] => {
           label: t(`customers.list.dormantOptions.${value}`),
         })),
       },
+      {
+        key: "source",
+        label: t("customers.list.source"),
+        type: "select",
+        options: links.map((link) => ({ value: link.id, label: link.name })),
+      },
     ],
-    [t],
+    [t, links],
   );
 };

@@ -37,6 +37,13 @@ const customers = [
       permissionUntil: null,
       hostile: false,
       dormant: false,
+      firstSource: {
+        sourceId: "src-1",
+        sourceName: "Tờ rơi Tết",
+        codeName: "KOL Minh Thư",
+        channel: "FACEBOOK_PAGE",
+        at: "2026-09-20T08:00:00Z",
+      },
     },
   },
   {
@@ -51,6 +58,7 @@ const customers = [
       permissionUntil: null,
       hostile: true,
       dormant: true,
+      firstSource: null,
     },
   },
 ];
@@ -67,6 +75,12 @@ vi.mock("@/hooks/api", () => ({
       error: null,
     };
   },
+}));
+
+vi.mock("@/hooks/api/tracked-links", () => ({
+  useTrackedLinks: () => ({
+    links: [{ id: "src-1", name: "Tờ rơi Tết" }],
+  }),
 }));
 
 import { CustomerListTable } from "./customer-list-table";
@@ -130,6 +144,19 @@ describe("CustomerListTable", () => {
       permission: "GRANTED",
       dormant: false,
     });
+  });
+
+  it("shows where each customer first came from", () => {
+    renderTable();
+
+    expect(screen.getByText("Tờ rơi Tết, KOL Minh Thư")).toBeInTheDocument();
+    expect(screen.getByText("Messaged the page directly")).toBeInTheDocument();
+  });
+
+  it("filters by first source from the URL", () => {
+    renderTable("/acme/customers?source=src-1");
+
+    expect(state.lastQuery).toMatchObject({ source: "src-1" });
   });
 
   it("says so when there are no customers yet", () => {

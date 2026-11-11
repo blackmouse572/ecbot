@@ -2,6 +2,7 @@ import { TooltipProvider } from "@medusajs/ui";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@/i18n";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // The Tiếp thị block in the conversation's customer panel: each label with
@@ -57,14 +58,23 @@ const NOW = new Date("2026-02-13T06:00:00Z").getTime();
 
 const renderSection = (onViewMessage = vi.fn()) => {
   render(
-    <TooltipProvider>
-      <MarketingSection
-        customerId="c-1"
-        customerName="Võ Thanh Tâm"
-        conversationId="conv-1"
-        onViewMessage={onViewMessage}
-      />
-    </TooltipProvider>,
+    <MemoryRouter initialEntries={["/lumi"]}>
+      <Routes>
+        <Route
+          path="/:workspaceSlug"
+          element={
+            <TooltipProvider>
+              <MarketingSection
+                customerId="c-1"
+                customerName="Võ Thanh Tâm"
+                conversationId="conv-1"
+                onViewMessage={onViewMessage}
+              />
+            </TooltipProvider>
+          }
+        />
+      </Routes>
+    </MemoryRouter>,
   );
 
   return onViewMessage;
@@ -101,6 +111,8 @@ describe("MarketingSection", () => {
           openUntil: "2026-02-13T12:00:00Z",
         },
       ],
+      reactions: [],
+      firstSource: null,
     };
     state.events = [];
   });
@@ -203,5 +215,59 @@ describe("MarketingSection", () => {
       screen.getByText("Product group interest: Asked price"),
     ).toBeInTheDocument();
     expect(screen.getByText("Came through a source link")).toBeInTheDocument();
+  });
+
+  it("shows each paused product group with the customer's words", () => {
+    state.marketing = {
+      ...(state.marketing as object),
+      reactions: [
+        {
+          productGroupId: "g-1",
+          productGroupName: "Serum",
+          until: "2026-04-15T16:59:59Z",
+          reason: "để sau nha, giờ chưa cần",
+        },
+      ],
+    };
+    renderSection();
+
+    expect(screen.getByText("Product groups")).toBeInTheDocument();
+    expect(screen.getByText("Serum paused until 4/15")).toBeInTheDocument();
+    expect(screen.getByText("để sau nha, giờ chưa cần")).toBeInTheDocument();
+    expect(
+      screen.getByText("Offers for other product groups can still go out."),
+    ).toBeInTheDocument();
+  });
+
+  it("hides the product group row when nothing is paused", () => {
+    renderSection();
+
+    expect(screen.queryByText("Product groups")).not.toBeInTheDocument();
+  });
+
+  it("links the first source and names the code the customer came through", () => {
+    state.marketing = {
+      ...(state.marketing as object),
+      firstSource: {
+        sourceId: "src-1",
+        sourceName: "Tờ rơi trong hộp quà Tết",
+        codeName: "KOL Minh Thư",
+        channel: "FACEBOOK_PAGE",
+        at: "2026-02-12T12:42:00Z",
+      },
+    };
+    renderSection();
+
+    expect(
+      screen.getByRole("link", { name: "Tờ rơi trong hộp quà Tết" }),
+    ).toHaveAttribute("href", "/lumi/sources/src-1");
+    expect(screen.getByText(/^Through KOL Minh Thư, /)).toBeInTheDocument();
+  });
+
+  it("says the customer wrote in directly when there is no source", () => {
+    renderSection();
+
+    expect(screen.getByText("First source")).toBeInTheDocument();
+    expect(screen.getByText("Messaged the page directly")).toBeInTheDocument();
   });
 });
