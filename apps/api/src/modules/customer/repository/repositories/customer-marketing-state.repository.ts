@@ -55,12 +55,31 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
             );
         }
         if (filter.dormant !== undefined) {
+            // No message and no order since the cutoff, and at least one of them.
+            const cutoff = new Date(
+                Date.now() - CUSTOMER_MARKETING_DORMANT_DAYS * DAY_MS
+            );
             const dormantIds = this.customerIds({
-                lastInboundAt: {
-                    $lt: new Date(
-                        Date.now() - CUSTOMER_MARKETING_DORMANT_DAYS * DAY_MS
-                    ),
-                },
+                $and: [
+                    {
+                        $or: [
+                            { lastInboundAt: { $lt: cutoff } },
+                            { lastInboundAt: null },
+                        ],
+                    },
+                    {
+                        $or: [
+                            { lastOrderAt: { $lt: cutoff } },
+                            { lastOrderAt: null },
+                        ],
+                    },
+                    {
+                        $or: [
+                            { lastInboundAt: { $ne: null } },
+                            { lastOrderAt: { $ne: null } },
+                        ],
+                    },
+                ],
             });
             conditions.push({
                 id: filter.dormant ? { $in: dormantIds } : { $nin: dormantIds },

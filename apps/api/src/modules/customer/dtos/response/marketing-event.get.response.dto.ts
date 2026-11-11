@@ -34,4 +34,20 @@ export class MarketingEventGetResponseDto extends DatabaseDto {
     @Expose()
     @ApiProperty({ type: String, required: false, nullable: true })
     messageId?: string | null;
+
+    @Expose()
+    @ApiProperty({
+        required: false,
+        nullable: true,
+        description: 'The confirmed order behind a Mua 1 lần / Mua nhiều lần.',
+    })
+    orderId?: string | null;
+
+    @Expose()
+    @ApiProperty({
+        required: false,
+        nullable: true,
+        description: 'The product group of a REACTION or INTENT event.',
+    })
+    productGroupId?: string | null;
 }

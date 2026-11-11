@@ -63,6 +63,9 @@ export class CustomerMarketingStateEntity extends DatabaseEntityBase {
     @Property({ type: 'timestamptz', nullable: true })
     lastInboundAt?: Date | null;
 
+    // The latest confirmed order, also for "Ngủ đông".
+    @Property({ type: 'timestamptz', nullable: true })
+    lastOrderAt?: Date | null;
     // Nguồn đầu tiên: the tracked link (a source, or one of its QR or KOL
     // codes) the customer first arrived through. Set once.
     @ManyToOne(() => TrackedLinkEntity, {

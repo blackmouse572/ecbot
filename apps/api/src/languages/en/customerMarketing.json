@@ -7,6 +7,11 @@
     "error": {
         "reasonRequired": "Give a reason to send offers again to a customer who said stop.",
         "hostile": "This customer is marked Khó chịu. Only a member can send them offers again.",
-        "pauseNeedsDate": "Choose a date in the future to pause offers until."
+        "pauseNeedsDate": "Choose a date in the future to pause offers until.",
+        "deferNeedsDate": "Choose a date in the future to postpone the product group until."
+    },
+    "reaction": {
+        "update": "Product group postponed for this customer.",
+        "delete": "This customer can be offered the product group again."
     }
 }

@@ -14,10 +14,11 @@ describe('E2E — customer marketing labels', () => {
     let ownerToken: string;
     let strangerToken: string;
     let workspaceId: string;
-    const ids: Record<'asked' | 'stopped' | 'fresh', string> = {
+    const ids: Record<'asked' | 'stopped' | 'fresh' | 'buyer', string> = {
         asked: '',
         stopped: '',
         fresh: '',
+        buyer: '',
     };
 
     const auth = (t: string): [string, string] => [
@@ -59,6 +60,7 @@ describe('E2E — customer marketing labels', () => {
         ids.asked = await insertCustomer('Hỏi giá');
         ids.stopped = await insertCustomer('Đã dừng');
         ids.fresh = await insertCustomer('Chưa có nhãn');
+        ids.buyer = await insertCustomer('Mua gần đây');
         const insertState = (
             customerId: string,
             stage: string,
@@ -73,6 +75,14 @@ describe('E2E — customer marketing labels', () => {
             );
         await insertState(ids.asked, 'ASKED_PRICE', 'GRANTED', 0);
         await insertState(ids.stopped, 'BOUGHT_ONCE', 'STOPPED', 200);
+        // Quiet in chat for 200 days, but ordered 30 days ago.
+        await insertState(ids.buyer, 'BOUGHT_REPEAT', 'GRANTED', 200);
+        await sql.execute(
+            `update customer_marketing_states
+                set last_order_at = now() - interval '30 days'
+              where customer_id = ?`,
+            [ids.buyer]
+        );
 
         // A Messenger conversation where "Hỏi giá" wrote 18 hours ago, then
         // the bot answered (outbound does not reopen the window).
@@ -151,16 +161,17 @@ describe('E2E — customer marketing labels', () => {
         expect(await listNames('stage=BOUGHT_ONCE')).toEqual(['Đã dừng']);
     });
 
-    it('filters by offers permission and Ngủ đông, together with search', async () => {
+    it('filters by offers permission and Lâu không nhắn, together with search', async () => {
         expect(await listNames('permission=PENDING')).toEqual(['Chưa có nhãn']);
         expect(await listNames('permission=STOPPED,GRANTED')).toEqual(
-            ['Hỏi giá', 'Đã dừng'].sort()
+            ['Hỏi giá', 'Mua gần đây', 'Đã dừng'].sort()
         );
         expect(await listNames('dormant=true')).toEqual(['Đã dừng']);
+        // A recent order keeps a quiet customer out of Lâu không nhắn.
         expect(await listNames('dormant=false')).toEqual(
-            ['Chưa có nhãn', 'Hỏi giá'].sort()
+            ['Chưa có nhãn', 'Hỏi giá', 'Mua gần đây'].sort()
         );
-        expect(await listNames('dormant=true,false')).toHaveLength(3);
+        expect(await listNames('dormant=true,false')).toHaveLength(4);
         expect(
             await listNames(
                 'stage=ASKED_PRICE,NEW&permission=GRANTED&search=hỏi'
