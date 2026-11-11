@@ -44,7 +44,7 @@ export const ImportMappingTable: FC<{
           key={column}
           className="border-ui-border-base grid grid-cols-[minmax(0,12rem)_1.5rem_14rem_minmax(0,1fr)] items-center gap-x-3 border-t px-4 py-1.5"
         >
-          <Text size="small" className="truncate font-mono" title={header}>
+          <Text size="small" className="truncate" title={header}>
             {header}
           </Text>
           <ArrowRightMini className="text-ui-fg-muted justify-self-center" />
