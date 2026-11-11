@@ -34,6 +34,14 @@ describe("guessMapping", () => {
       null,
     ]);
   });
+
+  it("does not take a product code column for the order code", () => {
+    expect(guessMapping(["Mã sản phẩm", "SĐT"])).toEqual([null, "phone"]);
+    expect(guessMapping(["Mã đơn hàng Shopee", "SĐT"])).toEqual([
+      "code",
+      "phone",
+    ]);
+  });
 });
 
 describe("buildImportLines", () => {

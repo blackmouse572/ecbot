@@ -8,7 +8,7 @@ import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { readApiError } from "@/libs/api-error";
 import { DocumentText } from "@medusajs/icons";
 import { Button, Heading, Skeleton, Text, toast } from "@medusajs/ui";
-import { useMemo, useState, type FC } from "react";
+import { useEffect, useMemo, useRef, useState, type FC } from "react";
 import { useTranslation } from "react-i18next";
 import type { OrderImportFile, OrderImportSummary } from "../types";
 import {
@@ -21,6 +21,8 @@ import { ImportMappingTable } from "./import-mapping-table";
 import { ImportStepBody } from "./import-step-body";
 import { ImportSummaryCard } from "./import-summary-card";
 import { InvalidLinesNotice } from "./invalid-lines-notice";
+
+const NO_RESULTS: OrderImportResponseDto[] = [];
 
 /**
  * Step 2, Ghép cột: the guessed mapping to check, and a dry run of the file
@@ -55,28 +57,38 @@ export const ImportMapStep: FC<{
     missing ? [] : chunks.map((chunk) => chunk.rows),
   );
 
+  // With no rows left to send (all cancelled, say) there is nothing to check.
+  const previewData = chunks.length ? preview.data : NO_RESULTS;
+
   const summary = useMemo(
-    () => preview.data && summarizeImport(preview.data, chunks, cancelled),
-    [preview.data, chunks, cancelled],
+    () => previewData && summarizeImport(previewData, chunks, cancelled),
+    [previewData, chunks, cancelled],
   );
 
   const importOrders = useImportOrders(workspaceSlug);
+  // Results of the requests already imported, in chunk order: a retry after a
+  // failure sends only the rest, since rows without a code would come twice.
+  const imported = useRef<OrderImportResponseDto[]>([]);
+
+  useEffect(() => {
+    imported.current = [];
+  }, [chunks]);
 
   const handleImport = async () => {
-    const results: OrderImportResponseDto[] = [];
+    const results = imported.current;
 
     try {
       await importOrders.mutateAsync({
-        chunks: chunks.map((chunk) => chunk.rows),
+        chunks: chunks.slice(results.length).map((chunk) => chunk.rows),
         onChunk: (result) => results.push(result),
       });
       onDone(summarizeImport(results, chunks, cancelled));
     } catch (error) {
-      const imported = results.reduce((sum, result) => sum + result.orders, 0);
+      const count = results.reduce((sum, result) => sum + result.orders, 0);
 
       toast.error(
-        imported
-          ? t("orders.import.partial", { count: imported })
+        count
+          ? t("orders.import.partial", { count })
           : (readApiError(error).message ?? t("orders.error")),
       );
     }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseCsv } from "./csv";
+import { decodeCsv, parseCsv } from "./csv";
 
 describe("parseCsv", () => {
   it("reads quoted cells with commas, quotes and line breaks", () => {
@@ -26,5 +26,23 @@ describe("parseCsv", () => {
       ["a", "b"],
       ["1", "2"],
     ]);
+  });
+
+  it("ignores delimiters inside quoted header cells", () => {
+    expect(parseCsv('"Ma don";"Ten, khach"\n1;"A; B"\n')).toEqual([
+      ["Ma don", "Ten, khach"],
+      ["1", "A; B"],
+    ]);
+  });
+});
+
+describe("decodeCsv", () => {
+  it("reads UTF-8, and falls back to Windows Vietnamese (cp1258)", () => {
+    const utf8 = new TextEncoder().encode("Tên khách").buffer;
+    // "Tên" as Excel saves it on a Vietnamese Windows: ê is one byte, 0xEA.
+    const cp1258 = new Uint8Array([0x54, 0xea, 0x6e]).buffer;
+
+    expect(decodeCsv(utf8)).toBe("Tên khách");
+    expect(decodeCsv(cp1258)).toBe("Tên");
   });
 });

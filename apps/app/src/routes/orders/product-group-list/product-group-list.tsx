@@ -32,6 +32,8 @@ export const ProductGroupList = () => {
       perPage: ORDER_CONSTANTS.PAGE_SIZE,
       page: raw.page ? Number(raw.page) : 1,
       search: raw.search || undefined,
+      // The order and customer counts are opt-in; only this tab shows them.
+      withStats: true,
     },
   );
 

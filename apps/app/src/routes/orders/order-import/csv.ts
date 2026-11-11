@@ -1,8 +1,25 @@
+/**
+ * The file's text: UTF-8 (with or without BOM), or else Windows Vietnamese
+ * (cp1258), which Excel uses for a plain "CSV (Comma delimited)" there.
+ */
+export const decodeCsv = (buffer: ArrayBuffer) => {
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+  } catch {
+    return new TextDecoder("windows-1258").decode(buffer);
+  }
+};
+
 const DELIMITERS = [",", ";", "\t"];
 
-/** The delimiter used most on the header line: Excel in Vietnamese saves ";". */
+/**
+ * The delimiter used most on the header line, outside quoted cells: Excel in
+ * Vietnamese saves ";".
+ */
 const detectDelimiter = (text: string) => {
-  const header = text.slice(0, text.search(/\r?\n|$/));
+  const header = text
+    .slice(0, text.search(/\r?\n|$/))
+    .replace(/"(?:[^"]|"")*"/g, "");
 
   return DELIMITERS.reduce((best, delimiter) =>
     header.split(delimiter).length > header.split(best).length

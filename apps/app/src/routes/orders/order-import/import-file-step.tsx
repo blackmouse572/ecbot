@@ -8,7 +8,7 @@ import {
 import { useMemo, useState, type FC } from "react";
 import { useTranslation } from "react-i18next";
 import type { OrderImportFile } from "../types";
-import { parseCsv } from "./csv";
+import { decodeCsv, parseCsv } from "./csv";
 import { ImportStepBody } from "./import-step-body";
 import { importTemplate } from "./import-template";
 
@@ -30,7 +30,10 @@ export const ImportFileStep: FC<{
     }
 
     URL.revokeObjectURL(upload.url);
-    const [headers = [], ...records] = parseCsv(await upload.file.text());
+
+    const [headers = [], ...records] = parseCsv(
+      decodeCsv(await upload.file.arrayBuffer()),
+    );
 
     if (!records.length) {
       setError(t("orders.import.file.empty"));

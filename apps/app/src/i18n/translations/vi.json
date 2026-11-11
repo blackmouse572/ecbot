@@ -3577,6 +3577,7 @@
       "none": "Chưa có",
       "setCycle": "Đặt chu kỳ",
       "notLearned": "Chưa đủ lần mua lại",
+      "learnsNext": "Đủ lần mua lại, chu kỳ sẽ cập nhật ở đơn xác nhận tới",
       "fromPairs_one": "từ {{count}} lần mua lại",
       "fromPairs_other": "từ {{count}} lần mua lại",
       "needPairs_one": "Cần thêm {{count}} lần mua lại",

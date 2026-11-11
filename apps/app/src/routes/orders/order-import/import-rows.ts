@@ -52,7 +52,9 @@ export const guessMapping = (headers: string[]): OrderImportMapping => {
     });
 
   pass((name, alias) => name === alias);
-  pass((name, alias) => name.startsWith(`${alias} `));
+  // Short aliases match whole names only: "ma" alone is an order code, but
+  // "ma san pham" is a product code.
+  pass((name, alias) => alias.length > 2 && name.startsWith(`${alias} `));
 
   return mapping;
 };

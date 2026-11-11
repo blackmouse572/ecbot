@@ -23,4 +23,15 @@ describe("LearnedCycleCell", () => {
     expect(screen.getByText("2 more repurchases needed")).toBeTruthy();
     expect(screen.getByRole("meter").getAttribute("aria-valuenow")).toBe("3");
   });
+
+  it("says the cycle comes with the next order once there are enough repurchases", () => {
+    render(<LearnedCycleCell group={{ ...group, repurchasePairs: 8 }} />);
+
+    expect(
+      screen.getByText(
+        "Enough repurchases, the cycle updates with the next confirmed order",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText(/Not enough/)).toBeNull();
+  });
 });

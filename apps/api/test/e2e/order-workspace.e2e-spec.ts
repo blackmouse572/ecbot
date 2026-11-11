@@ -100,8 +100,17 @@ describe('E2E — workspace orders and product groups', () => {
             expect(res.body.data.code).toMatch(/^DH-\d{6}-[A-Z0-9]{4}$/);
         }
 
-        const list = await http(ctx.app)
+        // The counts are opt-in: the plain list backs the order form selects.
+        const plain = await http(ctx.app)
             .get(`${groupsUrl()}?search=Serum`)
+            .set(...auth(ownerToken));
+        expect(plain.status).toBe(200);
+        const plainSerum = plain.body.data.find((g: any) => g.id === groupId);
+        expect(plainSerum.confirmedOrders).toBeUndefined();
+        expect(plainSerum.learnedRepurchaseDays).toBe(30);
+
+        const list = await http(ctx.app)
+            .get(`${groupsUrl()}?search=Serum&withStats=true`)
             .set(...auth(ownerToken));
         expect(list.status).toBe(200);
         const serum = list.body.data.find((g: any) => g.id === groupId);
@@ -167,7 +176,9 @@ describe('E2E — workspace orders and product groups', () => {
         }
 
         const list = await http(ctx.app)
-            .get(`${groupsUrl()}?search=${encodeURIComponent('Mặt nạ')}`)
+            .get(
+                `${groupsUrl()}?search=${encodeURIComponent('Mặt nạ')}&withStats=true`
+            )
             .set(...auth(ownerToken));
         const mask = list.body.data.find((g: any) => g.id === groupId);
         expect(mask.learnedRepurchaseDays ?? null).toBeNull();

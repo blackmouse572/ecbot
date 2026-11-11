@@ -3542,6 +3542,7 @@
       "none": "None yet",
       "setCycle": "Set a cycle",
       "notLearned": "Not enough repurchases yet",
+      "learnsNext": "Enough repurchases, the cycle updates with the next confirmed order",
       "fromPairs_one": "from {{count}} repurchase",
       "fromPairs_other": "from {{count}} repurchases",
       "needPairs_one": "{{count}} more repurchase needed",

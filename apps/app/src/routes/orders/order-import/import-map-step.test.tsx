@@ -7,6 +7,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const api = vi.hoisted(() => ({
   previewChunks: new Array<unknown>(),
   imported: new Array<unknown>(),
+  /** Import calls, each with the chunks it sent. */
+  calls: new Array<unknown[][]>(),
+  /** Fail the next import after this many chunks went through. */
+  failAfter: null as number | null,
   onDone: vi.fn(),
 }));
 
@@ -34,7 +38,16 @@ vi.mock("@/hooks/api/orders", () => ({
       onChunk: (r: ReturnType<typeof result>) => void;
     }) => {
       api.imported = chunks;
-      onChunk(result(1));
+      api.calls.push(chunks);
+
+      for (const [index] of chunks.entries()) {
+        if (api.failAfter === index) {
+          api.failAfter = null;
+          throw new Error("network");
+        }
+
+        onChunk(result(1));
+      }
     },
     isPending: false,
   }),
@@ -63,14 +76,18 @@ const file = {
   ],
 };
 
-const renderStep = () =>
+const renderStep = (current = file) =>
   render(
     <MemoryRouter initialEntries={["/ws/orders/import"]}>
       <Routes>
         <Route
           path="/:workspaceSlug/orders/import"
           element={
-            <ImportMapStep file={file} onBack={vi.fn()} onDone={api.onDone} />
+            <ImportMapStep
+              file={current}
+              onBack={vi.fn()}
+              onDone={api.onDone}
+            />
           }
         />
       </Routes>
@@ -80,6 +97,8 @@ const renderStep = () =>
 describe("ImportMapStep", () => {
   beforeEach(() => {
     api.onDone.mockReset();
+    api.calls = [];
+    api.failAfter = null;
   });
 
   it("previews the guessed mapping, then imports the same rows", async () => {
@@ -100,5 +119,42 @@ describe("ImportMapStep", () => {
     expect(api.onDone.mock.calls[0][0].invalidLines).toEqual([
       { line: 3, reason: "missingPhone" },
     ]);
+  });
+
+  it("lists the cancelled rows when nothing else is left to import", () => {
+    renderStep({
+      name: "huy.csv",
+      headers: ["Ma don", "SDT", "San pham", "Trang thai"],
+      records: [["SP-1", "0903412885", "Kem", "Đã huỷ"]],
+    });
+
+    expect(api.previewChunks).toEqual([]);
+    expect(screen.getByText(/1 row of cancelled orders/)).toBeTruthy();
+    expect(screen.queryByLabelText("Checking the file")).toBeNull();
+  });
+
+  it("sends only the chunks left when the shop retries a failed import", async () => {
+    // 201 customers: one request holds 200 rows, so this file takes two.
+    const big = {
+      name: "lon.csv",
+      headers: ["SDT", "San pham"],
+      records: Array.from({ length: 201 }, (_, index) => [
+        `09000${String(index).padStart(5, "0")}`,
+        "Kem",
+      ]),
+    };
+
+    api.failAfter = 1;
+    renderStep(big);
+    const submit = screen.getByRole("button", { name: /^Import/ });
+
+    fireEvent.click(submit);
+    await waitFor(() => expect(api.calls).toHaveLength(1));
+    expect(api.onDone).not.toHaveBeenCalled();
+
+    fireEvent.click(submit);
+    await waitFor(() => expect(api.onDone).toHaveBeenCalled());
+    expect(api.calls[1]).toEqual([api.calls[0][1]]);
+    expect(api.onDone.mock.calls[0][0].orders).toBe(2);
   });
 });

@@ -34671,6 +34671,10 @@ export type ProductGroupWorkspaceControllerListV1Data = {
     };
     query?: {
         /**
+         * Add confirmedOrders, customers and repurchasePairs to each group
+         */
+        withStats?: boolean;
+        /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
          */
         search?: string;

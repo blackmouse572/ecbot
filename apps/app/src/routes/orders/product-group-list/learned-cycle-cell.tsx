@@ -32,9 +32,9 @@ export const LearnedCycleCell: FC<{ group: ProductGroupGetResponseDto }> = ({
   // Enough pairs but nothing learned: the cycle is refreshed on the next order.
   if (pairs >= min) {
     return (
-      <span className="txt-compact-small text-ui-fg-muted">
-        {t("orders.groups.notLearned")}
-      </span>
+      <Text size="xsmall" className="text-ui-fg-subtle">
+        {t("orders.groups.learnsNext")}
+      </Text>
     );
   }
 
