@@ -512,6 +512,8 @@ function getRouteMaps(): RouteObject[] {
                   lazy: () => import("./orders/product-group-list"),
                   children: [
                     {
+                      // The one create route on a drawer, not a focus modal:
+                      // a group is two fields, and create shares edit's drawer.
                       path: "create",
                       ErrorBoundary: ErrorBoundary,
                       lazy: () => import("./orders/product-group-edit"),
