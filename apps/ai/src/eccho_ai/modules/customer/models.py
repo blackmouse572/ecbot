@@ -26,6 +26,11 @@ class ClassifierTagDef(BaseModel):
     )
 
 
+class ClassifierProductGroup(BaseModel):
+    id: str
+    name: str
+
+
 class ClassifyRequest(BaseModel):
     customer_id: str
     conversation_id: str
@@ -56,9 +61,42 @@ class ClassifyRequest(BaseModel):
             "`recent_messages`."
         ),
     )
+    product_groups: list[ClassifierProductGroup] = Field(
+        default_factory=list,
+        description="The shop's product groups, for the marketing signals.",
+    )
 
 
 # ----- Response -----
+
+
+class MarketingSignal(BaseModel):
+    """One thing the customer said that moves their marketing labels (#500)."""
+
+    kind: Literal["interest", "asked_price", "later", "complaint", "hostile"] = Field(
+        ...,
+        description=(
+            '"interest": asked about the shop or a product group. '
+            '"asked_price": asked the price, shipping fee or how to order. '
+            '"later": postponed a product group ("để sau"). '
+            '"complaint": unhappy, without insults. '
+            '"hostile": insulted or threatened people.'
+        ),
+    )
+    product_group: str = Field(
+        default="",
+        description="Exact name from the product groups list, or empty.",
+    )
+    defer_days: int | None = Field(
+        default=None,
+        description='"later" only: 60, or 90 when the customer says a longer time.',
+    )
+    message_index: int = Field(
+        ..., description="The #number of the customer message it comes from."
+    )
+    quote: str = Field(
+        default="", description="The customer's own words, up to 200 characters."
+    )
 
 
 class ClassifyResponse(BaseModel):
@@ -76,11 +114,22 @@ class ClassifyResponse(BaseModel):
         default="",
         description="One paragraph (~70 tokens) describing who this customer is and how staff talk to them.",
     )
+    marketing_signals: list[MarketingSignal] = Field(
+        default_factory=list,
+        description="What the customer said that moves their marketing labels.",
+    )
+
+
+class MarketingSignalResult(MarketingSignal):
+    """A checked signal, with the product group's id for apps/api."""
+
+    product_group_id: str | None = None
 
 
 class ClassifyResult(ClassifyResponse):
     """What the endpoint returns: the model's answer plus what it spent, for
     apps/api to meter. Kept off `ClassifyResponse` so the LLM never sees it."""
 
+    marketing_signals: list[MarketingSignalResult] = Field(default_factory=list)
     usage: TokenUsage | None = None
     model: str | None = None
