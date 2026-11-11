@@ -3310,7 +3310,22 @@
       "source": "Nguồn",
       "channel": "Kênh",
       "status": "Trạng thái",
-      "kind": "Loại"
+      "kind": "Loại",
+      "newCustomers": "Khách mới",
+      "potentialCustomers": "Tiềm năng",
+      "orders": "Đơn hàng",
+      "closeRate": "Tỉ lệ chốt",
+      "ordersShort": "Đơn",
+      "rateShort": "Tỉ lệ"
+    },
+    "stats": {
+      "newCustomers": "Khách mới",
+      "since": "Từ {{date}} đến nay",
+      "potentialCustomers": "Khách tiềm năng",
+      "potentialHint": "Đã hỏi giá hoặc đã đặt đơn",
+      "orders": "Đơn hàng",
+      "ordersHint": "Đơn đã xác nhận, kể từ khi khách đến",
+      "closeRateHint": "Số đơn trên mỗi khách mới"
     },
     "status": {
       "ACTIVE": "Đang dùng",
@@ -3435,6 +3450,167 @@
       "deleted": "Đã xóa nguồn khách"
     },
     "error": "Có lỗi xảy ra. Bạn thử lại nhé."
+  },
+  "orders": {
+    "title": "Đơn hàng",
+    "description": "Đơn đã xác nhận cho biết khách mua gì, lúc nào, để Ecbot tính lần mua cuối và nhắc mua lại đúng hẹn.",
+    "create": "Thêm đơn",
+    "error": "Có lỗi xảy ra, bạn thử lại nhé.",
+    "noName": "Chưa có tên",
+    "noItems": "Chưa ghi sản phẩm",
+    "moreItems_one": "+{{count}} món",
+    "moreItems_other": "+{{count}} món",
+    "tabs": {
+      "orders": "Đơn hàng",
+      "groups": "Nhóm hàng"
+    },
+    "columns": {
+      "code": "Mã đơn",
+      "customer": "Khách",
+      "items": "Sản phẩm và nhóm hàng",
+      "total": "Tổng tiền",
+      "source": "Nguồn",
+      "status": "Trạng thái",
+      "orderedAt": "Ngày đặt",
+      "group": "Nhóm hàng"
+    },
+    "status": {
+      "PENDING": "Chờ xác nhận",
+      "CONFIRMED": "Đã xác nhận",
+      "CANCELLED": "Đã huỷ"
+    },
+    "source": {
+      "CHAT": "Chat",
+      "MANUAL": "Thêm tay",
+      "IMPORT": "Nhập file"
+    },
+    "date": {
+      "today": "Hôm nay, {{time}}",
+      "yesterday": "Hôm qua, {{time}}"
+    },
+    "list": {
+      "noRecordsTitle": "Chưa có đơn nào",
+      "noRecordsMessage": "Đơn bot ghi trong chat sẽ hiện ở đây. Bạn cũng có thể thêm đơn khách đặt ở nơi khác."
+    },
+    "pending": {
+      "title_one": "{{count}} đơn bot ghi từ chat đang chờ xác nhận.",
+      "title_other": "{{count}} đơn bot ghi từ chat đang chờ xác nhận.",
+      "description": "Đơn chỉ được tính là đã mua sau khi bạn xác nhận.",
+      "show": "Xem đơn chờ"
+    },
+    "detail": {
+      "description": "Chi tiết đơn hàng",
+      "fromChat": "Bot ghi đơn này trong chat, {{when}}",
+      "fromChatHint": "Kiểm tra lại số lượng và giá rồi bấm Xác nhận. Đơn chưa xác nhận không được tính là đã mua.",
+      "openConversation": "Mở hội thoại",
+      "customer": "Khách",
+      "name": "Tên",
+      "phone": "Số điện thoại",
+      "previous": "Đã mua trước đó",
+      "previousNone": "Chưa có đơn nào",
+      "previousCount_one": "{{count}} đơn, lần cuối {{date}}",
+      "previousCount_other": "{{count}} đơn, lần cuối {{date}}",
+      "items": "Sản phẩm",
+      "currency": "Giá theo {{currency}}",
+      "afterConfirm": "Sau khi xác nhận, đơn được tính là khách đã mua.",
+      "afterConfirmGroups": "Sau khi xác nhận, đơn được tính là khách đã mua và nhóm {{groups}} đặt lại đồng hồ mua lại.",
+      "confirm": "Xác nhận đơn",
+      "confirmed": "Đã xác nhận đơn",
+      "edit": "Sửa đơn",
+      "cancel": "Huỷ đơn",
+      "keep": "Giữ đơn",
+      "cancelTitle": "Huỷ đơn {{code}}?",
+      "cancelDescription": "Đơn huỷ không được tính là đã mua và không mở lại được.",
+      "cancelled": "Đã huỷ đơn"
+    },
+    "form": {
+      "createTitle": "Thêm đơn",
+      "createDescription": "Ghi lại đơn khách đặt ngoài chat, ví dụ qua điện thoại, Shopee hay tại cửa hàng.",
+      "editTitle": "Sửa đơn",
+      "editDescription": "Sửa sản phẩm, giá và ngày đặt của đơn {{code}}.",
+      "customer": "Khách",
+      "customerPlaceholder": "Tìm khách",
+      "customerHint": "Tìm theo tên hoặc số điện thoại trong danh sách Khách hàng.",
+      "customerEmpty": "Không tìm thấy khách nào",
+      "items": "Sản phẩm",
+      "itemName": "Tên sản phẩm",
+      "itemNamePlaceholder": "Ví dụ: Serum vitamin C 30ml",
+      "group": "Nhóm hàng",
+      "groupPlaceholder": "Chọn nhóm",
+      "groupCreate": "Tạo nhóm “{{name}}”",
+      "quantity": "SL",
+      "unitPrice": "Đơn giá",
+      "lineTotal": "Thành tiền",
+      "removeItem": "Xoá sản phẩm",
+      "addItem": "Thêm sản phẩm",
+      "total": "Tổng tiền",
+      "customTotal": "Nhập tổng khác",
+      "itemsTotal": "Tính theo sản phẩm",
+      "groupHint": "Nhóm hàng giúp Ecbot biết khách hết hàng lúc nào để nhắc mua lại. Chưa có nhóm phù hợp thì gõ tên để tạo mới.",
+      "code": "Mã đơn",
+      "codePlaceholder": "Để trống, Ecbot tự tạo mã DH-...",
+      "orderedAt": "Ngày đặt",
+      "orderedTime": "Giờ đặt",
+      "status": "Trạng thái",
+      "statusHint": {
+        "CONFIRMED": "Khách đã chốt, tính là đã mua ngay.",
+        "PENDING": "Còn chờ khách chuyển khoản hoặc kiểm hàng."
+      },
+      "note": "Ghi chú",
+      "notePlaceholder": "Ví dụ: giao giờ hành chính",
+      "save": "Lưu đơn",
+      "created": "Đã thêm đơn",
+      "saved": "Đã lưu đơn",
+      "errors": {
+        "customer": "Chọn khách đặt đơn này",
+        "itemName": "Nhập tên sản phẩm",
+        "quantity": "Số lượng từ 1 trở lên",
+        "items": "Thêm ít nhất một sản phẩm, hoặc nhập tổng tiền",
+        "orderedAt": "Chọn ngày đặt",
+        "codeTaken": "Mã đơn này đã có, bạn chọn mã khác nhé",
+        "group": "Chưa tạo được nhóm hàng {{name}}, bạn thử lại nhé"
+      }
+    },
+    "groups": {
+      "title": "Nhóm hàng",
+      "create": "Tạo nhóm hàng",
+      "noRecordsTitle": "Chưa có nhóm hàng",
+      "noRecordsMessage": "Gom sản phẩm cùng loại vào một nhóm để Ecbot biết khi nào khách cần mua lại.",
+      "columns": {
+        "name": "Nhóm hàng",
+        "inUse": "Chu kỳ đang dùng",
+        "yours": "Bạn đặt",
+        "learned": "Ecbot học được"
+      },
+      "days_one": "{{count}} ngày",
+      "days_other": "{{count}} ngày",
+      "none": "Chưa có",
+      "setCycle": "Đặt chu kỳ",
+      "notLearned": "Chưa đủ lần mua lại",
+      "howLearned": "Ecbot học chu kỳ từ số ngày giữa hai lần mua cùng nhóm của một khách, lấy số ở giữa khi có từ 5 lần mua lại trở lên. Chưa đủ thì dùng số bạn đặt. Đơn huỷ và đơn chờ xác nhận không được tính.",
+      "delete": {
+        "title": "Xoá nhóm {{name}}?",
+        "description": "Sản phẩm trong các đơn vẫn giữ tên nhưng không còn thuộc nhóm nào.",
+        "deleted": "Đã xoá nhóm hàng"
+      },
+      "form": {
+        "editTitle": "Sửa nhóm hàng",
+        "notFoundTitle": "Nhóm hàng này không còn nữa",
+        "notFoundMessage": "Có thể nhóm đã bị xoá. Bạn quay lại danh sách để xem các nhóm hiện có.",
+        "description": "Tên nhóm và số ngày khách thường dùng hết hàng",
+        "namePlaceholder": "Ví dụ: Kem chống nắng",
+        "nameHint": "Sản phẩm có tên chứa tên nhóm sẽ tự vào nhóm này khi bot ghi đơn.",
+        "days": "Chu kỳ mua lại (ngày)",
+        "daysHint": "Số ngày khách thường dùng hết. Ecbot dùng số này cho tới khi tự học được từ đơn.",
+        "created": "Đã tạo nhóm hàng",
+        "saved": "Đã lưu nhóm hàng",
+        "errors": {
+          "name": "Nhập tên nhóm",
+          "days": "Từ 1 đến 730 ngày",
+          "nameTaken": "Đã có nhóm tên này"
+        }
+      }
+    }
   },
   "customerMarketing": {
     "stage": {

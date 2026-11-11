@@ -30,3 +30,12 @@ export interface ITrackedLinkArrival {
     conversationId?: string;
     messageId?: string;
 }
+
+/** Nguồn khách counts, by each customer's first source. */
+export interface ITrackedLinkStats {
+    newCustomers: number;
+    /** Asked the price or bought (stage Hỏi giá and later). */
+    potentialCustomers: number;
+    /** Confirmed orders since the customer arrived. */
+    orders: number;
+}

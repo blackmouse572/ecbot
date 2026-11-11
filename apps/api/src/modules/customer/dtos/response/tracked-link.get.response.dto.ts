@@ -5,6 +5,7 @@ import {
     ENUM_TRACKED_LINK_STATUS,
 } from '../../enums/tracked-link.enum';
 import { TrackedLinkAccountResponseDto } from './tracked-link.account.response.dto';
+import { TrackedLinkStatsResponseDto } from './tracked-link.stats.response.dto';
 
 export class TrackedLinkGetResponseDto {
     @Expose()
@@ -64,4 +65,10 @@ export class TrackedLinkGetResponseDto {
     @Expose()
     @ApiProperty({ required: false })
     updatedAt?: Date;
+
+    // On the list and detail pages; a source includes its QR and KOL codes.
+    @Expose()
+    @Type(() => TrackedLinkStatsResponseDto)
+    @ApiProperty({ type: TrackedLinkStatsResponseDto, required: false })
+    stats?: TrackedLinkStatsResponseDto;
 }

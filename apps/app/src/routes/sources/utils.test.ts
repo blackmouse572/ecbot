@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   childCodeFromName,
+  closeRatePercent,
+  formatRate,
   previewSourceUrl,
   sourceCodeFromName,
   withCode,
@@ -86,5 +88,31 @@ describe("previewSourceUrl", () => {
     expect(
       previewSourceUrl({ type: "ZALO_PAGE", link: "https://zalo.me/1" }, "x"),
     ).toBeNull();
+  });
+});
+
+describe("closeRatePercent", () => {
+  it("is confirmed orders per new customer, in percent", () => {
+    expect(
+      closeRatePercent({
+        newCustomers: 186,
+        potentialCustomers: 44,
+        orders: 21,
+      }),
+    ).toBeCloseTo(11.29, 2);
+  });
+
+  it("is empty before the first customer arrives", () => {
+    expect(
+      closeRatePercent({ newCustomers: 0, potentialCustomers: 0, orders: 0 }),
+    ).toBeNull();
+    expect(closeRatePercent(undefined)).toBeNull();
+  });
+});
+
+describe("formatRate", () => {
+  it("writes the rate the way the reader writes numbers", () => {
+    expect(formatRate(11.2903, "vi")).toBe("11,3%");
+    expect(formatRate(9.2, "en")).toBe("9.2%");
   });
 });
