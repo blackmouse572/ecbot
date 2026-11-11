@@ -12,13 +12,13 @@ const {
   endImpersonationFn,
   impersonationMock,
 } = vi.hoisted(() => ({
-    logoutFn: vi.fn(),
-    setAuthFn: vi.fn(),
-    setLastWorkspaceSlugFn: vi.fn(),
-    navigateFn: vi.fn(),
-    endImpersonationFn: vi.fn(),
-    impersonationMock: { current: null as unknown },
-  }));
+  logoutFn: vi.fn(),
+  setAuthFn: vi.fn(),
+  setLastWorkspaceSlugFn: vi.fn(),
+  navigateFn: vi.fn(),
+  endImpersonationFn: vi.fn(),
+  impersonationMock: { current: null as unknown },
+}));
 
 vi.mock("@repo/client", () => ({
   authSharedControllerLogoutV1: logoutFn,
@@ -40,6 +40,7 @@ vi.mock("@/modules/workspace", () => ({
 
 vi.mock("react-router-dom", async (importOriginal) => {
   const actual = await importOriginal<typeof import("react-router-dom")>();
+
   return { ...actual, useNavigate: () => navigateFn };
 });
 
@@ -48,6 +49,7 @@ import { useLogout } from "./auth";
 
 const wrapper = ({ children }: PropsWithChildren) => {
   const client = new QueryClient();
+
   return createElement(
     MemoryRouter,
     null,

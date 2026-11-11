@@ -9,9 +9,12 @@ class ResizeObserverMock {
   unobserve() {}
   disconnect() {}
 }
+
 type G = typeof globalThis & { ResizeObserver: typeof ResizeObserverMock };
+
 (globalThis as G).ResizeObserver =
   (globalThis as G).ResizeObserver ?? ResizeObserverMock;
+
 if (!HTMLElement.prototype.scroll) {
   HTMLElement.prototype.scroll = () => {};
 }
@@ -28,6 +31,13 @@ const customers = [
     phone: "0909 123 456",
     email: "lan@example.com",
     createdAt: "2026-09-20T08:00:00Z",
+    marketing: {
+      stage: "ASKED_PRICE",
+      permission: "PENDING",
+      permissionUntil: null,
+      hostile: false,
+      dormant: false,
+    },
   },
   {
     id: "c-2",
@@ -35,12 +45,20 @@ const customers = [
     phone: null,
     email: null,
     createdAt: "2026-09-21T08:00:00Z",
+    marketing: {
+      stage: "BOUGHT_ONCE",
+      permission: "STOPPED",
+      permissionUntil: null,
+      hostile: true,
+      dormant: true,
+    },
   },
 ];
 
 vi.mock("@/hooks/api", () => ({
   useCustomers: (query: unknown) => {
     state.lastQuery = query;
+
     return {
       customers: state.empty ? [] : customers,
       count: state.empty ? 0 : customers.length,
@@ -88,6 +106,29 @@ describe("CustomerListTable", () => {
       search: "lan",
       page: 2,
       perPage: 20,
+    });
+  });
+
+  it("shows each customer's stage and offers permission", () => {
+    renderTable();
+
+    expect(screen.getByText("Asked price")).toBeInTheDocument();
+    expect(screen.getByText("Not agreed yet")).toBeInTheDocument();
+    // Inactive shows over the stage; stopped and upset are loud.
+    expect(screen.getByText("Inactive")).toBeInTheDocument();
+    expect(screen.getByText("Stopped for good")).toBeInTheDocument();
+    expect(screen.getByText("Upset")).toBeInTheDocument();
+  });
+
+  it("filters by stage, permission and dormant from the URL", () => {
+    renderTable(
+      "/acme/customers?stage=NEW,ASKED_PRICE&permission=GRANTED&dormant=false",
+    );
+
+    expect(state.lastQuery).toMatchObject({
+      stage: "NEW,ASKED_PRICE",
+      permission: "GRANTED",
+      dormant: false,
     });
   });
 

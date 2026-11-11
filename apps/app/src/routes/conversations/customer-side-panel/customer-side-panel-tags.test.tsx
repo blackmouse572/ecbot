@@ -20,6 +20,11 @@ vi.mock("@/hooks/api/customers", () => ({
   })),
 }));
 
+// The Tiếp thị block has its own tests.
+vi.mock("./components/marketing-section", () => ({
+  MarketingSection: () => null,
+}));
+
 vi.mock("@/hooks/api/contact-points", () => ({
   useContactPointsByCustomer: vi.fn(),
 }));
@@ -57,6 +62,7 @@ vi.mock("react-i18next", () => ({
 vi.mock("@medusajs/ui", async () => {
   const actual =
     await vi.importActual<typeof import("@medusajs/ui")>("@medusajs/ui");
+
   return {
     ...actual,
     toast: { success: vi.fn(), error: vi.fn(), promise: vi.fn() },
@@ -91,10 +97,15 @@ const useRemoveMock = vi.mocked(useRemoveCustomerTag);
 // care about without `any` and without re-implementing every Query/Mutation
 // field.
 type UseCustomerReturn = ReturnType<typeof useCustomer>;
+
 type UseContactPointsReturn = ReturnType<typeof useContactPointsByCustomer>;
+
 type UseTagAssignmentsReturn = ReturnType<typeof useCustomerTagAssignments>;
+
 type UseTagListReturn = ReturnType<typeof useCustomerTagList>;
+
 type UseApplyReturn = ReturnType<typeof useApplyCustomerTag>;
+
 type UseRemoveReturn = ReturnType<typeof useRemoveCustomerTag>;
 
 const customerFixture = {
@@ -114,6 +125,7 @@ const vipTag = {
   description: "High value",
   triggersHandoff: false,
 };
+
 const hotLeadTag = {
   id: "tag-hot",
   name: "Hot lead",
@@ -121,6 +133,7 @@ const hotLeadTag = {
   description: "Strong intent",
   triggersHandoff: false,
 };
+
 const angryTag = {
   id: "tag-angry",
   name: "Angry",
@@ -214,6 +227,7 @@ describe("CustomerSidePanel — tags section", () => {
     const removeButton = screen.getByRole("button", {
       name: "conversations.customer.panel.tags.remove",
     });
+
     await user.click(removeButton);
 
     expect(removeMutate).toHaveBeenCalledTimes(1);
@@ -237,6 +251,7 @@ describe("CustomerSidePanel — tags section", () => {
     const addButton = screen.getByRole("button", {
       name: "conversations.customer.panel.tags.add",
     });
+
     await user.click(addButton);
 
     // The menu renders in a portal, so query by role across the document.
@@ -269,11 +284,13 @@ describe("CustomerSidePanel — tags section", () => {
     const addButton = screen.getByRole("button", {
       name: "conversations.customer.panel.tags.add",
     });
+
     await user.click(addButton);
 
     const menuItem = await screen.findByRole("option", {
       name: /Hot lead/,
     });
+
     await user.click(menuItem);
 
     expect(applyMutate).toHaveBeenCalledTimes(1);

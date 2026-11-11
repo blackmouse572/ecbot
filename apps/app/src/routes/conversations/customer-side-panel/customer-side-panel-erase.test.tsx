@@ -12,6 +12,7 @@ class ResizeObserverMock {
   unobserve() {}
   disconnect() {}
 }
+
 (globalThis as A).ResizeObserver =
   (globalThis as A).ResizeObserver ?? ResizeObserverMock;
 
@@ -42,6 +43,11 @@ vi.mock("@/hooks/api/customers", () => ({
 
 vi.mock("@/utils", () => ({
   downloadJson: (...args: unknown[]) => downloadJson(...args),
+}));
+
+// The Tiếp thị block has its own tests.
+vi.mock("./components/marketing-section", () => ({
+  MarketingSection: () => null,
 }));
 
 vi.mock("@/hooks/api/contact-points", () => ({
@@ -76,6 +82,7 @@ vi.mock("react-i18next", () => ({
 vi.mock("@medusajs/ui", async () => {
   const actual =
     await vi.importActual<typeof import("@medusajs/ui")>("@medusajs/ui");
+
   return {
     ...actual,
     toast: {
@@ -107,6 +114,7 @@ import type { ReactElement } from "react";
 import { CustomerSidePanel } from "./customer-side-panel";
 
 const ADMIN = [{ action: ["manage"], subject: "CUSTOMER_DATA" }];
+
 // The default Member role: manages customers, not their data rights.
 const MEMBER = [{ action: ["manage"], subject: "CUSTOMER" }];
 
