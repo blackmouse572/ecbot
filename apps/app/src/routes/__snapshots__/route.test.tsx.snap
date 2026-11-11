@@ -30,6 +30,7 @@ exports[`route map — public table > matches the path list captured from main b
   "/:workspaceSlug/orders/create",
   "/:workspaceSlug/orders/groups/:groupId/edit",
   "/:workspaceSlug/orders/groups/create",
+  "/:workspaceSlug/orders/import",
   "/:workspaceSlug/settings",
   "/:workspaceSlug/settings/client-credentials",
   "/:workspaceSlug/settings/members",

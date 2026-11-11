@@ -3,10 +3,13 @@ import {
   orderWorkspaceControllerConfirmV1,
   orderWorkspaceControllerCreateV1,
   orderWorkspaceControllerGetV1,
+  orderWorkspaceControllerImportV1,
   orderWorkspaceControllerListV1,
   orderWorkspaceControllerUpdateV1,
   type OrderCreateRequestDto,
   type OrderGetResponseDto,
+  type OrderImportResponseDto,
+  type OrderImportRowRequestDto,
   type OrderItemGetResponseDto,
   type OrderItemRequestDto,
   type OrderUpdateRequestDto,
@@ -18,11 +21,14 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { customerQueryKeys } from "./customers";
 import { orderQueryKeys, productGroupQueryKeys } from "./order-query-keys";
 
 export type {
   OrderCreateRequestDto,
   OrderGetResponseDto,
+  OrderImportResponseDto,
+  OrderImportRowRequestDto,
   OrderItemGetResponseDto,
   OrderItemRequestDto,
   OrderUpdateRequestDto,
@@ -143,5 +149,61 @@ export const useCancelOrder = (workspace: string, id: string) => {
         path: { workspace, order: id },
       }).then((res) => res.data.data),
     onSuccess: () => invalidate(id),
+  });
+};
+
+/** Sends each request's rows in turn: the endpoint takes 200 rows at most. */
+const importOrderChunks = async (
+  workspace: string,
+  chunks: OrderImportRowRequestDto[][],
+  dryRun: boolean,
+  onChunk?: (result: OrderImportResponseDto) => void,
+) => {
+  const results: OrderImportResponseDto[] = [];
+
+  for (const rows of chunks) {
+    const result = await orderWorkspaceControllerImportV1({
+      path: { workspace },
+      body: { rows, dryRun },
+    }).then((res) => res.data.data);
+
+    results.push(result);
+    onChunk?.(result);
+  }
+
+  return results;
+};
+
+/** What a file would import, one result per request; writes nothing. */
+export const useOrderImportPreview = (
+  workspace: string,
+  chunks: OrderImportRowRequestDto[][],
+) =>
+  useQuery({
+    queryKey: [ORDER_QUERY_KEY, "import-preview", workspace, chunks],
+    queryFn: () => importOrderChunks(workspace, chunks, true),
+    enabled: !!workspace && chunks.length > 0,
+    staleTime: Infinity,
+    gcTime: 0,
+    retry: false,
+  });
+
+export const useImportOrders = (workspace: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      chunks,
+      onChunk,
+    }: {
+      chunks: OrderImportRowRequestDto[][];
+      onChunk?: (result: OrderImportResponseDto) => void;
+    }) => importOrderChunks(workspace, chunks, false, onChunk),
+    // Also after a failure: the requests before it were imported.
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: orderQueryKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: productGroupQueryKeys.all });
+      queryClient.invalidateQueries({ queryKey: customerQueryKeys.lists() });
+    },
   });
 };

@@ -3,7 +3,7 @@ import { useOrders, type OrderGetResponseDto } from "@/hooks/api/orders";
 import { useProductGroups } from "@/hooks/api/product-groups";
 import { useDataTable } from "@/hooks/use-data-table";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
-import { PlusMini } from "@medusajs/icons";
+import { ArrowUpTray, PlusMini } from "@medusajs/icons";
 import { Button, Container } from "@medusajs/ui";
 import { useQueryParams } from "@repo/ui/hooks";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -68,12 +68,20 @@ export const OrderList = () => {
         <OrdersPageHeader
           tab="orders"
           actions={
-            <Button size="small" asChild>
-              <Link to="create">
-                <PlusMini />
-                {t("orders.create")}
-              </Link>
-            </Button>
+            <div className="flex items-center gap-x-2">
+              <Button size="small" variant="secondary" asChild>
+                <Link to="import">
+                  <ArrowUpTray />
+                  {t("orders.import.open")}
+                </Link>
+              </Button>
+              <Button size="small" asChild>
+                <Link to="create">
+                  <PlusMini />
+                  {t("orders.create")}
+                </Link>
+              </Button>
+            </div>
           }
         />
         <PendingOrdersBanner />
