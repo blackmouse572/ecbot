@@ -23,6 +23,7 @@ import { CustomerMarketingService } from './services/customer-marketing.service'
 import { CustomerProductMarketingService } from './services/customer-product-marketing.service';
 import { TrackedLinkAttributionService } from './services/tracked-link-attribution.service';
 import { CustomerMarketingSignalService } from './services/customer-marketing-signal.service';
+import { CustomerMarketingBackfillService } from './services/customer-marketing-backfill.service';
 import { OrderRepositoryModule } from '@app/modules/order/repository/order.repository.module';
 import { TrackedLinkService } from './services/tracked-link.service';
 
@@ -54,6 +55,7 @@ import { TrackedLinkService } from './services/tracked-link.service';
         CustomerMarketingService,
         CustomerProductMarketingService,
         CustomerMarketingSignalService,
+        CustomerMarketingBackfillService,
         TrackedLinkService,
         TrackedLinkAttributionService,
     ],
@@ -70,6 +72,7 @@ import { TrackedLinkService } from './services/tracked-link.service';
         CustomerTagAdminService,
         CustomerMarketingService,
         CustomerProductMarketingService,
+        CustomerMarketingBackfillService,
         TrackedLinkService,
         TrackedLinkAttributionService,
         CustomerRepositoryModule,

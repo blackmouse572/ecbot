@@ -13,5 +13,10 @@
     "reaction": {
         "update": "Đã tạm hoãn nhóm hàng cho khách này.",
         "delete": "Đã mở lại nhóm hàng cho khách này."
+    },
+    "backfill": {
+        "get": "Đã lấy tiến độ phân tích hội thoại cũ.",
+        "start": "Đang đọc hội thoại 90 ngày qua.",
+        "processed": "Đã xử lý một lô hội thoại cũ."
     }
 }

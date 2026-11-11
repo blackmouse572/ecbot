@@ -11,6 +11,7 @@ import { PlatformModule } from 'src/modules/platform/platform.module';
 import { KnowledgeIngestTaskController } from 'src/modules/knowledge-base/controllers/knowledge-ingest.task.controller';
 import { KnowledgeBaseServicesModule } from 'src/modules/knowledge-base/services/services.module';
 import { CustomerTagClassifierTaskController } from 'src/modules/customer/controllers/customer-tag-classifier.task.controller';
+import { CustomerMarketingBackfillTaskController } from 'src/modules/customer/controllers/customer-marketing-backfill.task.controller';
 import { CustomerModule } from 'src/modules/customer/customer.module';
 
 /**
@@ -31,6 +32,7 @@ import { CustomerModule } from 'src/modules/customer/customer.module';
         ConversationMemoryTaskController,
         KnowledgeIngestTaskController,
         CustomerTagClassifierTaskController,
+        CustomerMarketingBackfillTaskController,
     ],
     providers: [],
     exports: [],

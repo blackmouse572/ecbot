@@ -24,7 +24,10 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
     let service: CustomerTagClassifierTaskService;
 
     const conversationRepository = { findOneById: jest.fn() };
-    const messageRepository = { findByConversation: jest.fn() };
+    const messageRepository = {
+        findByConversation: jest.fn(),
+        findByConversationSince: jest.fn(),
+    };
     const customerRepository = { updateEntity: jest.fn() };
     const customerTagService = { findAllByWorkspace: jest.fn() };
     const customerTagAssignmentService = {
@@ -180,6 +183,84 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
             expect.anything(),
             []
         );
+    });
+
+    // #500: the 90-day backfill reads marketing labels only.
+    describe('classifyMarketing', () => {
+        const since = new Date('2026-03-17T00:00:00Z');
+        const sentAt = new Date('2026-05-01T09:00:00Z');
+
+        beforeEach(() => {
+            messageRepository.findByConversationSince.mockResolvedValue([
+                {
+                    id: 'msg-9',
+                    authorType: ENUM_MESSAGE_AUTHOR.USER,
+                    direction: ENUM_MESSAGE_DIRECTION.INBOUND,
+                    text: 'serum giá sao shop',
+                    dateSent: sentAt,
+                },
+            ]);
+            marketingSignalService.listProductGroups.mockResolvedValue([
+                { id: 'pg-serum', name: 'Serum' },
+            ]);
+        });
+
+        it('sends only the messages in the window, with no tags, and applies the signals', async () => {
+            const signals = [
+                {
+                    kind: 'asked_price',
+                    product_group_id: 'pg-serum',
+                    message_index: 0,
+                    quote: 'serum giá sao shop',
+                },
+            ];
+            httpService.post.mockReturnValue(
+                classifierResponse({
+                    tags_to_add: ['VIP'],
+                    profile_summary: 'Old news.',
+                    marketing_signals: signals,
+                })
+            );
+
+            await service.classifyMarketing('conv-1', since);
+
+            expect(
+                messageRepository.findByConversationSince
+            ).toHaveBeenCalledWith('conv-1', since, 50);
+            const [, body] = httpService.post.mock.calls[0];
+            expect(body).toMatchObject({
+                available_tags: [],
+                current_tags: [],
+                product_groups: [{ id: 'pg-serum', name: 'Serum' }],
+            });
+            expect(body.recent_messages).toEqual([
+                {
+                    role: 'user',
+                    text: 'serum giá sao shop',
+                    ts: sentAt.toISOString(),
+                },
+            ]);
+            expect(marketingSignalService.apply).toHaveBeenCalledWith(
+                {
+                    customerId: 'cust-1',
+                    workspaceId: 'ws-1',
+                    conversationId: 'conv-1',
+                    messages: [{ id: 'msg-9', dateSent: sentAt }],
+                },
+                signals
+            );
+            // An old conversation never overwrites tags or the summary.
+            expect(customerTagAssignmentService.apply).not.toHaveBeenCalled();
+            expect(customerRepository.updateEntity).not.toHaveBeenCalled();
+        });
+
+        it('skips a conversation with no message in the window', async () => {
+            messageRepository.findByConversationSince.mockResolvedValue([]);
+
+            await service.classifyMarketing('conv-1', since);
+
+            expect(httpService.post).not.toHaveBeenCalled();
+        });
     });
 
     it('skips all classifier side effects when the live snapshot is stale', async () => {

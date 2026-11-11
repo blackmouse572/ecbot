@@ -68,3 +68,13 @@ export enum ENUM_CUSTOMER_MARKETING_AGENT_ACTION {
     PAUSED = 'PAUSED',
     STOPPED = 'STOPPED',
 }
+
+/** Where a workspace's 90-day marketing backfill (#500) stands. */
+export enum ENUM_MARKETING_BACKFILL_STATUS {
+    /** Never started; only in responses, never stored. */
+    NOT_STARTED = 'NOT_STARTED',
+    RUNNING = 'RUNNING',
+    DONE = 'DONE',
+    /** Stopped at its token cap; starting again resumes from the cursor. */
+    STOPPED_BUDGET = 'STOPPED_BUDGET',
+}

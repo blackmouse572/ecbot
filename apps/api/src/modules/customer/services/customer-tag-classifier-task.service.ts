@@ -231,23 +231,7 @@ export class CustomerTagClassifierTaskService {
             conversation_summary: conversation.memorySummary ?? '',
             product_groups: productGroups,
         });
-        const usage = parseWireTokenUsage(result.usage);
-        if (usage) {
-            await this.meter
-                ?.record({
-                    workspaceId,
-                    usage,
-                    source: ENUM_AI_USAGE_SOURCE.TAG_CLASSIFIER,
-                    chatbotId: chatbot.id,
-                    model: result.model,
-                    conversationId,
-                })
-                .catch((err: unknown) =>
-                    this.logger.warn(
-                        `Tag classifier usage not recorded for conversation ${conversationId}: ${err}`
-                    )
-                );
-        }
+        await this.recordUsage(workspaceId, chatbot.id, conversationId, result);
 
         const availableNames = new Set(
             availableTags.map(t => normalizeTagName(t.name))
@@ -336,6 +320,98 @@ export class CustomerTagClassifierTaskService {
                 `+${(result.tags_to_add ?? []).length}/-${(result.tags_to_remove ?? []).length} ` +
                 `summary=${summary ? 'yes' : 'no'} signals=${signals}`
         );
+    }
+
+    /**
+     * The 90-day backfill (#500): reads one conversation's messages since
+     * `since` for marketing labels only. Free tags and the profile summary
+     * are left alone, since an old conversation would overwrite newer ones.
+     * The caller checks the token budget.
+     */
+    async classifyMarketing(
+        conversationId: string,
+        since: Date
+    ): Promise<void> {
+        const conversation = await this.conversationRepository.findOneById(
+            conversationId,
+            {
+                populate: [
+                    'contactPoint',
+                    'contactPoint.customer',
+                    'chatbot',
+                    'chatbot.workspace',
+                ] as any,
+            } as any
+        );
+        const contactPoint: any = (conversation as any)?.contactPoint;
+        const customerId: string | undefined =
+            contactPoint?.customer?.id ?? contactPoint?.customer;
+        const chatbot = (conversation as any)?.chatbot;
+        const workspaceId: string | undefined = chatbot?.workspace?.id;
+        if (!conversation || !customerId || !workspaceId) return;
+
+        const messages = await this.messageRepository.findByConversationSince(
+            conversationId,
+            since,
+            CUSTOMER_TAG_CLASSIFIER_MESSAGE_WINDOW
+        );
+        if (!messages.length) return;
+
+        const result = await this.callClassifier({
+            customer_id: customerId,
+            conversation_id: conversationId,
+            recent_messages: messages.map(m => ({
+                role: this.roleFor(m.authorType, m.direction),
+                text: m.text ?? '',
+                ts: m.dateSent.toISOString(),
+            })),
+            available_tags: [],
+            current_tags: [],
+            current_summary: '',
+            conversation_summary: '',
+            product_groups:
+                await this.marketingSignalService.listProductGroups(
+                    workspaceId
+                ),
+        });
+        await this.recordUsage(workspaceId, chatbot.id, conversationId, result);
+
+        await this.marketingSignalService.apply(
+            {
+                customerId,
+                workspaceId,
+                conversationId,
+                messages: messages.map(m => ({
+                    id: m.id,
+                    dateSent: m.dateSent,
+                })),
+            },
+            result.marketing_signals ?? []
+        );
+    }
+
+    private async recordUsage(
+        workspaceId: string,
+        chatbotId: string,
+        conversationId: string,
+        result: IClassifierResponse
+    ): Promise<void> {
+        const usage = parseWireTokenUsage(result.usage);
+        if (!usage) return;
+        await this.meter
+            ?.record({
+                workspaceId,
+                usage,
+                source: ENUM_AI_USAGE_SOURCE.TAG_CLASSIFIER,
+                chatbotId,
+                model: result.model,
+                conversationId,
+            })
+            .catch((err: unknown) =>
+                this.logger.warn(
+                    `Tag classifier usage not recorded for conversation ${conversationId}: ${err}`
+                )
+            );
     }
 
     private roleFor(

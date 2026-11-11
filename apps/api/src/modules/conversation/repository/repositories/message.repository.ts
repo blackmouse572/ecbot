@@ -187,6 +187,26 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
         return rows.reverse();
     }
 
+    /** The newest `limit` messages sent since `since`, oldest first. */
+    async findByConversationSince(
+        conversationId: string,
+        since: Date,
+        limit: number
+    ): Promise<MessageEntity[]> {
+        const rows = await this.find(
+            {
+                conversation: conversationId,
+                dateSent: { $gte: since },
+                deletedAt: null,
+            } as any,
+            {
+                orderBy: { dateSent: 'DESC' } as any,
+                paging: { limit, offset: 0 },
+            }
+        );
+        return rows.reverse();
+    }
+
     async countByConversation(conversationId: string): Promise<number> {
         return this.getTotal({
             conversation: conversationId,
