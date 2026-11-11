@@ -27,38 +27,24 @@ const wrapperWith = (client: QueryClient) => {
 // from it (and a just-unlinked one reappear) without a manual refresh.
 describe("useLinkChatbotAccount / useUnlinkChatbotAccount", () => {
   it("invalidates the account lists after linking, so the unlinked list refreshes", async () => {
-    const client = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
-    client.setQueryData(accountQueryKeys.listUnlinked(), {
-      data: [{ id: "a1" }],
-    });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    client.setQueryData(accountQueryKeys.listUnlinked(), { data: [{ id: "a1" }] });
 
-    const { result } = renderHook(() => useLinkChatbotAccount("bot-1"), {
-      wrapper: wrapperWith(client),
-    });
+    const { result } = renderHook(() => useLinkChatbotAccount("bot-1"), { wrapper: wrapperWith(client) });
     result.current.mutate({ accounts: ["a1"] });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(
-      client.getQueryState(accountQueryKeys.listUnlinked())?.isInvalidated,
-    ).toBe(true);
+    expect(client.getQueryState(accountQueryKeys.listUnlinked())?.isInvalidated).toBe(true);
   });
 
   it("invalidates the account lists after unlinking, so the unlinked list refreshes", async () => {
-    const client = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    });
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     client.setQueryData(accountQueryKeys.listUnlinked(), { data: [] });
 
-    const { result } = renderHook(() => useUnlinkChatbotAccount("bot-1"), {
-      wrapper: wrapperWith(client),
-    });
+    const { result } = renderHook(() => useUnlinkChatbotAccount("bot-1"), { wrapper: wrapperWith(client) });
     result.current.mutate({ accounts: ["a1"] });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(
-      client.getQueryState(accountQueryKeys.listUnlinked())?.isInvalidated,
-    ).toBe(true);
+    expect(client.getQueryState(accountQueryKeys.listUnlinked())?.isInvalidated).toBe(true);
   });
 });

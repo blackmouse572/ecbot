@@ -1,8 +1,5 @@
 import type { AgentSuggestion } from "@repo/agent-blueprint";
-import {
-  agentBuilderWorkspaceControllerSuggestV1,
-  agentBuilderWorkspaceControllerWarmV1,
-} from "@repo/client";
+import { agentBuilderWorkspaceControllerSuggestV1, agentBuilderWorkspaceControllerWarmV1 } from "@repo/client";
 import { useMutation } from "@tanstack/react-query";
 import { useWorkspace } from "./workspace";
 
@@ -15,8 +12,7 @@ export const useAgentBuilderSuggest = () => {
         body: { description },
       }).then(
         (res) =>
-          ((res as { data?: { data?: AgentSuggestion } }).data?.data ??
-            null) as AgentSuggestion | null,
+          ((res as { data?: { data?: AgentSuggestion } }).data?.data ?? null) as AgentSuggestion | null,
       ),
   });
 };
@@ -25,9 +21,6 @@ export const useAgentBuilderSuggest = () => {
 export const useAgentBuilderWarm = () => {
   const { workspace } = useWorkspace();
   return useMutation({
-    mutationFn: () =>
-      agentBuilderWorkspaceControllerWarmV1({
-        path: { workspace: workspace!.slug },
-      }),
+    mutationFn: () => agentBuilderWorkspaceControllerWarmV1({ path: { workspace: workspace!.slug } }),
   });
 };

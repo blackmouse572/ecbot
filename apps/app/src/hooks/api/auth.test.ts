@@ -12,13 +12,13 @@ const {
   endImpersonationFn,
   impersonationMock,
 } = vi.hoisted(() => ({
-  logoutFn: vi.fn(),
-  setAuthFn: vi.fn(),
-  setLastWorkspaceSlugFn: vi.fn(),
-  navigateFn: vi.fn(),
-  endImpersonationFn: vi.fn(),
-  impersonationMock: { current: null as unknown },
-}));
+    logoutFn: vi.fn(),
+    setAuthFn: vi.fn(),
+    setLastWorkspaceSlugFn: vi.fn(),
+    navigateFn: vi.fn(),
+    endImpersonationFn: vi.fn(),
+    impersonationMock: { current: null as unknown },
+  }));
 
 vi.mock("@repo/client", () => ({
   authSharedControllerLogoutV1: logoutFn,
