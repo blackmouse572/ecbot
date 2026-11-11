@@ -3404,6 +3404,167 @@
     },
     "error": "Something went wrong. Try again."
   },
+  "orders": {
+    "title": "Orders",
+    "description": "Confirmed orders show what customers bought and when, so Ecbot knows their last purchase and reminds them to rebuy on time.",
+    "create": "Add order",
+    "error": "Something went wrong, please try again.",
+    "noName": "No name",
+    "noItems": "No items noted",
+    "moreItems_one": "+{{count}} item",
+    "moreItems_other": "+{{count}} items",
+    "tabs": {
+      "orders": "Orders",
+      "groups": "Product groups"
+    },
+    "columns": {
+      "code": "Order code",
+      "customer": "Customer",
+      "items": "Items and groups",
+      "total": "Total",
+      "source": "Source",
+      "status": "Status",
+      "orderedAt": "Ordered",
+      "group": "Product group"
+    },
+    "status": {
+      "PENDING": "Awaiting confirmation",
+      "CONFIRMED": "Confirmed",
+      "CANCELLED": "Cancelled"
+    },
+    "source": {
+      "CHAT": "Chat",
+      "MANUAL": "Added by hand",
+      "IMPORT": "Imported"
+    },
+    "date": {
+      "today": "Today, {{time}}",
+      "yesterday": "Yesterday, {{time}}"
+    },
+    "list": {
+      "noRecordsTitle": "No orders yet",
+      "noRecordsMessage": "Orders the bot notes in chat show up here. You can also add orders customers placed elsewhere."
+    },
+    "pending": {
+      "title_one": "{{count}} order the bot noted in chat is awaiting confirmation.",
+      "title_other": "{{count}} orders the bot noted in chat are awaiting confirmation.",
+      "description": "An order only counts as a purchase once you confirm it.",
+      "show": "Show pending orders"
+    },
+    "detail": {
+      "description": "Order details",
+      "fromChat": "The bot noted this order in chat, {{when}}",
+      "fromChatHint": "Check the quantities and prices, then press Confirm. An unconfirmed order does not count as a purchase.",
+      "openConversation": "Open conversation",
+      "customer": "Customer",
+      "name": "Name",
+      "phone": "Phone",
+      "previous": "Bought before",
+      "previousNone": "No orders yet",
+      "previousCount_one": "{{count}} order, last on {{date}}",
+      "previousCount_other": "{{count}} orders, last on {{date}}",
+      "items": "Items",
+      "currency": "Prices in {{currency}}",
+      "afterConfirm": "Once confirmed, the order counts as a purchase.",
+      "afterConfirmGroups": "Once confirmed, the order counts as a purchase and the repurchase clock of {{groups}} starts again.",
+      "confirm": "Confirm order",
+      "confirmed": "Order confirmed",
+      "edit": "Edit order",
+      "cancel": "Cancel order",
+      "keep": "Keep order",
+      "cancelTitle": "Cancel order {{code}}?",
+      "cancelDescription": "A cancelled order does not count as a purchase and cannot be reopened.",
+      "cancelled": "Order cancelled"
+    },
+    "form": {
+      "createTitle": "Add order",
+      "createDescription": "Note an order placed outside chat, such as by phone, on Shopee or in store.",
+      "editTitle": "Edit order",
+      "editDescription": "Change the items, prices and date of order {{code}}.",
+      "customer": "Customer",
+      "customerPlaceholder": "Find a customer",
+      "customerHint": "Search by name or phone in your Customers list.",
+      "customerEmpty": "No customers found",
+      "items": "Items",
+      "itemName": "Product name",
+      "itemNamePlaceholder": "For example: Vitamin C serum 30ml",
+      "group": "Product group",
+      "groupPlaceholder": "Pick a group",
+      "groupCreate": "Create group “{{name}}”",
+      "quantity": "Qty",
+      "unitPrice": "Unit price",
+      "lineTotal": "Amount",
+      "removeItem": "Remove item",
+      "addItem": "Add item",
+      "total": "Total",
+      "customTotal": "Enter another total",
+      "itemsTotal": "Use the items' sum",
+      "groupHint": "Product groups tell Ecbot when a customer runs out, so it can remind them to rebuy. No matching group? Type a name to create one.",
+      "code": "Order code",
+      "codePlaceholder": "Leave empty and Ecbot makes a DH-... code",
+      "orderedAt": "Ordered",
+      "orderedTime": "Order time",
+      "status": "Status",
+      "statusHint": {
+        "CONFIRMED": "The customer committed, it counts as a purchase now.",
+        "PENDING": "Still waiting for payment or a delivery check."
+      },
+      "note": "Note",
+      "notePlaceholder": "For example: deliver during office hours",
+      "save": "Save order",
+      "created": "Order added",
+      "saved": "Order saved",
+      "errors": {
+        "customer": "Pick the customer who placed this order",
+        "itemName": "Enter the product name",
+        "quantity": "Quantity of 1 or more",
+        "items": "Add at least one item, or enter a total",
+        "orderedAt": "Pick the order date",
+        "codeTaken": "This order code is taken, please choose another",
+        "group": "Could not create the product group {{name}}, please try again"
+      }
+    },
+    "groups": {
+      "title": "Product groups",
+      "create": "Create product group",
+      "noRecordsTitle": "No product groups yet",
+      "noRecordsMessage": "Group similar products so Ecbot knows when customers need to buy again.",
+      "columns": {
+        "name": "Product group",
+        "inUse": "Cycle in use",
+        "yours": "You set",
+        "learned": "Ecbot learned"
+      },
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days",
+      "none": "None yet",
+      "setCycle": "Set a cycle",
+      "notLearned": "Not enough repurchases yet",
+      "howLearned": "Ecbot learns the cycle from the days between two purchases in the same group by one customer, taking the middle value once there are 5 or more repurchases. Until then it uses the number you set. Cancelled and unconfirmed orders do not count.",
+      "delete": {
+        "title": "Delete group {{name}}?",
+        "description": "Items in orders keep their names but no longer belong to a group.",
+        "deleted": "Product group deleted"
+      },
+      "form": {
+        "editTitle": "Edit product group",
+        "notFoundTitle": "This product group no longer exists",
+        "notFoundMessage": "It may have been deleted. Go back to the list to see the groups you have.",
+        "description": "The group name and how many days customers usually take to run out",
+        "namePlaceholder": "For example: Sunscreen",
+        "nameHint": "Products whose name contains the group name join this group when the bot notes an order.",
+        "days": "Repurchase cycle (days)",
+        "daysHint": "How many days customers usually take to run out. Ecbot uses this until it learns from orders.",
+        "created": "Product group created",
+        "saved": "Product group saved",
+        "errors": {
+          "name": "Enter a group name",
+          "days": "From 1 to 730 days",
+          "nameTaken": "A group with this name exists"
+        }
+      }
+    }
+  },
   "customerMarketing": {
     "stage": {
       "NEW": "New",
