@@ -479,6 +479,52 @@ function getRouteMaps(): RouteObject[] {
               ],
             },
             {
+              path: ROUTES.Orders,
+              handle: {
+                breadcrumb: () => t("orders.title"),
+              },
+              ErrorBoundary: ErrorBoundary,
+              children: [
+                {
+                  path: "",
+                  lazy: () => import("./orders/order-list"),
+                  children: [
+                    {
+                      path: "create",
+                      ErrorBoundary: ErrorBoundary,
+                      lazy: () => import("./orders/order-create"),
+                    },
+                    {
+                      path: ":orderId",
+                      ErrorBoundary: ErrorBoundary,
+                      lazy: () => import("./orders/order-detail"),
+                    },
+                    {
+                      path: ":orderId/edit",
+                      ErrorBoundary: ErrorBoundary,
+                      lazy: () => import("./orders/order-edit"),
+                    },
+                  ],
+                },
+                {
+                  path: "groups",
+                  lazy: () => import("./orders/product-group-list"),
+                  children: [
+                    {
+                      path: "create",
+                      ErrorBoundary: ErrorBoundary,
+                      lazy: () => import("./orders/product-group-edit"),
+                    },
+                    {
+                      path: ":groupId/edit",
+                      ErrorBoundary: ErrorBoundary,
+                      lazy: () => import("./orders/product-group-edit"),
+                    },
+                  ],
+                },
+              ],
+            },
+            {
               path: ROUTES.Customers,
               handle: {
                 private: true,
