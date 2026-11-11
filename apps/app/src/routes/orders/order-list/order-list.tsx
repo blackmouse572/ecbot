@@ -166,7 +166,7 @@ const useColumns = () => {
           <span className="block text-right">{t("orders.columns.total")}</span>
         ),
         cell: ({ row }) => (
-          <span className="txt-compact-small-plus block text-right whitespace-nowrap tabular-nums">
+          <span className="txt-compact-small-plus ml-auto block text-right whitespace-nowrap tabular-nums">
             {formatMoney(
               row.original.total,
               row.original.currency,
