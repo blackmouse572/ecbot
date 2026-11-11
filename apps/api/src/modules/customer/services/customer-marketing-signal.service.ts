@@ -1,6 +1,9 @@
 import { ProductGroupRepository } from '@app/modules/order/repository/repositories/product-group.repository';
 import { Injectable, Logger } from '@nestjs/common';
-import { CUSTOMER_MARKETING_DEFER_DAYS } from '../constants/customer-marketing.constant';
+import {
+    CUSTOMER_MARKETING_DEFER_DAYS,
+    CUSTOMER_MARKETING_HOSTILE_MAX_AGE_DAYS,
+} from '../constants/customer-marketing.constant';
 import {
     ENUM_CUSTOMER_JOURNEY_STAGE,
     ENUM_MARKETING_EVENT_ACTOR,
@@ -135,6 +138,12 @@ export class CustomerMarketingSignalService {
                 return true;
             }
             case 'hostile': {
+                // The 90-day backfill reads old history: only a recent
+                // insult marks the customer.
+                const age = Date.now() - message.dateSent.getTime();
+                if (age > CUSTOMER_MARKETING_HOSTILE_MAX_AGE_DAYS * DAY_MS) {
+                    return false;
+                }
                 // Once per message, and never over a person's decision made
                 // after the message: an operator who cleared the flag is not
                 // overruled by a re-read or by the 90-day backfill.

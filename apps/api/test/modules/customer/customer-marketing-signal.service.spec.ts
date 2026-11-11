@@ -162,6 +162,27 @@ describe('CustomerMarketingSignalService (#500)', () => {
         ]);
     });
 
+    it('ignores an insult older than 30 days (Jaden, 2026-11-11)', async () => {
+        const old = {
+            ...target,
+            messages: [
+                { id: 'msg-old', dateSent: new Date(Date.now() - 31 * DAY_MS) },
+            ],
+        };
+
+        const applied = await service.apply(old, [
+            {
+                kind: 'hostile',
+                product_group_id: null,
+                message_index: 0,
+                quote: 'đồ lừa đảo',
+            },
+        ]);
+
+        expect(applied).toBe(0);
+        expect(marketing.setHostile).not.toHaveBeenCalled();
+    });
+
     it('marks the customer Khó chịu from a hostile message', async () => {
         await service.apply(target, [
             {
