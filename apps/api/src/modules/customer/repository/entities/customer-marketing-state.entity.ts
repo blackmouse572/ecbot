@@ -26,6 +26,10 @@ export const CustomerMarketingStateTableName = 'customer_marketing_states';
 @Unique({ properties: ['customer'] })
 @Index({ properties: ['workspace', 'stage'] })
 @Index({ properties: ['workspace', 'permission'] })
+@Index({
+    name: 'customer_marketing_states_first_source_index',
+    properties: ['workspace', 'firstTrackedLink'],
+})
 export class CustomerMarketingStateEntity extends DatabaseEntityBase {
     @ManyToOne(() => WorkspaceEntity)
     workspace: WorkspaceEntity;

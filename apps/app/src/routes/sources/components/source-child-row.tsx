@@ -6,19 +6,24 @@ import {
 } from "@medusajs/icons";
 import { IconButton, Text, Tooltip, toast } from "@medusajs/ui";
 import { IconLink, IconQrcode } from "@tabler/icons-react";
-import { useState, type FC } from "react";
+import { useMemo, useState, type FC } from "react";
 import { useTranslation } from "react-i18next";
+import { SourceCloseRate } from "./source-close-rate";
 import { useQrDownload } from "./use-qr-download";
 
 type SourceChildRowProps = {
   link: TrackedLinkGetResponseDto;
-  /** Show the kind (Mã QR, Link KOL) as its own column, as on the detail page. */
+  /** The detail page's columns: the kind (Mã QR, Link KOL) and the counts. */
   showKind?: boolean;
 };
 
 /** One QR code or KOL link under a source: its name and code, copy, and QR download. */
 export const SourceChildRow: FC<SourceChildRowProps> = ({ link, showKind }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const number = useMemo(
+    () => new Intl.NumberFormat(i18n.language),
+    [i18n.language],
+  );
   const [copied, setCopied] = useState(false);
   const { qr, downloadPng } = useQrDownload(link.url, link.code);
   const isQr = link.kind === "QR";
@@ -59,6 +64,25 @@ export const SourceChildRow: FC<SourceChildRowProps> = ({ link, showKind }) => {
         >
           {t(`customerSources.kind.${link.kind}`)}
         </Text>
+      )}
+      {showKind && (
+        <>
+          <Text
+            size="small"
+            className="hidden w-20 shrink-0 text-right tabular-nums md:block"
+          >
+            {number.format(link.stats?.newCustomers ?? 0)}
+          </Text>
+          <Text
+            size="small"
+            className="hidden w-14 shrink-0 text-right tabular-nums md:block"
+          >
+            {number.format(link.stats?.orders ?? 0)}
+          </Text>
+          <div className="hidden w-16 shrink-0 justify-end md:flex">
+            <SourceCloseRate stats={link.stats} />
+          </div>
+        </>
       )}
       {link.url && (
         <div className="flex w-[60px] shrink-0 items-center justify-end gap-x-1">
