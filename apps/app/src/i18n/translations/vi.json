@@ -3621,6 +3621,11 @@
         "meta": "{{rows}} dòng, {{columns}} cột",
         "change": "Đổi file"
       },
+      "template": {
+        "title": "File mẫu",
+        "description": "Tải file mẫu để xem Ecbot đọc những cột nào. Các dòng cùng mã đơn gộp thành một đơn.",
+        "sample": "3 đơn mẫu, CSV"
+      },
       "map": {
         "description": "Ghép mỗi cột trong file với một thông tin của đơn. Ecbot đã đoán sẵn, bạn chỉ cần kiểm lại.",
         "columns": {

@@ -1,18 +1,28 @@
 import { RouteFocusModal } from "@/components/modals";
-import { Button, Text } from "@medusajs/ui";
-import { FileUpload, type FileType } from "@repo/ui/common-components";
-import { useState, type FC } from "react";
+import { Button, Heading, Text } from "@medusajs/ui";
+import {
+  FilePreview,
+  FileUpload,
+  type FileType,
+} from "@repo/ui/common-components";
+import { useMemo, useState, type FC } from "react";
 import { useTranslation } from "react-i18next";
 import type { OrderImportFile } from "../types";
 import { parseCsv } from "./csv";
 import { ImportStepBody } from "./import-step-body";
+import { importTemplate } from "./import-template";
 
 /** Step 1, Chọn file: read the CSV in the browser, nothing is sent yet. */
 export const ImportFileStep: FC<{
   onFile: (file: OrderImportFile) => void;
 }> = ({ onFile }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [error, setError] = useState<string | null>(null);
+
+  const template = useMemo(
+    () => importTemplate(i18n.language),
+    [i18n.language],
+  );
 
   const handleUploaded = async ([upload]: FileType[]) => {
     if (!upload) {
@@ -51,6 +61,20 @@ export const ImportFileStep: FC<{
               {error}
             </Text>
           )}
+        </div>
+        <div className="flex flex-col gap-y-3">
+          <div className="flex flex-col gap-y-1">
+            <Heading level="h2">{t("orders.import.template.title")}</Heading>
+            <Text size="small" className="text-ui-fg-subtle">
+              {t("orders.import.template.description")}
+            </Text>
+          </div>
+          <FilePreview
+            filename={template.filename}
+            mime="text/csv"
+            description={t("orders.import.template.sample")}
+            url={`data:text/csv;charset=utf-8,${encodeURIComponent(template.csv)}`}
+          />
         </div>
       </ImportStepBody>
       <RouteFocusModal.Footer>

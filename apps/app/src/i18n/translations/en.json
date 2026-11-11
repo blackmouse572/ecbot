@@ -3586,6 +3586,11 @@
         "meta": "{{rows}} rows, {{columns}} columns",
         "change": "Change file"
       },
+      "template": {
+        "title": "Import template",
+        "description": "Download the sample file to see which columns Ecbot reads. Rows with the same order code become one order.",
+        "sample": "3 sample orders, CSV"
+      },
       "map": {
         "description": "Match each column in the file to a detail of the order. Ecbot has guessed already, you only need to check.",
         "columns": {

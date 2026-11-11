@@ -180,7 +180,7 @@ export const useOrderImportPreview = (
   chunks: OrderImportRowRequestDto[][],
 ) =>
   useQuery({
-    queryKey: [ORDER_QUERY_KEY, "import-preview", workspace, chunks],
+    queryKey: [...orderQueryKeys.all, "import-preview", workspace, chunks],
     queryFn: () => importOrderChunks(workspace, chunks, true),
     enabled: !!workspace && chunks.length > 0,
     staleTime: Infinity,
