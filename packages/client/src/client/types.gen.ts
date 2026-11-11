@@ -6390,9 +6390,7 @@ export type AttachSkillRequestDto = {
 export type CustomerMarketingSummaryResponseDto = {
     stage: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'BOUGHT_ONCE' | 'BOUGHT_REPEAT';
     permission: 'PENDING' | 'GRANTED' | 'PAUSED' | 'STOPPED';
-    permissionUntil?: {
-        [key: string]: unknown;
-    } | null;
+    permissionUntil?: string | null;
     /**
      * The "Khó chịu" flag.
      */
@@ -6691,21 +6689,11 @@ export type MarketingEventGetResponseDto = {
     deletedBy?: UserMetaResponseDto;
     kind: 'STAGE' | 'PERMISSION' | 'CONSENT_ASKED' | 'HOSTILE';
     actor: 'BOT' | 'CLASSIFIER' | 'OPERATOR' | 'CLIENT' | 'RULE';
-    oldValue?: {
-        [key: string]: unknown;
-    } | null;
-    newValue?: {
-        [key: string]: unknown;
-    } | null;
-    reason?: {
-        [key: string]: unknown;
-    } | null;
-    conversationId?: {
-        [key: string]: unknown;
-    } | null;
-    messageId?: {
-        [key: string]: unknown;
-    } | null;
+    oldValue?: string | null;
+    newValue?: string | null;
+    reason?: string | null;
+    conversationId?: string | null;
+    messageId?: string | null;
 };
 
 export type CustomerMarketingFreeWindowResponseDto = {
@@ -6717,17 +6705,13 @@ export type CustomerMarketingFreeWindowResponseDto = {
     /**
      * Free messages are allowed until then; past means closed. Null: no limit (Telegram).
      */
-    openUntil: {
-        [key: string]: unknown;
-    } | null;
+    openUntil: string | null;
 };
 
 export type CustomerMarketingStateGetResponseDto = {
     stage: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'BOUGHT_ONCE' | 'BOUGHT_REPEAT';
     permission: 'PENDING' | 'GRANTED' | 'PAUSED' | 'STOPPED';
-    permissionUntil?: {
-        [key: string]: unknown;
-    } | null;
+    permissionUntil?: string | null;
     /**
      * The "Khó chịu" flag.
      */
@@ -6736,12 +6720,8 @@ export type CustomerMarketingStateGetResponseDto = {
      * Ngủ đông: no message for 120 days.
      */
     dormant: boolean;
-    consentAskedAt?: {
-        [key: string]: unknown;
-    } | null;
-    lastInboundAt?: {
-        [key: string]: unknown;
-    } | null;
+    consentAskedAt?: string | null;
+    lastInboundAt?: string | null;
     /**
      * The latest stage change: why the customer is here.
      */

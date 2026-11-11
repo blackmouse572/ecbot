@@ -6,11 +6,11 @@ import { MarketingEventGetResponseDto } from './marketing-event.get.response.dto
 
 export class CustomerMarketingStateGetResponseDto extends CustomerMarketingSummaryResponseDto {
     @Expose()
-    @ApiProperty({ required: false, nullable: true })
+    @ApiProperty({ type: Date, required: false, nullable: true })
     consentAskedAt?: Date | null;
 
     @Expose()
-    @ApiProperty({ required: false, nullable: true })
+    @ApiProperty({ type: Date, required: false, nullable: true })
     lastInboundAt?: Date | null;
 
     @Expose()

@@ -16,7 +16,7 @@ export class CustomerMarketingSummaryResponseDto {
     permission: ENUM_CUSTOMER_MARKETING_PERMISSION;
 
     @Expose()
-    @ApiProperty({ required: false, nullable: true })
+    @ApiProperty({ type: Date, required: false, nullable: true })
     permissionUntil?: Date | null;
 
     @Expose()

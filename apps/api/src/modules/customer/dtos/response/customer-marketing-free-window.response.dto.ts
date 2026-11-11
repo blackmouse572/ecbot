@@ -14,6 +14,7 @@ export class CustomerMarketingFreeWindowResponseDto {
 
     @Expose()
     @ApiProperty({
+        type: Date,
         nullable: true,
         description:
             'Free messages are allowed until then; past means closed. Null: no limit (Telegram).',
