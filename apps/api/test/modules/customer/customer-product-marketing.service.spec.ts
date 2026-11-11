@@ -1,3 +1,4 @@
+import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { NotFoundException } from '@nestjs/common';
 import {
     ENUM_CUSTOMER_JOURNEY_STAGE as STAGE,
@@ -84,7 +85,7 @@ function makeHarness() {
         reactionRepository as any,
         marketingService
     );
-    return { service, states, reactions, events };
+    return { service, states, reactions, events, em };
 }
 
 const classifier = {
@@ -162,6 +163,24 @@ describe('CustomerProductMarketingService', () => {
             );
         });
 
+        it('survives two writes racing to create the same row', async () => {
+            const { service, em, reactions } = makeHarness();
+            em.flush.mockRejectedValueOnce(
+                new UniqueConstraintViolationException(new Error('duplicate'))
+            );
+            const until = new Date(Date.now() + 60 * DAY);
+            await expect(
+                service.deferProductGroup(
+                    'c1',
+                    'w1',
+                    'serum',
+                    until,
+                    classifier
+                )
+            ).resolves.toEqual(expect.objectContaining({ until }));
+            expect(reactions).toHaveLength(1);
+        });
+
         it('ignores a date already past (an old message in the backfill)', async () => {
             const { service, reactions, events } = makeHarness();
             await service.deferProductGroup(
@@ -204,6 +223,7 @@ describe('CustomerProductMarketingService', () => {
                 reason: 'customer asked again',
                 userId: 'u1',
             });
+            expect(events.at(-1)?.reason).toBe('customer asked again');
             expect(reactions).toHaveLength(0);
             expect(events.at(-1)).toEqual(
                 expect.objectContaining({

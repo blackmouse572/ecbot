@@ -28,6 +28,7 @@ import {
     Param,
     ParseUUIDPipe,
     Put,
+    Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'src/common/response/decorators/response.decorator';
@@ -113,13 +114,18 @@ export class CustomerProductReactionWorkspaceController {
         @WorkspacePayload() workspace: WorkspaceEntity,
         @Param('id') id: string,
         @Param('productGroupId', ParseUUIDPipe) productGroupId: string,
-        @AuthJwtPayload('user', UserParsePipe) user: UserEntity
+        @AuthJwtPayload('user', UserParsePipe) user: UserEntity,
+        @Query('reason') reason?: string
     ): Promise<void> {
         await this.productMarketingService.clearProductGroup(
             id,
             workspace.id,
             productGroupId,
-            { actor: ENUM_MARKETING_EVENT_ACTOR.OPERATOR, userId: user.id }
+            {
+                actor: ENUM_MARKETING_EVENT_ACTOR.OPERATOR,
+                reason: reason?.trim().slice(0, 500) || undefined,
+                userId: user.id,
+            }
         );
         await this.activityService.createByUserWithWorkspace(user, workspace, {
             action: ENUM_ACTIVITY_ACTION.UPDATE,

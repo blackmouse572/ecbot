@@ -32,6 +32,8 @@ function makeHarness(
         }),
         flush: jest.fn().mockResolvedValue(undefined),
         fork: jest.fn(() => em),
+        nativeDelete: jest.fn().mockResolvedValue(1),
+        nativeUpdate: jest.fn().mockResolvedValue(1),
         find: jest.fn(async () => reactions),
         count: jest.fn(async (_entity: any, where: any) =>
             (where.customer.$in as string[]).reduce(
@@ -359,10 +361,11 @@ describe('CustomerMarketingService', () => {
             expect(states.get('messenger')?.stage).toBe(STAGE.BOUGHT_REPEAT);
         });
 
-        it('carries "Tạm hoãn" over, the later date winning', async () => {
+        it('carries "Tạm hoãn" over, the later date winning, with events', async () => {
             const soon = new Date(Date.now() + 10 * 86_400_000);
             const later = new Date(Date.now() + 80 * 86_400_000);
             const row = (customer: string, group: string, until: Date) => ({
+                id: `${customer}-${group}`,
                 workspace: { id: 'w1' },
                 customer: { id: customer },
                 productGroup: { id: group },
@@ -370,7 +373,7 @@ describe('CustomerMarketingService', () => {
                 reason: customer,
             });
             const survivorSerum = row('messenger', 'serum', soon);
-            const { service, em } = makeHarness(
+            const { service, em, events } = makeHarness(
                 { zalo: 'w1', messenger: 'w1' },
                 {},
                 [
@@ -379,19 +382,75 @@ describe('CustomerMarketingService', () => {
                     survivorSerum,
                 ]
             );
-            await service.recordInbound({
-                customerId: 'zalo',
-                workspaceId: 'w1',
-                text: 'hi',
-            });
-            await service.mergeInto('zalo', 'messenger', 'w1', em);
+            // The loser never messaged, so it has no state row.
+            const result = await service.mergeInto(
+                'zalo',
+                'messenger',
+                'w1',
+                em
+            );
             expect(survivorSerum.until).toEqual(later);
-            expect(em.persist).toHaveBeenCalledWith(
+            expect(result.replacedReactions).toEqual([
+                {
+                    id: 'messenger-serum',
+                    until: soon.toISOString(),
+                    reason: 'messenger',
+                },
+            ]);
+            expect(result.createdReactions).toEqual([
                 expect.objectContaining({
                     customer: { id: 'messenger' },
                     productGroup: { id: 'toner' },
                     until: soon,
+                }),
+            ]);
+            const reactionEvents = events.filter(e => e.kind === KIND.REACTION);
+            expect(reactionEvents).toHaveLength(2);
+            expect(reactionEvents[0]).toEqual(
+                expect.objectContaining({
+                    actor: ACTOR.RULE,
+                    reason: 'customer_merge',
+                    customer: { id: 'messenger' },
+                    productGroup: { id: 'serum' },
+                    newValue: later.toISOString().slice(0, 10),
                 })
+            );
+        });
+
+        it('counts orders of a loser with no state row', async () => {
+            const { service, states, em } = makeHarness(
+                { zalo: 'w1', messenger: 'w1' },
+                { zalo: 1, messenger: 1 }
+            );
+            await service.setStage('messenger', 'w1', STAGE.BOUGHT_ONCE, bot);
+            await service.mergeInto('zalo', 'messenger', 'w1', em);
+            expect(states.get('messenger')?.stage).toBe(STAGE.BOUGHT_REPEAT);
+        });
+    });
+
+    describe('revertMergedReactions', () => {
+        it('deletes the copies and restores replaced dates', async () => {
+            const { service, em } = makeHarness();
+            await service.revertMergedReactions(
+                {
+                    createdReactionIds: ['copy-1'],
+                    replacedReactions: [
+                        {
+                            id: 'row-1',
+                            until: '2026-12-01T00:00:00.000Z',
+                            reason: 'later',
+                        },
+                    ],
+                },
+                em
+            );
+            expect(em.nativeDelete).toHaveBeenCalledWith(expect.anything(), {
+                id: { $in: ['copy-1'] },
+            });
+            expect(em.nativeUpdate).toHaveBeenCalledWith(
+                expect.anything(),
+                { id: 'row-1' },
+                { until: new Date('2026-12-01T00:00:00.000Z'), reason: 'later' }
             );
         });
     });

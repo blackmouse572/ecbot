@@ -33,6 +33,8 @@ import {
 import {
     ICustomerMarketingChangeContext,
     ICustomerMarketingInbound,
+    ICustomerMarketingMergeResult,
+    ICustomerMarketingMergeUndo,
     IMarketingEventInput,
 } from '../interfaces/customer-marketing.interface';
 import { CustomerMarketingStateEntity } from '../repository/entities/customer-marketing-state.entity';
@@ -243,76 +245,63 @@ export class CustomerMarketingService {
 
     /**
      * Inside the merge transaction: the survivor keeps the strictest
-     * permission, the further stage and the hostile flag. The loser keeps its
-     * own row, so an unmerge gets it back unchanged.
+     * permission, the further stage and the hostile flag, counts both
+     * customers' confirmed orders and gets the loser's "Tạm hoãn" rows. The
+     * loser keeps its own rows, so an unmerge gets them back unchanged; the
+     * result says what to undo on the survivor (see revertMergedReactions).
      */
     async mergeInto(
         loserId: string,
         survivorId: string,
         workspaceId: string,
         em: EntityManager
-    ): Promise<void> {
-        const loser = await this.stateRepository.findByCustomer(loserId, em);
-        if (!loser) return;
-        const survivor =
-            (await this.stateRepository.findByCustomer(survivorId, em)) ??
-            this.newState(survivorId, workspaceId, em);
+    ): Promise<ICustomerMarketingMergeResult> {
         const context: ICustomerMarketingChangeContext = {
             actor: ENUM_MARKETING_EVENT_ACTOR.RULE,
             reason: CUSTOMER_MARKETING_REASON_MERGE,
         };
-
-        const stageOf = (s: CustomerMarketingStateEntity) =>
-            CUSTOMER_JOURNEY_STAGE_ORDER.indexOf(s.stage);
-        if (stageOf(loser) > stageOf(survivor)) {
-            this.addEvent(
-                survivor,
-                ENUM_MARKETING_EVENT_KIND.STAGE,
-                { ...context, oldValue: survivor.stage, newValue: loser.stage },
-                em
-            );
-            survivor.stage = loser.stage;
-        }
-        if (loser.hostile && !survivor.hostile) {
-            this.addEvent(
-                survivor,
-                ENUM_MARKETING_EVENT_KIND.HOSTILE,
-                { ...context, oldValue: 'false', newValue: 'true' },
-                em
-            );
-            survivor.hostile = true;
-        }
-        const rank = (p: ENUM_CUSTOMER_MARKETING_PERMISSION) =>
-            CUSTOMER_MARKETING_PERMISSION_MERGE_ORDER.indexOf(p);
-        if (rank(loser.permission) < rank(survivor.permission)) {
-            this.applyPermission(
-                survivor,
-                loser.permission,
-                loser.permissionUntil ?? null,
-                context,
-                em
-            );
-        }
+        const result = await this.mergeReactions(
+            loserId,
+            survivorId,
+            workspaceId,
+            context,
+            em
+        );
+        const loser = await this.stateRepository.findByCustomer(loserId, em);
         // The loser's orders move to the survivor, so count both.
         const confirmed = await this.countConfirmedOrders(
             [loserId, survivorId],
             em
         );
+        if (!loser && !confirmed) return result;
+        const survivor =
+            (await this.stateRepository.findByCustomer(survivorId, em)) ??
+            this.newState(survivorId, workspaceId, em);
+        if (loser) this.mergeLabels(loser, survivor, context, em);
         if (confirmed) {
             this.moveStage(survivor, this.boughtStage(confirmed), context, em);
         }
-        survivor.lastOrderAt = this.latest(
-            survivor.lastOrderAt,
-            loser.lastOrderAt
-        );
-        await this.mergeReactions(loserId, survivorId, em);
-        survivor.consentAskedAt =
-            survivor.consentAskedAt ?? loser.consentAskedAt ?? null;
-        survivor.lastInboundAt = this.latest(
-            survivor.lastInboundAt,
-            loser.lastInboundAt
-        );
         em.persist(survivor);
+        return result;
+    }
+
+    /** Unmerge: removes the merge's copies and restores replaced dates. */
+    async revertMergedReactions(
+        undo: ICustomerMarketingMergeUndo,
+        em: EntityManager
+    ): Promise<void> {
+        if (undo.createdReactionIds?.length) {
+            await em.nativeDelete(CustomerProductReactionEntity, {
+                id: { $in: undo.createdReactionIds },
+            });
+        }
+        for (const row of undo.replacedReactions ?? []) {
+            await em.nativeUpdate(
+                CustomerProductReactionEntity,
+                { id: row.id },
+                { until: new Date(row.until), reason: row.reason }
+            );
+        }
     }
 
     async listEvents(
@@ -555,38 +544,116 @@ export class CustomerMarketingService {
         return a > b ? a : b;
     }
 
+    private mergeLabels(
+        loser: CustomerMarketingStateEntity,
+        survivor: CustomerMarketingStateEntity,
+        context: ICustomerMarketingChangeContext,
+        em: EntityManager
+    ): void {
+        const stageOf = (s: CustomerMarketingStateEntity) =>
+            CUSTOMER_JOURNEY_STAGE_ORDER.indexOf(s.stage);
+        if (stageOf(loser) > stageOf(survivor)) {
+            this.addEvent(
+                survivor,
+                ENUM_MARKETING_EVENT_KIND.STAGE,
+                { ...context, oldValue: survivor.stage, newValue: loser.stage },
+                em
+            );
+            survivor.stage = loser.stage;
+        }
+        if (loser.hostile && !survivor.hostile) {
+            this.addEvent(
+                survivor,
+                ENUM_MARKETING_EVENT_KIND.HOSTILE,
+                { ...context, oldValue: 'false', newValue: 'true' },
+                em
+            );
+            survivor.hostile = true;
+        }
+        const rank = (p: ENUM_CUSTOMER_MARKETING_PERMISSION) =>
+            CUSTOMER_MARKETING_PERMISSION_MERGE_ORDER.indexOf(p);
+        if (rank(loser.permission) < rank(survivor.permission)) {
+            this.applyPermission(
+                survivor,
+                loser.permission,
+                loser.permissionUntil ?? null,
+                context,
+                em
+            );
+        }
+        survivor.consentAskedAt =
+            survivor.consentAskedAt ?? loser.consentAskedAt ?? null;
+        survivor.lastInboundAt = this.latest(
+            survivor.lastInboundAt,
+            loser.lastInboundAt
+        );
+        survivor.lastOrderAt = this.latest(
+            survivor.lastOrderAt,
+            loser.lastOrderAt
+        );
+    }
+
     /**
      * The survivor gets the loser's "Tạm hoãn" rows; on the same group the
-     * later date wins. The loser keeps its rows for an unmerge.
+     * later date wins. Each change writes a REACTION event on the survivor.
      */
     private async mergeReactions(
         loserId: string,
         survivorId: string,
+        workspaceId: string,
+        context: ICustomerMarketingChangeContext,
         em: EntityManager
-    ): Promise<void> {
+    ): Promise<ICustomerMarketingMergeResult> {
+        const result: ICustomerMarketingMergeResult = {
+            createdReactions: [],
+            replacedReactions: [],
+        };
         const rows = await em.find(CustomerProductReactionEntity, {
             customer: { $in: [loserId, survivorId] },
         });
+        const target = {
+            workspace: em.getReference(WorkspaceEntity, workspaceId),
+            customer: em.getReference(CustomerEntity, survivorId),
+        };
+        const day = (date?: Date | null) =>
+            date?.toISOString().slice(0, 10) ?? null;
         const survivorRows = rows.filter(r => r.customer.id === survivorId);
         for (const row of rows.filter(r => r.customer.id === loserId)) {
             const existing = survivorRows.find(
                 r => r.productGroup.id === row.productGroup.id
             );
+            if (existing && row.until <= existing.until) continue;
+            this.addEvent(
+                target,
+                ENUM_MARKETING_EVENT_KIND.REACTION,
+                {
+                    ...context,
+                    productGroupId: row.productGroup.id,
+                    oldValue: day(existing?.until),
+                    newValue: day(row.until),
+                },
+                em
+            );
             if (existing) {
-                if (row.until > existing.until) {
-                    existing.until = row.until;
-                    existing.reason = row.reason;
-                }
+                result.replacedReactions.push({
+                    id: existing.id,
+                    until: existing.until.toISOString(),
+                    reason: existing.reason ?? null,
+                });
+                existing.until = row.until;
+                existing.reason = row.reason;
                 continue;
             }
             const copy = new CustomerProductReactionEntity();
             copy.workspace = row.workspace;
-            copy.customer = em.getReference(CustomerEntity, survivorId);
+            copy.customer = target.customer;
             copy.productGroup = row.productGroup;
             copy.until = row.until;
             copy.reason = row.reason;
             em.persist(copy);
+            result.createdReactions.push(copy);
         }
+        return result;
     }
 
     private async save(

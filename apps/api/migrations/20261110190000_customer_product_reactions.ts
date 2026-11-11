@@ -61,6 +61,13 @@ export class Migration20261110190000_customer_product_reactions extends Migratio
 
     override async down(): Promise<void> {
         this.addSql(
+            `drop table if exists "customer_product_reactions" cascade;`
+        );
+        // The narrower kind check below cannot hold rows of the new kinds.
+        this.addSql(
+            `delete from "marketing_events" where "kind" in ('REACTION', 'INTENT');`
+        );
+        this.addSql(
             `alter table "marketing_events" drop constraint if exists "marketing_events_kind_check";`
         );
 

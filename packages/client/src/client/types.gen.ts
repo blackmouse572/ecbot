@@ -32925,7 +32925,12 @@ export type CustomerProductReactionWorkspaceControllerRemoveV1Data = {
          */
         workspace: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Why the group can be offered again (kept in the history).
+         */
+        reason?: string;
+    };
     url: '/api/v1/workspace/{workspace}/customers/{id}/marketing/reactions/{productGroupId}';
 };
 

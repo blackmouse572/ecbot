@@ -44,7 +44,17 @@ function makeService(em: any, suggestionRepo: any) {
         findActiveByWorkspace: jest.fn().mockResolvedValue([]),
     };
     const customerMarketing = {
-        mergeInto: jest.fn().mockResolvedValue(undefined),
+        mergeInto: jest.fn().mockResolvedValue({
+            createdReactions: [{ id: 'react-copy' }],
+            replacedReactions: [
+                {
+                    id: 'react-a',
+                    until: '2026-12-01T00:00:00.000Z',
+                    reason: 'x',
+                },
+            ],
+        }),
+        revertMergedReactions: jest.fn().mockResolvedValue(undefined),
     };
     const service = new CustomerMergeSuggestionService(
         em,
@@ -424,6 +434,19 @@ describe('CustomerMergeSuggestionService', () => {
             expect((suggestion as any).unmergeSnapshot.loserOrderIds).toEqual([
                 'ord-1',
             ]);
+            // The "Tạm hoãn" rows the merge put on the survivor, for unmerge.
+            expect(
+                (suggestion as any).unmergeSnapshot.createdReactionIds
+            ).toEqual(['react-copy']);
+            expect(
+                (suggestion as any).unmergeSnapshot.replacedReactions
+            ).toEqual([
+                {
+                    id: 'react-a',
+                    until: '2026-12-01T00:00:00.000Z',
+                    reason: 'x',
+                },
+            ]);
             expect((suggestion as any).unmergeSnapshot.loserFields.name).toBe(
                 'Loser'
             );
@@ -505,6 +528,7 @@ describe('CustomerMergeSuggestionService', () => {
                     loserContactPointIds: ['cp-1'],
                     loserOrderIds: ['ord-1'],
                     loserTagAssignmentIds: ['assn-1'],
+                    createdReactionIds: ['react-copy'],
                     loserFields: {
                         name: 'Loser was here',
                         phone: 'l-phone',
@@ -523,9 +547,17 @@ describe('CustomerMergeSuggestionService', () => {
             tem.findOne
                 .mockResolvedValueOnce(suggestion) // suggestion
                 .mockResolvedValueOnce(loser); // loser
-            const { service } = makeService(em, {});
+            const { service, customerMarketing } = makeService(em, {});
 
             await service.unmerge('cust-A', 'ws-1');
+
+            // The survivor's merged "Tạm hoãn" rows are undone.
+            expect(
+                customerMarketing.revertMergedReactions
+            ).toHaveBeenCalledWith(
+                expect.objectContaining({ createdReactionIds: ['react-copy'] }),
+                tem
+            );
 
             // Loser restored
             expect((loser as any).mergedIntoCustomerId).toBeNull();

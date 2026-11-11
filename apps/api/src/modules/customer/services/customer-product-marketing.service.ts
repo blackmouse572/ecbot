@@ -1,6 +1,7 @@
 import { ENUM_ORDER_STATUS } from '@app/modules/order/enums/order.enum';
 import { OrderItemEntity } from '@app/modules/order/repository/entities/order-item.entity';
 import { ProductGroupEntity } from '@app/modules/order/repository/entities/product-group.entity';
+import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
@@ -46,50 +47,16 @@ export class CustomerProductMarketingService {
     ): Promise<CustomerProductReactionEntity | null> {
         await this.marketingService.assertCustomer(customerId, workspaceId);
         await this.assertProductGroup(productGroupId, workspaceId);
-        const existing = await this.findReaction(customerId, productGroupId);
-        if (until.getTime() <= Date.now()) return existing;
-        if (
-            await this.alreadyRecorded(
-                customerId,
-                ENUM_MARKETING_EVENT_KIND.REACTION,
-                productGroupId,
-                context
-            )
-        ) {
-            return existing;
+        const args = [customerId, workspaceId, productGroupId, until] as const;
+        try {
+            return await this.applyDefer(...args, context, this.em.fork());
+        } catch (error: unknown) {
+            // Two writes for the same group raced to create the row: the
+            // other one won, so this run finds it and updates it.
+            if (!(error instanceof UniqueConstraintViolationException))
+                throw error;
+            return this.applyDefer(...args, context, this.em.fork());
         }
-
-        const reaction = existing ?? new CustomerProductReactionEntity();
-        if (!existing) {
-            reaction.workspace = this.em.getReference(
-                WorkspaceEntity,
-                workspaceId
-            );
-            reaction.customer = this.em.getReference(
-                CustomerEntity,
-                customerId
-            );
-            reaction.productGroup = this.em.getReference(
-                ProductGroupEntity,
-                productGroupId
-            );
-        }
-        const before = existing?.until ?? null;
-        reaction.until = until;
-        reaction.reason = context.reason ?? null;
-        this.marketingService.addEvent(
-            reaction,
-            ENUM_MARKETING_EVENT_KIND.REACTION,
-            {
-                ...context,
-                productGroupId,
-                oldValue: toDay(before),
-                newValue: toDay(until),
-            }
-        );
-        this.em.persist(reaction);
-        await this.em.flush();
-        return reaction;
     }
 
     /** The group can be offered again. */
@@ -226,6 +193,59 @@ export class CustomerProductMarketingService {
         );
     }
 
+    private async applyDefer(
+        customerId: string,
+        workspaceId: string,
+        productGroupId: string,
+        until: Date,
+        context: ICustomerMarketingChangeContext,
+        em: EntityManager
+    ): Promise<CustomerProductReactionEntity | null> {
+        const existing = await this.reactionRepository.findOne(
+            { customer: customerId, productGroup: productGroupId },
+            { populate: [], em }
+        );
+        if (until.getTime() <= Date.now()) return existing;
+        if (
+            await this.alreadyRecorded(
+                customerId,
+                ENUM_MARKETING_EVENT_KIND.REACTION,
+                productGroupId,
+                context,
+                em
+            )
+        ) {
+            return existing;
+        }
+
+        const reaction = existing ?? new CustomerProductReactionEntity();
+        if (!existing) {
+            reaction.workspace = em.getReference(WorkspaceEntity, workspaceId);
+            reaction.customer = em.getReference(CustomerEntity, customerId);
+            reaction.productGroup = em.getReference(
+                ProductGroupEntity,
+                productGroupId
+            );
+        }
+        const before = existing?.until ?? null;
+        reaction.until = until;
+        reaction.reason = context.reason ?? null;
+        this.marketingService.addEvent(
+            reaction,
+            ENUM_MARKETING_EVENT_KIND.REACTION,
+            {
+                ...context,
+                productGroupId,
+                oldValue: toDay(before),
+                newValue: toDay(until),
+            },
+            em
+        );
+        em.persist(reaction);
+        await em.flush();
+        return reaction;
+    }
+
     findReaction(
         customerId: string,
         productGroupId: string
@@ -240,10 +260,11 @@ export class CustomerProductMarketingService {
         customerId: string,
         kind: ENUM_MARKETING_EVENT_KIND,
         productGroupId: string | null,
-        context: ICustomerMarketingChangeContext
+        context: ICustomerMarketingChangeContext,
+        em: EntityManager = this.em
     ): Promise<boolean> {
         if (!context.messageId) return false;
-        const count = await this.em.count(MarketingEventEntity, {
+        const count = await em.count(MarketingEventEntity, {
             customer: customerId,
             kind,
             messageId: context.messageId,

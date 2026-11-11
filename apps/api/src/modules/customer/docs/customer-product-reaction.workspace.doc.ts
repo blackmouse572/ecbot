@@ -46,7 +46,19 @@ export function CustomerProductReactionWorkspaceDeleteDoc(): MethodDecorator {
         Doc({
             summary: 'Offer a postponed product group to this customer again',
         }),
-        DocRequest({ params }),
+        DocRequest({
+            params,
+            queries: [
+                {
+                    name: 'reason',
+                    required: false,
+                    allowEmptyValue: true,
+                    type: 'string',
+                    description:
+                        'Why the group can be offered again (kept in the history).',
+                },
+            ],
+        }),
         DocAuth({ xApiKey: true, jwtAccessToken: true }),
         DocResponse('customerMarketing.reaction.delete')
     );

@@ -1,3 +1,4 @@
+import type { CustomerProductReactionEntity } from '../repository/entities/customer-product-reaction.entity';
 import {
     ENUM_CUSTOMER_JOURNEY_STAGE,
     ENUM_MARKETING_EVENT_ACTOR,
@@ -40,4 +41,25 @@ export interface ICustomerMarketingInbound {
     text?: string | null;
     conversationId?: string;
     messageId?: string;
+}
+
+/** What a merge changed on the survivor's "Tạm hoãn" rows. */
+export interface ICustomerMarketingMergeResult {
+    /** Ids are set once the merge flushes. */
+    createdReactions: CustomerProductReactionEntity[];
+    replacedReactions: ICustomerProductReactionBefore[];
+}
+
+/** A survivor row before the merge moved its date. */
+export interface ICustomerProductReactionBefore {
+    id: string;
+    /** ISO date, as kept in the unmerge snapshot. */
+    until: string;
+    reason: string | null;
+}
+
+/** Kept in the merge suggestion's unmerge snapshot. */
+export interface ICustomerMarketingMergeUndo {
+    createdReactionIds?: string[];
+    replacedReactions?: ICustomerProductReactionBefore[];
 }
