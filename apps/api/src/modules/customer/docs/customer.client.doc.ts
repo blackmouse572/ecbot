@@ -7,13 +7,17 @@ import {
 } from '@app/common/doc/decorators/doc.decorator';
 import { ENUM_DOC_REQUEST_BODY_TYPE } from '@app/common/doc/enums/doc.enum';
 import { applyDecorators } from '@nestjs/common';
-import { CustomerDocParamsId } from '../constants/customer.doc.constant';
+import {
+    CustomerDocParamsId,
+    CustomerDocQueryMarketingFilters,
+} from '../constants/customer.doc.constant';
 import { CustomerUpdateRequestDto } from '../dtos/request/customer.update.request.dto';
 import { CustomerGetResponseDto } from '../dtos/response/customer.get.response.dto';
 
 export function CustomerClientListDoc(): MethodDecorator {
     return applyDecorators(
         Doc({ summary: 'list the customers of the credential workspace' }),
+        DocRequest({ queries: CustomerDocQueryMarketingFilters }),
         DocAuth({ xApiKey: true }),
         DocResponsePaging<CustomerGetResponseDto>('customer.workspace.list', {
             dto: CustomerGetResponseDto,

@@ -70,7 +70,8 @@ function makeHarness(
         em,
         stateRepository as any,
         eventRepository as any,
-        customerRepository as any
+        customerRepository as any,
+        { get: jest.fn() } as any
     );
     return { service, states, events, em };
 }
@@ -569,24 +570,40 @@ describe('CustomerMarketingService', () => {
         });
     });
 
-    describe('mapGet', () => {
-        it('is not Ngủ đông while a recent order exists', () => {
+    describe('dormant', () => {
+        const summaryFor = async (state: CustomerMarketingStateEntity) => {
             const { service } = makeHarness();
+            state.customer = { id: 'c1' } as any;
+            (service as any).stateRepository.find = jest.fn(async () => [
+                state,
+            ]);
+            return (await service.summarize(['c1'])).get('c1');
+        };
+
+        it('is not Lâu không nhắn while a recent order exists', async () => {
             const state = new CustomerMarketingStateEntity();
             state.lastInboundAt = new Date(Date.now() - 200 * 86_400_000);
             state.lastOrderAt = new Date(Date.now() - 30 * 86_400_000);
-            expect(service.mapGet(state).dormant).toBe(false);
+            expect((await summaryFor(state))?.dormant).toBe(false);
             state.lastOrderAt = new Date(Date.now() - 130 * 86_400_000);
-            expect(service.mapGet(state).dormant).toBe(true);
+            expect((await summaryFor(state))?.dormant).toBe(true);
         });
 
-        it('shows Ngủ đông after 120 days without a message', () => {
+        it('shows Lâu không nhắn after 120 days without a message', async () => {
             const { service } = makeHarness();
             const state = new CustomerMarketingStateEntity();
+            state.customer = { id: 'c1' } as any;
+            (service as any).stateRepository.find = jest.fn(async () => [
+                state,
+            ]);
             state.lastInboundAt = new Date(Date.now() - 121 * 86_400_000);
-            expect(service.mapGet(state).dormant).toBe(true);
+            expect((await service.summarize(['c1'])).get('c1')?.dormant).toBe(
+                true
+            );
             state.lastInboundAt = new Date(Date.now() - 10 * 86_400_000);
-            expect(service.mapGet(state).dormant).toBe(false);
+            expect((await service.summarize(['c1'])).get('c1')?.dormant).toBe(
+                false
+            );
         });
     });
 });

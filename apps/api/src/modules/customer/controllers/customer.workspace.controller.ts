@@ -35,7 +35,11 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from 'src/common/pagination/enums/pagination.enum';
-import { PaginationQuery } from 'src/common/pagination/decorators/pagination.decorator';
+import {
+    PaginationQuery,
+    PaginationQueryFilterInBoolean,
+    PaginationQueryFilterInEnum,
+} from 'src/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from 'src/common/pagination/dtos/pagination.list.dto';
 import { PaginationService } from 'src/common/pagination/services/pagination.service';
 import {
@@ -58,7 +62,13 @@ import { CustomerGetResponseDto } from '../dtos/response/customer.get.response.d
 import { CustomerWorkspaceGetResponseDto } from '../dtos/response/customer.workspace-get.response.dto';
 import { CustomerErasureService } from '../services/customer-erasure.service';
 import { CustomerMergeSuggestionService } from '../services/customer-merge-suggestion.service';
+import {
+    ENUM_CUSTOMER_JOURNEY_STAGE,
+    ENUM_CUSTOMER_MARKETING_PERMISSION,
+} from '../enums/customer-marketing.enum';
+import { CustomerMarketingService } from '../services/customer-marketing.service';
 import { CustomerService } from '../services/customer.service';
+import { customerMarketingListFilterFromQuery } from '../utils/customer-marketing-list-filter.util';
 
 @ApiTags('modules.workspace.customer')
 @Controller({
@@ -71,7 +81,8 @@ export class CustomerWorkspaceController {
         private readonly mergeSuggestionService: CustomerMergeSuggestionService,
         private readonly activityService: ActivityService,
         private readonly paginationService: PaginationService,
-        private readonly erasureService: CustomerErasureService
+        private readonly erasureService: CustomerErasureService,
+        private readonly marketingService: CustomerMarketingService
     ) {}
 
     @CustomerWorkspaceListDoc()
@@ -94,9 +105,28 @@ export class CustomerWorkspaceController {
             // customers in a large workspace.
             defaultOrderDirection: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
         })
-        { _search, _limit, _offset, _order }: PaginationListDto
+        { _search, _limit, _offset, _order }: PaginationListDto,
+        @PaginationQueryFilterInEnum(
+            'stage',
+            undefined,
+            ENUM_CUSTOMER_JOURNEY_STAGE
+        )
+        stage?: Record<string, any>,
+        @PaginationQueryFilterInEnum(
+            'permission',
+            undefined,
+            ENUM_CUSTOMER_MARKETING_PERMISSION
+        )
+        permission?: Record<string, any>,
+        @PaginationQueryFilterInBoolean('dormant', [true, false])
+        dormant?: Record<string, any>
     ): Promise<IResponsePaging<CustomerGetResponseDto>> {
-        const find: Record<string, any> = { ..._search };
+        const find: Record<string, any> = {
+            ..._search,
+            ...this.marketingService.customerListFilter(
+                customerMarketingListFilterFromQuery(stage, permission, dormant)
+            ),
+        };
 
         const [customers, total] = await Promise.all([
             this.customerService.findByWorkspace(workspace.id, find, {
@@ -111,17 +141,18 @@ export class CustomerWorkspaceController {
             this.customerService.countByWorkspace(workspace.id, find),
         ]);
 
-        const summaries = await this.customerService.summarizeConversations(
-            customers.map(c => c.id),
-            workspace.id
-        );
+        const ids = customers.map(c => c.id);
+        const [summaries, marketing] = await Promise.all([
+            this.customerService.summarizeConversations(ids, workspace.id),
+            this.marketingService.summarize(ids),
+        ]);
 
         return {
             _pagination: {
                 total,
                 totalPage: this.paginationService.totalPage(total, _limit),
             },
-            data: this.customerService.mapList(customers, summaries),
+            data: this.customerService.mapList(customers, summaries, marketing),
         };
     }
 

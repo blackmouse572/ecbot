@@ -17,7 +17,7 @@ export function CustomerMarketingWorkspaceGetDoc(): MethodDecorator {
     return applyDecorators(
         Doc({
             summary:
-                "Get a customer's marketing labels: journey stage, messaging permission, Khó chịu and Ngủ đông",
+                "Get a customer's marketing labels (journey stage, messaging permission, Khó chịu, Ngủ đông), the reason behind each, and the free-message windows",
         }),
         DocRequest({
             params: [...WorkspaceDocParamsId, ...CustomerDocParamsId],

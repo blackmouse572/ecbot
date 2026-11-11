@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { plainToInstance } from 'class-transformer';
+import { CustomerMarketingSummaryResponseDto } from '../dtos/response/customer-marketing-summary.response.dto';
 import { CustomerGetResponseDto } from '../dtos/response/customer.get.response.dto';
 import { CustomerWorkspaceGetResponseDto } from '../dtos/response/customer.workspace-get.response.dto';
 import {
@@ -431,7 +432,8 @@ export class CustomerService implements ICustomerService {
 
     mapList(
         customers: CustomerEntity[],
-        summaries?: Map<string, ICustomerConversationSummary>
+        summaries?: Map<string, ICustomerConversationSummary>,
+        marketing?: Map<string, CustomerMarketingSummaryResponseDto>
     ): CustomerGetResponseDto[] {
         return customers.map(c => {
             const dto = this.mapGet(c);
@@ -440,6 +442,7 @@ export class CustomerService implements ICustomerService {
                 dto.conversationCount = summary?.conversationCount ?? 0;
                 dto.channels = summary?.channels ?? [];
             }
+            if (marketing) dto.marketing = marketing.get(c.id);
             return dto;
         });
     }

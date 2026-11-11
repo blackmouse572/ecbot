@@ -28,6 +28,11 @@ const mockActivityService = {
     createByUserWithWorkspace: jest.fn(),
 };
 
+const mockMarketingService = {
+    customerListFilter: jest.fn(() => ({})),
+    summarize: jest.fn(async () => new Map()),
+};
+
 const mockPaginationService = {
     totalPage: jest.fn((total: number, limit: number) =>
         Math.ceil(total / limit)
@@ -44,7 +49,8 @@ describe('CustomerClientController', () => {
         controller = new CustomerClientController(
             mockCustomerService as any,
             mockActivityService as any,
-            mockPaginationService as any
+            mockPaginationService as any,
+            mockMarketingService as any
         );
     });
 
@@ -117,6 +123,43 @@ describe('CustomerClientController', () => {
             _pagination: { total: 1, totalPage: 1 },
             data: mapped,
         });
+    });
+
+    it('filters by the marketing labels and returns them on each row', async () => {
+        mockMarketingService.customerListFilter.mockReturnValue({
+            $and: [{ label: true }],
+        });
+        const marketing = new Map([['cust-1', { stage: 'NEW' }]]);
+        mockMarketingService.summarize.mockResolvedValue(marketing as any);
+        mockCustomerService.findByWorkspace.mockResolvedValue([
+            { id: 'cust-1' },
+        ]);
+        mockCustomerService.countByWorkspace.mockResolvedValue(1);
+        mockCustomerService.mapList.mockReturnValue([]);
+
+        await controller.list(
+            workspace,
+            { _limit: 20, _offset: 0, _order: {}, _search: {} } as any,
+            { stage: { $in: ['NEW'] } },
+            undefined,
+            { dormant: { $in: [false] } }
+        );
+
+        expect(mockMarketingService.customerListFilter).toHaveBeenCalledWith({
+            stages: ['NEW'],
+            permissions: undefined,
+            dormant: false,
+        });
+        expect(mockCustomerService.findByWorkspace).toHaveBeenCalledWith(
+            'workspace-1',
+            { $and: [{ label: true }] },
+            expect.anything()
+        );
+        expect(mockCustomerService.mapList).toHaveBeenCalledWith(
+            [{ id: 'cust-1' }],
+            undefined,
+            marketing
+        );
     });
 
     describe('get', () => {

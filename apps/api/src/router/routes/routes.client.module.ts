@@ -14,6 +14,7 @@ import { AwsModule } from '@app/modules/aws/aws.module';
 import { ConversationClientController } from '@app/modules/conversation/controllers/conversation.client.controller';
 import { ConversationModule } from '@app/modules/conversation/conversation.module';
 import { CustomerClientController } from '@app/modules/customer/controllers/customer.client.controller';
+import { CustomerMarketingClientController } from '@app/modules/customer/controllers/customer-marketing.client.controller';
 import { CustomerTagAssignmentClientController } from '@app/modules/customer/controllers/customer-tag-assignment.client.controller';
 import { CustomerTagClientController } from '@app/modules/customer/controllers/customer-tag.client.controller';
 import { CustomerModule } from '@app/modules/customer/customer.module';
@@ -44,6 +45,7 @@ import { Module } from '@nestjs/common';
         ChatbotKnowledgeItemClientController,
         ConversationClientController,
         CustomerClientController,
+        CustomerMarketingClientController,
         CustomerTagClientController,
         CustomerTagAssignmentClientController,
         ToolClientController,

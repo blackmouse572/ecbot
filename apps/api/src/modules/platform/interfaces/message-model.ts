@@ -63,6 +63,12 @@ export interface AdapterCapabilities {
      * send never fails on a limit. Left out, the inbox sends text only.
      */
     uploads?: MediaLimits;
+    /**
+     * Hours after a customer's last message that the shop may still message
+     * them for free (offers, follow-ups). Null means no limit (Telegram, once
+     * they pressed Start). Left out, the channel has no free route for offers.
+     */
+    freeMessageWindowHours?: number | null;
 }
 
 export type MediaLimits = Partial<

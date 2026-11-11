@@ -46,6 +46,11 @@ const mockErasureService = {
     erase: jest.fn(),
 };
 
+const mockMarketingService = {
+    customerListFilter: jest.fn(() => ({})),
+    summarize: jest.fn(async () => new Map()),
+};
+
 const mockPaginationService = {
     totalPage: jest.fn((total: number, limit: number) =>
         Math.ceil(total / limit)
@@ -58,7 +63,8 @@ function buildController(): CustomerWorkspaceController {
         mockMergeSuggestionService as any,
         mockActivityService as any,
         mockPaginationService as any,
-        mockErasureService as any
+        mockErasureService as any,
+        mockMarketingService as any
     );
 }
 
@@ -164,8 +170,86 @@ describe('CustomerWorkspaceController', () => {
             ).toHaveBeenCalledWith(['cust-1'], 'ws-1');
             expect(mockCustomerService.mapList).toHaveBeenCalledWith(
                 [customerEntity],
-                summaries
+                summaries,
+                expect.any(Map)
             );
+        });
+
+        it('filters by the marketing labels and returns them on each row', async () => {
+            const labelFind = { $and: [{ label: true }] };
+            mockMarketingService.customerListFilter.mockReturnValue(labelFind);
+            const marketing = new Map([
+                ['cust-1', { stage: 'ASKED_PRICE', permission: 'GRANTED' }],
+            ]);
+            mockMarketingService.summarize.mockResolvedValue(marketing as any);
+            mockCustomerService.findByWorkspace.mockResolvedValue([
+                customerEntity,
+            ]);
+            mockCustomerService.countByWorkspace.mockResolvedValue(1);
+            mockCustomerService.summarizeConversations.mockResolvedValue(
+                new Map()
+            );
+            mockCustomerService.mapList.mockReturnValue([mappedDto]);
+            const search = { $or: [{ name: { $ilike: '%ali%' } }] };
+
+            await controller.list(
+                { id: 'ws-1' } as any,
+                { _search: search, _limit: 20, _offset: 0, _order: {} } as any,
+                { stage: { $in: ['NEW', 'ASKED_PRICE'] } },
+                { permission: { $in: ['STOPPED'] } },
+                { dormant: { $in: [true] } }
+            );
+
+            expect(
+                mockMarketingService.customerListFilter
+            ).toHaveBeenCalledWith({
+                stages: ['NEW', 'ASKED_PRICE'],
+                permissions: ['STOPPED'],
+                dormant: true,
+            });
+            const find = { ...search, ...labelFind };
+            expect(mockCustomerService.findByWorkspace).toHaveBeenCalledWith(
+                'ws-1',
+                find,
+                expect.anything()
+            );
+            expect(mockCustomerService.countByWorkspace).toHaveBeenCalledWith(
+                'ws-1',
+                find
+            );
+            expect(mockMarketingService.summarize).toHaveBeenCalledWith([
+                'cust-1',
+            ]);
+            expect(mockCustomerService.mapList).toHaveBeenCalledWith(
+                [customerEntity],
+                expect.any(Map),
+                marketing
+            );
+        });
+
+        it('does not filter on Ngủ đông when both values or none are asked', async () => {
+            mockCustomerService.findByWorkspace.mockResolvedValue([]);
+            mockCustomerService.countByWorkspace.mockResolvedValue(0);
+            mockCustomerService.summarizeConversations.mockResolvedValue(
+                new Map()
+            );
+            mockCustomerService.mapList.mockReturnValue([]);
+
+            await controller.list(
+                { id: 'ws-1' } as any,
+                { _search: {}, _limit: 20, _offset: 0, _order: {} } as any,
+                undefined,
+                undefined,
+                { dormant: { $in: [true, false] } }
+            );
+
+            expect(
+                mockMarketingService.customerListFilter
+            ).toHaveBeenCalledWith({
+                stages: undefined,
+                permissions: undefined,
+                dormant: undefined,
+            });
         });
     });
 
