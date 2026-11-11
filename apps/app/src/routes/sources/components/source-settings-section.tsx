@@ -29,7 +29,7 @@ export const SourceSettingsSection: FC<SourceSettingsSectionProps> = ({
   );
 
   return (
-    <Container className="p-0">
+    <Container className="divide-y p-0">
       <div className="flex items-center justify-between px-6 py-4">
         <Heading level="h2">{t("customerSources.detail.settings")}</Heading>
         <Button size="small" variant="transparent" asChild>
