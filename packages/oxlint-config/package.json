@@ -10,10 +10,10 @@
     "check-types": "tsc --noEmit --target ES2024 --module NodeNext --moduleResolution NodeNext --strict --skipLibCheck --verbatimModuleSyntax --allowImportingTsExtensions --types node anti-slop/index.ts"
   },
   "devDependencies": {
-    "@oxlint/plugins": "1.90.0",
+    "@oxlint/plugins": "1.92.0",
     "@types/node": "^22.20.4",
-    "eslint-plugin-turbo": "^2.11.3",
-    "oxlint": "1.90.0",
+    "eslint-plugin-turbo": "^2.11.10",
+    "oxlint": "1.92.0",
     "typescript": "^5.9.3"
   }
 }
