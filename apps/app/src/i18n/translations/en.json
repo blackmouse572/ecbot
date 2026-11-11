@@ -3440,7 +3440,8 @@
         "quantity": "Quantity of 1 or more",
         "items": "Add at least one item, or enter a total",
         "orderedAt": "Pick the order date",
-        "codeTaken": "This order code is taken, please choose another"
+        "codeTaken": "This order code is taken, please choose another",
+        "group": "Could not create the product group {{name}}, please try again"
       }
     },
     "groups": {
@@ -3467,6 +3468,8 @@
       },
       "form": {
         "editTitle": "Edit product group",
+        "notFoundTitle": "This product group no longer exists",
+        "notFoundMessage": "It may have been deleted. Go back to the list to see the groups you have.",
         "description": "The group name and how many days customers usually take to run out",
         "namePlaceholder": "For example: Sunscreen",
         "nameHint": "Products whose name contains the group name join this group when the bot notes an order.",

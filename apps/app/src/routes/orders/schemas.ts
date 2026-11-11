@@ -1,5 +1,6 @@
 import { t } from "i18next";
 import { z as zod } from "zod/v4";
+import { ORDER_FORM_STATUSES } from "./constants";
 
 /** A group picked from the list (id), or a new name the form creates on save. */
 const groupChoice = zod
@@ -24,7 +25,7 @@ export const orderFormSchema = zod
     customTotal: zod.number().int().min(0).nullable(),
     code: zod.string().trim().max(64),
     orderedAt: zod.date(t("orders.form.errors.orderedAt")),
-    status: zod.enum(["CONFIRMED", "PENDING"]),
+    status: zod.enum(ORDER_FORM_STATUSES),
     note: zod.string().trim().max(2000),
   })
   .refine((value) => value.items.length > 0 || value.customTotal !== null, {

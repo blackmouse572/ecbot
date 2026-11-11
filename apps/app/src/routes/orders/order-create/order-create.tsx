@@ -48,11 +48,16 @@ const OrderCreateForm = () => {
   });
 
   const handleSubmit = form.handleSubmit(async (data) => {
+    // Groups first, outside the order's try: their errors are not the order's.
+    const items = await toItems(data.items, groups);
+
+    if (!items) return;
+
     try {
       await mutateAsync({
         customerId: data.customerId,
         code: data.code || undefined,
-        items: await toItems(data.items, groups),
+        items,
         total: data.customTotal ?? itemsTotal(data.items),
         status: data.status,
         orderedAt: data.orderedAt.toISOString(),

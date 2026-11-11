@@ -13,11 +13,10 @@ import { Form } from "@repo/ui/common-components";
 import type { FC, ReactNode } from "react";
 import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { ORDER_FORM_STATUSES } from "../constants";
 import type { OrderFormData } from "../schemas";
 import { timeOf, withDay, withTime } from "../utils";
 import { OrderItemsField } from "./order-items-field";
-
-const STATUSES = ["CONFIRMED", "PENDING"] as const;
 
 /**
  * The body of frame 14c, shared by Thêm đơn and Sửa đơn. Sửa đơn passes the
@@ -113,7 +112,7 @@ export const OrderFormFields: FC<{
                   onValueChange={onChange}
                   className="grid grid-cols-1 gap-3 sm:grid-cols-2"
                 >
-                  {STATUSES.map((status) => (
+                  {ORDER_FORM_STATUSES.map((status) => (
                     <label
                       key={status}
                       className={clx(

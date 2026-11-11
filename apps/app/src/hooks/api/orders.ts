@@ -1,4 +1,3 @@
-import { queryKeysFactory } from "@/libs/query-factory";
 import {
   orderWorkspaceControllerCancelV1,
   orderWorkspaceControllerConfirmV1,
@@ -19,7 +18,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { productGroupQueryKeys } from "./product-groups";
+import { orderQueryKeys, productGroupQueryKeys } from "./order-query-keys";
 
 export type {
   OrderCreateRequestDto,
@@ -29,8 +28,7 @@ export type {
   OrderUpdateRequestDto,
 };
 
-export const ORDER_QUERY_KEY = "orders" as const;
-export const orderQueryKeys = queryKeysFactory(ORDER_QUERY_KEY);
+export { ORDER_QUERY_KEY, orderQueryKeys } from "./order-query-keys";
 
 export type OrderListParams = NonNullable<
   OrderWorkspaceControllerListV1Data["query"]

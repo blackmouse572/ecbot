@@ -28,6 +28,9 @@ export const ORDER_STATUSES = Object.keys(
   ORDER_STATUS_COLOR,
 ) as OrderGetResponseDto["status"][];
 
+/** The statuses an order can be saved with; Huỷ đơn is its own action. */
+export const ORDER_FORM_STATUSES = ["CONFIRMED", "PENDING"] as const;
+
 export const ORDER_SOURCES: OrderGetResponseDto["source"][] = [
   "CHAT",
   "MANUAL",

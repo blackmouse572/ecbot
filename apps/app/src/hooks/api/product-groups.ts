@@ -1,4 +1,3 @@
-import { queryKeysFactory } from "@/libs/query-factory";
 import {
   productGroupWorkspaceControllerCreateV1,
   productGroupWorkspaceControllerDeleteV1,
@@ -15,6 +14,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { orderQueryKeys, productGroupQueryKeys } from "./order-query-keys";
 
 export type {
   ProductGroupCreateRequestDto,
@@ -22,8 +22,10 @@ export type {
   ProductGroupUpdateRequestDto,
 };
 
-export const PRODUCT_GROUP_QUERY_KEY = "product-groups" as const;
-export const productGroupQueryKeys = queryKeysFactory(PRODUCT_GROUP_QUERY_KEY);
+export {
+  PRODUCT_GROUP_QUERY_KEY,
+  productGroupQueryKeys,
+} from "./order-query-keys";
 
 export type ProductGroupListParams = NonNullable<
   ProductGroupWorkspaceControllerListV1Data["query"]
@@ -97,7 +99,7 @@ export const useDeleteProductGroup = (workspace: string) => {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productGroupQueryKeys.all });
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: orderQueryKeys.all });
     },
   });
 };

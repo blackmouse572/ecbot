@@ -481,6 +481,7 @@ function getRouteMaps(): RouteObject[] {
             {
               path: ROUTES.Orders,
               handle: {
+                private: true,
                 breadcrumb: () => t("orders.title"),
               },
               ErrorBoundary: ErrorBoundary,

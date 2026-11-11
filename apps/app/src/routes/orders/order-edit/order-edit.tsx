@@ -96,10 +96,15 @@ const OrderEditForm: FC<{ order: OrderGetResponseDto }> = ({ order }) => {
   });
 
   const handleSubmit = form.handleSubmit(async (data) => {
+    // Groups first, outside the order's try: their errors are not the order's.
+    const items = await toItems(data.items, groups);
+
+    if (!items) return;
+
     try {
       await mutateAsync({
         code: data.code || undefined,
-        items: await toItems(data.items, groups),
+        items,
         total: data.customTotal ?? itemsTotal(data.items),
         orderedAt: data.orderedAt.toISOString(),
         note: data.note || null,

@@ -3478,7 +3478,8 @@
         "quantity": "Số lượng từ 1 trở lên",
         "items": "Thêm ít nhất một sản phẩm, hoặc nhập tổng tiền",
         "orderedAt": "Chọn ngày đặt",
-        "codeTaken": "Mã đơn này đã có, bạn chọn mã khác nhé"
+        "codeTaken": "Mã đơn này đã có, bạn chọn mã khác nhé",
+        "group": "Chưa tạo được nhóm hàng {{name}}, bạn thử lại nhé"
       }
     },
     "groups": {
@@ -3505,6 +3506,8 @@
       },
       "form": {
         "editTitle": "Sửa nhóm hàng",
+        "notFoundTitle": "Nhóm hàng này không còn nữa",
+        "notFoundMessage": "Có thể nhóm đã bị xoá. Bạn quay lại danh sách để xem các nhóm hiện có.",
         "description": "Tên nhóm và số ngày khách thường dùng hết hàng",
         "namePlaceholder": "Ví dụ: Kem chống nắng",
         "nameHint": "Sản phẩm có tên chứa tên nhóm sẽ tự vào nhóm này khi bot ghi đơn.",

@@ -10,7 +10,7 @@ import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { readApiError } from "@/libs/api-error";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Heading, Input, toast } from "@medusajs/ui";
-import { Form, FormSkeleton } from "@repo/ui/common-components";
+import { Form, FormSkeleton, NoRecords } from "@repo/ui/common-components";
 import type { FC } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -55,9 +55,16 @@ export const ProductGroupEdit = () => {
           {t("orders.groups.form.description")}
         </RouteDrawer.Description>
       </RouteDrawer.Header>
-      {groupId && (isLoading || !group) ? (
+      {groupId && isLoading ? (
         <RouteDrawer.Body className="p-6">
           <FormSkeleton label={t("general.loading")} />
+        </RouteDrawer.Body>
+      ) : groupId && !group ? (
+        <RouteDrawer.Body className="p-6">
+          <NoRecords
+            title={t("orders.groups.form.notFoundTitle")}
+            message={t("orders.groups.form.notFoundMessage")}
+          />
         </RouteDrawer.Body>
       ) : (
         <ProductGroupForm group={group} />
