@@ -98,86 +98,88 @@ export function SourceDetail() {
   };
 
   return (
-    <TwoColumnPage hasOutlet>
-      <TwoColumnPage.Main>
-        <Container className="p-0">
-          <div className="flex flex-col gap-y-3 px-6 py-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="flex min-w-0 flex-col gap-y-1">
-                <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                  <Heading level="h1" className="min-w-0 break-words">
-                    {link.name}
-                  </Heading>
-                  <StatusBadge
-                    color={SOURCE_STATUS_COLOR[link.status]}
-                    className="whitespace-nowrap"
-                  >
-                    {t(`customerSources.status.${link.status}`)}
-                  </StatusBadge>
-                </div>
-                <Text size="small" className="text-ui-fg-subtle">
-                  {t("customerSources.detail.summary", {
-                    kind: t(`customerSources.kind.${link.kind}`),
-                    channel: channelOf(link.account.type).label,
-                    date: getFullDate(new Date(link.createdAt)),
-                  })}
-                </Text>
+    <div className="flex w-full flex-col gap-y-3">
+      <Container className="p-0">
+        <div className="flex flex-col gap-y-3 px-6 py-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-col gap-y-1">
+              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                <Heading level="h1" className="min-w-0 break-words">
+                  {link.name}
+                </Heading>
+                <StatusBadge
+                  color={SOURCE_STATUS_COLOR[link.status]}
+                  className="whitespace-nowrap"
+                >
+                  {t(`customerSources.status.${link.status}`)}
+                </StatusBadge>
               </div>
-              <div className="flex items-center gap-x-2">
-                {link.url && (
-                  <Button size="small" variant="secondary" asChild>
-                    <Link to="share">
-                      <Share />
-                      {t("customerSources.share.action")}
-                    </Link>
-                  </Button>
-                )}
+              <Text size="small" className="text-ui-fg-subtle">
+                {t("customerSources.detail.summary", {
+                  kind: t(`customerSources.kind.${link.kind}`),
+                  channel: channelOf(link.account.type).label,
+                  date: getFullDate(new Date(link.createdAt)),
+                })}
+              </Text>
+            </div>
+            <div className="flex items-center gap-x-2">
+              {link.url && (
                 <Button size="small" variant="secondary" asChild>
-                  <Link to="edit">
-                    <PencilSquare />
-                    {t("actions.edit")}
+                  <Link to="share">
+                    <Share />
+                    {t("customerSources.share.action")}
                   </Link>
                 </Button>
-                <ActionMenu
-                  groups={[
-                    {
-                      actions: [
-                        {
-                          icon: stopped ? <PlaySolid /> : <PauseSolid />,
-                          label: t(
-                            stopped
-                              ? "customerSources.detail.resume"
-                              : "customerSources.detail.stop",
-                          ),
-                          onClick: toggleStatus,
-                        },
-                      ],
-                    },
-                    {
-                      actions: [
-                        {
-                          icon: <Trash />,
-                          label: t("actions.delete"),
-                          onClick: handleDelete,
-                        },
-                      ],
-                    },
-                  ]}
-                />
-              </div>
-            </div>
-            <div className="max-w-[480px]">
-              <SourceLinkField url={link.url} channel={link.account.type} />
+              )}
+              <Button size="small" variant="secondary" asChild>
+                <Link to="edit">
+                  <PencilSquare />
+                  {t("actions.edit")}
+                </Link>
+              </Button>
+              <ActionMenu
+                groups={[
+                  {
+                    actions: [
+                      {
+                        icon: stopped ? <PlaySolid /> : <PauseSolid />,
+                        label: t(
+                          stopped
+                            ? "customerSources.detail.resume"
+                            : "customerSources.detail.stop",
+                        ),
+                        onClick: toggleStatus,
+                      },
+                    ],
+                  },
+                  {
+                    actions: [
+                      {
+                        icon: <Trash />,
+                        label: t("actions.delete"),
+                        onClick: handleDelete,
+                      },
+                    ],
+                  },
+                ]}
+              />
             </div>
           </div>
-          <SourceStatsSection source={link} />
-        </Container>
+          <div className="max-w-[480px]">
+            <SourceLinkField url={link.url} channel={link.account.type} />
+          </div>
+        </div>
+        <SourceStatsSection source={link} />
+      </Container>
 
-        <SourceLinksSection source={link} />
-      </TwoColumnPage.Main>
-      <TwoColumnPage.Sidebar>
-        <SourceSettingsSection source={link} />
-      </TwoColumnPage.Sidebar>
-    </TwoColumnPage>
+      <TwoColumnPage hasOutlet>
+        <TwoColumnPage.Main>
+          <SourceLinksSection source={link} />
+        </TwoColumnPage.Main>
+        <TwoColumnPage.Sidebar>
+          <SourceSettingsSection source={link} />
+        </TwoColumnPage.Sidebar>
+      </TwoColumnPage>
+    </div>
   );
 }
