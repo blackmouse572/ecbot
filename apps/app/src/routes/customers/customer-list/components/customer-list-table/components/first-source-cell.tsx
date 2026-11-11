@@ -20,13 +20,15 @@ export const FirstSourceCell: FC<Props> = ({ source }) => {
     );
   }
 
+  const text = source.codeName
+    ? `${source.sourceName}, ${source.codeName}`
+    : source.sourceName;
+
   return (
     <div className="flex min-w-0 items-center gap-x-2">
       <PlatformIcon type={source.channel} size={16} />
-      <Text size="small" className="truncate">
-        {source.codeName
-          ? `${source.sourceName}, ${source.codeName}`
-          : source.sourceName}
+      <Text size="small" className="truncate" title={text}>
+        {text}
       </Text>
     </div>
   );

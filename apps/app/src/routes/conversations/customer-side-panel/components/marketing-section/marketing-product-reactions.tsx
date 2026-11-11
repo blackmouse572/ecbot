@@ -21,9 +21,9 @@ export const MarketingProductReactions: FC<Props> = ({ reactions }) => {
         <div key={reaction.productGroupId} className="flex flex-col gap-y-1">
           <Badge
             size="2xsmall"
-            rounded="full"
             color="orange"
-            className="self-start whitespace-nowrap"
+            // The panel is narrow: a long group name wraps instead of spilling.
+            className="h-auto min-h-5 self-start py-0.5"
           >
             {t(`${KEY}.paused`, {
               group: reaction.productGroupName,
