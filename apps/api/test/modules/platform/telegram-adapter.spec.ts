@@ -102,6 +102,31 @@ describe('TelegramPlatformAdapter.parse', () => {
         expect(e.timestamp).toBeInstanceOf(Date);
     });
 
+    it('turns /start <code> into a referral and gives the bot a plain /start', () => {
+        const [e] = a.parse(msg({ text: '/start nhom-telegram-khach-quen' }));
+        expect(e).toMatchObject({
+            kind: 'message',
+            text: '/start',
+            referral: { code: 'nhom-telegram-khach-quen', source: 'link' },
+        });
+    });
+
+    it('lowercases the /start code and drops one that is not ours', () => {
+        expect(a.parse(msg({ text: '/start To-Roi-Tet' }))[0].referral).toEqual(
+            { code: 'to-roi-tet', source: 'link' }
+        );
+        const [other] = a.parse(msg({ text: '/start deep_link_1' }));
+        expect(other.text).toBe('/start');
+        expect(other.referral).toBeUndefined();
+    });
+
+    it('leaves a plain /start and other text without a referral', () => {
+        expect(a.parse(msg({ text: '/start' }))[0].referral).toBeUndefined();
+        const [spaced] = a.parse(msg({ text: '/start to roi tet' }));
+        expect(spaced.text).toBe('/start to roi tet');
+        expect(spaced.referral).toBeUndefined();
+    });
+
     it('parses a photo message', () => {
         const [e] = a.parse(
             msg({

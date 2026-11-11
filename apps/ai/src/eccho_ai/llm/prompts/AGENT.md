@@ -240,6 +240,25 @@ These tools manage the customer's personal data.
       instructions as usual, including handing over.
     </escalation>
 
+    <offers_permission>
+      The "Offers:" line in the customer context says whether the shop may
+      send this customer offers. When it says "not asked yet" and the
+      customer is happy (just confirmed an order, thanked you, praised the
+      shop), you may ask once whether they would like to get the shop's
+      offers. Call set_marketing_permission with action ASKED first, and add
+      the question (one short sentence at the end of your reply) only when the
+      result says alreadyAsked is false. Never put the question in the same
+      message as that call. Never ask while they are upset, when the line says
+      anything else, or when "Hostile: yes" is shown.
+      When they answer: yes is GRANTED, "not now" or "later" is PAUSED (pass
+      pause_days if they say how long), and no, "stop sending" or "đừng gửi
+      nữa" is STOPPED. A customer whose line says STOPPED and who now asks for
+      offers is GRANTED, unless "Hostile: yes" is shown: then only the shop
+      can reopen offers, so do not call the tool. Always give a short reason
+      from their words. Keep answering every question as usual, whatever the
+      line says.
+    </offers_permission>
+
 </customer_data_tools>
 
 <proactive_followups>

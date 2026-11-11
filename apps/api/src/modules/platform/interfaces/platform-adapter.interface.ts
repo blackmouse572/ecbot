@@ -40,6 +40,7 @@ export type PlatformWebhookEventKind =
     | 'reaction'
     | 'delivery'
     | 'read'
+    | 'referral'
     | 'unknown';
 
 export interface PlatformAttachment {
@@ -64,6 +65,14 @@ export interface PlatformAttachment {
  *  or the account's story (its image comes as a `story` attachment). */
 export type PlatformReplyTo =
     { kind: 'message'; externalMessageId: string } | { kind: 'story' };
+
+/** How the customer came in: the code of a tracked link, or a Meta ad. */
+export interface PlatformReferral {
+    /** The tracked link code (m.me / ig.me `ref`, Telegram start payload, ...). */
+    code?: string;
+    source: 'link' | 'ad';
+    adId?: string;
+}
 
 export interface PlatformWebhookEvent {
     kind: PlatformWebhookEventKind;
@@ -104,6 +113,8 @@ export interface PlatformWebhookEvent {
     action?: { id: string; value?: string };
     attachments?: PlatformAttachment[];
     replyTo?: PlatformReplyTo;
+    /** On a 'referral' event, or on the message or postback that opened the chat. */
+    referral?: PlatformReferral;
     reaction?: {
         emoji: string;
         messageId: string;

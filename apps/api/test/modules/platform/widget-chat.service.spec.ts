@@ -70,6 +70,11 @@ function setup(overrides: Record<string, any> = {}) {
     const sessionService = {
         mediaFolder: jest.fn(() => 'widget-media/acc-1/abc'),
     };
+    const customerMarketing = {
+        recordInbound: jest.fn(async () => ({
+            optedOut: overrides.optedOut ?? false,
+        })),
+    };
     const meter = {
         check: jest.fn().mockResolvedValue({ allowed: true }),
         record: jest.fn().mockResolvedValue(undefined),
@@ -93,6 +98,7 @@ function setup(overrides: Record<string, any> = {}) {
         handoffIntent as any,
         messageMedia as any,
         sessionService as any,
+        customerMarketing as any,
         meter as any
     );
 
@@ -106,7 +112,8 @@ function setup(overrides: Record<string, any> = {}) {
         turnContext,
         handoffIntent as any,
         messageMedia as any,
-        sessionService as any
+        sessionService as any,
+        customerMarketing as any
     );
 
     return {
@@ -122,6 +129,7 @@ function setup(overrides: Record<string, any> = {}) {
         handoffIntent,
         turnContext,
         messageMedia,
+        customerMarketing,
     };
 }
 
@@ -638,5 +646,48 @@ describe('WidgetChatService attachments', () => {
             })
         ).rejects.toThrow();
         expect(messageRepository.upsertByExternalId).not.toHaveBeenCalled();
+    });
+
+    describe('marketing opt-out', () => {
+        it('records the message and confirms "dừng" instead of an agent reply', async () => {
+            const {
+                service,
+                customerMarketing,
+                chatbotAIService,
+                messageRepository,
+            } = setup({ optedOut: true });
+
+            await service.handleTurn(res, { ...turn, text: 'dừng' });
+
+            expect(customerMarketing.recordInbound).toHaveBeenCalledWith({
+                customerId: 'cust-1',
+                workspaceId: 'ws-1',
+                text: 'dừng',
+                conversationId: 'conv-1',
+                messageId: 'msg-in',
+            });
+            expect(chatbotAIService.streamChat).not.toHaveBeenCalled();
+            expect(
+                messageRepository.insertPendingOutbound
+            ).toHaveBeenCalledWith(
+                'conv-1',
+                expect.any(String),
+                expect.objectContaining({
+                    authorType: ENUM_MESSAGE_AUTHOR.BOT,
+                    text: expect.stringContaining('dừng gửi tin ưu đãi'),
+                })
+            );
+        });
+
+        it('still answers when recording fails', async () => {
+            const { service, customerMarketing, chatbotAIService } = setup();
+            customerMarketing.recordInbound.mockRejectedValueOnce(
+                new Error('db down')
+            );
+
+            await service.handleTurn(res, turn);
+
+            expect(chatbotAIService.streamChat).toHaveBeenCalled();
+        });
     });
 });

@@ -343,6 +343,8 @@ export function widgetChatTransport(
   visitorId: string,
   parentOrigin: string | undefined,
   getTurnstileToken?: () => string | undefined,
+  /** The tracked link code (`ecb_src`) the visitor arrived with. */
+  source?: string,
 ): ChatTransportConfig {
   return {
     path: `/api/v1/public/widget/${encodeURIComponent(widgetKey)}/messages`,
@@ -354,6 +356,7 @@ export function widgetChatTransport(
       messageId: crypto.randomUUID(),
       parentOrigin,
       turnstileToken: getTurnstileToken?.(),
+      ...(source && { source }),
     }),
     // The widget keys its session by visitor, so it sends no session id.
     messageBody: (text) => ({ text }),

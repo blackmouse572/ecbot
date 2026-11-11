@@ -27,6 +27,8 @@ export interface WhatsAppInboundMessage {
     reaction?: { message_id: string; emoji?: string };
     /** Set on a reply that quotes an earlier message (`id`). */
     context?: { from?: string; id?: string; forwarded?: boolean };
+    /** Set on the first message from a click-to-WhatsApp ad. */
+    referral?: { source_id?: string; source_type?: string };
 }
 
 export interface WhatsAppStatus {

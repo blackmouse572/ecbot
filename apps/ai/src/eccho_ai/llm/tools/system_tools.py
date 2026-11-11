@@ -369,6 +369,57 @@ async def remove_customer_tag(name: str) -> dict[str, Any]:
         return {"error": str(exc)}
 
 
+_MARKETING_ACTIONS = {"ASKED", "GRANTED", "PAUSED", "STOPPED"}
+
+
+@tool
+async def set_marketing_permission(
+    action: str, reason: str, pause_days: int | None = None
+) -> dict[str, Any]:
+    """Record the one-time question about sending the customer offers, or
+    their answer. `action`: ASKED right when you ask (if the result says
+    alreadyAsked, do not ask), GRANTED when they say yes, PAUSED when they say
+    not now (`pause_days`, default 30), STOPPED when they refuse for good.
+    `reason`: a few words on what the customer said."""
+    started = time.perf_counter()
+    customer_id = _get_customer_id()
+    if not customer_id:
+        _log_call("set_marketing_permission", _truncate(action), "no_context", 0)
+        return {"error": "no customer context"}
+    normalized = action.strip().upper()
+    if normalized not in _MARKETING_ACTIONS:
+        _log_call("set_marketing_permission", _truncate(action), "bad_action", 0)
+        return {"error": f"action must be one of {sorted(_MARKETING_ACTIONS)}"}
+    # The API caps reason at 500 chars and pauseDays at 1..365; an
+    # out-of-range pause falls back to the API's default.
+    payload: dict[str, Any] = {"action": normalized, "reason": reason[:500]}
+    conversation_id = _get_session_id()
+    if conversation_id:
+        payload["conversationId"] = conversation_id
+    if pause_days is not None and 1 <= pause_days <= 365:
+        payload["pauseDays"] = pause_days
+    try:
+        result = await ApiClient.get_instance().post(
+            f"/system/customers/{customer_id}/marketing/permission",
+            payload,
+        )
+        _log_call(
+            "set_marketing_permission",
+            normalized,
+            "ok",
+            (time.perf_counter() - started) * 1000,
+        )
+        return result if isinstance(result, dict) else {"data": result}
+    except ApiClientError as exc:
+        _log_call(
+            "set_marketing_permission",
+            normalized,
+            "error",
+            (time.perf_counter() - started) * 1000,
+        )
+        return {"error": str(exc)}
+
+
 @tool
 async def schedule_followup(
     prompt: str,
@@ -638,6 +689,7 @@ SYSTEM_TOOLS: list[Any] = [
     update_customer_profile,
     apply_customer_tag,
     remove_customer_tag,
+    set_marketing_permission,
     schedule_followup,
     list_pending_followups,
     cancel_followup,

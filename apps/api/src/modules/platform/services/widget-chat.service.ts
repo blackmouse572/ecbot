@@ -34,9 +34,12 @@ import { WidgetSessionService } from './widget-session.service';
 import { MessageMediaService } from '@app/modules/conversation/services/message-media.service';
 import { HandoffIntentService } from './handoff-intent.service';
 import { handoffReplyText } from '../utils/handoff-reply.util';
+import { CustomerMarketingService } from '@app/modules/customer/services/customer-marketing.service';
+import { optOutReplyText } from '@app/modules/customer/utils/customer-marketing-opt-out.util';
 import { fallbackReplyText } from '../utils/fallback-reply.util';
 import { shouldHandOff } from '../utils/handoff-decision.util';
 import type { ReplyMedia } from '../interfaces/message-model';
+import type { PlatformReferral } from '../interfaces/platform-adapter.interface';
 
 export interface IWidgetTurn {
     /** WEBSITE_WIDGET account with `chatbot` and `workspace` populated. */
@@ -48,6 +51,8 @@ export interface IWidgetTurn {
     messageId: string;
     /** Uploads staged for this message (WidgetSessionService.mediaFolder). */
     attachments?: { key: string; name?: string }[];
+    /** The tracked link the visitor arrived through (`ecb_src`). */
+    referral?: PlatformReferral;
 }
 
 /**
@@ -81,6 +86,7 @@ export class WidgetChatService {
         private readonly handoffIntent: HandoffIntentService,
         private readonly messageMedia: MessageMediaService,
         private readonly sessionService: WidgetSessionService,
+        private readonly customerMarketing: CustomerMarketingService,
         @Optional()
         @Inject(AI_USAGE_METER)
         private readonly meter?: AiUsageMeter
@@ -159,6 +165,26 @@ export class WidgetChatService {
         );
         await this.conversationService.reopenIfResolved(conversation);
 
+        // Same rule as platform channels: a message that is only "dừng"
+        // stops offers. A failure must not lose the visitor's turn.
+        const optedOut = customerId
+            ? await this.customerMarketing
+                  .recordInbound({
+                      customerId,
+                      workspaceId: account.workspace.id,
+                      text,
+                      conversationId: conversation.id,
+                      messageId: inbound.id,
+                  })
+                  .then(r => r.optedOut)
+                  .catch((err: unknown) => {
+                      this.logger.warn(
+                          `Marketing state update failed for ${conversation.id}: ${(err as Error)?.message}`
+                      );
+                      return false;
+                  })
+            : false;
+
         // Handoff: an operator has taken over, so the visitor's message is
         // recorded for the inbox but the bot stays quiet. Their poll picks up
         // the operator's reply.
@@ -171,6 +197,13 @@ export class WidgetChatService {
         // but does not answer, as on platform channels.
         if (isAgentSilenced(chatbot, account.workspace)) {
             this.endStreamQuietly(res);
+            return;
+        }
+
+        if (optedOut) {
+            const reply = optOutReplyText(chatbot);
+            await this.persistReply(conversation.id, reply, []);
+            this.streamFallback(res, reply);
             return;
         }
 

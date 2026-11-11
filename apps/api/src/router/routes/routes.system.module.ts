@@ -26,6 +26,7 @@ import { ToolModule } from 'src/modules/tool/tool.module';
 import { UserSystemController } from 'src/modules/user/controllers/user.system.controller';
 import { UserModule } from 'src/modules/user/user.module';
 
+import { CustomerMarketingSystemController } from 'src/modules/customer/controllers/customer-marketing.system.controller';
 @Module({
     controllers: [
         HealthSystemController,
@@ -37,6 +38,7 @@ import { UserModule } from 'src/modules/user/user.module';
         FacebookActivityController,
         CustomerSystemController,
         CustomerTagSystemController,
+        CustomerMarketingSystemController,
         OrderSystemController,
         FollowupSystemController,
         PocSystemController,

@@ -837,6 +837,10 @@ export type WidgetSendMessageRequestDto = {
      */
     parentOrigin?: string;
     /**
+     * The tracked link code (ecb_src) the visitor arrived with. An unknown or malformed code is ignored.
+     */
+    source?: string;
+    /**
      * Turnstile token. Required once per visitor session.
      */
     turnstileToken?: string;
@@ -1396,6 +1400,18 @@ export type CustomerTagSystemApplyRequestDto = {
 
 export type CustomerTagSystemRemoveRequestDto = {
     tagName: string;
+};
+
+export type CustomerMarketingSystemPermissionRequestDto = {
+    action: 'ASKED' | 'GRANTED' | 'PAUSED' | 'STOPPED';
+    reason: string;
+    /**
+     * With PAUSED; default 30.
+     */
+    pauseDays?: number;
+    conversationId?: {
+        [key: string]: unknown;
+    } | null;
 };
 
 export type OrderItemGetResponseDto = {
@@ -6673,6 +6689,94 @@ export type CustomerTagUpdateRequestDto = {
     notifiesTeam?: boolean;
 };
 
+export type CustomerMarketingStateGetResponseDto = {
+    stage: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'BOUGHT_ONCE' | 'BOUGHT_REPEAT';
+    permission: 'PENDING' | 'GRANTED' | 'PAUSED' | 'STOPPED';
+    permissionUntil?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * The "Khó chịu" flag.
+     */
+    hostile: boolean;
+    /**
+     * Ngủ đông: no message for 120 days.
+     */
+    dormant: boolean;
+    consentAskedAt?: {
+        [key: string]: unknown;
+    } | null;
+    lastInboundAt?: {
+        [key: string]: unknown;
+    } | null;
+};
+
+export type CustomerMarketingStateUpdateRequestDto = {
+    stage?: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'BOUGHT_ONCE' | 'BOUGHT_REPEAT';
+    permission?: 'PENDING' | 'GRANTED' | 'PAUSED' | 'STOPPED';
+    /**
+     * Required with PAUSED: offers may resume after it.
+     */
+    permissionUntil?: string;
+    /**
+     * The "Khó chịu" flag.
+     */
+    hostile?: boolean;
+    reason: string;
+};
+
+export type MarketingEventGetResponseDto = {
+    /**
+     * Alias id of api key
+     */
+    id: string;
+    /**
+     * Date created at
+     */
+    createdAt: string;
+    /**
+     * created by
+     */
+    createdBy?: UserMetaResponseDto;
+    /**
+     * Date updated at
+     */
+    updatedAt: string;
+    /**
+     * updated by
+     */
+    updatedBy?: UserMetaResponseDto;
+    /**
+     * Flag for deleted
+     */
+    deleted: boolean;
+    /**
+     * Date delete at
+     */
+    deletedAt?: string;
+    /**
+     * Delete by
+     */
+    deletedBy?: UserMetaResponseDto;
+    kind: 'STAGE' | 'PERMISSION' | 'CONSENT_ASKED' | 'HOSTILE';
+    actor: 'BOT' | 'CLASSIFIER' | 'OPERATOR' | 'CLIENT' | 'RULE';
+    oldValue?: {
+        [key: string]: unknown;
+    } | null;
+    newValue?: {
+        [key: string]: unknown;
+    } | null;
+    reason?: {
+        [key: string]: unknown;
+    } | null;
+    conversationId?: {
+        [key: string]: unknown;
+    } | null;
+    messageId?: {
+        [key: string]: unknown;
+    } | null;
+};
+
 export type CustomerTagAssignmentGetResponseDto = {
     id: string;
     tag: CustomerTagGetResponseDto;
@@ -11589,6 +11693,19 @@ export type CustomerTagSystemControllerRemoveV1Data = {
 
 export type CustomerTagSystemControllerRemoveV1Responses = {
     201: unknown;
+};
+
+export type CustomerMarketingSystemControllerSetPermissionV1Data = {
+    body: CustomerMarketingSystemPermissionRequestDto;
+    path: {
+        customerId: string;
+    };
+    query?: never;
+    url: '/api/v1/system/customers/{customerId}/marketing/permission';
+};
+
+export type CustomerMarketingSystemControllerSetPermissionV1Responses = {
+    200: unknown;
 };
 
 export type OrderSystemControllerDraftV1Data = {
@@ -32663,6 +32780,253 @@ export type CustomerTagWorkspaceControllerUpdateV1Responses = {
 };
 
 export type CustomerTagWorkspaceControllerUpdateV1Response = CustomerTagWorkspaceControllerUpdateV1Responses[keyof CustomerTagWorkspaceControllerUpdateV1Responses];
+
+export type CustomerMarketingWorkspaceControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/customers/{id}/marketing';
+};
+
+export type CustomerMarketingWorkspaceControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerMarketingWorkspaceControllerGetV1Error = CustomerMarketingWorkspaceControllerGetV1Errors[keyof CustomerMarketingWorkspaceControllerGetV1Errors];
+
+export type CustomerMarketingWorkspaceControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: CustomerMarketingStateGetResponseDto;
+    };
+};
+
+export type CustomerMarketingWorkspaceControllerGetV1Response = CustomerMarketingWorkspaceControllerGetV1Responses[keyof CustomerMarketingWorkspaceControllerGetV1Responses];
+
+export type CustomerMarketingWorkspaceControllerUpdateV1Data = {
+    body: CustomerMarketingStateUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/customers/{id}/marketing';
+};
+
+export type CustomerMarketingWorkspaceControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerMarketingWorkspaceControllerUpdateV1Error = CustomerMarketingWorkspaceControllerUpdateV1Errors[keyof CustomerMarketingWorkspaceControllerUpdateV1Errors];
+
+export type CustomerMarketingWorkspaceControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: CustomerMarketingStateGetResponseDto;
+    };
+};
+
+export type CustomerMarketingWorkspaceControllerUpdateV1Response = CustomerMarketingWorkspaceControllerUpdateV1Responses[keyof CustomerMarketingWorkspaceControllerUpdateV1Responses];
+
+export type CustomerMarketingWorkspaceControllerListEventsV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/workspace/{workspace}/customers/{id}/marketing/events';
+};
+
+export type CustomerMarketingWorkspaceControllerListEventsV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerMarketingWorkspaceControllerListEventsV1Error = CustomerMarketingWorkspaceControllerListEventsV1Errors[keyof CustomerMarketingWorkspaceControllerListEventsV1Errors];
+
+export type CustomerMarketingWorkspaceControllerListEventsV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<MarketingEventGetResponseDto>;
+    };
+};
+
+export type CustomerMarketingWorkspaceControllerListEventsV1Response = CustomerMarketingWorkspaceControllerListEventsV1Responses[keyof CustomerMarketingWorkspaceControllerListEventsV1Responses];
 
 export type CustomerTagAssignmentWorkspaceControllerListV1Data = {
     body?: never;

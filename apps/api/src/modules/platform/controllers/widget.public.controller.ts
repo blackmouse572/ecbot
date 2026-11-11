@@ -56,6 +56,7 @@ import { WidgetChatService } from '../services/widget-chat.service';
 import { WidgetSessionService } from '../services/widget-session.service';
 import { ENUM_WIDGET_STATUS_CODE_ERROR } from '../enums/widget.status-code.enum';
 import { widgetWelcomeText } from '../utils/widget-welcome.util';
+import { widgetReferral } from '../utils/referral.util';
 
 /** Per-visitor ceiling. Turnstile stops bots at the door; this stops a human farming inference. */
 const TURNS_PER_HOUR = 60;
@@ -144,6 +145,7 @@ export class WidgetPublicController {
             text: dto.text,
             messageId: dto.messageId,
             attachments: dto.attachments,
+            referral: widgetReferral(dto.source),
         });
     }
 

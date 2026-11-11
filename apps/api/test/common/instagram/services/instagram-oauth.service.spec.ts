@@ -69,7 +69,7 @@ describe('InstagramOAuthService.getTokenAndProfile', () => {
         expect(call).toBeDefined();
         expect(call[2].params).toEqual({
             subscribed_fields:
-                'messages,messaging_postbacks,message_reactions,messaging_seen',
+                'messages,messaging_postbacks,messaging_referral,message_reactions,messaging_seen',
             access_token: 'long',
         });
     });

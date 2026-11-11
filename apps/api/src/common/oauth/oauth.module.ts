@@ -24,6 +24,6 @@ import { ConfigModule } from '@nestjs/config';
         ThreadsOAuthService,
         OAuthPlatformFactory,
     ],
-    exports: [OAuthPlatformFactory],
+    exports: [OAuthPlatformFactory, InstagramOAuthService],
 })
 export class OAuthModule {}
