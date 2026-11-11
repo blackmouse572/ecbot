@@ -3,7 +3,7 @@ import { clx } from "@medusajs/ui";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Command } from "cmdk";
 import { Popover as RadixPopover } from "radix-ui";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useSelectedParams } from "../hooks";
@@ -103,11 +103,13 @@ export const SelectFilter = ({
   useEffect(() => {
     setFilteredOptions(options);
   }, [options]);
-  const listRef = useRef<HTMLDivElement>(null);
+  // State, not a ref: the list mounts with the popover's portal after this
+  // component renders, and the virtualizer only sees it on a re-render.
+  const [listElement, setListElement] = useState<HTMLDivElement | null>(null);
 
   const virtualizer = useVirtualizer({
     count: filteredOptions.length,
-    getScrollElement: () => listRef.current,
+    getScrollElement: () => listElement,
     estimateSize: () => 32,
     overscan: 5,
   });
@@ -188,7 +190,7 @@ export const SelectFilter = ({
                 </div>
               ) : (
                 <div
-                  ref={listRef}
+                  ref={setListElement}
                   className="h-full max-h-[200px] min-h-0 overflow-auto p-1 outline-none"
                 >
                   <div

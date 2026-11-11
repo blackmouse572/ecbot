@@ -2478,6 +2478,64 @@
         },
         "savedFields": {
           "address": "Delivery address"
+        },
+        "marketing": {
+          "title": "Marketing",
+          "editLabels": "Edit labels",
+          "stage": "Stage",
+          "permission": "Offers",
+          "freeWindow": {
+            "title": "Free messaging",
+            "open": "{{time}} left on {{channel}}",
+            "closed": "Closed on {{channel}}",
+            "unlimited": "No time limit on {{channel}}",
+            "hours_one": "{{count}} hour",
+            "hours_other": "{{count}} hours",
+            "minutes_one": "{{count}} minute",
+            "minutes_other": "{{count}} minutes",
+            "lastInbound": "Customer last wrote {{time}}"
+          },
+          "timeline": {
+            "title": "Marketing timeline",
+            "viewAll": "View all",
+            "empty": "No label changes yet.",
+            "description": "Every label change, who made it and why, newest first.",
+            "descriptionNamed": "{{name}}. Every label change, who made it and why, newest first.",
+            "count_one": "{{count}} change",
+            "count_other": "{{count}} changes",
+            "loadMore": "Load more"
+          },
+          "edit": {
+            "title": "Edit marketing labels",
+            "description": "This change goes into the timeline with its reason.",
+            "descriptionNamed": "{{name}}. This change goes into the timeline with its reason.",
+            "stage": "Stage",
+            "stageHint": "The bot only moves a customer forward. You can pick any stage, earlier ones too.",
+            "permission": "Offers",
+            "permissionOption": {
+              "PENDING": "Not agreed yet",
+              "GRANTED": "Agreed",
+              "PAUSED": "Paused until a date",
+              "STOPPED": "Stopped for good"
+            },
+            "permissionHint": {
+              "PENDING": "The bot asks the customer once, right after a purchase or a compliment.",
+              "GRANTED": "Offers may be sent, within each channel's free messaging window.",
+              "PAUSED": "No offers until the end of that day, then back to Agreed.",
+              "STOPPED": "Never send offers. A customer who sends \"stop\" lands here too."
+            },
+            "until": "Until",
+            "untilFuture": "Pick a day after today.",
+            "hostile": "Customer is upset",
+            "hostileHint": "No offers, and the bot won't ask again. Only you can turn it off, not the bot.",
+            "reason": "Reason",
+            "reasonPlaceholder": "The customer called and will buy after Tết",
+            "reasonHint": "Required. It shows under the label and in the timeline.",
+            "reasonRequired": "Enter a reason for the change.",
+            "save": "Save labels",
+            "saved": "Labels saved",
+            "saveFailed": "Couldn't save the labels. Try again."
+          }
         }
       }
     },
@@ -2573,7 +2631,14 @@
       "conversationCount_other": "{{count}} conversations",
       "emptyTitle": "No customers yet",
       "emptyMessage": "Customers appear here once they message one of your channels.",
-      "connectChannel": "Connect a channel"
+      "connectChannel": "Connect a channel",
+      "stage": "Stage",
+      "permission": "Offers",
+      "dormant": "Inactive",
+      "dormantOptions": {
+        "true": "Inactive only",
+        "false": "Hide inactive"
+      }
     }
   },
   "settings": {
@@ -3323,5 +3388,52 @@
       "deleted": "Customer source deleted"
     },
     "error": "Something went wrong. Try again."
+  },
+  "customerMarketing": {
+    "stage": {
+      "NEW": "New",
+      "INTERESTED": "Interested",
+      "ASKED_PRICE": "Asked price",
+      "BOUGHT_ONCE": "Bought once",
+      "BOUGHT_REPEAT": "Repeat buyer"
+    },
+    "dormant": "Inactive",
+    "permission": {
+      "PENDING": "Not agreed yet",
+      "GRANTED": "Agreed",
+      "PAUSED": "Paused",
+      "STOPPED": "Stopped for good"
+    },
+    "pausedUntil": "Paused until {{date}}",
+    "hostile": "Upset",
+    "actor": {
+      "BOT": "Bot",
+      "CLASSIFIER": "Classifier",
+      "OPERATOR": "Team member",
+      "CLIENT": "Connected app",
+      "RULE": "Automatic"
+    },
+    "reasonCode": {
+      "opt_out_keyword": "Customer sent \"stop\"",
+      "first_message": "Customer's first message",
+      "customer_merge": "Customer profiles merged",
+      "hostile": "Customer was upset",
+      "order_confirmed": "Order confirmed",
+      "tracked_link": "Came through an offer link"
+    },
+    "event": {
+      "stageChanged": "Stage: {{from}} to {{to}}",
+      "stageSet": "Stage: {{to}}",
+      "permissionChanged": "Offers: {{from}} to {{to}}",
+      "permissionSet": "Offers: {{to}}",
+      "consentAsked": "Asked if the customer wants offers",
+      "hostileOn": "Upset: on",
+      "hostileOff": "Upset: off",
+      "reactionSet": "Paused a product group until {{date}}",
+      "reactionEnded": "Product group pause ended",
+      "intent": "Product group interest: {{to}}",
+      "source": "Came through a source link"
+    },
+    "viewMessage": "View message"
   }
 }

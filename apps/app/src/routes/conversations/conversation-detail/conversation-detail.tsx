@@ -42,6 +42,7 @@ export function ConversationDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { workspaceSlug } = useWorkspaceParams();
+
   const {
     open: sidebarOpen,
     toggle: toggleSidebar,
@@ -53,6 +54,7 @@ export function ConversationDetail() {
 
   const { conversation, isLoading: isLoadingConversation } =
     useConversation(id);
+
   const {
     messages,
     isLoading: isLoadingMessages,
@@ -61,6 +63,7 @@ export function ConversationDetail() {
     isFetchingNextPage,
     fetchNextPage,
   } = useConversationMessages(id);
+
   const send = useSendOperatorReply(id);
   const uploadAttachments = useUploadReplyAttachments(id);
   const markRead = useMarkConversationRead(id);
@@ -70,6 +73,7 @@ export function ConversationDetail() {
   // Meta's 24h window closes while the page may be open: re-render right then.
   const accountType = (conversation as A)?.account?.type as string | undefined;
   const lastInbound = lastInboundAt(messages);
+
   const now = useNowAt(
     isMetaPlatform(accountType) && lastInbound !== undefined
       ? lastInbound + REACTION_WINDOW_MS + 1
@@ -94,6 +98,7 @@ export function ConversationDetail() {
   // lookup by the stable `msg-${id}` id each MessageBubble carries.
   const scrollToMessage = useCallback((messageId: string) => {
     const el = document.getElementById(`msg-${messageId}`);
+
     if (!el) return;
     el.scrollIntoView({ behavior: "smooth", block: "center" });
     el.classList.add("bg-ui-tag-orange-bg", "rounded-md");
@@ -118,14 +123,17 @@ export function ConversationDetail() {
     if (!id) return;
     const key = `conversations.lastViewedAt.${id}`;
     const now = Date.now();
+
     try {
       const last = localStorage.getItem(key);
+
       // Debounce: skip if viewed within the last 5 seconds (rapid navigation guard)
       if (last && now - parseInt(last, 10) < 5000) return;
       localStorage.setItem(key, now.toString());
     } catch {
       /* ignore */
     }
+
     markRead.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -148,6 +156,7 @@ export function ConversationDetail() {
     // Uploaded first: a refused file keeps the message and its files in
     // the reply box, so the operator can change them and send again.
     let attachments: ChatAttachmentResponseDto[] | undefined;
+
     if (files.length) {
       try {
         attachments = await uploadAttachments(files);
@@ -158,6 +167,7 @@ export function ConversationDetail() {
         throw error;
       }
     }
+
     send.mutate(
       { text, attachments, previews: files },
       {
@@ -202,6 +212,7 @@ export function ConversationDetail() {
     messages,
     now,
   );
+
   // The composer locks only when the loaded messages can be trusted: not while
   // loading or after a failed load, and not when the customer's last message
   // may sit on an older, unloaded page. Meta still enforces the rule.
@@ -289,6 +300,8 @@ export function ConversationDetail() {
         <ResizablePanelGroup
           direction="horizontal"
           autoSaveId="conversations:detail"
+          // The handle is z-indexed; isolate it so drawers and their scrim cover it.
+          className="isolate"
         >
           <ResizablePanel id="thread" order={1} defaultSize={72} minSize={45}>
             <div className="flex h-full min-w-0 flex-col overflow-hidden">

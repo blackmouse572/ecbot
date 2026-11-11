@@ -7,15 +7,22 @@ import { ROUTES } from "@/routes/constants";
 import { Container, Heading, Text } from "@medusajs/ui";
 import { useTranslation } from "react-i18next";
 import { CUSTOMER_LIST_PAGE_SIZE } from "../../../constants";
-import { useCustomerTableColumns, useCustomerTableQuery } from "./hooks";
+import {
+  useCustomerTableColumns,
+  useCustomerTableFilters,
+  useCustomerTableQuery,
+} from "./hooks";
 
 export const CustomerListTable = () => {
   const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
   const { searchParams, raw } = useCustomerTableQuery();
+
   const { customers, count, isLoading, isError, error } =
     useCustomers(searchParams);
+
   const columns = useCustomerTableColumns();
+  const filters = useCustomerTableFilters();
 
   const { table } = useDataTable({
     data: customers,
@@ -38,6 +45,7 @@ export const CustomerListTable = () => {
       </div>
       <_DataTable
         table={table}
+        filters={filters}
         columns={columns}
         count={count}
         pageSize={CUSTOMER_LIST_PAGE_SIZE}

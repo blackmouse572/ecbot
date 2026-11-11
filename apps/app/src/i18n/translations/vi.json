@@ -2519,6 +2519,61 @@
         },
         "savedFields": {
           "address": "Địa chỉ giao hàng"
+        },
+        "marketing": {
+          "title": "Tiếp thị",
+          "editLabels": "Sửa nhãn",
+          "stage": "Giai đoạn",
+          "permission": "Nhận ưu đãi",
+          "freeWindow": {
+            "title": "Nhắn miễn phí",
+            "open": "Còn {{time}} trên {{channel}}",
+            "closed": "Đã hết trên {{channel}}",
+            "unlimited": "Không giới hạn trên {{channel}}",
+            "hours_other": "{{count}} giờ",
+            "minutes_other": "{{count}} phút",
+            "lastInbound": "Khách nhắn lần cuối {{time}}"
+          },
+          "timeline": {
+            "title": "Dòng thời gian tiếp thị",
+            "viewAll": "Xem tất cả",
+            "empty": "Chưa đổi nhãn lần nào.",
+            "description": "Mỗi lần đổi nhãn, ai đổi và vì sao, mới nhất trước.",
+            "descriptionNamed": "{{name}}. Mỗi lần đổi nhãn, ai đổi và vì sao, mới nhất trước.",
+            "count_other": "{{count}} thay đổi",
+            "loadMore": "Tải thêm"
+          },
+          "edit": {
+            "title": "Sửa nhãn tiếp thị",
+            "description": "Lần đổi này được ghi vào dòng thời gian, kèm lý do.",
+            "descriptionNamed": "{{name}}. Lần đổi này được ghi vào dòng thời gian, kèm lý do.",
+            "stage": "Giai đoạn",
+            "stageHint": "Bot chỉ đưa khách lên giai đoạn sau. Bạn có thể chọn bất kỳ giai đoạn nào, kể cả giai đoạn trước.",
+            "permission": "Nhận ưu đãi",
+            "permissionOption": {
+              "PENDING": "Chưa đồng ý",
+              "GRANTED": "Đồng ý",
+              "PAUSED": "Tạm ngưng đến ngày",
+              "STOPPED": "Đã dừng vĩnh viễn"
+            },
+            "permissionHint": {
+              "PENDING": "Bot hỏi khách một lần, khi khách vừa mua hoặc vừa khen.",
+              "GRANTED": "Được gửi ưu đãi, trong khung nhắn miễn phí của từng kênh.",
+              "PAUSED": "Không gửi ưu đãi đến hết ngày này, sau đó trở lại Đồng ý.",
+              "STOPPED": "Không bao giờ gửi ưu đãi. Khách nhắn \"dừng\" cũng vào đây."
+            },
+            "until": "Đến ngày",
+            "untilFuture": "Chọn một ngày sau hôm nay.",
+            "hostile": "Khách khó chịu",
+            "hostileHint": "Không gửi ưu đãi và bot không hỏi lại. Bot không tự tắt được, chỉ bạn tắt.",
+            "reason": "Lý do",
+            "reasonPlaceholder": "Khách gọi điện, hẹn sau Tết mới mua",
+            "reasonHint": "Bắt buộc. Lý do hiện dưới nhãn và trong dòng thời gian.",
+            "reasonRequired": "Nhập lý do đổi nhãn.",
+            "save": "Lưu nhãn",
+            "saved": "Đã lưu nhãn",
+            "saveFailed": "Không lưu được nhãn. Thử lại."
+          }
         }
       }
     },
@@ -2613,7 +2668,14 @@
       "conversationCount_other": "{{count}} hội thoại",
       "emptyTitle": "Chưa có khách hàng nào",
       "emptyMessage": "Khách hàng sẽ xuất hiện ở đây khi họ nhắn tin tới một kênh của bạn.",
-      "connectChannel": "Liên kết kênh"
+      "connectChannel": "Liên kết kênh",
+      "stage": "Giai đoạn",
+      "permission": "Nhận ưu đãi",
+      "dormant": "Lâu không nhắn",
+      "dormantOptions": {
+        "true": "Chỉ khách lâu không nhắn",
+        "false": "Ẩn khách lâu không nhắn"
+      }
     }
   },
   "settings": {
@@ -3361,5 +3423,52 @@
       "deleted": "Đã xóa nguồn khách"
     },
     "error": "Có lỗi xảy ra. Bạn thử lại nhé."
+  },
+  "customerMarketing": {
+    "stage": {
+      "NEW": "Mới biết",
+      "INTERESTED": "Quan tâm",
+      "ASKED_PRICE": "Hỏi giá",
+      "BOUGHT_ONCE": "Đã mua 1 lần",
+      "BOUGHT_REPEAT": "Mua lại"
+    },
+    "dormant": "Lâu không nhắn",
+    "permission": {
+      "PENDING": "Chưa đồng ý",
+      "GRANTED": "Đồng ý",
+      "PAUSED": "Tạm ngưng",
+      "STOPPED": "Đã dừng vĩnh viễn"
+    },
+    "pausedUntil": "Tạm ngưng đến {{date}}",
+    "hostile": "Khó chịu",
+    "actor": {
+      "BOT": "Bot",
+      "CLASSIFIER": "Bộ phân loại",
+      "OPERATOR": "Thành viên",
+      "CLIENT": "Ứng dụng kết nối",
+      "RULE": "Tự động"
+    },
+    "reasonCode": {
+      "opt_out_keyword": "Khách nhắn \"dừng\"",
+      "first_message": "Khách nhắn lần đầu",
+      "customer_merge": "Gộp hồ sơ khách",
+      "hostile": "Khách khó chịu",
+      "order_confirmed": "Đơn đã xác nhận",
+      "tracked_link": "Khách đến qua link ưu đãi"
+    },
+    "event": {
+      "stageChanged": "Giai đoạn: {{from}} sang {{to}}",
+      "stageSet": "Giai đoạn: {{to}}",
+      "permissionChanged": "Nhận ưu đãi: {{from}} sang {{to}}",
+      "permissionSet": "Nhận ưu đãi: {{to}}",
+      "consentAsked": "Đã hỏi khách có muốn nhận ưu đãi",
+      "hostileOn": "Khó chịu: bật",
+      "hostileOff": "Khó chịu: tắt",
+      "reactionSet": "Tạm hoãn một nhóm hàng đến {{date}}",
+      "reactionEnded": "Hết tạm hoãn một nhóm hàng",
+      "intent": "Quan tâm theo nhóm hàng: {{to}}",
+      "source": "Đến qua link nguồn"
+    },
+    "viewMessage": "Xem tin nhắn"
   }
 }

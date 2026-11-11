@@ -12,6 +12,7 @@ class ResizeObserverMock {
   unobserve() {}
   disconnect() {}
 }
+
 (globalThis as A).ResizeObserver =
   (globalThis as A).ResizeObserver ?? ResizeObserverMock;
 
@@ -29,6 +30,11 @@ vi.mock("@/hooks/api/customers", () => ({
     mutateAsync: updateMutateAsync,
     isPending: false,
   })),
+}));
+
+// The Tiếp thị block has its own tests.
+vi.mock("./components/marketing-section", () => ({
+  MarketingSection: () => null,
 }));
 
 vi.mock("@/hooks/api/contact-points", () => ({
@@ -63,6 +69,7 @@ vi.mock("react-i18next", () => ({
 vi.mock("@medusajs/ui", async () => {
   const actual =
     await vi.importActual<typeof import("@medusajs/ui")>("@medusajs/ui");
+
   return {
     ...actual,
     toast: { success: vi.fn(), error: vi.fn() },
@@ -141,6 +148,7 @@ describe("CustomerSidePanel — Unmerge action", () => {
     const moreBtn = screen.getByRole("button", {
       name: "conversations.customer.panel.actions.more",
     });
+
     expect(moreBtn).toBeInTheDocument();
   });
 
@@ -151,11 +159,13 @@ describe("CustomerSidePanel — Unmerge action", () => {
     const moreBtn = screen.getByRole("button", {
       name: "conversations.customer.panel.actions.more",
     });
+
     await user.click(moreBtn);
 
     const unmergeItem = await screen.findByRole("menuitem", {
       name: "conversations.customer.panel.unmerge.action",
     });
+
     expect(unmergeItem).toBeInTheDocument();
   });
 
@@ -173,6 +183,7 @@ describe("CustomerSidePanel — Unmerge action", () => {
     const unmergeItem = await screen.findByRole("menuitem", {
       name: "conversations.customer.panel.unmerge.action",
     });
+
     await user.click(unmergeItem);
 
     expect(promptFn).toHaveBeenCalledTimes(1);
@@ -196,9 +207,11 @@ describe("CustomerSidePanel — Unmerge action", () => {
         name: "conversations.customer.panel.actions.more",
       }),
     );
+
     const unmergeItem = await screen.findByRole("menuitem", {
       name: "conversations.customer.panel.unmerge.action",
     });
+
     await user.click(unmergeItem);
 
     await Promise.resolve();

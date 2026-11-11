@@ -25,6 +25,7 @@ import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import { ConversationsSection } from "./components/conversations-section";
 import { CustomerTagPicker } from "./components/customer-tag-picker";
 import { FollowupsSection } from "./components/followups-section";
+import { MarketingSection } from "./components/marketing-section";
 import { SavedFieldsSection } from "./components/saved-fields-section";
 import { TimezoneSection } from "./components/timezone-section";
 import { CUSTOMER_DATA_SUBJECT } from "../constants";
@@ -133,6 +134,7 @@ export function CustomerSidePanel({
 
   const handleSubmit = form.handleSubmit(async (data) => {
     if (!customerId) return;
+
     const patch: CustomerUpdateRequestDto = {
       name: data.name?.trim() || null,
       phone: data.phone?.trim() || null,
@@ -140,6 +142,7 @@ export function CustomerSidePanel({
       language: data.language?.trim() || null,
       notes: data.notes?.trim() || null,
     };
+
     toast.promise(mutateAsync(patch), {
       loading: t("conversations.customer.panel.toast.saving"),
       success: t("conversations.customer.panel.toast.updated"),
@@ -335,6 +338,15 @@ export function CustomerSidePanel({
             <ContactPointsList contactPoints={contactPoints} />
           </div>
 
+          <div className="border-ui-border-base border-t px-4 py-4">
+            <MarketingSection
+              customerId={customerId}
+              customerName={customer?.name}
+              conversationId={conversationId}
+              onViewMessage={onViewMessage}
+            />
+          </div>
+
           {conversationId && (
             <div className="border-ui-border-base border-t px-4 py-4">
               <Heading level="h3" className="mb-2">
@@ -447,7 +459,9 @@ function TagChip({
 }) {
   const { t } = useTranslation();
   const tag = assignment.tag;
+
   if (!tag) return null;
+
   return (
     <li>
       <Badge size="small" className="flex items-center gap-x-1">
@@ -506,7 +520,9 @@ function CustomerActions({
         customerName?.trim() ||
         t("conversations.customer.panel.erase.confirm.verification"),
     });
+
     if (!confirmed) return;
+
     try {
       await erase.mutateAsync();
       toast.success(t("conversations.customer.panel.erase.toast.success"));
@@ -524,7 +540,9 @@ function CustomerActions({
       cancelText: t("conversations.customer.panel.unmerge.confirm.cancel"),
       variant: "danger",
     });
+
     if (!confirmed) return;
+
     try {
       await unmerge.mutateAsync();
       toast.success(t("conversations.customer.panel.unmerge.toast.success"));
@@ -577,6 +595,7 @@ function ContactPointsList({
   contactPoints: ContactPointGetResponseDto[];
 }) {
   const { t } = useTranslation();
+
   if (contactPoints.length === 0) {
     return (
       <NoRecords
@@ -587,6 +606,7 @@ function ContactPointsList({
       />
     );
   }
+
   return (
     <ul className="flex flex-col gap-y-2">
       {contactPoints.map((cp) => (

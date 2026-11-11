@@ -1,3 +1,7 @@
+import {
+  MarketingPermissionLabel,
+  MarketingStageBadge,
+} from "@/components/customer-marketing";
 import type { CustomerGetResponseDto } from "@/hooks/api";
 import { CreatedAtCell } from "@/components/table/table-cells/common/created-at-cell";
 import { TextCell } from "@/components/table/table-cells/common/text-cell";
@@ -32,6 +36,35 @@ export const useCustomerTableColumns = () => {
       columnHelper.accessor("email", {
         header: () => t("fields.email"),
         cell: ({ getValue }) => <TextCell text={getValue() ?? undefined} />,
+      }),
+      columnHelper.display({
+        id: "stage",
+        header: () => t("customers.list.stage"),
+        cell: ({ row }) => {
+          const marketing = row.original.marketing;
+
+          return marketing ? (
+            <MarketingStageBadge
+              stage={marketing.stage}
+              dormant={marketing.dormant}
+            />
+          ) : null;
+        },
+      }),
+      columnHelper.display({
+        id: "permission",
+        header: () => t("customers.list.permission"),
+        cell: ({ row }) => {
+          const marketing = row.original.marketing;
+
+          return marketing ? (
+            <MarketingPermissionLabel
+              permission={marketing.permission}
+              permissionUntil={marketing.permissionUntil}
+              hostile={marketing.hostile}
+            />
+          ) : null;
+        },
       }),
       columnHelper.display({
         id: "conversations",
