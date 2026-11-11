@@ -1,3 +1,4 @@
+import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { ENUM_CUSTOMER_MARKETING_BACKFILL_PROCESS } from '../../../src/modules/customer/constants/customer-marketing-backfill.constant';
 import { ENUM_MARKETING_BACKFILL_STATUS } from '../../../src/modules/customer/enums/customer-marketing.enum';
 import { CustomerMarketingBackfillService } from '../../../src/modules/customer/services/customer-marketing-backfill.service';
@@ -136,6 +137,22 @@ describe('CustomerMarketingBackfillService (#500)', () => {
             await make().start('ws-1', 'user-1');
 
             expect(cloudTasks.enqueue).toHaveBeenCalledTimes(1);
+        });
+
+        it('returns the run a concurrent start created instead of failing', async () => {
+            const other = runningRun();
+            runRepository.findOne
+                .mockResolvedValueOnce(null)
+                .mockResolvedValueOnce(other);
+            conversationRepository.countForMarketingBackfill.mockResolvedValue(
+                5
+            );
+            runRepository.save.mockRejectedValueOnce(
+                new UniqueConstraintViolationException(new Error('dup'))
+            );
+
+            await expect(make().start('ws-1', 'user-1')).resolves.toBe(other);
+            expect(cloudTasks.enqueue).not.toHaveBeenCalled();
         });
 
         it('has no cap in the open edition (no meter)', async () => {

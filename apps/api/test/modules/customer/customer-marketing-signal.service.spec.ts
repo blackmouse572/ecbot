@@ -15,6 +15,7 @@ describe('CustomerMarketingSignalService (#500)', () => {
     const marketing = { setHostile: jest.fn() };
     const eventRepository = { getTotal: jest.fn() };
     const productGroupRepository = { find: jest.fn() };
+    const reactionRepository = { findOne: jest.fn() };
     let service: CustomerMarketingSignalService;
 
     const sentAt = new Date(Date.now() - 2 * DAY_MS);
@@ -39,11 +40,13 @@ describe('CustomerMarketingSignalService (#500)', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         eventRepository.getTotal.mockResolvedValue(0);
+        reactionRepository.findOne.mockResolvedValue(null);
         service = new CustomerMarketingSignalService(
             productMarketing as any,
             marketing as any,
             eventRepository as any,
-            productGroupRepository as any
+            productGroupRepository as any,
+            reactionRepository as any
         );
     });
 
@@ -67,6 +70,31 @@ describe('CustomerMarketingSignalService (#500)', () => {
         );
         expect(productMarketing.recordIntent).not.toHaveBeenCalled();
         expect(marketing.setHostile).not.toHaveBeenCalled();
+    });
+
+    it('keeps a longer "Tạm hoãn" when an older message would shorten it', async () => {
+        // The backfill reads newest first: an older "để sau" comes after a
+        // newer one and must not cut the newer postpone short.
+        reactionRepository.findOne.mockResolvedValue({
+            until: new Date(sentAt.getTime() + 90 * DAY_MS),
+        });
+
+        const applied = await service.apply(target, [
+            {
+                kind: 'later',
+                product_group_id: 'pg-serum',
+                defer_days: 60,
+                message_index: 2,
+                quote: 'x',
+            },
+        ]);
+
+        expect(reactionRepository.findOne).toHaveBeenCalledWith({
+            customer: 'cust-1',
+            productGroup: 'pg-serum',
+        });
+        expect(productMarketing.deferProductGroup).not.toHaveBeenCalled();
+        expect(applied).toBe(0);
     });
 
     it('records interest and a price question dated at the message', async () => {
@@ -152,7 +180,7 @@ describe('CustomerMarketingSignalService (#500)', () => {
         );
     });
 
-    it('does not flag the same message again after an operator cleared it', async () => {
+    it('does not flag a message again, or one an operator decided on later', async () => {
         eventRepository.getTotal.mockResolvedValue(1);
 
         await service.apply(target, [
@@ -167,7 +195,18 @@ describe('CustomerMarketingSignalService (#500)', () => {
         expect(eventRepository.getTotal).toHaveBeenCalledWith({
             customer: 'cust-1',
             kind: ENUM_MARKETING_EVENT_KIND.HOSTILE,
-            messageId: 'msg-1',
+            $or: [
+                { messageId: 'msg-1' },
+                {
+                    actor: {
+                        $in: [
+                            ENUM_MARKETING_EVENT_ACTOR.OPERATOR,
+                            ENUM_MARKETING_EVENT_ACTOR.CLIENT,
+                        ],
+                    },
+                    createdAt: { $gt: sentAt },
+                },
+            ],
         });
         expect(marketing.setHostile).not.toHaveBeenCalled();
     });

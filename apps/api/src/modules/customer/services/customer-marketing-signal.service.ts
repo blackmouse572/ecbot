@@ -12,6 +12,7 @@ import {
     ICustomerMarketingSignalProductGroup,
     ICustomerMarketingSignalTarget,
 } from '../interfaces/customer-marketing-signal.interface';
+import { CustomerProductReactionRepository } from '../repository/repositories/customer-product-reaction.repository';
 import { MarketingEventRepository } from '../repository/repositories/marketing-event.repository';
 import { CustomerMarketingService } from './customer-marketing.service';
 import { CustomerProductMarketingService } from './customer-product-marketing.service';
@@ -41,7 +42,8 @@ export class CustomerMarketingSignalService {
         private readonly productMarketingService: CustomerProductMarketingService,
         private readonly marketingService: CustomerMarketingService,
         private readonly eventRepository: MarketingEventRepository,
-        private readonly productGroupRepository: ProductGroupRepository
+        private readonly productGroupRepository: ProductGroupRepository,
+        private readonly reactionRepository: CustomerProductReactionRepository
     ) {}
 
     async listProductGroups(
@@ -113,22 +115,44 @@ export class CustomerMarketingSignalService {
             case 'later': {
                 if (!productGroupId) return false;
                 const days = signal.defer_days ?? CUSTOMER_MARKETING_DEFER_DAYS;
+                const until = new Date(
+                    message.dateSent.getTime() + days * DAY_MS
+                );
+                // The backfill reads newest first, so an older "để sau" must
+                // not shorten a postpone that is already longer.
+                const existing = await this.reactionRepository.findOne({
+                    customer: customerId,
+                    productGroup: productGroupId,
+                });
+                if (existing?.until && existing.until >= until) return false;
                 await this.productMarketingService.deferProductGroup(
                     customerId,
                     workspaceId,
                     productGroupId,
-                    new Date(message.dateSent.getTime() + days * DAY_MS),
+                    until,
                     context
                 );
                 return true;
             }
             case 'hostile': {
-                // Once per message: an operator who cleared the flag is not
-                // overruled by the next re-read of the same conversation.
+                // Once per message, and never over a person's decision made
+                // after the message: an operator who cleared the flag is not
+                // overruled by a re-read or by the 90-day backfill.
                 const seen = await this.eventRepository.getTotal({
                     customer: customerId,
                     kind: ENUM_MARKETING_EVENT_KIND.HOSTILE,
-                    messageId: message.id,
+                    $or: [
+                        { messageId: message.id },
+                        {
+                            actor: {
+                                $in: [
+                                    ENUM_MARKETING_EVENT_ACTOR.OPERATOR,
+                                    ENUM_MARKETING_EVENT_ACTOR.CLIENT,
+                                ],
+                            },
+                            createdAt: { $gt: message.dateSent },
+                        },
+                    ],
                 });
                 if (seen > 0) return false;
                 await this.marketingService.setHostile(

@@ -4,6 +4,7 @@ import {
 } from '@app/app/ai-usage-meter.interface';
 import { ConversationRepository } from '@app/modules/conversation/repository/repositories/conversation.repository';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
+import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
@@ -85,7 +86,21 @@ export class CustomerMarketingBackfillService {
         run.processedAtStart = run.processed;
         run.status = ENUM_MARKETING_BACKFILL_STATUS.RUNNING;
         run.finishedAt = null;
-        await this.runRepository.save(run);
+        try {
+            await this.runRepository.save(run);
+        } catch (error: unknown) {
+            // Two starts raced to create the run: the other one won and
+            // queued it, so this one returns it.
+            if (
+                existing ||
+                !(error instanceof UniqueConstraintViolationException)
+            ) {
+                throw error;
+            }
+            return (await this.getRun(
+                workspaceId
+            )) as MarketingBackfillRunEntity;
+        }
         await this.enqueue(run, `start-${Date.now()}`);
         return run;
     }
