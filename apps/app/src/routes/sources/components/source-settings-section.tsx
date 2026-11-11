@@ -29,7 +29,7 @@ export const SourceSettingsSection: FC<SourceSettingsSectionProps> = ({
   );
 
   return (
-    <Container className="p-0">
+    <Container className="divide-y p-0">
       <div className="flex items-center justify-between px-6 py-4">
         <Heading level="h2">{t("customerSources.detail.settings")}</Heading>
         <Button size="small" variant="transparent" asChild>
@@ -60,7 +60,7 @@ export const SourceSettingsSection: FC<SourceSettingsSectionProps> = ({
         <SectionRow
           title={t("customerSources.detail.channel")}
           value={
-            <span className="flex min-w-0 items-center gap-x-2">
+            <span className="txt-compact-small flex min-w-0 items-center gap-x-2">
               <PlatformIcon type={source.account.type} aria-hidden />
               <span
                 className="truncate"
@@ -74,12 +74,18 @@ export const SourceSettingsSection: FC<SourceSettingsSectionProps> = ({
         {source.targetUrl && (
           <SectionRow
             title={t("customerSources.detail.targetUrl")}
-            value={<span className="break-all">{source.targetUrl}</span>}
+            value={
+              <span className="txt-compact-small break-all">
+                {source.targetUrl}
+              </span>
+            }
           />
         )}
         <SectionRow
           title={t("customerSources.detail.code")}
-          value={<span className="font-mono">{source.code}</span>}
+          value={
+            <span className="txt-compact-small font-mono">{source.code}</span>
+          }
         />
         <SectionRow
           title={t("customerSources.detail.createdAt")}

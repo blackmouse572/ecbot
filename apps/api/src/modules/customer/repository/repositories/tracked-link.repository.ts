@@ -23,9 +23,15 @@ export class TrackedLinkRepository extends DatabaseRepository<TrackedLinkEntity>
         );
     }
 
-    async findChildren(parentId: string): Promise<TrackedLinkEntity[]> {
+    /** The live QR and KOL codes of one source, or of several. */
+    async findChildren(
+        parentIds: string | string[]
+    ): Promise<TrackedLinkEntity[]> {
         return this.find(
-            { parent: parentId, deletedAt: null },
+            {
+                parent: { $in: ([] as string[]).concat(parentIds) },
+                deletedAt: null,
+            },
             {
                 populate: ['account'],
                 order: { createdAt: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.ASC },

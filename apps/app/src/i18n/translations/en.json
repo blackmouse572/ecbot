@@ -3261,7 +3261,22 @@
       "source": "Source",
       "channel": "Channel",
       "status": "Status",
-      "kind": "Type"
+      "kind": "Type",
+      "newCustomers": "New customers",
+      "potentialCustomers": "Potential",
+      "orders": "Orders",
+      "closeRate": "Close rate",
+      "ordersShort": "Orders",
+      "rateShort": "Rate"
+    },
+    "stats": {
+      "newCustomers": "New customers",
+      "since": "Since {{date}}",
+      "potentialCustomers": "Potential customers",
+      "potentialHint": "Asked the price or ordered",
+      "orders": "Orders",
+      "ordersHint": "Confirmed orders since the customer arrived",
+      "closeRateHint": "Orders per new customer"
     },
     "status": {
       "ACTIVE": "In use",

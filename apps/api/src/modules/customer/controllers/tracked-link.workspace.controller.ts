@@ -119,7 +119,10 @@ export class TrackedLinkWorkspaceController {
                 total,
                 totalPage: this.paginationService.totalPage(total, _limit),
             },
-            data: this.trackedLinkService.mapList(links),
+            data: await this.trackedLinkService.mapListWithStats(
+                workspace.id,
+                links
+            ),
         };
     }
 
@@ -142,7 +145,13 @@ export class TrackedLinkWorkspaceController {
             id
         );
         const children = await this.trackedLinkService.findChildren(link.id);
-        return { data: this.trackedLinkService.mapDetail(link, children) };
+        return {
+            data: await this.trackedLinkService.mapDetailWithStats(
+                workspace.id,
+                link,
+                children
+            ),
+        };
     }
 
     @TrackedLinkWorkspaceCreateDoc()
