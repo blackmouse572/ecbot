@@ -30,9 +30,11 @@ describe('TrackedLinkService', () => {
         updateEntity: jest.fn(),
         updateRaw: jest.fn(),
         save: jest.fn(async (e: any) => e),
+        find: jest.fn(),
     };
     const accountRepository = { findOne: jest.fn() };
     const customerTagRepository = { findByWorkspace: jest.fn() };
+    const marketingStateRepository = { statsByFirstSource: jest.fn() };
 
     let service: TrackedLinkService;
 
@@ -44,7 +46,8 @@ describe('TrackedLinkService', () => {
         service = new TrackedLinkService(
             trackedLinkRepository as any,
             accountRepository as any,
-            customerTagRepository as any
+            customerTagRepository as any,
+            marketingStateRepository as any
         );
     });
 
@@ -323,6 +326,98 @@ describe('TrackedLinkService', () => {
                 name: 'Lumi Skincare',
                 type: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
             });
+        });
+    });
+
+    // #503 part 3: counts come from each customer's first source, and a
+    // source counts the customers its QR and KOL codes brought in.
+    describe('stats', () => {
+        const link = (id: string, parent?: { id: string }) => ({
+            id,
+            name: id,
+            code: id,
+            kind: ENUM_TRACKED_LINK_KIND.LINK,
+            status: ENUM_TRACKED_LINK_STATUS.ACTIVE,
+            account: page,
+            parent: parent ?? null,
+            tagIds: [],
+            createdAt: new Date(),
+        });
+        const tet = link('tet');
+        const qr = link('tet-qr', tet);
+        const kol = link('tet-kol', tet);
+        const blackFriday = link('black-friday');
+
+        beforeEach(() => {
+            marketingStateRepository.statsByFirstSource.mockResolvedValue([
+                {
+                    linkId: 'tet',
+                    newCustomers: 10,
+                    potentialCustomers: 3,
+                    orders: 2,
+                },
+                {
+                    linkId: 'tet-qr',
+                    newCustomers: 5,
+                    potentialCustomers: 1,
+                    orders: 1,
+                },
+                {
+                    linkId: 'tet-kol',
+                    newCustomers: 1,
+                    potentialCustomers: 1,
+                    orders: 0,
+                },
+            ]);
+        });
+
+        it('adds the codes into their source on the list, and zero for none', async () => {
+            trackedLinkRepository.findChildren.mockResolvedValue([qr, kol]);
+
+            const rows = await service.mapListWithStats('ws-1', [
+                tet,
+                blackFriday,
+            ] as any);
+
+            expect(trackedLinkRepository.findChildren).toHaveBeenCalledWith([
+                'tet',
+                'black-friday',
+            ]);
+            expect(
+                marketingStateRepository.statsByFirstSource
+            ).toHaveBeenCalledWith('ws-1', [
+                'tet',
+                'black-friday',
+                'tet-qr',
+                'tet-kol',
+            ]);
+            expect(rows.map(r => [r.id, r.stats])).toEqual([
+                ['tet', { newCustomers: 16, potentialCustomers: 5, orders: 3 }],
+                [
+                    'black-friday',
+                    { newCustomers: 0, potentialCustomers: 0, orders: 0 },
+                ],
+            ]);
+        });
+
+        it('shows each code on its own on the detail page', async () => {
+            const detail = await service.mapDetailWithStats(
+                'ws-1',
+                tet as any,
+                [qr, kol] as any
+            );
+
+            expect(detail.stats).toEqual({
+                newCustomers: 16,
+                potentialCustomers: 5,
+                orders: 3,
+            });
+            expect(
+                detail.children.map(c => [c.id, c.stats?.newCustomers])
+            ).toEqual([
+                ['tet-qr', 5],
+                ['tet-kol', 1],
+            ]);
         });
     });
 });

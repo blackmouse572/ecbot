@@ -52,7 +52,10 @@ describe('CustomerService', () => {
                 'ws-1'
             );
 
-            expect(summarize).toHaveBeenCalledWith(['cust-1', 'cust-2'], 'ws-1');
+            expect(summarize).toHaveBeenCalledWith(
+                ['cust-1', 'cust-2'],
+                'ws-1'
+            );
             expect(result.get('cust-1')).toEqual({
                 conversationCount: 3,
                 channels: ['FACEBOOK_PAGE', 'ZALO_PAGE'],

@@ -22,6 +22,8 @@ import {
   SOURCE_QUERY_PARAMS,
   SOURCE_STATUS_COLOR,
 } from "../constants";
+import { SourceCloseRate } from "../components/source-close-rate";
+import { closeRatePercent } from "../utils";
 import { SourceRowActions } from "./source-row-actions";
 
 const columnHelper = createColumnHelper<TrackedLinkGetResponseDto>();
@@ -42,7 +44,7 @@ export const SourceList = () => {
     },
   );
 
-  const columns = useColumns();
+  const columns = useColumns(links);
   const filters = useFilters();
 
   const { table } = useDataTable({
@@ -101,8 +103,17 @@ export const SourceList = () => {
   );
 };
 
-const useColumns = () => {
-  const { t } = useTranslation();
+const useColumns = (links: TrackedLinkGetResponseDto[]) => {
+  const { t, i18n } = useTranslation();
+  // The bars compare sources on this page: the best rate fills its bar.
+  const bestRate = Math.max(
+    ...links.map((link) => closeRatePercent(link.stats) ?? 0),
+    1,
+  );
+  const number = useMemo(
+    () => new Intl.NumberFormat(i18n.language),
+    [i18n.language],
+  );
 
   return useMemo(
     () => [
@@ -129,10 +140,33 @@ const useColumns = () => {
             <span className="txt-compact-small truncate">
               {channelOf(row.original.account.type).label}
             </span>
-            <span className="txt-compact-small hidden truncate text-ui-fg-muted lg:inline">
+            <span className="txt-compact-small hidden truncate text-ui-fg-muted 2xl:inline">
               {row.original.account.name}
             </span>
           </div>
+        ),
+      }),
+      ...(["newCustomers", "potentialCustomers", "orders"] as const).map(
+        (key) =>
+          columnHelper.display({
+            id: key,
+            header: () => (
+              <div className="flex w-full justify-end">
+                {t(`customerSources.columns.${key}`)}
+              </div>
+            ),
+            cell: ({ row }) => (
+              <div className="txt-compact-small flex w-full justify-end tabular-nums">
+                {number.format(row.original.stats?.[key] ?? 0)}
+              </div>
+            ),
+          }),
+      ),
+      columnHelper.display({
+        id: "closeRate",
+        header: () => t("customerSources.columns.closeRate"),
+        cell: ({ row }) => (
+          <SourceCloseRate stats={row.original.stats} barMax={bestRate} />
         ),
       }),
       columnHelper.display({
@@ -152,7 +186,7 @@ const useColumns = () => {
         cell: ({ row }) => <SourceRowActions link={row.original} />,
       }),
     ],
-    [t],
+    [t, number, bestRate],
   );
 };
 

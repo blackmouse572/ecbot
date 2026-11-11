@@ -31,6 +31,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { SourceLinkField } from "../components/source-link-field";
 import { SourceLinksSection } from "../components/source-links-section";
 import { SourceSettingsSection } from "../components/source-settings-section";
+import { SourceStatsSection } from "../components/source-stats-section";
 import { SOURCE_STATUS_COLOR } from "../constants";
 
 export function SourceDetail() {
@@ -97,9 +98,9 @@ export function SourceDetail() {
   };
 
   return (
-    <TwoColumnPage hasOutlet>
-      <TwoColumnPage.Main>
-        <Container className="flex flex-col gap-y-3 px-6 py-4">
+    <div className="flex w-full flex-col gap-y-3">
+      <Container className="p-0">
+        <div className="flex flex-col gap-y-3 px-6 py-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex min-w-0 flex-col gap-y-1">
               <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
@@ -167,13 +168,18 @@ export function SourceDetail() {
           <div className="max-w-[480px]">
             <SourceLinkField url={link.url} channel={link.account.type} />
           </div>
-        </Container>
+        </div>
+        <SourceStatsSection source={link} />
+      </Container>
 
-        <SourceLinksSection source={link} />
-      </TwoColumnPage.Main>
-      <TwoColumnPage.Sidebar>
-        <SourceSettingsSection source={link} />
-      </TwoColumnPage.Sidebar>
-    </TwoColumnPage>
+      <TwoColumnPage hasOutlet>
+        <TwoColumnPage.Main>
+          <SourceLinksSection source={link} />
+        </TwoColumnPage.Main>
+        <TwoColumnPage.Sidebar>
+          <SourceSettingsSection source={link} />
+        </TwoColumnPage.Sidebar>
+      </TwoColumnPage>
+    </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   type TrackedLinkCreateRequestDto,
   type TrackedLinkDetailResponseDto,
   type TrackedLinkGetResponseDto,
+  type TrackedLinkStatsResponseDto,
   type TrackedLinkUpdateRequestDto,
 } from "@repo/client";
 import {
@@ -24,6 +25,7 @@ export type {
   TrackedLinkCreateRequestDto,
   TrackedLinkDetailResponseDto,
   TrackedLinkGetResponseDto,
+  TrackedLinkStatsResponseDto,
   TrackedLinkUpdateRequestDto,
 };
 

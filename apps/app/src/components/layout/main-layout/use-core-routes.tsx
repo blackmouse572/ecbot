@@ -5,10 +5,12 @@ import {
   ChatBubbleLeftRight,
   FolderOpen,
   Puzzle,
+  Receipt,
   Sparkles,
   SquaresPlus,
   Users,
 } from "@medusajs/icons";
+import { Badge } from "@medusajs/ui";
 import type { INavItem } from "@repo/ui/layout";
 import { useTranslation } from "react-i18next";
 
@@ -61,6 +63,20 @@ export const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
           badge: <PendingSuggestionsBadge />,
         },
       ],
+    },
+    {
+      label: t("orders.title"),
+      to: `${baseUrl}/${ROUTES.Orders}`,
+      icon: <Receipt />,
+      ability: {
+        action: "manage",
+        subject: "CUSTOMER",
+      },
+      badge: (
+        <Badge size="2xsmall" color="blue">
+          {t("app.nav.marketing.new")}
+        </Badge>
+      ),
     },
     {
       label: t("conversations.title"),

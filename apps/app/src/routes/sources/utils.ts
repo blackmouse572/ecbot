@@ -1,4 +1,7 @@
-import type { TrackedLinkGetResponseDto } from "@/hooks/api/tracked-links";
+import type {
+  TrackedLinkGetResponseDto,
+  TrackedLinkStatsResponseDto,
+} from "@/hooks/api/tracked-links";
 
 type AccountType = TrackedLinkGetResponseDto["account"]["type"];
 
@@ -145,4 +148,17 @@ export async function pngBlob(svg: SVGSVGElement, size = 1024): Promise<Blob> {
   } finally {
     URL.revokeObjectURL(url);
   }
+}
+
+/** "Tỉ lệ chốt": confirmed orders per new customer, in percent. Null before
+ *  the first customer arrives. */
+export function closeRatePercent(
+  stats: TrackedLinkStatsResponseDto | undefined,
+): number | null {
+  return stats?.newCustomers ? (stats.orders / stats.newCustomers) * 100 : null;
+}
+
+/** A rate as "11,3%" in the reader's language. */
+export function formatRate(rate: number, language: string): string {
+  return `${new Intl.NumberFormat(language, { maximumFractionDigits: 1 }).format(rate)}%`;
 }

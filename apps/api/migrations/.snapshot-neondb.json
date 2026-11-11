@@ -6246,6 +6246,17 @@
         },
         {
           "columnNames": [
+            "workspace_id",
+            "first_tracked_link_id"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "customer_marketing_states_first_source_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
             "id"
           ],
           "composite": false,
