@@ -80,10 +80,12 @@ export class CustomerMarketingService {
     /**
      * A customer arrived through a tracked link: logs the visit (once per link
      * and conversation), keeps the first source, and opts a PENDING customer
-     * in when the link promises an offer. False when this visit was already
-     * logged, so the caller does not greet or tag twice.
+     * in when the link promises an offer. Null when this visit was already
+     * logged, so the caller does not greet or tag twice; otherwise the state.
      */
-    async recordSource(input: ICustomerMarketingArrival): Promise<boolean> {
+    async recordSource(
+        input: ICustomerMarketingArrival
+    ): Promise<CustomerMarketingStateEntity | null> {
         const em = this.em.fork();
         const visits = await this.eventRepository.getTotal(
             {
@@ -94,7 +96,7 @@ export class CustomerMarketingService {
             },
             { em }
         );
-        if (visits > 0) return false;
+        if (visits > 0) return null;
 
         const context: ICustomerMarketingChangeContext = {
             actor: ENUM_MARKETING_EVENT_ACTOR.RULE,
@@ -135,7 +137,7 @@ export class CustomerMarketingService {
         }
         em.persist(state);
         await em.flush();
-        return true;
+        return state;
     }
 
     async getState(

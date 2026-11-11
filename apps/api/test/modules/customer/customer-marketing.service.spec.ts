@@ -157,7 +157,7 @@ describe('CustomerMarketingService', () => {
                 workspaceId: 'w1',
             });
 
-            expect(await service.recordSource(arrival)).toBe(true);
+            expect(await service.recordSource(arrival)).toBe(states.get('c1'));
             const first = states.get('c1')!;
             expect(first.firstTrackedLink).toEqual({ id: 'link-tet' });
             expect(first.firstSourceAt).toBeInstanceOf(Date);
@@ -184,7 +184,7 @@ describe('CustomerMarketingService', () => {
             const { service, events } = makeHarness();
             await service.recordSource(arrival);
 
-            expect(await service.recordSource(arrival)).toBe(false);
+            expect(await service.recordSource(arrival)).toBeNull();
             expect(events.filter(e => e.kind === KIND.SOURCE)).toHaveLength(1);
         });
 

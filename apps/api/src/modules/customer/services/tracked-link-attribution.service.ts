@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ENUM_CUSTOMER_MARKETING_PERMISSION } from '../enums/customer-marketing.enum';
 import { ENUM_CUSTOMER_TAG_EVENT_ACTOR } from '../enums/customer-tag.enum';
 import { ENUM_TRACKED_LINK_STATUS } from '../enums/tracked-link.enum';
 import { ITrackedLinkArrival } from '../interfaces/tracked-link.interface';
+import { CustomerMarketingStateEntity } from '../repository/entities/customer-marketing-state.entity';
 import { TrackedLinkRepository } from '../repository/repositories/tracked-link.repository';
 import { CustomerMarketingService } from './customer-marketing.service';
 import { CustomerTagAssignmentService } from './customer-tag-assignment.service';
@@ -40,7 +42,7 @@ export class TrackedLinkAttributionService {
             return null;
         }
 
-        const recorded = await this.marketing.recordSource({
+        const state = await this.marketing.recordSource({
             customerId: input.customerId,
             workspaceId: input.workspaceId,
             trackedLinkId: link.id,
@@ -48,7 +50,7 @@ export class TrackedLinkAttributionService {
             conversationId: input.conversationId,
             messageId: input.messageId,
         });
-        if (!recorded) return null;
+        if (!state) return null;
 
         for (const tagId of source.tagIds) {
             await this.tags
@@ -63,6 +65,18 @@ export class TrackedLinkAttributionService {
                 );
         }
 
-        return { greeting: source.greeting?.trim() || null };
+        // The greeting is offer copy: a customer who stopped or paused offers
+        // does not get it, and the agent answers them as usual.
+        const greeting = offersHeld(state) ? null : source.greeting?.trim();
+        return { greeting: greeting || null };
     }
+}
+
+function offersHeld(state: CustomerMarketingStateEntity): boolean {
+    if (state.permission === ENUM_CUSTOMER_MARKETING_PERMISSION.STOPPED)
+        return true;
+    return (
+        state.permission === ENUM_CUSTOMER_MARKETING_PERMISSION.PAUSED &&
+        (!state.permissionUntil || state.permissionUntil > new Date())
+    );
 }

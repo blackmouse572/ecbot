@@ -1,3 +1,4 @@
+import { ENUM_CUSTOMER_MARKETING_PERMISSION } from '../../../src/modules/customer/enums/customer-marketing.enum';
 import { ENUM_CUSTOMER_TAG_EVENT_ACTOR } from '../../../src/modules/customer/enums/customer-tag.enum';
 import { ENUM_TRACKED_LINK_STATUS } from '../../../src/modules/customer/enums/tracked-link.enum';
 import { TrackedLinkAttributionService } from '../../../src/modules/customer/services/tracked-link-attribution.service';
@@ -31,7 +32,12 @@ describe('TrackedLinkAttributionService', () => {
             where.workspace === 'w1' ? (links[where.code] ?? null) : null
         ),
     };
-    const marketing = { recordSource: jest.fn(async () => true) };
+    const state: any = {
+        permission: ENUM_CUSTOMER_MARKETING_PERMISSION.GRANTED,
+    };
+    const marketing = {
+        recordSource: jest.fn(async (): Promise<any> => state),
+    };
     const tags = {
         apply: jest.fn(async (_c: string, tagId: string) => {
             if (tagId === 'tag-gone')
@@ -109,9 +115,35 @@ describe('TrackedLinkAttributionService', () => {
     });
 
     it('does not greet or tag again for a visit already logged', async () => {
-        marketing.recordSource.mockResolvedValueOnce(false);
+        marketing.recordSource.mockResolvedValueOnce(null);
 
         expect(await service.recordArrival(arrival)).toBeNull();
         expect(tags.apply).not.toHaveBeenCalled();
+    });
+
+    it('logs and tags but does not greet a customer who stopped or paused offers', async () => {
+        const later = new Date(Date.now() + 86_400_000);
+        for (const held of [
+            { permission: ENUM_CUSTOMER_MARKETING_PERMISSION.STOPPED },
+            {
+                permission: ENUM_CUSTOMER_MARKETING_PERMISSION.PAUSED,
+                permissionUntil: later,
+            },
+        ]) {
+            marketing.recordSource.mockResolvedValueOnce(held);
+            expect(await service.recordArrival(arrival)).toEqual({
+                greeting: null,
+            });
+        }
+        expect(tags.apply).toHaveBeenCalledTimes(4);
+
+        // A pause that has run out greets again.
+        marketing.recordSource.mockResolvedValueOnce({
+            permission: ENUM_CUSTOMER_MARKETING_PERMISSION.PAUSED,
+            permissionUntil: new Date(Date.now() - 1000),
+        });
+        expect((await service.recordArrival(arrival))?.greeting).toBe(
+            'Chào bạn, shop tặng mã giảm 10%.'
+        );
     });
 });

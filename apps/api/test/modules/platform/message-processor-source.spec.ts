@@ -200,6 +200,15 @@ describe('MessageProcessorService tracked link arrival', () => {
         );
         expect(replyGeneration.sendGreeting).toHaveBeenCalled();
         expect(messageDebounceService.schedule).not.toHaveBeenCalled();
+        // Coming back counts: a closed thread reopens and the customer is
+        // no longer dormant.
+        expect(conversationService.reopenIfResolved).toHaveBeenCalled();
+        expect(customerMarketing.recordInbound).toHaveBeenCalledWith(
+            expect.objectContaining({
+                text: '',
+                conversationId: expect.any(String),
+            })
+        );
     });
 
     it('lets the agent answer as usual when the source has no greeting', async () => {

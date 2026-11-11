@@ -186,8 +186,16 @@ export class MessageProcessorService implements OnModuleInit {
         });
 
         // A reopened chat (m.me / ig.me link on an existing thread) has no
-        // message to save or answer: log the source and send its greeting.
+        // message to save or answer: reopen the thread, count it as the
+        // customer coming back, log the source and send its greeting.
         if (event.kind === 'referral') {
+            await this.conversationService.reopenIfResolved(conversation);
+            await this.recordMarketingInbound({
+                customerId,
+                workspaceId,
+                text: '',
+                conversationId: conversation.id,
+            });
             const greeting = await this.recordArrival(
                 event,
                 customerId,

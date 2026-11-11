@@ -331,6 +331,22 @@ describe('MessengerPlatformAdapter.parse', () => {
             });
         });
 
+        it('gives a standalone referral without a time no id, so it is not deduped as one', () => {
+            const [e] = makeAdapter().parse(
+                wrap({
+                    sender: { id: 'S' },
+                    recipient: { id: 'PAGE' },
+                    referral: {
+                        ref: 'to-roi-tet',
+                        source: 'SHORTLINK',
+                        type: 'OPEN_THREAD',
+                    },
+                })
+            );
+            expect(e.kind).toBe('referral');
+            expect(e.externalMessageId).toBeUndefined();
+        });
+
         it('marks a click-to-Messenger ad with its ad id', () => {
             const [e] = makeAdapter().parse(
                 wrap({
