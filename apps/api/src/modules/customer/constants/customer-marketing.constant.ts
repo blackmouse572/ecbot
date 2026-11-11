@@ -1,3 +1,4 @@
+import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import {
     ENUM_CUSTOMER_JOURNEY_STAGE,
     ENUM_CUSTOMER_MARKETING_PERMISSION,
@@ -50,3 +51,19 @@ export const CUSTOMER_MARKETING_REASON_HOSTILE = 'hostile';
 
 /** "Not now" from the agent pauses offers this long unless it says otherwise. */
 export const CUSTOMER_MARKETING_AGENT_PAUSE_DAYS = 30;
+
+/**
+ * Hours after a customer's last message that the shop may still message them
+ * for free on each channel; null means no limit (Telegram, once they pressed
+ * Start). Channels missing here have no free route for offers.
+ */
+export const CUSTOMER_MARKETING_FREE_WINDOW_HOURS: Partial<
+    Record<ENUM_ACCOUNT_TYPE, number | null>
+> = {
+    [ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE]: 24,
+    [ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE]: 24,
+    [ENUM_ACCOUNT_TYPE.INSTAGRAM_ACCOUNT]: 24,
+    [ENUM_ACCOUNT_TYPE.WHATSAPP_BUSINESS]: 24,
+    [ENUM_ACCOUNT_TYPE.ZALO_PAGE]: 48,
+    [ENUM_ACCOUNT_TYPE.TELEGRAM_BOT]: null,
+};

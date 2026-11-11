@@ -6387,6 +6387,22 @@ export type AttachSkillRequestDto = {
     enabled?: boolean;
 };
 
+export type CustomerMarketingSummaryResponseDto = {
+    stage: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'BOUGHT_ONCE' | 'BOUGHT_REPEAT';
+    permission: 'PENDING' | 'GRANTED' | 'PAUSED' | 'STOPPED';
+    permissionUntil?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * The "Khó chịu" flag.
+     */
+    hostile: boolean;
+    /**
+     * Ngủ đông: no message for 120 days.
+     */
+    dormant: boolean;
+};
+
 export type CustomerGetResponseDto = {
     /**
      * Alias id of api key
@@ -6435,6 +6451,10 @@ export type CustomerGetResponseDto = {
      * Distinct channel (account) types the customer talked on. Present on list responses only.
      */
     channels?: Array<string>;
+    /**
+     * Stage, offers permission, Khó chịu and Ngủ đông. Present on list responses only.
+     */
+    marketing?: CustomerMarketingSummaryResponseDto;
 };
 
 export type CustomerWorkspaceGetResponseDto = {
@@ -6485,6 +6505,10 @@ export type CustomerWorkspaceGetResponseDto = {
      * Distinct channel (account) types the customer talked on. Present on list responses only.
      */
     channels?: Array<string>;
+    /**
+     * Stage, offers permission, Khó chịu and Ngủ đông. Present on list responses only.
+     */
+    marketing?: CustomerMarketingSummaryResponseDto;
     /**
      * Details the agent saved about the customer (set_customer_field), by key.
      */
@@ -6632,42 +6656,6 @@ export type CustomerTagUpdateRequestDto = {
     notifiesTeam?: boolean;
 };
 
-export type CustomerMarketingStateGetResponseDto = {
-    stage: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'BOUGHT_ONCE' | 'BOUGHT_REPEAT';
-    permission: 'PENDING' | 'GRANTED' | 'PAUSED' | 'STOPPED';
-    permissionUntil?: {
-        [key: string]: unknown;
-    } | null;
-    /**
-     * The "Khó chịu" flag.
-     */
-    hostile: boolean;
-    /**
-     * Ngủ đông: no message for 120 days.
-     */
-    dormant: boolean;
-    consentAskedAt?: {
-        [key: string]: unknown;
-    } | null;
-    lastInboundAt?: {
-        [key: string]: unknown;
-    } | null;
-};
-
-export type CustomerMarketingStateUpdateRequestDto = {
-    stage?: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'BOUGHT_ONCE' | 'BOUGHT_REPEAT';
-    permission?: 'PENDING' | 'GRANTED' | 'PAUSED' | 'STOPPED';
-    /**
-     * Required with PAUSED: offers may resume after it.
-     */
-    permissionUntil?: string;
-    /**
-     * The "Khó chịu" flag.
-     */
-    hostile?: boolean;
-    reason: string;
-};
-
 export type MarketingEventGetResponseDto = {
     /**
      * Alias id of api key
@@ -6718,6 +6706,72 @@ export type MarketingEventGetResponseDto = {
     messageId?: {
         [key: string]: unknown;
     } | null;
+};
+
+export type CustomerMarketingFreeWindowResponseDto = {
+    channel: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
+    /**
+     * The customer's last message on it.
+     */
+    lastInboundAt: string;
+    /**
+     * Free messages are allowed until then; past means closed. Null: no limit (Telegram).
+     */
+    openUntil: {
+        [key: string]: unknown;
+    } | null;
+};
+
+export type CustomerMarketingStateGetResponseDto = {
+    stage: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'BOUGHT_ONCE' | 'BOUGHT_REPEAT';
+    permission: 'PENDING' | 'GRANTED' | 'PAUSED' | 'STOPPED';
+    permissionUntil?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * The "Khó chịu" flag.
+     */
+    hostile: boolean;
+    /**
+     * Ngủ đông: no message for 120 days.
+     */
+    dormant: boolean;
+    consentAskedAt?: {
+        [key: string]: unknown;
+    } | null;
+    lastInboundAt?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * The latest stage change: why the customer is here.
+     */
+    stageEvent: MarketingEventGetResponseDto | null;
+    /**
+     * The latest permission change.
+     */
+    permissionEvent: MarketingEventGetResponseDto | null;
+    /**
+     * Why the customer is Khó chịu; null while the flag is off.
+     */
+    hostileEvent: MarketingEventGetResponseDto | null;
+    /**
+     * Free-message window on each channel with a free route, most recent first.
+     */
+    freeWindows: Array<CustomerMarketingFreeWindowResponseDto>;
+};
+
+export type CustomerMarketingStateUpdateRequestDto = {
+    stage?: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'BOUGHT_ONCE' | 'BOUGHT_REPEAT';
+    permission?: 'PENDING' | 'GRANTED' | 'PAUSED' | 'STOPPED';
+    /**
+     * Required with PAUSED: offers may resume after it.
+     */
+    permissionUntil?: string;
+    /**
+     * The "Khó chịu" flag.
+     */
+    hostile?: boolean;
+    reason: string;
 };
 
 export type CustomerTagAssignmentGetResponseDto = {
@@ -31761,6 +31815,18 @@ export type CustomerWorkspaceControllerListV1Data = {
     };
     query?: {
         /**
+         * Journey stages, with ',' delimiter. A customer with no labels yet counts as NEW.
+         */
+        stage?: string;
+        /**
+         * Offers permissions, with ',' delimiter. A customer with no labels yet counts as PENDING.
+         */
+        permission?: string;
+        /**
+         * Ngủ đông: true for only dormant customers, false to leave them out.
+         */
+        dormant?: boolean;
+        /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
          */
         search?: string;
@@ -37696,6 +37762,18 @@ export type CustomerClientControllerListV1Data = {
     path?: never;
     query?: {
         /**
+         * Journey stages, with ',' delimiter. A customer with no labels yet counts as NEW.
+         */
+        stage?: string;
+        /**
+         * Offers permissions, with ',' delimiter. A customer with no labels yet counts as PENDING.
+         */
+        permission?: string;
+        /**
+         * Ngủ đông: true for only dormant customers, false to leave them out.
+         */
+        dormant?: boolean;
+        /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
          */
         search?: string;
@@ -37908,6 +37986,232 @@ export type CustomerClientControllerUpdateV1Responses = {
 };
 
 export type CustomerClientControllerUpdateV1Response = CustomerClientControllerUpdateV1Responses[keyof CustomerClientControllerUpdateV1Responses];
+
+export type CustomerMarketingClientControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/customers/{id}/marketing';
+};
+
+export type CustomerMarketingClientControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerMarketingClientControllerGetV1Error = CustomerMarketingClientControllerGetV1Errors[keyof CustomerMarketingClientControllerGetV1Errors];
+
+export type CustomerMarketingClientControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: CustomerMarketingStateGetResponseDto;
+    };
+};
+
+export type CustomerMarketingClientControllerGetV1Response = CustomerMarketingClientControllerGetV1Responses[keyof CustomerMarketingClientControllerGetV1Responses];
+
+export type CustomerMarketingClientControllerUpdateV1Data = {
+    body: CustomerMarketingStateUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/v1/client/customers/{id}/marketing';
+};
+
+export type CustomerMarketingClientControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerMarketingClientControllerUpdateV1Error = CustomerMarketingClientControllerUpdateV1Errors[keyof CustomerMarketingClientControllerUpdateV1Errors];
+
+export type CustomerMarketingClientControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: CustomerMarketingStateGetResponseDto;
+    };
+};
+
+export type CustomerMarketingClientControllerUpdateV1Response = CustomerMarketingClientControllerUpdateV1Responses[keyof CustomerMarketingClientControllerUpdateV1Responses];
+
+export type CustomerMarketingClientControllerListEventsV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: {
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/client/customers/{id}/marketing/events';
+};
+
+export type CustomerMarketingClientControllerListEventsV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerMarketingClientControllerListEventsV1Error = CustomerMarketingClientControllerListEventsV1Errors[keyof CustomerMarketingClientControllerListEventsV1Errors];
+
+export type CustomerMarketingClientControllerListEventsV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<MarketingEventGetResponseDto>;
+    };
+};
+
+export type CustomerMarketingClientControllerListEventsV1Response = CustomerMarketingClientControllerListEventsV1Responses[keyof CustomerMarketingClientControllerListEventsV1Responses];
 
 export type CustomerTagClientControllerListV1Data = {
     body?: never;

@@ -43,7 +43,8 @@ function makeHarness(customers: Record<string, string> = {}) {
         em,
         stateRepository as any,
         eventRepository as any,
-        customerRepository as any
+        customerRepository as any,
+        { get: jest.fn() } as any
     );
     return { service, states, events, em };
 }
@@ -287,14 +288,22 @@ describe('CustomerMarketingService', () => {
         });
     });
 
-    describe('mapGet', () => {
-        it('shows Ngủ đông after 120 days without a message', () => {
+    describe('dormant', () => {
+        it('shows Ngủ đông after 120 days without a message', async () => {
             const { service } = makeHarness();
             const state = new CustomerMarketingStateEntity();
+            state.customer = { id: 'c1' } as any;
+            (service as any).stateRepository.find = jest.fn(async () => [
+                state,
+            ]);
             state.lastInboundAt = new Date(Date.now() - 121 * 86_400_000);
-            expect(service.mapGet(state).dormant).toBe(true);
+            expect((await service.summarize(['c1'])).get('c1')?.dormant).toBe(
+                true
+            );
             state.lastInboundAt = new Date(Date.now() - 10 * 86_400_000);
-            expect(service.mapGet(state).dormant).toBe(false);
+            expect((await service.summarize(['c1'])).get('c1')?.dormant).toBe(
+                false
+            );
         });
     });
 });

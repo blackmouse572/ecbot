@@ -1,0 +1,329 @@
+import { NotFoundException } from '@nestjs/common';
+import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
+import {
+    ENUM_CUSTOMER_JOURNEY_STAGE as STAGE,
+    ENUM_CUSTOMER_MARKETING_PERMISSION as PERMISSION,
+    ENUM_MARKETING_EVENT_ACTOR as ACTOR,
+    ENUM_MARKETING_EVENT_KIND as KIND,
+} from '../../../src/modules/customer/enums/customer-marketing.enum';
+import { CustomerMarketingStateEntity } from '../../../src/modules/customer/repository/entities/customer-marketing-state.entity';
+import { CustomerMarketingService } from '../../../src/modules/customer/services/customer-marketing.service';
+import { ConversationRepository } from '../../../src/modules/conversation/repository/repositories/conversation.repository';
+
+// What the app reads about a Customer's marketing labels: the "why" behind
+// each layer, the free-message window per channel, the summary on list rows,
+// and an operator's edit applied in a safe order.
+
+const HOUR = 3_600_000;
+
+function state(patch: Partial<CustomerMarketingStateEntity> = {}) {
+    const s = new CustomerMarketingStateEntity();
+    s.customer = { id: 'c1' } as any;
+    s.workspace = { id: 'w1' } as any;
+    Object.assign(s, patch);
+    return s;
+}
+
+function makeHarness(opts: {
+    state?: CustomerMarketingStateEntity | null;
+    events?: Record<string, any>;
+    lastInbound?: { channel: ENUM_ACCOUNT_TYPE; lastInboundAt: Date }[];
+    states?: CustomerMarketingStateEntity[];
+}) {
+    const em: any = {
+        getReference: jest.fn((_e: any, id: string) => ({ id })),
+        persist: jest.fn(() => em),
+        flush: jest.fn().mockResolvedValue(undefined),
+        fork: jest.fn(() => em),
+    };
+    const stateRepository = {
+        findByCustomer: jest.fn(async () => opts.state ?? null),
+        find: jest.fn(async () => opts.states ?? []),
+        customerListFilter: jest.fn(() => ({ marker: true })),
+    };
+    const eventRepository = {
+        findOne: jest.fn(
+            async (where: any) => opts.events?.[where.kind] ?? null
+        ),
+    };
+    const customerRepository = {
+        findOne: jest.fn(async (where: any) =>
+            where.id === 'c1' && where.workspace === 'w1' ? { id: 'c1' } : null
+        ),
+    };
+    const conversationRepository = {
+        lastInboundByChannel: jest.fn(async () => opts.lastInbound ?? []),
+    };
+    const moduleRef = {
+        get: jest.fn((token: any) =>
+            token === ConversationRepository ? conversationRepository : null
+        ),
+    };
+    const service = new CustomerMarketingService(
+        em,
+        stateRepository as any,
+        eventRepository as any,
+        customerRepository as any,
+        moduleRef as any
+    );
+    return {
+        service,
+        stateRepository,
+        eventRepository,
+        conversationRepository,
+    };
+}
+
+describe('CustomerMarketingService.getDetail', () => {
+    it('returns the latest event behind stage and permission', async () => {
+        const stageEvent = {
+            id: 'e1',
+            kind: KIND.STAGE,
+            actor: ACTOR.CLASSIFIER,
+            oldValue: STAGE.INTERESTED,
+            newValue: STAGE.ASKED_PRICE,
+            reason: 'Khách hỏi giá serum vitamin C',
+            conversationId: 'conv-1',
+            messageId: 'm-1',
+            createdAt: new Date('2026-11-10T12:50:00Z'),
+        };
+        const permissionEvent = {
+            id: 'e2',
+            kind: KIND.PERMISSION,
+            actor: ACTOR.RULE,
+            oldValue: PERMISSION.GRANTED,
+            newValue: PERMISSION.STOPPED,
+            reason: 'opt_out_keyword',
+            createdAt: new Date('2026-11-10T13:00:00Z'),
+        };
+        const { service, eventRepository } = makeHarness({
+            state: state({
+                stage: STAGE.ASKED_PRICE,
+                permission: PERMISSION.STOPPED,
+            }),
+            events: {
+                [KIND.STAGE]: stageEvent,
+                [KIND.PERMISSION]: permissionEvent,
+            },
+        });
+
+        const detail = await service.getDetail('c1', 'w1');
+
+        expect(detail.stage).toBe(STAGE.ASKED_PRICE);
+        expect(detail.stageEvent).toEqual(
+            expect.objectContaining({
+                id: 'e1',
+                actor: ACTOR.CLASSIFIER,
+                reason: 'Khách hỏi giá serum vitamin C',
+                conversationId: 'conv-1',
+                messageId: 'm-1',
+            })
+        );
+        expect(detail.permissionEvent).toEqual(
+            expect.objectContaining({ id: 'e2', reason: 'opt_out_keyword' })
+        );
+        // Newest first, id breaking ties.
+        expect(eventRepository.findOne).toHaveBeenCalledWith(
+            { customer: 'c1', workspace: 'w1', kind: KIND.STAGE },
+            { order: { createdAt: 'DESC', id: 'DESC' } }
+        );
+    });
+
+    it('shows why the customer is Khó chịu only while the flag is on', async () => {
+        const hostileEvent = {
+            id: 'e3',
+            kind: KIND.HOSTILE,
+            actor: ACTOR.OPERATOR,
+            newValue: 'false',
+            reason: 'nhầm',
+            createdAt: new Date(),
+        };
+        const off = makeHarness({
+            state: state({ hostile: false }),
+            events: { [KIND.HOSTILE]: hostileEvent },
+        });
+        expect((await off.service.getDetail('c1', 'w1')).hostileEvent).toBe(
+            null
+        );
+
+        const on = makeHarness({
+            state: state({ hostile: true }),
+            events: { [KIND.HOSTILE]: { ...hostileEvent, newValue: 'true' } },
+        });
+        expect((await on.service.getDetail('c1', 'w1')).hostileEvent).toEqual(
+            expect.objectContaining({ id: 'e3' })
+        );
+    });
+
+    it('gives the free-message window per channel', async () => {
+        const last = new Date(Date.now() - 18 * HOUR);
+        const { service, conversationRepository } = makeHarness({
+            state: state(),
+            lastInbound: [
+                {
+                    channel: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+                    lastInboundAt: last,
+                },
+                {
+                    channel: ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
+                    lastInboundAt: last,
+                },
+            ],
+        });
+
+        const detail = await service.getDetail('c1', 'w1');
+
+        expect(
+            conversationRepository.lastInboundByChannel
+        ).toHaveBeenCalledWith('c1', 'w1');
+        expect(detail.freeWindows).toEqual([
+            {
+                channel: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+                lastInboundAt: last,
+                openUntil: new Date(last.getTime() + 24 * HOUR),
+            },
+        ]);
+    });
+
+    it('reads a customer with no label row yet as Mới biết, Chưa đồng ý', async () => {
+        const { service } = makeHarness({ state: null });
+        const detail = await service.getDetail('c1', 'w1');
+        expect(detail).toEqual(
+            expect.objectContaining({
+                stage: STAGE.NEW,
+                permission: PERMISSION.PENDING,
+                hostile: false,
+                dormant: false,
+                stageEvent: null,
+                permissionEvent: null,
+                freeWindows: [],
+            })
+        );
+    });
+
+    it('404s a customer of another workspace', async () => {
+        const { service } = makeHarness({ state: state() });
+        await expect(service.getDetail('c1', 'other')).rejects.toBeInstanceOf(
+            NotFoundException
+        );
+    });
+});
+
+describe('CustomerMarketingService.summarize', () => {
+    it('gives each customer its labels, defaults when it has no row', async () => {
+        const old = new Date(Date.now() - 200 * 24 * HOUR);
+        const { service, stateRepository } = makeHarness({
+            states: [
+                state({
+                    customer: { id: 'c1' } as any,
+                    stage: STAGE.BOUGHT_ONCE,
+                    permission: PERMISSION.GRANTED,
+                    lastInboundAt: old,
+                }),
+            ],
+        });
+
+        const summaries = await service.summarize(['c1', 'c2']);
+
+        expect(stateRepository.find).toHaveBeenCalledWith({
+            customer: { $in: ['c1', 'c2'] },
+        });
+        expect(summaries.get('c1')).toEqual(
+            expect.objectContaining({
+                stage: STAGE.BOUGHT_ONCE,
+                permission: PERMISSION.GRANTED,
+                dormant: true,
+            })
+        );
+        expect(summaries.get('c2')).toEqual(
+            expect.objectContaining({
+                stage: STAGE.NEW,
+                permission: PERMISSION.PENDING,
+                hostile: false,
+                dormant: false,
+            })
+        );
+    });
+
+    it('skips the query for an empty page', async () => {
+        const { service, stateRepository } = makeHarness({});
+        expect((await service.summarize([])).size).toBe(0);
+        expect(stateRepository.find).not.toHaveBeenCalled();
+    });
+});
+
+describe('CustomerMarketingService.applyChange', () => {
+    it('applies Khó chịu, then stage, then permission, with one reason', async () => {
+        const { service } = makeHarness({ state: state() });
+        const calls: string[] = [];
+        jest.spyOn(service, 'setHostile').mockImplementation(async () => {
+            calls.push('hostile');
+            return state();
+        });
+        jest.spyOn(service, 'setStage').mockImplementation(async () => {
+            calls.push('stage');
+            return state();
+        });
+        jest.spyOn(service, 'setPermission').mockImplementation(async () => {
+            calls.push('permission');
+            return state();
+        });
+        const until = new Date('2026-12-01T00:00:00Z');
+        const context = {
+            actor: ACTOR.CLIENT,
+            reason: 'from MCP',
+            userId: 'u1',
+        };
+
+        await service.applyChange(
+            'c1',
+            'w1',
+            {
+                stage: STAGE.ASKED_PRICE,
+                permission: PERMISSION.PAUSED,
+                permissionUntil: until,
+                hostile: true,
+                reason: 'from MCP',
+            },
+            context
+        );
+
+        expect(calls).toEqual(['hostile', 'stage', 'permission']);
+        expect(service.setPermission).toHaveBeenCalledWith(
+            'c1',
+            'w1',
+            PERMISSION.PAUSED,
+            context,
+            until
+        );
+    });
+
+    it('leaves untouched layers alone', async () => {
+        const { service } = makeHarness({ state: state() });
+        const setStage = jest.spyOn(service, 'setStage');
+        const setHostile = jest.spyOn(service, 'setHostile');
+        jest.spyOn(service, 'setPermission').mockResolvedValue(state());
+
+        await service.applyChange(
+            'c1',
+            'w1',
+            {
+                permission: PERMISSION.GRANTED,
+                reason: 'khách đồng ý qua điện thoại',
+            },
+            { actor: ACTOR.OPERATOR, reason: 'x' }
+        );
+
+        expect(setStage).not.toHaveBeenCalled();
+        expect(setHostile).not.toHaveBeenCalled();
+    });
+});
+
+describe('CustomerMarketingService.customerListFilter', () => {
+    it('hands the label filters to the repository', () => {
+        const { service, stateRepository } = makeHarness({});
+        const filter = { stages: [STAGE.NEW], dormant: true };
+        expect(service.customerListFilter(filter)).toEqual({ marker: true });
+        expect(stateRepository.customerListFilter).toHaveBeenCalledWith(filter);
+    });
+});

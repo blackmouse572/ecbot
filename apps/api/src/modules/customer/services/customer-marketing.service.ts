@@ -1,4 +1,6 @@
 import { IDatabaseFindAllOptions } from '@app/common/database/interfaces/database.interface';
+import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '@app/common/pagination/enums/pagination.enum';
+import { ConversationRepository } from '@app/modules/conversation/repository/repositories/conversation.repository';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { EntityManager } from '@mikro-orm/postgresql';
 import {
@@ -6,6 +8,7 @@ import {
     Injectable,
     NotFoundException,
 } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { plainToInstance } from 'class-transformer';
 import { UserEntity } from 'src/modules/user/repository/entities/user.entity';
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
@@ -18,7 +21,9 @@ import {
     CUSTOMER_MARKETING_REASON_MERGE,
     CUSTOMER_MARKETING_REASON_OPT_OUT_KEYWORD,
 } from '../constants/customer-marketing.constant';
+import { CustomerMarketingStateUpdateRequestDto } from '../dtos/request/customer-marketing-state.update.request.dto';
 import { CustomerMarketingStateGetResponseDto } from '../dtos/response/customer-marketing-state.get.response.dto';
+import { CustomerMarketingSummaryResponseDto } from '../dtos/response/customer-marketing-summary.response.dto';
 import { MarketingEventGetResponseDto } from '../dtos/response/marketing-event.get.response.dto';
 import {
     ENUM_CUSTOMER_JOURNEY_STAGE,
@@ -29,6 +34,7 @@ import {
 import {
     ICustomerMarketingChangeContext,
     ICustomerMarketingInbound,
+    ICustomerMarketingListFilter,
 } from '../interfaces/customer-marketing.interface';
 import { CustomerMarketingStateEntity } from '../repository/entities/customer-marketing-state.entity';
 import { CustomerEntity } from '../repository/entities/customer.entity';
@@ -36,6 +42,7 @@ import { MarketingEventEntity } from '../repository/entities/marketing-event.ent
 import { CustomerMarketingStateRepository } from '../repository/repositories/customer-marketing-state.repository';
 import { CustomerRepository } from '../repository/repositories/customer.repository';
 import { MarketingEventRepository } from '../repository/repositories/marketing-event.repository';
+import { customerMarketingFreeWindows } from '../utils/customer-marketing-free-window.util';
 import { isMarketingOptOutMessage } from '../utils/customer-marketing-opt-out.util';
 
 const DAY_MS = 86_400_000;
@@ -52,7 +59,8 @@ export class CustomerMarketingService {
         private readonly em: EntityManager,
         private readonly stateRepository: CustomerMarketingStateRepository,
         private readonly eventRepository: MarketingEventRepository,
-        private readonly customerRepository: CustomerRepository
+        private readonly customerRepository: CustomerRepository,
+        private readonly moduleRef: ModuleRef
     ) {}
 
     /**
@@ -83,6 +91,122 @@ export class CustomerMarketingService {
             (await this.stateRepository.findByCustomer(customerId)) ??
             this.newState(customerId, workspaceId)
         );
+    }
+
+    /**
+     * The labels with the event behind each one and the free-message window
+     * per channel, for the customer panel.
+     */
+    async getDetail(
+        customerId: string,
+        workspaceId: string
+    ): Promise<CustomerMarketingStateGetResponseDto> {
+        const state = await this.getState(customerId, workspaceId);
+        // Resolved lazily: the conversation module already depends on this one.
+        const conversationRepository = this.moduleRef.get(
+            ConversationRepository,
+            { strict: false }
+        );
+        const [stageEvent, permissionEvent, hostileEvent, lastInbound] =
+            await Promise.all([
+                this.latestEvent(
+                    customerId,
+                    workspaceId,
+                    ENUM_MARKETING_EVENT_KIND.STAGE
+                ),
+                this.latestEvent(
+                    customerId,
+                    workspaceId,
+                    ENUM_MARKETING_EVENT_KIND.PERMISSION
+                ),
+                state.hostile
+                    ? this.latestEvent(
+                          customerId,
+                          workspaceId,
+                          ENUM_MARKETING_EVENT_KIND.HOSTILE
+                      )
+                    : null,
+                conversationRepository.lastInboundByChannel(
+                    customerId,
+                    workspaceId
+                ),
+            ]);
+        return plainToInstance(
+            CustomerMarketingStateGetResponseDto,
+            {
+                ...state,
+                dormant: this.isDormant(state),
+                stageEvent,
+                permissionEvent,
+                hostileEvent,
+                freeWindows: customerMarketingFreeWindows(lastInbound),
+            },
+            { excludeExtraneousValues: true }
+        );
+    }
+
+    /**
+     * An edit from the app or a Client credential. Khó chịu goes first: it
+     * stops offers, and a permission in the same request then applies on top.
+     */
+    async applyChange(
+        customerId: string,
+        workspaceId: string,
+        change: CustomerMarketingStateUpdateRequestDto,
+        context: ICustomerMarketingChangeContext
+    ): Promise<void> {
+        if (change.hostile !== undefined) {
+            await this.setHostile(
+                customerId,
+                workspaceId,
+                change.hostile,
+                context
+            );
+        }
+        if (change.stage) {
+            await this.setStage(customerId, workspaceId, change.stage, context);
+        }
+        if (change.permission) {
+            await this.setPermission(
+                customerId,
+                workspaceId,
+                change.permission,
+                context,
+                change.permissionUntil
+            );
+        }
+    }
+
+    /** Labels per customer for a list page; a customer without a row gets the defaults. */
+    async summarize(
+        customerIds: string[]
+    ): Promise<Map<string, CustomerMarketingSummaryResponseDto>> {
+        if (customerIds.length === 0) return new Map();
+        const states = await this.stateRepository.find({
+            customer: { $in: customerIds },
+        });
+        const byCustomer = new Map(states.map(s => [s.customer.id, s]));
+        return new Map(
+            customerIds.map(id => {
+                const state =
+                    byCustomer.get(id) ?? new CustomerMarketingStateEntity();
+                return [
+                    id,
+                    plainToInstance(
+                        CustomerMarketingSummaryResponseDto,
+                        { ...state, dormant: this.isDormant(state) },
+                        { excludeExtraneousValues: true }
+                    ),
+                ];
+            })
+        );
+    }
+
+    /** A `find` fragment for the customers list. */
+    customerListFilter(
+        filter: ICustomerMarketingListFilter
+    ): Record<string, any> {
+        return this.stateRepository.customerListFilter(filter);
     }
 
     /** Forward only, except for an operator. */
@@ -301,20 +425,6 @@ export class CustomerMarketingService {
         ]);
     }
 
-    mapGet(
-        state: CustomerMarketingStateEntity
-    ): CustomerMarketingStateGetResponseDto {
-        const dormant =
-            !!state.lastInboundAt &&
-            Date.now() - state.lastInboundAt.getTime() >
-                CUSTOMER_MARKETING_DORMANT_DAYS * DAY_MS;
-        return plainToInstance(
-            CustomerMarketingStateGetResponseDto,
-            { ...state, dormant },
-            { excludeExtraneousValues: true }
-        );
-    }
-
     mapEvents(events: MarketingEventEntity[]): MarketingEventGetResponseDto[] {
         return plainToInstance(MarketingEventGetResponseDto, events, {
             excludeExtraneousValues: true,
@@ -379,6 +489,30 @@ export class CustomerMarketingService {
             em
         );
         return state;
+    }
+
+    private isDormant(state: CustomerMarketingStateEntity): boolean {
+        return (
+            !!state.lastInboundAt &&
+            Date.now() - state.lastInboundAt.getTime() >
+                CUSTOMER_MARKETING_DORMANT_DAYS * DAY_MS
+        );
+    }
+
+    private latestEvent(
+        customerId: string,
+        workspaceId: string,
+        kind: ENUM_MARKETING_EVENT_KIND
+    ): Promise<MarketingEventEntity | null> {
+        return this.eventRepository.findOne(
+            { customer: customerId, workspace: workspaceId, kind },
+            {
+                order: {
+                    createdAt: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
+                    id: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
+                },
+            }
+        );
     }
 
     private async loadForChange(

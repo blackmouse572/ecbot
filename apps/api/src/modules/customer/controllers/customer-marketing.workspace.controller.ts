@@ -69,8 +69,9 @@ export class CustomerMarketingWorkspaceController {
         @WorkspacePayload() workspace: WorkspaceEntity,
         @Param('id') id: string
     ): Promise<IResponse<CustomerMarketingStateGetResponseDto>> {
-        const state = await this.marketingService.getState(id, workspace.id);
-        return { data: this.marketingService.mapGet(state) };
+        return {
+            data: await this.marketingService.getDetail(id, workspace.id),
+        };
     }
 
     @CustomerMarketingWorkspaceUpdateDoc()
@@ -94,40 +95,15 @@ export class CustomerMarketingWorkspaceController {
             reason: dto.reason,
             userId: user.id,
         };
-        // Hostile first: it stops offers, and a permission in the same
-        // request then applies on top of it.
-        if (dto.hostile !== undefined) {
-            await this.marketingService.setHostile(
-                id,
-                workspace.id,
-                dto.hostile,
-                context
-            );
-        }
-        if (dto.stage) {
-            await this.marketingService.setStage(
-                id,
-                workspace.id,
-                dto.stage,
-                context
-            );
-        }
-        if (dto.permission) {
-            await this.marketingService.setPermission(
-                id,
-                workspace.id,
-                dto.permission,
-                context,
-                dto.permissionUntil
-            );
-        }
+        await this.marketingService.applyChange(id, workspace.id, dto, context);
         await this.activityService.createByUserWithWorkspace(user, workspace, {
             action: ENUM_ACTIVITY_ACTION.UPDATE,
             subject: ENUM_POLICY_SUBJECT.CUSTOMER,
             metadata: { id },
         });
-        const state = await this.marketingService.getState(id, workspace.id);
-        return { data: this.marketingService.mapGet(state) };
+        return {
+            data: await this.marketingService.getDetail(id, workspace.id),
+        };
     }
 
     @CustomerMarketingWorkspaceListEventsDoc()
