@@ -10,6 +10,7 @@ import { CustomerMarketingStateEntity } from '../../../src/modules/customer/repo
 import { CustomerMarketingService } from '../../../src/modules/customer/services/customer-marketing.service';
 import { ConversationRepository } from '../../../src/modules/conversation/repository/repositories/conversation.repository';
 import { PlatformAdapterRegistry } from '../../../src/modules/platform/services/platform-adapter.registry';
+import { customerMarketingFreeWindows } from '../../../src/modules/customer/utils/customer-marketing-free-window.util';
 
 // What the app reads about a Customer's marketing labels: the "why" behind
 // each layer, the free-message window per channel, the summary on list rows,
@@ -419,5 +420,111 @@ describe('CustomerMarketingService.customerListFilter', () => {
         const filter = { stages: [STAGE.NEW], dormant: true };
         expect(service.customerListFilter(filter)).toEqual({ marker: true });
         expect(stateRepository.customerListFilter).toHaveBeenCalledWith(filter);
+    });
+});
+
+// How long the shop may still message a customer for free on each channel,
+// counted from the customer's last message there.
+
+const NOW = new Date('2026-11-11T10:00:00Z');
+const ago = (hours: number) => new Date(NOW.getTime() - hours * HOUR);
+// Stands in for each channel adapter's freeMessageWindowHours.
+const HOURS: Partial<Record<ENUM_ACCOUNT_TYPE, number | null>> = {
+    [ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE]: 24,
+    [ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE]: 24,
+    [ENUM_ACCOUNT_TYPE.WHATSAPP_BUSINESS]: 24,
+    [ENUM_ACCOUNT_TYPE.ZALO_PAGE]: 48,
+    [ENUM_ACCOUNT_TYPE.TELEGRAM_BOT]: null,
+};
+const windowHours = (channel: ENUM_ACCOUNT_TYPE) => HOURS[channel];
+
+describe('customerMarketingFreeWindows', () => {
+    it("counts each channel's hours from the last message, newest first", () => {
+        const windows = customerMarketingFreeWindows(
+            [
+                {
+                    channel: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+                    lastInboundAt: ago(18),
+                },
+                {
+                    channel: ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE,
+                    lastInboundAt: ago(30),
+                },
+                {
+                    channel: ENUM_ACCOUNT_TYPE.WHATSAPP_BUSINESS,
+                    lastInboundAt: ago(1),
+                },
+                {
+                    channel: ENUM_ACCOUNT_TYPE.ZALO_PAGE,
+                    lastInboundAt: ago(30),
+                },
+            ],
+            windowHours
+        );
+
+        expect(windows).toEqual([
+            {
+                channel: ENUM_ACCOUNT_TYPE.WHATSAPP_BUSINESS,
+                lastInboundAt: ago(1),
+                openUntil: new Date(ago(1).getTime() + 24 * HOUR),
+            },
+            {
+                channel: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+                lastInboundAt: ago(18),
+                openUntil: new Date(ago(18).getTime() + 24 * HOUR),
+            },
+            {
+                channel: ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE,
+                lastInboundAt: ago(30),
+                openUntil: new Date(ago(30).getTime() + 24 * HOUR),
+            },
+            {
+                channel: ENUM_ACCOUNT_TYPE.ZALO_PAGE,
+                lastInboundAt: ago(30),
+                openUntil: new Date(ago(30).getTime() + 48 * HOUR),
+            },
+        ]);
+    });
+
+    it('keeps Telegram open with no end', () => {
+        expect(
+            customerMarketingFreeWindows(
+                [
+                    {
+                        channel: ENUM_ACCOUNT_TYPE.TELEGRAM_BOT,
+                        lastInboundAt: ago(500),
+                    },
+                ],
+                windowHours
+            )
+        ).toEqual([
+            {
+                channel: ENUM_ACCOUNT_TYPE.TELEGRAM_BOT,
+                lastInboundAt: ago(500),
+                openUntil: null,
+            },
+        ]);
+    });
+
+    it('leaves out channels with no free route for offers', () => {
+        expect(
+            customerMarketingFreeWindows(
+                [
+                    {
+                        channel: ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
+                        lastInboundAt: ago(1),
+                    },
+                    {
+                        channel: ENUM_ACCOUNT_TYPE.API_CHANNEL,
+                        lastInboundAt: ago(1),
+                    },
+                    {
+                        channel: ENUM_ACCOUNT_TYPE.THREADS_ACCOUNT,
+                        lastInboundAt: ago(1),
+                    },
+                ],
+                windowHours
+            )
+        ).toEqual([]);
     });
 });
