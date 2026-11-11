@@ -17,7 +17,13 @@ type Option = {
   renderItem?(): React.ReactNode;
 };
 
-type SelectExtra = { multiple?: boolean; searchable?: boolean };
+type SelectExtra = {
+  multiple?: boolean;
+  searchable?: boolean;
+  /** Search on the server: the options are already the matches, so the
+   * picker passes the text on instead of filtering them itself. */
+  onSearchChange?: (value: string) => void;
+};
 type SelectFilterFields = { type: "select"; options: Option[] } & SelectExtra;
 
 type SimpleFilterFields<T extends string> = { type: T; options?: never };
@@ -128,7 +134,14 @@ export const DataTableFilter = ({
   return (
     <DataTableFilterContext.Provider value={filterContextValue}>
       <div className="max-w-2/3 flex flex-wrap items-center gap-2">
-        {activeFilters.map((filter) => {
+        {activeFilters.map((active) => {
+          // The live definition, so options fetched after the filter was
+          // added (a server search) still reach the picker.
+          const filter = {
+            ...active,
+            ...filters.find((f) => f.key === active.key),
+          } as ActiveFilter;
+
           switch (filter.type) {
             case "select":
               return (
@@ -140,6 +153,7 @@ export const DataTableFilter = ({
                   options={filter.options}
                   multiple={filter.multiple}
                   searchable={filter.searchable}
+                  onSearchChange={filter.onSearchChange}
                   openOnMount={filter.openOnMount}
                 />
               );

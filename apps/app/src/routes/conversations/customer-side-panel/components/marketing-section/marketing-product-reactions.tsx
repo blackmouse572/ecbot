@@ -1,8 +1,8 @@
-import { useMarketingDay } from "@/components/customer-marketing";
 import type { CustomerMarketingStateGetResponseDto } from "@/hooks/api/customer-marketing";
 import { Badge, Text } from "@medusajs/ui";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
+import { useMarketingDay } from "./use-marketing-day";
 
 type Props = {
   reactions: CustomerMarketingStateGetResponseDto["reactions"];

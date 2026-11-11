@@ -1,5 +1,7 @@
 import { TooltipProvider } from "@medusajs/ui";
-import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import "@/i18n";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -19,10 +21,31 @@ if (!HTMLElement.prototype.scroll) {
   HTMLElement.prototype.scroll = () => {};
 }
 
+// cmdk scrolls the active item into view; jsdom does not implement it.
+Element.prototype.scrollIntoView = vi.fn();
+
+// jsdom has no layout, so the real virtualizer measures zero rows.
+vi.mock("@tanstack/react-virtual", () => ({
+  useVirtualizer: ({ count }: { count: number }) => ({
+    getTotalSize: () => count * 32,
+    getVirtualItems: () =>
+      Array.from({ length: count }, (_, index) => ({
+        index,
+        size: 32,
+        start: index * 32,
+      })),
+  }),
+}));
+
 const state = vi.hoisted(() => ({
   empty: false,
   lastQuery: undefined as unknown,
+  sourceSearches: [] as Array<string | undefined>,
 }));
+
+const tet = { id: "src-1", name: "Tờ rơi Tết", code: "tet" };
+// Past the first page of sources, found by its code.
+const fair = { id: "src-9", name: "Hội chợ", code: "hc26" };
 
 const customers = [
   {
@@ -78,8 +101,21 @@ vi.mock("@/hooks/api", () => ({
 }));
 
 vi.mock("@/hooks/api/tracked-links", () => ({
-  useTrackedLinks: () => ({
-    links: [{ id: "src-1", name: "Tờ rơi Tết" }],
+  trackedLinkListQueryOptions: (
+    workspace: string,
+    params: { search?: string },
+  ) => ({
+    queryKey: ["tracked-links", workspace, params],
+    queryFn: () => {
+      state.sourceSearches.push(params.search);
+
+      return Promise.resolve({
+        data: params.search === fair.code ? [fair] : [tet],
+      });
+    },
+  }),
+  useTrackedLink: (_workspace: string, id: string) => ({
+    link: id === fair.id ? fair : undefined,
   }),
 }));
 
@@ -87,21 +123,24 @@ import { CustomerListTable } from "./customer-list-table";
 
 const renderTable = (url = "/acme/customers") =>
   render(
-    <TooltipProvider>
-      <MemoryRouter initialEntries={[url]}>
-        <Routes>
-          <Route
-            path="/:workspaceSlug/customers"
-            element={<CustomerListTable />}
-          />
-        </Routes>
-      </MemoryRouter>
-    </TooltipProvider>,
+    <QueryClientProvider client={new QueryClient()}>
+      <TooltipProvider>
+        <MemoryRouter initialEntries={[url]}>
+          <Routes>
+            <Route
+              path="/:workspaceSlug/customers"
+              element={<CustomerListTable />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </TooltipProvider>
+    </QueryClientProvider>,
   );
 
 describe("CustomerListTable", () => {
   afterEach(() => {
     state.empty = false;
+    state.sourceSearches = [];
   });
 
   it("lists the customers the bot collected, with their contact details", () => {
@@ -157,6 +196,26 @@ describe("CustomerListTable", () => {
     renderTable("/acme/customers?source=src-1");
 
     expect(state.lastQuery).toMatchObject({ source: "src-1" });
+  });
+
+  it("searches every source on the server from the Nguồn picker", async () => {
+    renderTable("/acme/customers?source=src-1");
+
+    await userEvent.click(await screen.findByText("Tờ rơi Tết"));
+    // Hidden to queries: jsdom has no layout, so Radix sees it detached.
+    const picker = await screen.findByRole("dialog", { hidden: true });
+    await userEvent.type(within(picker).getByPlaceholderText("Search"), "hc26");
+
+    // The name does not contain the code, so only the server could match it.
+    expect(await screen.findByText("Hội chợ")).toBeInTheDocument();
+    expect(state.sourceSearches).toContain("hc26");
+  });
+
+  it("names a picked source that is not on the first page", async () => {
+    renderTable("/acme/customers?source=src-9");
+
+    await waitFor(() => expect(state.sourceSearches).toEqual([undefined]));
+    expect(screen.getByText("Hội chợ")).toBeInTheDocument();
   });
 
   it("says so when there are no customers yet", () => {
