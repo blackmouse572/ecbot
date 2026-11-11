@@ -35,6 +35,19 @@ describe('ProductGroupService', () => {
         expect(fallback.repurchaseDays).toBe(60);
     });
 
+    it('matches an item to the group with the longest name it contains', () => {
+        const groups = [
+            { id: 'g1', name: 'Kem' },
+            { id: 'g2', name: 'kem chống nắng' },
+            { id: 'g3', name: 'Serum' },
+        ] as any;
+        expect(
+            service.matchItemName('Kem Chống Nắng SPF50 50ml', groups)?.id
+        ).toBe('g2');
+        expect(service.matchItemName('Kem dưỡng ẩm', groups)?.id).toBe('g1');
+        expect(service.matchItemName('Mặt nạ ngủ', groups)).toBeUndefined();
+    });
+
     it('rejects a duplicate name in the workspace', async () => {
         productGroupRepository.exists.mockResolvedValue(true);
         await expect(

@@ -12,8 +12,11 @@ import {
     OrderDocParamsId,
     OrderDocQueryFilters,
 } from '../constants/order.doc.constant';
+import { OrderImportRequestDto } from '../dtos/request/order-import.request.dto';
+import { OrderSystemDraftRequestDto } from '../dtos/request/order.system-draft.request.dto';
 import { OrderCreateRequestDto } from '../dtos/request/order.create.request.dto';
 import { OrderUpdateRequestDto } from '../dtos/request/order.update.request.dto';
+import { OrderImportResponseDto } from '../dtos/response/order-import.response.dto';
 import { OrderGetResponseDto } from '../dtos/response/order.get.response.dto';
 
 const auth = () => DocAuth({ xApiKey: true, jwtAccessToken: true });
@@ -90,6 +93,41 @@ export function OrderWorkspaceCancelDoc(): MethodDecorator {
         DocRequest({ params: [...WorkspaceDocParamsId, ...OrderDocParamsId] }),
         auth(),
         DocResponse<OrderGetResponseDto>('order.workspace.cancel', {
+            dto: OrderGetResponseDto,
+        })
+    );
+}
+
+export function OrderWorkspaceImportDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'Import orders from mapped CSV rows',
+            description:
+                'Rows sharing a code are one order; existing codes are skipped. Send dryRun for the preview counts.',
+        }),
+        DocRequest({
+            params: [...WorkspaceDocParamsId],
+            dto: OrderImportRequestDto,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        }),
+        auth(),
+        DocResponse<OrderImportResponseDto>('order.workspace.import', {
+            dto: OrderImportResponseDto,
+        })
+    );
+}
+
+export function OrderSystemDraftDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: 'Note an order the customer confirmed in chat (apps/ai)',
+        }),
+        DocAuth({ xApiKey: true }),
+        DocRequest({
+            dto: OrderSystemDraftRequestDto,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        }),
+        DocResponse<OrderGetResponseDto>('order.system.draft', {
             dto: OrderGetResponseDto,
         })
     );

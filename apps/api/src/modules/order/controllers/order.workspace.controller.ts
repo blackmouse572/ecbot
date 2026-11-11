@@ -58,14 +58,18 @@ import {
     OrderWorkspaceConfirmDoc,
     OrderWorkspaceCreateDoc,
     OrderWorkspaceGetDoc,
+    OrderWorkspaceImportDoc,
     OrderWorkspaceListDoc,
     OrderWorkspaceUpdateDoc,
 } from '../docs/order.workspace.doc';
+import { OrderImportRequestDto } from '../dtos/request/order-import.request.dto';
 import { OrderCreateRequestDto } from '../dtos/request/order.create.request.dto';
 import { OrderUpdateRequestDto } from '../dtos/request/order.update.request.dto';
+import { OrderImportResponseDto } from '../dtos/response/order-import.response.dto';
 import { OrderGetResponseDto } from '../dtos/response/order.get.response.dto';
 import { ENUM_ORDER_SOURCE, ENUM_ORDER_STATUS } from '../enums/order.enum';
 import { OrderEntity } from '../repository/entities/order.entity';
+import { OrderImportService } from '../services/order-import.service';
 import { OrderService } from '../services/order.service';
 
 @ApiTags('modules.workspace.order')
@@ -76,6 +80,7 @@ import { OrderService } from '../services/order.service';
 export class OrderWorkspaceController {
     constructor(
         private readonly orderService: OrderService,
+        private readonly orderImportService: OrderImportService,
         private readonly paginationService: PaginationService,
         private readonly activityService: ActivityService
     ) {}
@@ -180,6 +185,41 @@ export class OrderWorkspaceController {
         });
         await this.log(user, workspace, ENUM_ACTIVITY_ACTION.CREATE, order);
         return { data: this.orderService.mapGet(order) };
+    }
+
+    @OrderWorkspaceImportDoc()
+    @Response('order.workspace.import')
+    @WorkspaceScopedProtected(ORDER_ABILITY_CREATE)
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @HttpCode(HttpStatus.OK)
+    @Post('/import')
+    async import(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Body() dto: OrderImportRequestDto,
+        @AuthJwtPayload('user', UserParsePipe) user: UserEntity
+    ): Promise<IResponse<OrderImportResponseDto>> {
+        const result = await this.orderImportService.import(
+            workspace.id,
+            dto.rows,
+            dto.dryRun ?? false
+        );
+        if (!result.dryRun) {
+            await this.activityService.createByUserWithWorkspace(
+                user,
+                workspace,
+                {
+                    action: ENUM_ACTIVITY_ACTION.CREATE,
+                    subject: ENUM_POLICY_SUBJECT.ORDER,
+                    metadata: {
+                        imported: result.orders,
+                        skipped: result.skipped,
+                    },
+                }
+            );
+        }
+        return { data: result };
     }
 
     @OrderWorkspaceUpdateDoc()

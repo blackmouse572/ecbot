@@ -17,9 +17,11 @@ import {
     ORDER_DEFAULT_CURRENCY,
 } from '../constants/order.constant';
 import { OrderGetResponseDto } from '../dtos/response/order.get.response.dto';
-import { ENUM_ORDER_STATUS } from '../enums/order.enum';
+import { ENUM_ORDER_SOURCE, ENUM_ORDER_STATUS } from '../enums/order.enum';
 import {
+    IOrderChatDraft,
     IOrderCreate,
+    IOrderCreateOptions,
     IOrderItemInput,
     IOrderUpdate,
 } from '../interfaces/order.interface';
@@ -79,7 +81,8 @@ export class OrderService {
 
     async create(
         workspaceId: string,
-        input: IOrderCreate
+        input: IOrderCreate,
+        options: IOrderCreateOptions = {}
     ): Promise<OrderEntity> {
         const customer = await this.customerRepository.findOne({
             id: input.customerId,
@@ -118,8 +121,64 @@ export class OrderService {
         });
 
         return input.status === ENUM_ORDER_STATUS.CONFIRMED
-            ? this.markConfirmed(order)
+            ? this.markConfirmed(order, options.refreshCycles ?? true)
             : order;
+    }
+
+    /**
+     * The bot noted an order the customer confirmed in chat. It stays PENDING
+     * until staff confirm it, and a later note in the same conversation
+     * replaces the draft instead of adding a second order. Items get the
+     * product group their name matches.
+     */
+    async recordChatDraft(
+        customerId: string,
+        input: IOrderChatDraft
+    ): Promise<OrderEntity> {
+        const customer = await this.customerRepository.findOne({
+            id: customerId,
+            deletedAt: null,
+        } as any);
+        if (!customer) {
+            throw new NotFoundException({
+                message: 'customer.error.notFound',
+                statusCode: 404,
+            });
+        }
+        const workspaceId = customer.workspace.id;
+        const groups = await this.productGroupService.findAll(workspaceId, {});
+        const items = input.items.map(item => ({
+            ...item,
+            productGroupId:
+                this.productGroupService.matchItemName(item.name, groups)?.id ??
+                null,
+        }));
+
+        const draft = input.conversationId
+            ? await this.orderRepository.findOne({
+                  workspace: workspaceId,
+                  conversationId: input.conversationId,
+                  status: ENUM_ORDER_STATUS.PENDING,
+                  source: ENUM_ORDER_SOURCE.CHAT,
+                  deletedAt: null,
+              })
+            : null;
+        if (draft) {
+            return this.update(draft.id, workspaceId, {
+                items,
+                total: input.total,
+                note: input.note,
+            });
+        }
+        return this.create(workspaceId, {
+            customerId,
+            items,
+            total: input.total,
+            note: input.note,
+            conversationId: input.conversationId,
+            status: ENUM_ORDER_STATUS.PENDING,
+            source: ENUM_ORDER_SOURCE.CHAT,
+        });
     }
 
     async update(
@@ -240,13 +299,18 @@ export class OrderService {
         return orders.map(order => this.mapGet(order));
     }
 
-    private async markConfirmed(order: OrderEntity): Promise<OrderEntity> {
+    private async markConfirmed(
+        order: OrderEntity,
+        refreshCycles = true
+    ): Promise<OrderEntity> {
         order.status = ENUM_ORDER_STATUS.CONFIRMED;
         order.confirmedAt = new Date();
         const saved = await this.orderRepository.save(order);
-        await this.productGroupService.refreshLearnedCycles(
-            this.groupIds(saved)
-        );
+        if (refreshCycles) {
+            await this.productGroupService.refreshLearnedCycles(
+                this.groupIds(saved)
+            );
+        }
         await this.onConfirmed(saved);
         return saved;
     }
@@ -261,7 +325,7 @@ export class OrderService {
         );
     }
 
-    private groupIds(order: OrderEntity): string[] {
+    groupIds(order: OrderEntity): string[] {
         return order.items
             .getItems()
             .flatMap(item => (item.productGroup ? [item.productGroup.id] : []));

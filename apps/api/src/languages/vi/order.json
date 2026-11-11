@@ -5,7 +5,8 @@
         "create": "Đã thêm đơn hàng.",
         "update": "Đã cập nhật đơn hàng.",
         "confirm": "Đã xác nhận đơn hàng.",
-        "cancel": "Đã huỷ đơn hàng."
+        "cancel": "Đã huỷ đơn hàng.",
+        "import": "Đã nhập đơn hàng."
     },
     "error": {
         "notFound": "Không tìm thấy đơn hàng.",
@@ -24,5 +25,8 @@
             "notFound": "Không tìm thấy nhóm hàng.",
             "duplicate": "Đã có nhóm hàng trùng tên."
         }
+    },
+    "system": {
+        "draft": "Đã ghi lại đơn để nhân viên xác nhận."
     }
 }
