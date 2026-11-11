@@ -8,6 +8,7 @@ import {
 import { ENUM_DOC_REQUEST_BODY_TYPE } from '@app/common/doc/enums/doc.enum';
 import { WorkspaceDocParamsId } from '@app/modules/workspace/constants/workspace.doc.constant';
 import { applyDecorators } from '@nestjs/common';
+import { CustomerDocQueryMarketingFilters } from '../constants/customer.doc.constant';
 import { CustomerUpdateRequestDto } from '../dtos/request/customer.update.request.dto';
 import { ContactPointGetResponseDto } from '../dtos/response/contact-point.get.response.dto';
 import { CustomerEraseResponseDto } from '../dtos/response/customer.erase.response.dto';
@@ -17,7 +18,10 @@ import { CustomerWorkspaceGetResponseDto } from '../dtos/response/customer.works
 export function CustomerWorkspaceListDoc(): MethodDecorator {
     return applyDecorators(
         Doc({ summary: 'List the customers of a workspace' }),
-        DocRequest({ params: [...WorkspaceDocParamsId] }),
+        DocRequest({
+            params: [...WorkspaceDocParamsId],
+            queries: CustomerDocQueryMarketingFilters,
+        }),
         DocAuth({ xApiKey: true, jwtAccessToken: true }),
         DocResponsePaging<CustomerGetResponseDto>('customer.workspace.list', {
             dto: CustomerGetResponseDto,

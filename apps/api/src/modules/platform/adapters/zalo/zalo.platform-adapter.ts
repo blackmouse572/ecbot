@@ -67,6 +67,7 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
         deleteMessage: false,
         reactions: { inbound: true, outbound: true },
         typing: false,
+        freeMessageWindowHours: 48,
         markRead: false,
         mediaLimits: ZaloPlatformAdapter.MEDIA_LIMITS,
         uploads: ZaloPlatformAdapter.MEDIA_LIMITS,

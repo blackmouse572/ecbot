@@ -30,7 +30,7 @@ The Cloud Task is the durable record of an inbound event.
 ## Consequences
 
 - The inbound Turn works at `minScale=0`: it runs inside a request and gets full CPU. Two things still need an instance that is alive and has CPU, so **keep min 1 with CPU always allocated** until they move:
-    - Five in-process `@ContextualCron` jobs: `account-token-refresh` (hourly, page tokens stop refreshing without it), `inbound-reconciliation` (hourly), `session-revoke` (hourly), `tool-install-session-prune` (every 15 min) and `tool-invocation-prune` (daily). Moving them to Cloud Scheduler calling `/system` endpoints is the follow-up that makes min 0 safe.
+    - Five in-process `@ContextualCron` jobs: `account-token-refresh` (hourly, page tokens stop refreshing without it), `inbound-reconciliation` (hourly), `session-revoke` (hourly), `tool-install-session-prune` (hourly) and `tool-invocation-prune` (daily). Moving them to Cloud Scheduler calling `/system` endpoints is the follow-up that makes min 0 safe.
     - The reply itself when `POC_EDGE_DEBOUNCE_URL` is unset or the edge debounce is down: the in-process `setTimeout` debounce fires after the response.
 - Each task calls back the `API_BACKEND_URL` of the environment that created it, so staging can no longer take prod's events.
 - No idle Redis polling; Redis commands now scale with messages only.

@@ -1,9 +1,11 @@
 import { IDatabaseFindAllOptions } from '@app/common/database/interfaces/database.interface';
 import { CustomerRepository } from '@app/modules/customer/repository/repositories/customer.repository';
+import { CustomerMarketingService } from '@app/modules/customer/services/customer-marketing.service';
 import {
     BadRequestException,
     ConflictException,
     Injectable,
+    Logger,
     NotFoundException,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
@@ -30,11 +32,14 @@ import { ProductGroupService } from './product-group.service';
 
 @Injectable()
 export class OrderService {
+    private readonly logger = new Logger(OrderService.name);
+
     constructor(
         private readonly orderRepository: OrderRepository,
         private readonly productGroupRepository: ProductGroupRepository,
         private readonly customerRepository: CustomerRepository,
-        private readonly productGroupService: ProductGroupService
+        private readonly productGroupService: ProductGroupService,
+        private readonly customerMarketingService: CustomerMarketingService
     ) {}
 
     findAll(
@@ -254,10 +259,20 @@ export class OrderService {
     }
 
     /**
-     * Runs after an order becomes CONFIRMED. The journey stage (task 2) hooks
-     * in here; nothing listens yet.
+     * Runs after an order becomes CONFIRMED: moves the customer to Mua 1 lần
+     * or Mua nhiều lần. The order is already saved, so a failure here is
+     * logged and the confirmation still succeeds.
      */
-    async onConfirmed(_order: OrderEntity): Promise<void> {}
+    async onConfirmed(order: OrderEntity): Promise<void> {
+        try {
+            await this.customerMarketingService.onOrderConfirmed(order);
+        } catch (error: unknown) {
+            this.logger.error(
+                `Journey stage not updated for order ${order.id}`,
+                error instanceof Error ? error.stack : String(error)
+            );
+        }
+    }
 
     mapGet(order: OrderEntity): OrderGetResponseDto {
         return plainToInstance(

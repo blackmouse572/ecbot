@@ -2,8 +2,10 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Module } from '@nestjs/common';
 import { ContactPointEntity } from './entities/contact-point.entity';
 import { CustomerMarketingStateEntity } from './entities/customer-marketing-state.entity';
+import { CustomerProductReactionEntity } from './entities/customer-product-reaction.entity';
 import { MarketingEventEntity } from './entities/marketing-event.entity';
 import { CustomerMarketingStateRepository } from './repositories/customer-marketing-state.repository';
+import { CustomerProductReactionRepository } from './repositories/customer-product-reaction.repository';
 import { MarketingEventRepository } from './repositories/marketing-event.repository';
 import { CustomerMergeSuggestionEntity } from './entities/customer-merge-suggestion.entity';
 import { CustomerTagAssignmentEntity } from './entities/customer-tag-assignment.entity';
@@ -30,6 +32,7 @@ import { TrackedLinkRepository } from './repositories/tracked-link.repository';
             CustomerMergeSuggestionEntity,
             CustomerMarketingStateEntity,
             MarketingEventEntity,
+            CustomerProductReactionEntity,
             TrackedLinkEntity,
         ]),
     ],
@@ -42,6 +45,7 @@ import { TrackedLinkRepository } from './repositories/tracked-link.repository';
         CustomerMergeSuggestionRepository,
         CustomerMarketingStateRepository,
         MarketingEventRepository,
+        CustomerProductReactionRepository,
         TrackedLinkRepository,
     ],
     exports: [
@@ -53,6 +57,7 @@ import { TrackedLinkRepository } from './repositories/tracked-link.repository';
         CustomerMergeSuggestionRepository,
         CustomerMarketingStateRepository,
         MarketingEventRepository,
+        CustomerProductReactionRepository,
         TrackedLinkRepository,
     ],
 })

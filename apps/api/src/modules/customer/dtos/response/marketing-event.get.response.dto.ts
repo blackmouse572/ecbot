@@ -16,22 +16,38 @@ export class MarketingEventGetResponseDto extends DatabaseDto {
     actor: ENUM_MARKETING_EVENT_ACTOR;
 
     @Expose()
-    @ApiProperty({ required: false, nullable: true })
+    @ApiProperty({ type: String, required: false, nullable: true })
     oldValue?: string | null;
 
     @Expose()
-    @ApiProperty({ required: false, nullable: true })
+    @ApiProperty({ type: String, required: false, nullable: true })
     newValue?: string | null;
 
     @Expose()
-    @ApiProperty({ required: false, nullable: true })
+    @ApiProperty({ type: String, required: false, nullable: true })
     reason?: string | null;
 
     @Expose()
-    @ApiProperty({ required: false, nullable: true })
+    @ApiProperty({ type: String, required: false, nullable: true })
     conversationId?: string | null;
 
     @Expose()
-    @ApiProperty({ required: false, nullable: true })
+    @ApiProperty({ type: String, required: false, nullable: true })
     messageId?: string | null;
+
+    @Expose()
+    @ApiProperty({
+        required: false,
+        nullable: true,
+        description: 'The confirmed order behind a Mua 1 lần / Mua nhiều lần.',
+    })
+    orderId?: string | null;
+
+    @Expose()
+    @ApiProperty({
+        required: false,
+        nullable: true,
+        description: 'The product group of a REACTION or INTENT event.',
+    })
+    productGroupId?: string | null;
 }

@@ -235,6 +235,8 @@ Editing an existing resource's fields (profile, workspace, customer, tag, a chat
 
 Reference implementations: `routes/profile/profile-edit`, `routes/workspace/workspace-edit`.
 
+One exception: an edit opened from a side panel that sits beside live work, such as the customer panel next to an open conversation, uses a plain `Drawer` with the same header, body and footer. A route change there would reload the conversation and lose the reply being typed. Reference: `routes/conversations/customer-side-panel/components/marketing-section/marketing-edit-drawer.tsx`.
+
 **Both overlays** close back to the parent route (`prev`, default `..`), and their `.Form` wrapper blocks leaving a dirty form with an unsaved-changes Prompt. `KeyboundForm` adds ⌘/Ctrl + Enter to submit.
 
 ### Forms

@@ -1,12 +1,15 @@
 import { ContextualCron } from '@app/common/database/decorators/contextual-cron.decorator';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable, Logger } from '@nestjs/common';
+import { CronExpression } from '@nestjs/schedule';
 import { ToolInstallSessionEntity } from 'src/modules/tool/repository/entities/tool-install-session.entity';
 
 /**
- * Runs every 15 minutes. Hard-deletes expired ToolInstallSession rows
+ * Runs hourly, on the hour with the other crons, so the database can
+ * suspend between runs. Hard-deletes expired ToolInstallSession rows
  * (where expiresAt < NOW()). Sessions are short-lived OAuth state; the
- * prune keeps the table small without operator intervention.
+ * prune keeps the table small without operator intervention, and an expired
+ * row waiting for the next run is never used.
  */
 @Injectable()
 export class ToolInstallSessionPruneScheduler {
@@ -14,7 +17,7 @@ export class ToolInstallSessionPruneScheduler {
 
     constructor(private readonly em: EntityManager) {}
 
-    @ContextualCron('0 */15 * * * *')
+    @ContextualCron(CronExpression.EVERY_HOUR)
     async prune(): Promise<void> {
         const now = new Date();
         // @ContextualCron already runs this inside a fresh EM fork; nativeDelete

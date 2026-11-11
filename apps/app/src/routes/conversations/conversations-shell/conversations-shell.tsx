@@ -51,6 +51,8 @@ export function ConversationsShell() {
           <ResizablePanelGroup
             direction="horizontal"
             autoSaveId="conversations:shell"
+            // The handle is z-indexed; isolate it so drawers and their scrim cover it.
+            className="isolate"
           >
             <ResizablePanel
               id="conversation-list"

@@ -1,4 +1,8 @@
-import { PaginationQuery } from '@app/common/pagination/decorators/pagination.decorator';
+import {
+    PaginationQuery,
+    PaginationQueryFilterInBoolean,
+    PaginationQueryFilterInEnum,
+} from '@app/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from '@app/common/pagination/dtos/pagination.list.dto';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '@app/common/pagination/enums/pagination.enum';
 import { PaginationService } from '@app/common/pagination/services/pagination.service';
@@ -43,7 +47,13 @@ import {
 } from '../docs/customer.client.doc';
 import { CustomerUpdateRequestDto } from '../dtos/request/customer.update.request.dto';
 import { CustomerGetResponseDto } from '../dtos/response/customer.get.response.dto';
+import {
+    ENUM_CUSTOMER_JOURNEY_STAGE,
+    ENUM_CUSTOMER_MARKETING_PERMISSION,
+} from '../enums/customer-marketing.enum';
+import { CustomerMarketingService } from '../services/customer-marketing.service';
 import { CustomerService } from '../services/customer.service';
+import { customerMarketingListFilterFromQuery } from '../utils/customer-marketing-list-filter.util';
 
 // 3rd-party surface: authenticated by x-api-key (ClientCredential), tenant
 // derived from the credential (no :workspace param). See ADR-0012. Reading a
@@ -55,7 +65,8 @@ export class CustomerClientController {
     constructor(
         private readonly customerService: CustomerService,
         private readonly activityService: ActivityService,
-        private readonly paginationService: PaginationService
+        private readonly paginationService: PaginationService,
+        private readonly marketingService: CustomerMarketingService
     ) {}
 
     @CustomerClientListDoc()
@@ -73,9 +84,28 @@ export class CustomerClientController {
             defaultOrderBy: 'createdAt',
             defaultOrderDirection: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
         })
-        { _search, _limit, _offset, _order }: PaginationListDto
+        { _search, _limit, _offset, _order }: PaginationListDto,
+        @PaginationQueryFilterInEnum(
+            'stage',
+            undefined,
+            ENUM_CUSTOMER_JOURNEY_STAGE
+        )
+        stage?: Record<string, any>,
+        @PaginationQueryFilterInEnum(
+            'permission',
+            undefined,
+            ENUM_CUSTOMER_MARKETING_PERMISSION
+        )
+        permission?: Record<string, any>,
+        @PaginationQueryFilterInBoolean('dormant', [true, false])
+        dormant?: Record<string, any>
     ): Promise<IResponsePaging<CustomerGetResponseDto>> {
-        const find: Record<string, any> = { ..._search };
+        const find: Record<string, any> = {
+            ..._search,
+            ...this.marketingService.customerListFilter(
+                customerMarketingListFilterFromQuery(stage, permission, dormant)
+            ),
+        };
 
         const [customers, total] = await Promise.all([
             this.customerService.findByWorkspace(workspace.id, find, {
@@ -94,7 +124,11 @@ export class CustomerClientController {
                 total,
                 totalPage: this.paginationService.totalPage(total, _limit),
             },
-            data: this.customerService.mapList(customers),
+            data: this.customerService.mapList(
+                customers,
+                undefined,
+                await this.marketingService.summarize(customers.map(c => c.id))
+            ),
         };
     }
 

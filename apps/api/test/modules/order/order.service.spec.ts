@@ -35,12 +35,14 @@ describe('OrderService', () => {
         findAll: jest.fn(),
         matchItemName: ProductGroupService.prototype.matchItemName,
     };
+    const customerMarketingService = { onOrderConfirmed: jest.fn() };
 
     const service = new OrderService(
         orderRepository as any,
         productGroupRepository as any,
         customerRepository as any,
-        productGroupService as any
+        productGroupService as any,
+        customerMarketingService as any
     );
 
     const order = (extra: Record<string, any> = {}) => ({
@@ -172,6 +174,23 @@ describe('OrderService', () => {
             expect(
                 productGroupService.refreshLearnedCycles
             ).toHaveBeenCalledWith(['g1']);
+        });
+
+        it('moves the customer to Mua 1 lần / Mua nhiều lần', async () => {
+            orderRepository.findOne.mockResolvedValue(order());
+            const confirmed = await service.confirm('o1', workspaceId);
+            expect(
+                customerMarketingService.onOrderConfirmed
+            ).toHaveBeenCalledWith(confirmed);
+        });
+
+        it('still confirms when the marketing labels fail', async () => {
+            orderRepository.findOne.mockResolvedValue(order());
+            customerMarketingService.onOrderConfirmed.mockRejectedValueOnce(
+                new Error('db down')
+            );
+            const confirmed = await service.confirm('o1', workspaceId);
+            expect(confirmed.status).toBe(ENUM_ORDER_STATUS.CONFIRMED);
         });
 
         it('refuses an order that is not pending', async () => {

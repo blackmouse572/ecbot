@@ -58,6 +58,7 @@ export class MessengerPlatformAdapter extends PlatformAdapter {
         deleteMessage: false,
         reactions: { inbound: true, outbound: true },
         typing: true,
+        freeMessageWindowHours: 24,
         markRead: true,
         // Messenger shows JPEG, PNG and GIF photos and takes any file up to 25 MB.
         uploads: uploadLimits(['image/jpeg', 'image/png', 'image/gif'], true),
