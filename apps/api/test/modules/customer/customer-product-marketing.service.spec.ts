@@ -22,21 +22,26 @@ function makeHarness() {
     const states = new Map<string, CustomerMarketingStateEntity>();
     const reactions: CustomerProductReactionEntity[] = [];
     const events: MarketingEventEntity[] = [];
+
     const em: any = {
         getReference: jest.fn((_e: any, id: string) => ({ id })),
         persist: jest.fn((entity: any) => {
             if (entity instanceof MarketingEventEntity) events.push(entity);
+
             if (entity instanceof CustomerMarketingStateEntity)
                 states.set(entity.customer.id, entity);
+
             if (
                 entity instanceof CustomerProductReactionEntity &&
                 !reactions.includes(entity)
             )
                 reactions.push(entity);
+
             return em;
         }),
         remove: jest.fn((entity: any) => {
             reactions.splice(reactions.indexOf(entity), 1);
+
             return em;
         }),
         flush: jest.fn().mockResolvedValue(undefined),
@@ -56,14 +61,17 @@ function makeHarness() {
             groups[where.id] === where.workspace ? { id: where.id } : null
         ),
     };
+
     const stateRepository = {
         findByCustomer: jest.fn(async (id: string) => states.get(id) ?? null),
     };
+
     const customerRepository = {
         findOne: jest.fn(async (where: any) =>
             customers[where.id] === where.workspace ? { id: where.id } : null
         ),
     };
+
     const reactionRepository = {
         findOne: jest.fn(
             async (where: any) =>
@@ -74,18 +82,22 @@ function makeHarness() {
                 ) ?? null
         ),
     };
+
     const marketingService = new CustomerMarketingService(
         em,
         stateRepository as any,
         {} as any,
         customerRepository as any,
+        {} as any,
         {} as any
     );
+
     const service = new CustomerProductMarketingService(
         em,
         reactionRepository as any,
         marketingService
     );
+
     return { service, states, reactions, events, em };
 }
 
@@ -278,11 +290,13 @@ describe('CustomerProductMarketingService', () => {
 
         it('writes once per message and product group', async () => {
             const { service, events } = makeHarness();
+
             const input = {
                 stage: STAGE.INTERESTED as const,
                 productGroupId: 'serum',
                 occurredAt: new Date(),
             };
+
             await service.recordIntent('c1', 'w1', input, classifier);
             await service.recordIntent('c1', 'w1', input, classifier);
             expect(events.filter(e => e.kind === KIND.INTENT)).toHaveLength(1);

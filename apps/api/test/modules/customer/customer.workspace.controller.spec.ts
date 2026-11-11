@@ -80,6 +80,7 @@ describe('CustomerWorkspaceController', () => {
         notes: 'VIP',
         createdAt: new Date('2026-06-15T00:00:00Z'),
     };
+
     const mappedDto = {
         id: 'cust-1',
         name: 'Alice',
@@ -89,6 +90,7 @@ describe('CustomerWorkspaceController', () => {
         notes: 'VIP',
         createdAt: customerEntity.createdAt,
     };
+
     const user = { id: 'user-1', email: 'op@acme.test' } as any;
 
     beforeEach(() => {
@@ -146,6 +148,7 @@ describe('CustomerWorkspaceController', () => {
                     { conversationCount: 2, channels: ['FACEBOOK_PAGE'] },
                 ],
             ]);
+
             mockCustomerService.findByWorkspace.mockResolvedValue([
                 customerEntity,
             ]);
@@ -178,9 +181,11 @@ describe('CustomerWorkspaceController', () => {
         it('filters by the marketing labels and returns them on each row', async () => {
             const labelFind = { $and: [{ label: true }] };
             mockMarketingService.customerListFilter.mockReturnValue(labelFind);
+
             const marketing = new Map([
                 ['cust-1', { stage: 'ASKED_PRICE', permission: 'GRANTED' }],
             ]);
+
             mockMarketingService.summarize.mockResolvedValue(marketing as any);
             mockCustomerService.findByWorkspace.mockResolvedValue([
                 customerEntity,
@@ -197,7 +202,8 @@ describe('CustomerWorkspaceController', () => {
                 { _search: search, _limit: 20, _offset: 0, _order: {} } as any,
                 { stage: { $in: ['NEW', 'ASKED_PRICE'] } },
                 { permission: { $in: ['STOPPED'] } },
-                { dormant: { $in: [true] } }
+                { dormant: { $in: [true] } },
+                { source: 'link-1' }
             );
 
             expect(
@@ -206,6 +212,7 @@ describe('CustomerWorkspaceController', () => {
                 stages: ['NEW', 'ASKED_PRICE'],
                 permissions: ['STOPPED'],
                 dormant: true,
+                sourceId: 'link-1',
             });
             const find = { ...search, ...labelFind };
             expect(mockCustomerService.findByWorkspace).toHaveBeenCalledWith(
@@ -227,7 +234,7 @@ describe('CustomerWorkspaceController', () => {
             );
         });
 
-        it('does not filter on Ngủ đông when both values or none are asked', async () => {
+        it('does not filter on Lâu không nhắn when both values or none are asked', async () => {
             mockCustomerService.findByWorkspace.mockResolvedValue([]);
             mockCustomerService.countByWorkspace.mockResolvedValue(0);
             mockCustomerService.summarizeConversations.mockResolvedValue(
@@ -249,6 +256,7 @@ describe('CustomerWorkspaceController', () => {
                 stages: undefined,
                 permissions: undefined,
                 dormant: undefined,
+                sourceId: undefined,
             });
         });
     });
@@ -295,6 +303,7 @@ describe('CustomerWorkspaceController', () => {
                 language: 'en',
                 notes: 'Updated notes',
             };
+
             const updated = { ...customerEntity, ...dto };
             mockCustomerService.update.mockResolvedValue(updated);
             mockCustomerService.mapWorkspaceGet.mockReturnValue({
@@ -414,6 +423,7 @@ describe('CustomerWorkspaceController', () => {
             const interceptor = new AuthImpersonationReadOnlyInterceptor(
                 new Reflector()
             );
+
             const context = {
                 getType: () => 'http',
                 getHandler: () => CustomerWorkspaceController.prototype.erase,

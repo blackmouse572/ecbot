@@ -37,6 +37,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from 'src/common/pagination/enums/pagination.enum';
 import {
     PaginationQuery,
+    PaginationQueryFilterEqual,
     PaginationQueryFilterInBoolean,
     PaginationQueryFilterInEnum,
 } from 'src/common/pagination/decorators/pagination.decorator';
@@ -119,12 +120,19 @@ export class CustomerWorkspaceController {
         )
         permission?: Record<string, any>,
         @PaginationQueryFilterInBoolean('dormant', [true, false])
-        dormant?: Record<string, any>
+        dormant?: Record<string, any>,
+        @PaginationQueryFilterEqual('source', { raw: true })
+        source?: Record<string, any>
     ): Promise<IResponsePaging<CustomerGetResponseDto>> {
         const find: Record<string, any> = {
             ..._search,
             ...this.marketingService.customerListFilter(
-                customerMarketingListFilterFromQuery(stage, permission, dormant)
+                customerMarketingListFilterFromQuery(
+                    stage,
+                    permission,
+                    dormant,
+                    source
+                )
             ),
         };
 
@@ -142,6 +150,7 @@ export class CustomerWorkspaceController {
         ]);
 
         const ids = customers.map(c => c.id);
+
         const [summaries, marketing] = await Promise.all([
             this.customerService.summarizeConversations(ids, workspace.id),
             this.marketingService.summarize(ids),
@@ -176,12 +185,14 @@ export class CustomerWorkspaceController {
             id,
             workspace.id
         );
+
         if (!customer) {
             throw new NotFoundException({
                 message: 'customer.error.notFound',
                 statusCode: 404,
             });
         }
+
         return { data: this.customerService.mapWorkspaceGet(customer) };
     }
 
@@ -208,12 +219,14 @@ export class CustomerWorkspaceController {
             dto,
             workspace.id
         );
+
         await this.activityService.createByUserWithWorkspace(user, workspace, {
             action: ENUM_ACTIVITY_ACTION.UPDATE,
             subject: ENUM_POLICY_SUBJECT.CUSTOMER,
             // The audit log is append-only, so it keeps ids, not names.
             metadata: { id: updated.id },
         });
+
         return { data: this.customerService.mapWorkspaceGet(updated) };
     }
 
@@ -236,6 +249,7 @@ export class CustomerWorkspaceController {
             id,
             workspace.id
         );
+
         await this.activityService.createByUserWithWorkspace(user, workspace, {
             action: ENUM_ACTIVITY_ACTION.CUSTOMER_UNMERGE,
             subject: ENUM_POLICY_SUBJECT.CUSTOMER,
@@ -244,6 +258,7 @@ export class CustomerWorkspaceController {
                 suggestionId: suggestion.id,
             },
         });
+
         return { data: { suggestionId: suggestion.id } };
     }
 
@@ -269,6 +284,7 @@ export class CustomerWorkspaceController {
         // conversations, messages and stored media, plus the audit row, in
         // one transaction scoped to this workspace.
         const summary = await this.erasureService.erase(id, workspace, user);
+
         return { data: summary };
     }
 }

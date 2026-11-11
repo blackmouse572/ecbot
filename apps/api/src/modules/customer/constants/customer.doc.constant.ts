@@ -93,6 +93,15 @@ export const CustomerDocQueryMarketingFilters = [
         type: 'boolean',
         example: true,
         description:
-            'Ngủ đông: true for only dormant customers, false to leave them out.',
+            'Lâu không nhắn: true for only customers with no message and no order for 120 days, false to leave them out.',
+    },
+    {
+        name: 'source',
+        allowEmptyValue: true,
+        required: false,
+        type: 'string',
+        example: '0193a5d2-7c1e-7b3a-9f1e-2b8c4d6e8f10',
+        description:
+            'A source id: customers whose first source is that source or one of its codes.',
     },
 ];

@@ -36,6 +36,7 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
         filter: ICustomerMarketingListFilter
     ): Record<string, any> {
         const conditions: Record<string, any>[] = [];
+
         if (filter.stages?.length) {
             conditions.push(
                 this.withMissing(
@@ -44,6 +45,7 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
                 )
             );
         }
+
         if (filter.permissions?.length) {
             conditions.push(
                 this.withMissing(
@@ -54,11 +56,13 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
                 )
             );
         }
+
         if (filter.dormant !== undefined) {
             // No message and no order since the cutoff, and at least one of them.
             const cutoff = new Date(
                 Date.now() - CUSTOMER_MARKETING_DORMANT_DAYS * DAY_MS
             );
+
             const dormantIds = this.customerIds({
                 $and: [
                     {
@@ -81,11 +85,37 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
                     },
                 ],
             });
+
             conditions.push({
                 id: filter.dormant ? { $in: dormantIds } : { $nin: dormantIds },
             });
         }
+
+        if (filter.sourceId) {
+            const fromSource = this.customerIds({
+                $or: [
+                    { firstTrackedLink: filter.sourceId },
+                    { firstTrackedLink: { parent: filter.sourceId } },
+                ],
+            });
+
+            conditions.push({ id: { $in: fromSource } });
+        }
+
         return conditions.length ? { $and: conditions } : {};
+    }
+
+    /** Loads Nguồn đầu tiên: the link, its source and its channel. */
+    async populateFirstSource(
+        states: CustomerMarketingStateEntity[]
+    ): Promise<void> {
+        const withSource = states.filter(s => s.firstTrackedLink);
+
+        if (withSource.length === 0) return;
+        await this.em.populate(withSource, [
+            'firstTrackedLink.parent',
+            'firstTrackedLink.account',
+        ]);
     }
 
     /** Customers whose row matches, plus those without a row when the default matches. */
@@ -94,6 +124,7 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
         includeMissing: boolean
     ): Record<string, any> {
         const matching = { id: { $in: this.customerIds(where) } };
+
         return includeMissing
             ? { $or: [matching, { id: { $nin: this.customerIds({}) } }] }
             : matching;
