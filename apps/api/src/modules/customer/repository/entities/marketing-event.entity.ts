@@ -6,6 +6,8 @@ import {
     Property,
 } from '@mikro-orm/postgresql';
 import { DatabaseEntityBase } from 'src/common/database/bases/database.entity';
+import { OrderEntity } from 'src/modules/order/repository/entities/order.entity';
+import { ProductGroupEntity } from 'src/modules/order/repository/entities/product-group.entity';
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
 import {
     ENUM_MARKETING_EVENT_ACTOR,
@@ -18,8 +20,7 @@ export const MarketingEventTableName = 'marketing_events';
 /**
  * Append-only history of a Customer's marketing labels and consent, so each
  * label can answer "why". `createdBy` is the member, for OPERATOR and CLIENT
- * rows. Order, campaign and product group ids are plain uuids until those
- * tables exist.
+ * rows. The campaign id is a plain uuid until campaigns exist.
  */
 @Entity({ tableName: MarketingEventTableName })
 @Index({ properties: ['customer', 'createdAt'] })
@@ -53,14 +54,18 @@ export class MarketingEventEntity extends DatabaseEntityBase {
     @Property({ type: 'uuid', nullable: true })
     messageId?: string | null;
 
-    @Property({ type: 'uuid', nullable: true })
-    orderId?: string | null;
+    // History outlives a deleted order or product group.
+    @ManyToOne(() => OrderEntity, { nullable: true, deleteRule: 'set null' })
+    order?: OrderEntity | null;
 
     @Property({ type: 'uuid', nullable: true })
     campaignId?: string | null;
 
-    @Property({ type: 'uuid', nullable: true })
-    productGroupId?: string | null;
+    @ManyToOne(() => ProductGroupEntity, {
+        nullable: true,
+        deleteRule: 'set null',
+    })
+    productGroup?: ProductGroupEntity | null;
 
     // SOURCE rows: the tracked link the customer arrived through.
     @Property({ type: 'uuid', nullable: true })

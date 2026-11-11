@@ -3,7 +3,7 @@ import {
     ENUM_CUSTOMER_MARKETING_PERMISSION,
 } from '../enums/customer-marketing.enum';
 
-/** No message for this many days shows the Customer as "Ngủ đông". */
+/** No message and no order for this many days shows "Ngủ đông". */
 export const CUSTOMER_MARKETING_DORMANT_DAYS = 120;
 
 /** Journey stages in order; a later index is further along. */
@@ -47,6 +47,7 @@ export const CUSTOMER_MARKETING_REASON_OPT_OUT_KEYWORD = 'opt_out_keyword';
 export const CUSTOMER_MARKETING_REASON_FIRST_MESSAGE = 'first_message';
 export const CUSTOMER_MARKETING_REASON_MERGE = 'customer_merge';
 export const CUSTOMER_MARKETING_REASON_HOSTILE = 'hostile';
+export const CUSTOMER_MARKETING_REASON_ORDER_CONFIRMED = 'order_confirmed';
 export const CUSTOMER_MARKETING_REASON_TRACKED_LINK = 'tracked_link';
 
 /** "Not now" from the agent pauses offers this long unless it says otherwise. */

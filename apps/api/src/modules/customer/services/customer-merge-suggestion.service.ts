@@ -17,6 +17,7 @@ import { WorkspaceMemberRepository } from '@app/modules/workspace/repository/rep
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
 import { ENUM_CUSTOMER_MERGE_SUGGESTION_STATUS } from '../enums/customer.enum';
 import { ContactPointEntity } from '../repository/entities/contact-point.entity';
+import { ICustomerMarketingMergeUndo } from '../interfaces/customer-marketing.interface';
 import { CustomerMergeSuggestionEntity } from '../repository/entities/customer-merge-suggestion.entity';
 import { CustomerTagAssignmentEntity } from '../repository/entities/customer-tag-assignment.entity';
 import { CustomerEntity } from '../repository/entities/customer.entity';
@@ -281,12 +282,13 @@ export class CustomerMergeSuggestionService {
             }
 
             // 2b) Combine marketing labels: an opt-out on either side wins.
-            await this.customerMarketingService.mergeInto(
-                loserId,
-                survivorId,
-                workspaceId,
-                tem
-            );
+            const marketingMerge =
+                await this.customerMarketingService.mergeInto(
+                    loserId,
+                    survivorId,
+                    workspaceId,
+                    tem
+                );
 
             // 3) Reparent ContactPoints
             const loserContactPoints = await tem.find(ContactPointEntity, {
@@ -352,6 +354,9 @@ export class CustomerMergeSuggestionService {
                 survivorTagAssignmentIds: createdSurvivorAssignments.map(
                     a => a.id
                 ),
+                createdReactionIds:
+                    marketingMerge?.createdReactions.map(r => r.id) ?? [],
+                replacedReactions: marketingMerge?.replacedReactions ?? [],
                 loserFields: loserFieldsSnapshot,
             };
             tem.persist(suggestion);
@@ -400,7 +405,7 @@ export class CustomerMergeSuggestionService {
                 loserTagAssignmentIds?: string[];
                 survivorTagAssignmentIds?: string[];
                 loserFields?: Record<string, unknown>;
-            };
+            } & ICustomerMarketingMergeUndo;
 
             const loser = await tem.findOne(CustomerEntity, {
                 id: loserId,
@@ -480,6 +485,12 @@ export class CustomerMergeSuggestionService {
                     { deletedAt: new Date(), deleted: true } as any
                 );
             }
+
+            // 3c) Undo the "Tạm hoãn" rows the merge put on the survivor.
+            await this.customerMarketingService.revertMergedReactions(
+                snapshot,
+                tem
+            );
 
             // 4) Flip suggestion to DISMISSED (so it doesn't re-surface)
             suggestion.status = ENUM_CUSTOMER_MERGE_SUGGESTION_STATUS.DISMISSED;
