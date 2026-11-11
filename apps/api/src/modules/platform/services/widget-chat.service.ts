@@ -35,6 +35,7 @@ import { MessageMediaService } from '@app/modules/conversation/services/message-
 import { HandoffIntentService } from './handoff-intent.service';
 import { handoffReplyText } from '../utils/handoff-reply.util';
 import { CustomerMarketingService } from '@app/modules/customer/services/customer-marketing.service';
+import { TrackedLinkAttributionService } from '@app/modules/customer/services/tracked-link-attribution.service';
 import { optOutReplyText } from '@app/modules/customer/utils/customer-marketing-opt-out.util';
 import { fallbackReplyText } from '../utils/fallback-reply.util';
 import { shouldHandOff } from '../utils/handoff-decision.util';
@@ -87,6 +88,7 @@ export class WidgetChatService {
         private readonly messageMedia: MessageMediaService,
         private readonly sessionService: WidgetSessionService,
         private readonly customerMarketing: CustomerMarketingService,
+        private readonly attribution: TrackedLinkAttributionService,
         @Optional()
         @Inject(AI_USAGE_METER)
         private readonly meter?: AiUsageMeter
@@ -184,6 +186,24 @@ export class WidgetChatService {
                       return false;
                   })
             : false;
+
+        // The tracked link the visitor arrived through becomes their source.
+        // The widget's own welcome already greeted them, so no source greeting.
+        if (customerId && turn.referral?.code) {
+            await this.attribution
+                .recordArrival({
+                    customerId,
+                    workspaceId: account.workspace.id,
+                    code: turn.referral.code,
+                    conversationId: conversation.id,
+                    messageId: inbound.id,
+                })
+                .catch((err: unknown) =>
+                    this.logger.warn(
+                        `Tracked link arrival failed for ${conversation.id}: ${(err as Error)?.message}`
+                    )
+                );
+        }
 
         // Handoff: an operator has taken over, so the visitor's message is
         // recorded for the inbox but the bot stays quiet. Their poll picks up

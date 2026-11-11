@@ -1,4 +1,8 @@
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
+import {
+    ENUM_CUSTOMER_JOURNEY_STAGE,
+    ENUM_CUSTOMER_MARKETING_PERMISSION,
+} from '../enums/customer-marketing.enum';
 
 export const CustomerDocParamsId = [
     {
@@ -57,3 +61,38 @@ export const CustomerAdminDocQueryFilters = [
 ];
 
 export const CustomerTagAdminDocQueryFilters = [CustomerAdminDocQueryWorkspace];
+
+// Marketing label filters for the workspace and client customer lists. The
+// filter decorators emit no OpenAPI metadata, so they are declared here.
+export const CustomerDocQueryMarketingFilters = [
+    {
+        name: 'stage',
+        allowEmptyValue: true,
+        required: false,
+        type: 'string',
+        example: [
+            ENUM_CUSTOMER_JOURNEY_STAGE.ASKED_PRICE,
+            ENUM_CUSTOMER_JOURNEY_STAGE.BOUGHT_ONCE,
+        ].join(','),
+        description:
+            "Journey stages, with ',' delimiter. A customer with no labels yet counts as NEW.",
+    },
+    {
+        name: 'permission',
+        allowEmptyValue: true,
+        required: false,
+        type: 'string',
+        example: ENUM_CUSTOMER_MARKETING_PERMISSION.GRANTED,
+        description:
+            "Offers permissions, with ',' delimiter. A customer with no labels yet counts as PENDING.",
+    },
+    {
+        name: 'dormant',
+        allowEmptyValue: true,
+        required: false,
+        type: 'boolean',
+        example: true,
+        description:
+            'Ngủ đông: true for only dormant customers, false to leave them out.',
+    },
+];

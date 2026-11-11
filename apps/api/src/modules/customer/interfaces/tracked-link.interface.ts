@@ -21,3 +21,12 @@ export interface ITrackedLinkCreate {
     promisesOffer?: boolean;
     targetUrl?: string | null;
 }
+
+/** A tracked link code read on a customer's inbound message. */
+export interface ITrackedLinkArrival {
+    customerId: string;
+    workspaceId: string;
+    code: string;
+    conversationId?: string;
+    messageId?: string;
+}

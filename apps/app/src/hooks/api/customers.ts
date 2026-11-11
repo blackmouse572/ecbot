@@ -1,5 +1,6 @@
 import { queryKeysFactory } from "@/libs/query-factory";
 import {
+  type CustomerMarketingSummaryResponseDto,
   customerWorkspaceControllerEraseV1,
   customerWorkspaceControllerGetV1,
   customerWorkspaceControllerListV1,
@@ -24,6 +25,8 @@ export type CustomerGetResponseDto = {
   mergedIntoCustomerId?: string | null;
   // Details the agent saved (set_customer_field), by key.
   metadata?: Record<string, string> | null;
+  // Marketing labels, on list rows only.
+  marketing?: CustomerMarketingSummaryResponseDto;
   createdAt: string;
   updatedAt?: string;
 };
@@ -41,6 +44,10 @@ export type CustomerListQuery = {
   page?: number;
   perPage?: number;
   search?: string;
+  // Comma-separated label values.
+  stage?: string;
+  permission?: string;
+  dormant?: boolean;
 };
 
 export const customerQueryKeys = {

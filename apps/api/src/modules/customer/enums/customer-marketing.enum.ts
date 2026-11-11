@@ -35,6 +35,15 @@ export enum ENUM_MARKETING_EVENT_KIND {
     CONSENT_ASKED = 'CONSENT_ASKED',
     /** The "Khó chịu" flag. */
     HOSTILE = 'HOSTILE',
+    /** "Tạm hoãn <product group> đến <date>": old and new until dates. */
+    REACTION = 'REACTION',
+    /**
+     * Interest or a price question, dated, per product group (or the shop in
+     * general). The value is the stage it stands for.
+     */
+    INTENT = 'INTENT',
+    /** The customer arrived through a tracked link: `trackedLinkId`. */
+    SOURCE = 'SOURCE',
 }
 
 /** Who made a marketing label change. */
@@ -47,7 +56,7 @@ export enum ENUM_MARKETING_EVENT_ACTOR {
     OPERATOR = 'OPERATOR',
     /** A Client credential (MCP or the public API). */
     CLIENT = 'CLIENT',
-    /** A built-in rule: the opt-out keyword, a first message, a merge. */
+    /** A built-in rule: the opt-out keyword, a first message, a merge, an order. */
     RULE = 'RULE',
 }
 

@@ -1,4 +1,6 @@
+import { PlatformWebhookEvent } from '../../../../src/modules/platform/interfaces/platform-adapter.interface';
 import {
+    opensChatOnly,
     trackedLinkCode,
     widgetReferral,
 } from '../../../../src/modules/platform/utils/referral.util';
@@ -30,5 +32,38 @@ describe('widgetReferral', () => {
         expect(widgetReferral('')).toBeUndefined();
         expect(widgetReferral('<script>')).toBeUndefined();
         expect(widgetReferral('a'.repeat(65))).toBeUndefined();
+    });
+});
+
+describe('opensChatOnly', () => {
+    const event = (over: Partial<PlatformWebhookEvent>): PlatformWebhookEvent =>
+        ({
+            kind: 'message',
+            referral: { code: 'to-roi-tet', source: 'link' },
+            ...over,
+        }) as PlatformWebhookEvent;
+
+    it('is true when the message only carried the link', () => {
+        expect(opensChatOnly(event({ kind: 'referral' }))).toBe(true);
+        expect(
+            opensChatOnly(
+                event({ action: { id: 'GET_STARTED', value: 'GET_STARTED' } })
+            )
+        ).toBe(true);
+        expect(opensChatOnly(event({ text: '/start' }))).toBe(true);
+        expect(
+            opensChatOnly(event({ text: 'Xin chào shop (mã to-roi-tet)' }))
+        ).toBe(true);
+    });
+
+    it('is false for a real question or a message with no code', () => {
+        expect(
+            opensChatOnly(
+                event({ text: 'Xin chào shop (mã to-roi-tet) giá bao nhiêu' })
+            )
+        ).toBe(false);
+        expect(
+            opensChatOnly(event({ referral: undefined, text: '/start' }))
+        ).toBe(false);
     });
 });

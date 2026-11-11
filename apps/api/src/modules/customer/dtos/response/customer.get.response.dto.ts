@@ -1,6 +1,7 @@
 import { DatabaseDto } from '@app/common/database/dtos/database.dto';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
+import { CustomerMarketingSummaryResponseDto } from './customer-marketing-summary.response.dto';
 
 export class CustomerGetResponseDto extends DatabaseDto {
     @Expose()
@@ -47,4 +48,14 @@ export class CustomerGetResponseDto extends DatabaseDto {
             'Distinct channel (account) types the customer talked on. Present on list responses only.',
     })
     channels?: string[];
+
+    @Expose()
+    @Type(() => CustomerMarketingSummaryResponseDto)
+    @ApiProperty({
+        required: false,
+        type: CustomerMarketingSummaryResponseDto,
+        description:
+            'Stage, offers permission, Khó chịu and Ngủ đông. Present on list responses only.',
+    })
+    marketing?: CustomerMarketingSummaryResponseDto;
 }

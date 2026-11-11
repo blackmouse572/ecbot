@@ -58,6 +58,7 @@ export class MessengerPlatformAdapter extends PlatformAdapter {
         deleteMessage: false,
         reactions: { inbound: true, outbound: true },
         typing: true,
+        freeMessageWindowHours: 24,
         markRead: true,
         // Messenger shows JPEG, PNG and GIF photos and takes any file up to 25 MB.
         uploads: uploadLimits(['image/jpeg', 'image/png', 'image/gif'], true),
@@ -197,6 +198,12 @@ export class MessengerPlatformAdapter extends PlatformAdapter {
             kind = 'read';
         } else if (event.referral) {
             kind = 'referral';
+            // No mid on a reopened chat: the sender and time make the
+            // dedupe key, so a redelivery is still logged once. Without a
+            // time there is no stable key, so the inbox drops the event.
+            if (event.timestamp) {
+                externalMessageId = `referral:${event.sender.id}:${event.timestamp}`;
+            }
         }
 
         // On an echo the page is the sender and the customer the recipient.

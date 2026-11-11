@@ -13,6 +13,11 @@ vi.mock("@/hooks/api/customers", () => ({
   useUpdateCustomer: vi.fn(() => ({ mutateAsync, isPending: false })),
 }));
 
+// The Tiếp thị block has its own tests.
+vi.mock("./components/marketing-section", () => ({
+  MarketingSection: () => null,
+}));
+
 vi.mock("@/hooks/api/contact-points", () => ({
   useContactPointsByCustomer: vi.fn(),
 }));
@@ -32,10 +37,12 @@ vi.mock("@/hooks/api/customer-tag-assignments", () => ({
     isPending: false,
   }),
 }));
+
 vi.mock("@/hooks/api/customer-tags", () => ({
   useCustomerTagList: () => ({ tags: [], isLoading: false }),
   useCreateCustomerTag: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
+
 vi.mock("@/hooks/api/customer-merge-suggestions", () => ({
   useUnmergeCustomer: () => ({ mutate: vi.fn(), isPending: false }),
 }));
@@ -49,6 +56,7 @@ vi.mock("react-i18next", () => ({
 vi.mock("@medusajs/ui", async () => {
   const actual =
     await vi.importActual<typeof import("@medusajs/ui")>("@medusajs/ui");
+
   return {
     ...actual,
     toast: { success: vi.fn(), error: vi.fn(), promise: vi.fn() },
@@ -75,7 +83,9 @@ const useContactPointsMock = vi.mocked(useContactPointsByCustomer);
 // care about without `any` and without re-implementing every Query/Mutation
 // field.
 type UseCustomerReturn = ReturnType<typeof useCustomer>;
+
 type UseUpdateCustomerReturn = ReturnType<typeof useUpdateCustomer>;
+
 type UseContactPointsReturn = ReturnType<typeof useContactPointsByCustomer>;
 
 const customerFixture = {
@@ -158,6 +168,7 @@ describe("CustomerSidePanel", () => {
     const saveButton = screen.getByRole("button", {
       name: "actions.save",
     });
+
     await user.click(saveButton);
 
     // The mutation must be called with a patch object including the new fields.
