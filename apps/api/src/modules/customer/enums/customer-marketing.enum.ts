@@ -42,6 +42,8 @@ export enum ENUM_MARKETING_EVENT_KIND {
      * general). The value is the stage it stands for.
      */
     INTENT = 'INTENT',
+    /** The customer arrived through a tracked link: `trackedLinkId`. */
+    SOURCE = 'SOURCE',
 }
 
 /** Who made a marketing label change. */

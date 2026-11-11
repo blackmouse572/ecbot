@@ -12,6 +12,8 @@ export interface ICustomerMarketingChangeContext {
     messageId?: string | null;
     /** The member, for OPERATOR and CLIENT changes. */
     userId?: string;
+    /** The tracked link behind a SOURCE event or an offer opt-in. */
+    trackedLinkId?: string;
 }
 
 /** What an event links to, besides the conversation and message. */
@@ -62,4 +64,15 @@ export interface ICustomerProductReactionBefore {
 export interface ICustomerMarketingMergeUndo {
     createdReactionIds?: string[];
     replacedReactions?: ICustomerProductReactionBefore[];
+}
+
+/** A customer arriving through a tracked link (`link` is the code they used). */
+export interface ICustomerMarketingArrival {
+    customerId: string;
+    workspaceId: string;
+    trackedLinkId: string;
+    /** The source's "promises an offer" flag: opts a PENDING customer in. */
+    promisesOffer: boolean;
+    conversationId?: string;
+    messageId?: string;
 }

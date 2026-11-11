@@ -45,7 +45,7 @@ export class Migration20261110190000_customer_product_reactions extends Migratio
         );
 
         this.addSql(
-            `alter table "marketing_events" add constraint "marketing_events_kind_check" check("kind" in ('STAGE', 'PERMISSION', 'CONSENT_ASKED', 'HOSTILE', 'REACTION', 'INTENT'));`
+            `alter table "marketing_events" add constraint "marketing_events_kind_check" check("kind" in ('STAGE', 'PERMISSION', 'CONSENT_ASKED', 'HOSTILE', 'REACTION', 'INTENT', 'SOURCE'));`
         );
         this.addSql(
             `alter table "marketing_events" add constraint "marketing_events_order_id_foreign" foreign key ("order_id") references "orders" ("id") on update cascade on delete set null;`
@@ -83,7 +83,7 @@ export class Migration20261110190000_customer_product_reactions extends Migratio
         );
 
         this.addSql(
-            `alter table "marketing_events" add constraint "marketing_events_kind_check" check("kind" in ('STAGE', 'PERMISSION', 'CONSENT_ASKED', 'HOSTILE'));`
+            `alter table "marketing_events" add constraint "marketing_events_kind_check" check("kind" in ('STAGE', 'PERMISSION', 'CONSENT_ASKED', 'HOSTILE', 'SOURCE'));`
         );
     }
 }

@@ -25,6 +25,7 @@ export const MarketingEventTableName = 'marketing_events';
 @Entity({ tableName: MarketingEventTableName })
 @Index({ properties: ['customer', 'createdAt'] })
 @Index({ properties: ['workspace', 'createdAt'] })
+@Index({ properties: ['trackedLinkId'] })
 export class MarketingEventEntity extends DatabaseEntityBase {
     @ManyToOne(() => WorkspaceEntity)
     workspace: WorkspaceEntity;
@@ -65,4 +66,8 @@ export class MarketingEventEntity extends DatabaseEntityBase {
         deleteRule: 'set null',
     })
     productGroup?: ProductGroupEntity | null;
+
+    // SOURCE rows: the tracked link the customer arrived through.
+    @Property({ type: 'uuid', nullable: true })
+    trackedLinkId?: string | null;
 }

@@ -6758,7 +6758,7 @@ export type MarketingEventGetResponseDto = {
      * Delete by
      */
     deletedBy?: UserMetaResponseDto;
-    kind: 'STAGE' | 'PERMISSION' | 'CONSENT_ASKED' | 'HOSTILE' | 'REACTION' | 'INTENT';
+    kind: 'STAGE' | 'PERMISSION' | 'CONSENT_ASKED' | 'HOSTILE' | 'REACTION' | 'INTENT' | 'SOURCE';
     actor: 'BOT' | 'CLASSIFIER' | 'OPERATOR' | 'CLIENT' | 'RULE';
     oldValue?: {
         [key: string]: unknown;

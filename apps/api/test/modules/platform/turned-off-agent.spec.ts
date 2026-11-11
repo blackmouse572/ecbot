@@ -231,7 +231,10 @@ describe('WidgetChatService — agent turned off', () => {
             { wantsPerson: jest.fn() } as any,
             {} as any, // messageMedia
             {} as any, // sessionService
-            { recordInbound: jest.fn(async () => ({ optedOut: false })) } as any
+            {
+                recordInbound: jest.fn(async () => ({ optedOut: false })),
+            } as any,
+            { recordArrival: jest.fn(async () => null) } as any
         );
         const turn = {
             account: {
@@ -305,7 +308,10 @@ describe('WidgetChatService — workspace suspended', () => {
             { wantsPerson: jest.fn() } as any,
             {} as any, // messageMedia
             {} as any, // sessionService
-            { recordInbound: jest.fn(async () => ({ optedOut: false })) } as any
+            {
+                recordInbound: jest.fn(async () => ({ optedOut: false })),
+            } as any,
+            { recordArrival: jest.fn(async () => null) } as any
         );
 
         await service.handleTurn(res as any, {

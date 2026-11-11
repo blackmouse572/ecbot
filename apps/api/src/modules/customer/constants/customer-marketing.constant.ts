@@ -48,6 +48,7 @@ export const CUSTOMER_MARKETING_REASON_FIRST_MESSAGE = 'first_message';
 export const CUSTOMER_MARKETING_REASON_MERGE = 'customer_merge';
 export const CUSTOMER_MARKETING_REASON_HOSTILE = 'hostile';
 export const CUSTOMER_MARKETING_REASON_ORDER_CONFIRMED = 'order_confirmed';
+export const CUSTOMER_MARKETING_REASON_TRACKED_LINK = 'tracked_link';
 
 /** "Not now" from the agent pauses offers this long unless it says otherwise. */
 export const CUSTOMER_MARKETING_AGENT_PAUSE_DAYS = 30;

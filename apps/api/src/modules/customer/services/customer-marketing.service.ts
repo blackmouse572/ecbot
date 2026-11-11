@@ -21,6 +21,7 @@ import {
     CUSTOMER_MARKETING_REASON_MERGE,
     CUSTOMER_MARKETING_REASON_OPT_OUT_KEYWORD,
     CUSTOMER_MARKETING_REASON_ORDER_CONFIRMED,
+    CUSTOMER_MARKETING_REASON_TRACKED_LINK,
 } from '../constants/customer-marketing.constant';
 import { CustomerMarketingStateGetResponseDto } from '../dtos/response/customer-marketing-state.get.response.dto';
 import { MarketingEventGetResponseDto } from '../dtos/response/marketing-event.get.response.dto';
@@ -31,6 +32,7 @@ import {
     ENUM_MARKETING_EVENT_KIND,
 } from '../enums/customer-marketing.enum';
 import {
+    ICustomerMarketingArrival,
     ICustomerMarketingChangeContext,
     ICustomerMarketingInbound,
     ICustomerMarketingMergeResult,
@@ -41,6 +43,7 @@ import { CustomerMarketingStateEntity } from '../repository/entities/customer-ma
 import { CustomerProductReactionEntity } from '../repository/entities/customer-product-reaction.entity';
 import { CustomerEntity } from '../repository/entities/customer.entity';
 import { MarketingEventEntity } from '../repository/entities/marketing-event.entity';
+import { TrackedLinkEntity } from '../repository/entities/tracked-link.entity';
 import { CustomerMarketingStateRepository } from '../repository/repositories/customer-marketing-state.repository';
 import { CustomerRepository } from '../repository/repositories/customer.repository';
 import { MarketingEventRepository } from '../repository/repositories/marketing-event.repository';
@@ -80,6 +83,69 @@ export class CustomerMarketingService {
                 throw error;
             return this.applyInbound(input, this.em.fork());
         }
+    }
+
+    /**
+     * A customer arrived through a tracked link: logs the visit (once per link
+     * and conversation), keeps the first source, and opts a PENDING customer
+     * in when the link promises an offer. Null when this visit was already
+     * logged, so the caller does not greet or tag twice; otherwise the state.
+     */
+    async recordSource(
+        input: ICustomerMarketingArrival
+    ): Promise<CustomerMarketingStateEntity | null> {
+        const em = this.em.fork();
+        const visits = await this.eventRepository.getTotal(
+            {
+                customer: input.customerId,
+                kind: ENUM_MARKETING_EVENT_KIND.SOURCE,
+                trackedLinkId: input.trackedLinkId,
+                conversationId: input.conversationId ?? null,
+            },
+            { em }
+        );
+        if (visits > 0) return null;
+
+        const context: ICustomerMarketingChangeContext = {
+            actor: ENUM_MARKETING_EVENT_ACTOR.RULE,
+            conversationId: input.conversationId,
+            messageId: input.messageId,
+            trackedLinkId: input.trackedLinkId,
+        };
+        const state = await this.ensureState(
+            input.customerId,
+            input.workspaceId,
+            context,
+            em
+        );
+        this.addEvent(
+            state,
+            ENUM_MARKETING_EVENT_KIND.SOURCE,
+            { ...context, oldValue: null, newValue: null },
+            em
+        );
+        if (!state.firstTrackedLink) {
+            state.firstTrackedLink = em.getReference(
+                TrackedLinkEntity,
+                input.trackedLinkId
+            );
+            state.firstSourceAt = new Date();
+        }
+        if (
+            input.promisesOffer &&
+            state.permission === ENUM_CUSTOMER_MARKETING_PERMISSION.PENDING
+        ) {
+            this.applyPermission(
+                state,
+                ENUM_CUSTOMER_MARKETING_PERMISSION.GRANTED,
+                null,
+                { ...context, reason: CUSTOMER_MARKETING_REASON_TRACKED_LINK },
+                em
+            );
+        }
+        em.persist(state);
+        await em.flush();
+        return state;
     }
 
     async getState(
@@ -492,6 +558,7 @@ export class CustomerMarketingService {
             );
         }
         if (context.at) event.createdAt = context.at;
+        event.trackedLinkId = context.trackedLinkId ?? null;
         if (context.userId) {
             event.createdBy = em.getReference(UserEntity, context.userId);
         }
@@ -591,6 +658,15 @@ export class CustomerMarketingService {
             survivor.lastOrderAt,
             loser.lastOrderAt
         );
+        if (
+            loser.firstTrackedLink &&
+            (!survivor.firstSourceAt ||
+                (loser.firstSourceAt &&
+                    loser.firstSourceAt < survivor.firstSourceAt))
+        ) {
+            survivor.firstTrackedLink = loser.firstTrackedLink;
+            survivor.firstSourceAt = loser.firstSourceAt;
+        }
     }
 
     /**
