@@ -20,6 +20,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from eccho_ai.models.customers import Customers
 from eccho_ai.models.customer_tags import CustomerTags
 from eccho_ai.models.customer_tag_assignments import CustomerTagAssignments
+from eccho_ai.models.customer_marketing_states import CustomerMarketingStates
 from eccho_ai.modules.chat import customer_context as customer_context_module
 from eccho_ai.modules.chat.customer_context import build_customer_context_block
 from eccho_ai.core.postgres import PostgresRepo
@@ -304,3 +305,44 @@ async def test_catalog_caps_at_twenty_and_marks_truncation(sqlite_repo):
     # 20 tag rows + 1 truncation row.
     assert len(catalog_lines) == 21
     assert catalog_lines[-1].strip() == "- …"
+
+
+async def _set_marketing(factory, customer: Customers, **fields) -> None:
+    state = CustomerMarketingStates(
+        workspace_id=customer.workspace_id, customer_id=customer.id, **fields
+    )
+    async with factory() as session:
+        session.add(state)
+        await session.commit()
+
+
+async def test_marketing_line_says_not_asked_yet_by_default(sqlite_repo):
+    customer = await _make_customer(sqlite_repo)
+
+    block = await build_customer_context_block(customer.id)
+
+    assert "Offers: not asked yet" in block
+
+
+async def test_marketing_line_says_already_asked(sqlite_repo):
+    from datetime import datetime
+
+    customer = await _make_customer(sqlite_repo)
+    await _set_marketing(
+        sqlite_repo, customer, stage="BOUGHT_ONCE", consent_asked_at=datetime(2026, 11, 1)
+    )
+
+    block = await build_customer_context_block(customer.id)
+
+    assert "Journey stage: BOUGHT_ONCE" in block
+    assert "Offers: PENDING, consent already asked (never ask again)" in block
+
+
+async def test_marketing_line_for_a_stopped_or_hostile_customer(sqlite_repo):
+    customer = await _make_customer(sqlite_repo)
+    await _set_marketing(sqlite_repo, customer, permission="STOPPED", hostile=True)
+
+    block = await build_customer_context_block(customer.id)
+
+    assert "Offers: STOPPED (never ask; reopen only if the customer asks for offers)" in block
+    assert "Hostile: yes (never ask about offers)" in block

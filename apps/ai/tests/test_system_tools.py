@@ -23,6 +23,7 @@ from eccho_ai.llm.tools.system_tools import (
     remove_customer_tag,
     schedule_followup,
     set_customer_field,
+    set_marketing_permission,
     update_customer_profile,
 )
 
@@ -183,8 +184,8 @@ def _stub_api_client_all(monkeypatch, *, post=None, get=None, delete=None):
     return calls
 
 
-def test_twelve_system_tools_registered():
-    assert len(SYSTEM_TOOLS) == 12
+def test_thirteen_system_tools_registered():
+    assert len(SYSTEM_TOOLS) == 13
     names = {t.name for t in SYSTEM_TOOLS}
     assert {
         "schedule_followup",
@@ -427,3 +428,71 @@ async def test_the_shared_agent_stops_at_end_without_reply():
 
     assert isinstance(result["messages"][-1], ToolMessage)
     assert all(m.content != "No reply needed." for m in result["messages"])
+
+
+# ─── set_marketing_permission ────────────────────────────────────────────────
+
+
+def test_set_marketing_permission_is_a_system_tool():
+    assert "set_marketing_permission" in {t.name for t in SYSTEM_TOOLS}
+
+
+async def test_set_marketing_permission_errors_when_no_context(monkeypatch):
+    monkeypatch.setattr(system_tools_module, "_get_customer_id", lambda: None)
+    result = await set_marketing_permission.ainvoke(
+        {"action": "ASKED", "reason": "order confirmed"}
+    )
+    assert result == {"error": "no customer context"}
+
+
+async def test_set_marketing_permission_posts_action_reason_and_conversation(monkeypatch):
+    _patch_runtime(monkeypatch, customer_id="cust-1", session_id="conv-1")
+    calls = _stub_api_client(
+        monkeypatch, response={"ok": True, "permission": "PAUSED"}
+    )
+
+    result = await set_marketing_permission.ainvoke(
+        {"action": "paused", "reason": "busy until Tet", "pause_days": 60}
+    )
+
+    assert result == {"ok": True, "permission": "PAUSED"}
+    assert calls == [
+        (
+            "/system/customers/cust-1/marketing/permission",
+            {
+                "action": "PAUSED",
+                "reason": "busy until Tet",
+                "conversationId": "conv-1",
+                "pauseDays": 60,
+            },
+        )
+    ]
+
+
+async def test_set_marketing_permission_drops_an_out_of_range_pause(monkeypatch):
+    # The API takes 1..365 days; anything else falls back to its default.
+    _patch_runtime(monkeypatch, customer_id="cust-1")
+    calls = _stub_api_client(monkeypatch, response={"ok": True})
+
+    await set_marketing_permission.ainvoke(
+        {"action": "PAUSED", "reason": "x" * 600, "pause_days": 0}
+    )
+
+    assert calls == [
+        (
+            "/system/customers/cust-1/marketing/permission",
+            {"action": "PAUSED", "reason": "x" * 500},
+        )
+    ]
+
+
+async def test_set_marketing_permission_refuses_an_unknown_action(monkeypatch):
+    _patch_runtime(monkeypatch, customer_id="cust-1")
+    calls = _stub_api_client(monkeypatch, response={"ok": True})
+
+    result = await set_marketing_permission.ainvoke(
+        {"action": "maybe", "reason": "x"}
+    )
+
+    assert "error" in result
+    assert calls == []

@@ -19,6 +19,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from eccho_ai.models.customers import Customers
 from eccho_ai.models.customer_tags import CustomerTags
 from eccho_ai.models.customer_tag_assignments import CustomerTagAssignments
+from eccho_ai.models.customer_marketing_states import CustomerMarketingStates
 from eccho_ai.core.postgres import PostgresRepo
 
 
@@ -87,6 +88,30 @@ def _saved_field_lines(metadata: Any) -> list[str]:
     return lines
 
 
+def _marketing_lines(state: CustomerMarketingStates | None) -> list[str]:
+    """Journey stage and offers permission, so the agent asks for consent once
+    and never asks a customer who said stop."""
+    if state is None:
+        return ["Offers: not asked yet"]
+    lines = [f"Journey stage: {_safe(state.stage, limit=20)}"]
+    permission = _safe(state.permission, limit=20)
+    if permission == "STOPPED":
+        lines.append(
+            "Offers: STOPPED (never ask; reopen only if the customer asks for offers)"
+        )
+    elif permission == "PAUSED" and state.permission_until:
+        lines.append(f"Offers: PAUSED until {state.permission_until.date().isoformat()}")
+    elif permission == "PENDING" and state.consent_asked_at:
+        lines.append("Offers: PENDING, consent already asked (never ask again)")
+    elif permission == "PENDING":
+        lines.append("Offers: not asked yet")
+    else:
+        lines.append(f"Offers: {permission}")
+    if state.hostile:
+        lines.append("Hostile: yes (never ask about offers)")
+    return lines
+
+
 async def build_customer_context_block(customer_id: str | None) -> str:
     """Return the context block for the given customer.
 
@@ -144,6 +169,19 @@ async def build_customer_context_block(customer_id: str | None) -> str:
                 .order_by(col(CustomerTags.created_at).desc())
             )
             catalog_rows = (await session.exec(catalog_stmt)).all()  # type: ignore[attr-defined]
+
+            # Last read, on its own: if the API's marketing tables lag this
+            # deploy, only the marketing lines go missing.
+            try:
+                marketing_stmt = select(CustomerMarketingStates).where(
+                    col(CustomerMarketingStates.customer_id) == customer.id
+                )
+                marketing = (await session.exec(marketing_stmt)).scalars().first()  # type: ignore[attr-defined]
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(
+                    "marketing context unavailable for customer=%s: %s", customer_id, exc
+                )
+                marketing = None
     except Exception as exc:
         logger.warning("build_customer_context_block failed for customer=%s: %s", customer_id, exc)
         return ""
@@ -164,6 +202,7 @@ async def build_customer_context_block(customer_id: str | None) -> str:
     if customer.notes and customer.notes.strip():
         lines.append(f"Staff notes: {_safe(customer.notes, limit=MAX_NOTES_LEN)}")
     lines.extend(_saved_field_lines(customer.metadata_))
+    lines.extend(_marketing_lines(marketing))
     lines.append("")
     lines.append(
         "# Tag catalog (apply with the apply_customer_tag tool when warranted;"
