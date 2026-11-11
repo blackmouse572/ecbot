@@ -6,7 +6,7 @@ import type { FC } from "react";
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { OrderFormData } from "../schemas";
-import { formatMoney, itemsTotal } from "../utils";
+import { emptyOrderItem, formatMoney, itemsTotal } from "../utils";
 import { MoneyInput } from "./money-input";
 import { ProductGroupCombobox } from "./product-group-combobox";
 

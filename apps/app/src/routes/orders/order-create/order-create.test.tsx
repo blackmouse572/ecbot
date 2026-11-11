@@ -207,4 +207,11 @@ describe("OrderCreate", () => {
     expect(api.orders).toEqual([]);
     expect(screen.queryByText(/order code is taken/)).toBeNull();
   });
+
+  it("adds another product row", () => {
+    renderCreate();
+    fireEvent.click(screen.getByRole("button", { name: "Add item" }));
+
+    expect(screen.getAllByLabelText("Product name")).toHaveLength(2);
+  });
 });
