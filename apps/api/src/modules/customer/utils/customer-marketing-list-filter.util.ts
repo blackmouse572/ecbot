@@ -24,7 +24,7 @@ export function customerMarketingListFilterFromQuery(
     if (sourceId !== undefined && !isSourceId) {
         throw new BadRequestException({
             statusCode: 400,
-            message: 'customerMarketing.error.sourceInvalid',
+            message: 'request.validation',
         });
     }
 

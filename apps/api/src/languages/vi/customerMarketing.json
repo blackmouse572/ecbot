@@ -8,8 +8,7 @@
         "reasonRequired": "Cần ghi lý do để gửi ưu đãi lại cho khách đã nói dừng.",
         "hostile": "Khách này đang có nhãn Khó chịu. Chỉ thành viên của shop mới mở lại ưu đãi được.",
         "pauseNeedsDate": "Chọn một ngày trong tương lai để tạm ngưng ưu đãi đến ngày đó.",
-        "deferNeedsDate": "Chọn một ngày trong tương lai để tạm hoãn nhóm hàng đến ngày đó.",
-        "sourceInvalid": "Bộ lọc nguồn chỉ nhận mã của một nguồn."
+        "deferNeedsDate": "Chọn một ngày trong tương lai để tạm hoãn nhóm hàng đến ngày đó."
     },
     "reaction": {
         "update": "Đã tạm hoãn nhóm hàng cho khách này.",
