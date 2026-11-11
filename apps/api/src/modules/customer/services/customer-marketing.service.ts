@@ -112,12 +112,14 @@ export class CustomerMarketingService {
                 this.latestEvent(
                     customerId,
                     workspaceId,
-                    ENUM_MARKETING_EVENT_KIND.STAGE
+                    ENUM_MARKETING_EVENT_KIND.STAGE,
+                    state.stage
                 ),
                 this.latestEvent(
                     customerId,
                     workspaceId,
-                    ENUM_MARKETING_EVENT_KIND.PERMISSION
+                    ENUM_MARKETING_EVENT_KIND.PERMISSION,
+                    state.permission
                 ),
                 state.hostile
                     ? this.latestEvent(
@@ -499,20 +501,31 @@ export class CustomerMarketingService {
         );
     }
 
-    private latestEvent(
+    /**
+     * The newest event that set the label to its current value. One request
+     * can write two events of a kind in the same millisecond (Khó chịu then
+     * permission; first message then stage), and ids are random, so the sort
+     * alone cannot pick the one that explains the label. Falls back to the
+     * newest event of the kind.
+     */
+    private async latestEvent(
         customerId: string,
         workspaceId: string,
-        kind: ENUM_MARKETING_EVENT_KIND
+        kind: ENUM_MARKETING_EVENT_KIND,
+        currentValue?: string
     ): Promise<MarketingEventEntity | null> {
-        return this.eventRepository.findOne(
-            { customer: customerId, workspace: workspaceId, kind },
-            {
-                order: {
-                    createdAt: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
-                    id: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
-                },
-            }
-        );
+        const where = { customer: customerId, workspace: workspaceId, kind };
+        const options = {
+            order: { createdAt: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC },
+        };
+        const matching =
+            currentValue === undefined
+                ? null
+                : await this.eventRepository.findOne(
+                      { ...where, newValue: currentValue },
+                      options
+                  );
+        return matching ?? this.eventRepository.findOne(where, options);
     }
 
     private async loadForChange(

@@ -122,10 +122,93 @@ describe('CustomerMarketingService.getDetail', () => {
         expect(detail.permissionEvent).toEqual(
             expect.objectContaining({ id: 'e2', reason: 'opt_out_keyword' })
         );
-        // Newest first, id breaking ties.
+        // The newest event that set the label to what it is now.
         expect(eventRepository.findOne).toHaveBeenCalledWith(
-            { customer: 'c1', workspace: 'w1', kind: KIND.STAGE },
-            { order: { createdAt: 'DESC', id: 'DESC' } }
+            {
+                customer: 'c1',
+                workspace: 'w1',
+                kind: KIND.STAGE,
+                newValue: STAGE.ASKED_PRICE,
+            },
+            { order: { createdAt: 'DESC' } }
+        );
+    });
+
+    it('picks the event that set the current value when one request wrote two', async () => {
+        // PATCH { hostile: true, permission: GRANTED } writes STOPPED then
+        // GRANTED in the same millisecond, so the sort alone cannot tell them apart.
+        const at = new Date('2026-11-10T13:00:00Z');
+        const rows = [
+            {
+                id: 'e9',
+                kind: KIND.PERMISSION,
+                newValue: PERMISSION.STOPPED,
+                reason: 'hostile',
+                createdAt: at,
+            },
+            {
+                id: 'e1',
+                kind: KIND.PERMISSION,
+                newValue: PERMISSION.GRANTED,
+                reason: 'Khách đồng ý qua điện thoại',
+                createdAt: at,
+            },
+            {
+                id: 'e8',
+                kind: KIND.STAGE,
+                newValue: STAGE.NEW,
+                reason: 'first_message',
+                createdAt: at,
+            },
+            {
+                id: 'e2',
+                kind: KIND.STAGE,
+                newValue: STAGE.INTERESTED,
+                reason: 'Hỏi về serum',
+                createdAt: at,
+            },
+        ];
+        const { service, eventRepository } = makeHarness({
+            state: state({
+                stage: STAGE.INTERESTED,
+                permission: PERMISSION.GRANTED,
+            }),
+        });
+        eventRepository.findOne.mockImplementation(
+            async (where: any) =>
+                rows.find(
+                    r =>
+                        r.kind === where.kind &&
+                        (where.newValue === undefined ||
+                            r.newValue === where.newValue)
+                ) ?? null
+        );
+
+        const detail = await service.getDetail('c1', 'w1');
+
+        expect(detail.permissionEvent).toEqual(
+            expect.objectContaining({ id: 'e1' })
+        );
+        expect(detail.stageEvent).toEqual(
+            expect.objectContaining({ id: 'e2' })
+        );
+    });
+
+    it('falls back to the newest event of the kind when none set the current value', async () => {
+        const fallback = { id: 'e5', kind: KIND.STAGE, newValue: STAGE.NEW };
+        const { service, eventRepository } = makeHarness({
+            state: state({ stage: STAGE.BOUGHT_ONCE }),
+        });
+        eventRepository.findOne.mockImplementation(async (where: any) =>
+            where.kind === KIND.STAGE && where.newValue === undefined
+                ? fallback
+                : null
+        );
+
+        const detail = await service.getDetail('c1', 'w1');
+
+        expect(detail.stageEvent).toEqual(
+            expect.objectContaining({ id: 'e5' })
         );
     });
 
