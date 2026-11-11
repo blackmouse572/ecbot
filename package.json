@@ -44,8 +44,8 @@
     "@commitlint/cli": "^21",
     "@commitlint/config-conventional": "^21",
     "lefthook": "^2.2.2",
-    "prettier": "^3.9.9",
-    "turbo": "^2.11.3",
+    "prettier": "^3.9.10",
+    "turbo": "^2.11.10",
     "typescript": "5.8.2"
   },
   "packageManager": "pnpm@9.15.9",
@@ -75,7 +75,7 @@
     }
   },
   "dependencies": {
-    "@turbo/gen": "^2.11.3",
+    "@turbo/gen": "^2.11.10",
     "slugify": "^1.6.9"
   }
 }
