@@ -201,6 +201,12 @@ export class InstagramPlatformAdapter extends PlatformAdapter {
             kind = 'read';
         } else if (event.referral) {
             kind = 'referral';
+            // No mid on a reopened chat: the sender and time make the
+            // dedupe key, so a redelivery is still logged once. Without a
+            // time there is no stable key, so the inbox drops the event.
+            if (event.timestamp) {
+                externalMessageId = `referral:${event.sender.id}:${event.timestamp}`;
+            }
         }
 
         // On an echo the account is the sender; keep the customer as senderId

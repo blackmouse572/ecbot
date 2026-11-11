@@ -517,6 +517,23 @@ export class ReplyGenerationService {
         );
     }
 
+    /** A tracked link's greeting, sent as written when the customer arrives. */
+    async sendGreeting(
+        chatbot: any,
+        account: any,
+        senderId: string,
+        conversationId: string,
+        greeting: string
+    ): Promise<boolean> {
+        return this.sendBotText(
+            chatbot,
+            account,
+            senderId,
+            conversationId,
+            greeting
+        );
+    }
+
     private async sendBotText(
         chatbot: any,
         account: any,

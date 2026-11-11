@@ -75,6 +75,9 @@ function setup(overrides: Record<string, any> = {}) {
             optedOut: overrides.optedOut ?? false,
         })),
     };
+    const attribution = {
+        recordArrival: jest.fn(async () => ({ greeting: null })),
+    };
     const meter = {
         check: jest.fn().mockResolvedValue({ allowed: true }),
         record: jest.fn().mockResolvedValue(undefined),
@@ -99,6 +102,7 @@ function setup(overrides: Record<string, any> = {}) {
         messageMedia as any,
         sessionService as any,
         customerMarketing as any,
+        attribution as any,
         meter as any
     );
 
@@ -113,7 +117,8 @@ function setup(overrides: Record<string, any> = {}) {
         handoffIntent as any,
         messageMedia as any,
         sessionService as any,
-        customerMarketing as any
+        customerMarketing as any,
+        attribution as any
     );
 
     return {
@@ -130,6 +135,7 @@ function setup(overrides: Record<string, any> = {}) {
         turnContext,
         messageMedia,
         customerMarketing,
+        attribution,
     };
 }
 
@@ -677,6 +683,38 @@ describe('WidgetChatService attachments', () => {
                     text: expect.stringContaining('dừng gửi tin ưu đãi'),
                 })
             );
+        });
+
+        it('logs the tracked link the visitor arrived through, then answers', async () => {
+            const { service, attribution, chatbotAIService } = setup();
+
+            await service.handleTurn(res, {
+                ...turn,
+                referral: { code: 'trang-khuyen-mai', source: 'link' },
+            });
+
+            expect(attribution.recordArrival).toHaveBeenCalledWith({
+                customerId: 'cust-1',
+                workspaceId: 'ws-1',
+                code: 'trang-khuyen-mai',
+                conversationId: 'conv-1',
+                messageId: 'msg-in',
+            });
+            expect(chatbotAIService.streamChat).toHaveBeenCalled();
+        });
+
+        it('answers when logging the source fails', async () => {
+            const { service, attribution, chatbotAIService } = setup();
+            attribution.recordArrival.mockRejectedValueOnce(
+                new Error('db down')
+            );
+
+            await service.handleTurn(res, {
+                ...turn,
+                referral: { code: 'trang-khuyen-mai', source: 'link' },
+            });
+
+            expect(chatbotAIService.streamChat).toHaveBeenCalled();
         });
 
         it('still answers when recording fails', async () => {

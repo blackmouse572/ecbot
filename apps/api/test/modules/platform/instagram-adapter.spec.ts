@@ -152,6 +152,7 @@ describe('InstagramPlatformAdapter.parse', () => {
         );
         expect(e).toMatchObject({
             kind: 'referral',
+            externalMessageId: `referral:${CUSTOMER}:1700000000000`,
             referral: { code: 'bio-instagram', source: 'link' },
         });
     });
