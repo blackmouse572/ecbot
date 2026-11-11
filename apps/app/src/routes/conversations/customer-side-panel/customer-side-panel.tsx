@@ -26,6 +26,7 @@ import { ConversationsSection } from "./components/conversations-section";
 import { CustomerTagPicker } from "./components/customer-tag-picker";
 import { FollowupsSection } from "./components/followups-section";
 import { MarketingSection } from "./components/marketing-section";
+import { OrdersSection } from "./components/orders-section";
 import { SavedFieldsSection } from "./components/saved-fields-section";
 import { TimezoneSection } from "./components/timezone-section";
 import { CUSTOMER_DATA_SUBJECT } from "../constants";
@@ -345,6 +346,7 @@ export function CustomerSidePanel({
               conversationId={conversationId}
               onViewMessage={onViewMessage}
             />
+            <OrdersSection customerId={customerId} />
           </div>
 
           {conversationId && (

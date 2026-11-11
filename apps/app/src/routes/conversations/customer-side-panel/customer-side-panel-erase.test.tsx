@@ -25,6 +25,9 @@ const exportMutateAsync = vi.fn();
 const eraseMutateAsync = vi.fn();
 const downloadJson = vi.fn();
 
+// Orders have their own test (components/orders-section).
+vi.mock("./components/orders-section", () => ({ OrdersSection: () => null }));
+
 vi.mock("@/hooks/api/customers", () => ({
   useCustomer: vi.fn(),
   useUpdateCustomer: vi.fn(() => ({

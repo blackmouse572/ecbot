@@ -9,23 +9,38 @@ import { Button, toast } from "@medusajs/ui";
 import { Form } from "@repo/ui/common-components";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { CustomerCombobox } from "../components/customer-combobox";
 import { OrderFormFields } from "../components/order-form-fields";
 import { useOrderItemsRequest } from "../components/use-order-items-request";
 import { emptyOrderItem, itemsTotal } from "../utils";
 import { ORDER_CONSTANTS, ORDER_DEFAULT_CURRENCY } from "../constants";
-import { orderFormSchema, type OrderFormData } from "../schemas";
+import {
+  backPathSchema,
+  orderFormSchema,
+  type OrderFormData,
+} from "../schemas";
 
-export const OrderCreate = () => (
-  <RouteFocusModal>
-    <OrderCreateForm />
-  </RouteFocusModal>
-);
+/**
+ * Thêm đơn. Opened from a customer panel it comes with ?customer=<id> and
+ * goes back to the page it came from (location state `from`).
+ */
+export const OrderCreate = () => {
+  const { state } = useLocation();
+  const from = backPathSchema.safeParse(state?.from);
+
+  return (
+    <RouteFocusModal prev={from.success ? from.data : ".."}>
+      <OrderCreateForm />
+    </RouteFocusModal>
+  );
+};
 
 const OrderCreateForm = () => {
   const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
   const { handleSuccess } = useRouteModal();
+  const [searchParams] = useSearchParams();
 
   const { groups } = useProductGroups(workspaceSlug, {
     perPage: ORDER_CONSTANTS.GROUP_PAGE_SIZE,
@@ -37,7 +52,7 @@ const OrderCreateForm = () => {
   const form = useForm<OrderFormData>({
     resolver: zodResolver(orderFormSchema),
     defaultValues: {
-      customerId: "",
+      customerId: searchParams.get("customer") ?? "",
       items: [emptyOrderItem()],
       customTotal: null,
       code: "",

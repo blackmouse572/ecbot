@@ -1,4 +1,5 @@
 import {
+  useCustomer,
   useCustomers,
   type CustomerGetResponseDto,
 } from "@/hooks/api/customers";
@@ -51,7 +52,14 @@ export function CustomerCombobox({
 
   // Kept apart from the results, which change with every search.
   const [picked, setPicked] = useState<Customer | null>(null);
-  const selected = picked?.id === value ? picked : null;
+
+  // A customer given up front (?customer=) is read once to show its name.
+  const { customer: preset } = useCustomer(
+    value && picked?.id !== value ? value : null,
+  );
+
+  const selected =
+    picked?.id === value ? picked : preset?.id === value ? preset : null;
 
   return (
     <Combobox<Customer>

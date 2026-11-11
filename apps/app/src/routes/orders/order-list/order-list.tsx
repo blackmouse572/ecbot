@@ -21,6 +21,7 @@ import {
   ORDER_STATUSES,
 } from "../constants";
 import { formatMoney, orderGroupNames, orderedAtLabel } from "../utils";
+import { CustomerFilterBanner } from "./customer-filter-banner";
 import { PendingOrdersBanner } from "./pending-orders-banner";
 
 const columnHelper = createColumnHelper<OrderGetResponseDto>();
@@ -40,6 +41,7 @@ export const OrderList = () => {
       status: raw.status || undefined,
       source: raw.source || undefined,
       productGroup: raw.productGroup || undefined,
+      customer: raw.customer || undefined,
     },
   );
 
@@ -84,7 +86,11 @@ export const OrderList = () => {
             </div>
           }
         />
-        <PendingOrdersBanner />
+        {raw.customer ? (
+          <CustomerFilterBanner customerId={raw.customer} />
+        ) : (
+          <PendingOrdersBanner />
+        )}
         <_DataTable
           table={table}
           filters={filters}

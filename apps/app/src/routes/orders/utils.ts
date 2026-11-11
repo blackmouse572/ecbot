@@ -116,3 +116,7 @@ export const withTime = (current: Date, time: string) => {
 
   return next;
 };
+
+/** "Kem chống nắng × 2, Serum C × 1": an order's items on one line. */
+export const itemsSummary = (order: Pick<OrderGetResponseDto, "items">) =>
+  order.items.map((item) => `${item.name} × ${item.quantity}`).join(", ");

@@ -6,6 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mutateAsync = vi.fn();
 
+// Orders have their own test (components/orders-section).
+vi.mock("./components/orders-section", () => ({ OrdersSection: () => null }));
+
 vi.mock("@/hooks/api/customers", () => ({
   useExportCustomer: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
   useEraseCustomer: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),

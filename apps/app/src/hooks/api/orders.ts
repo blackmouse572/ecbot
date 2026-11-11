@@ -5,6 +5,7 @@ import {
   orderWorkspaceControllerGetV1,
   orderWorkspaceControllerImportV1,
   orderWorkspaceControllerListV1,
+  orderWorkspaceControllerSummaryV1,
   orderWorkspaceControllerUpdateV1,
   type OrderCreateRequestDto,
   type OrderGetResponseDto,
@@ -12,6 +13,7 @@ import {
   type OrderImportRowRequestDto,
   type OrderItemGetResponseDto,
   type OrderItemRequestDto,
+  type OrderSummaryResponseDto,
   type OrderUpdateRequestDto,
   type OrderWorkspaceControllerListV1Data,
 } from "@repo/client";
@@ -31,6 +33,7 @@ export type {
   OrderImportRowRequestDto,
   OrderItemGetResponseDto,
   OrderItemRequestDto,
+  OrderSummaryResponseDto,
   OrderUpdateRequestDto,
 };
 
@@ -86,6 +89,27 @@ export const useOrder = (workspace: string, id: string) => {
   });
 
   return { ...rest, order: data };
+};
+
+/**
+ * A customer's confirmed orders added up. Keyed under the lists, so every
+ * order change refreshes it.
+ */
+export const useCustomerOrderSummary = (
+  workspace: string,
+  customer: string,
+) => {
+  const { data, ...rest } = useQuery({
+    queryKey: [...orderQueryKeys.lists(), "summary", workspace, customer],
+    queryFn: () =>
+      orderWorkspaceControllerSummaryV1({
+        path: { workspace },
+        query: { customer },
+      }).then((res) => res.data.data),
+    enabled: !!workspace && !!customer,
+  });
+
+  return { ...rest, summary: data };
 };
 
 /** A confirmed or cancelled order changes the learned cycles, so groups refresh too. */
