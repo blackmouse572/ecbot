@@ -6,7 +6,7 @@ import {
 import { useDataTable } from "@/hooks/use-data-table";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { LockClosedSolid, PlusMini } from "@medusajs/icons";
-import { Badge, Button, Container, Text } from "@medusajs/ui";
+import { Button, Container, Text } from "@medusajs/ui";
 import { useQueryParams } from "@repo/ui/hooks";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useMemo } from "react";
@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { Link, Outlet } from "react-router-dom";
 import { OrdersPageHeader } from "../components/orders-page-header";
 import { ORDER_CONSTANTS, PRODUCT_GROUP_QUERY_PARAMS } from "../constants";
+import { LearnedCycleCell } from "./learned-cycle-cell";
 import { ProductGroupRowActions } from "./product-group-row-actions";
 
 const columnHelper = createColumnHelper<ProductGroupGetResponseDto>();
@@ -101,7 +102,7 @@ const Days = ({ days }: { days: number }) => {
 };
 
 const useColumns = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   return useMemo(
     () => [
@@ -160,22 +161,39 @@ const useColumns = () => {
       columnHelper.display({
         id: "learnedRepurchaseDays",
         header: () => t("orders.groups.columns.learned"),
-        cell: ({ row }) =>
-          row.original.learnedRepurchaseDays ? (
-            <Badge size="2xsmall" color="green" className="tabular-nums">
-              <Days days={row.original.learnedRepurchaseDays} />
-            </Badge>
-          ) : (
-            <span className="txt-compact-small text-ui-fg-muted">
-              {t("orders.groups.notLearned")}
-            </span>
-          ),
+        cell: ({ row }) => <LearnedCycleCell group={row.original} />,
+      }),
+      columnHelper.display({
+        id: "confirmedOrders",
+        header: () => (
+          <span className="block text-right">
+            {t("orders.groups.columns.orders")}
+          </span>
+        ),
+        cell: ({ row }) => (
+          <span className="txt-compact-small block text-right tabular-nums">
+            {(row.original.confirmedOrders ?? 0).toLocaleString(i18n.language)}
+          </span>
+        ),
+      }),
+      columnHelper.display({
+        id: "customers",
+        header: () => (
+          <span className="block text-right">
+            {t("orders.groups.columns.customers")}
+          </span>
+        ),
+        cell: ({ row }) => (
+          <span className="txt-compact-small block text-right tabular-nums">
+            {(row.original.customers ?? 0).toLocaleString(i18n.language)}
+          </span>
+        ),
       }),
       columnHelper.display({
         id: "actions",
         cell: ({ row }) => <ProductGroupRowActions group={row.original} />,
       }),
     ],
-    [t],
+    [t, i18n.language],
   );
 };

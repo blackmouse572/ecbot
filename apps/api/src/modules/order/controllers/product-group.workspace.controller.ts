@@ -98,12 +98,15 @@ export class ProductGroupWorkspaceController {
             }),
             this.productGroupService.getTotal(workspace.id, find),
         ]);
+        const stats = await this.productGroupService.statsOf(
+            groups.map(group => group.id)
+        );
         return {
             _pagination: {
                 total,
                 totalPage: this.paginationService.totalPage(total, _limit),
             },
-            data: this.productGroupService.mapList(groups),
+            data: this.productGroupService.mapList(groups, stats),
         };
     }
 

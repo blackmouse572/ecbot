@@ -7060,6 +7060,18 @@ export type ProductGroupGetResponseDto = {
      * The cycle in use: the learned one when there is enough data, else the default
      */
     repurchaseDays?: number | null;
+    /**
+     * Confirmed orders holding the group (list only)
+     */
+    confirmedOrders?: number;
+    /**
+     * Customers with a confirmed order of the group (list only)
+     */
+    customers?: number;
+    /**
+     * Gaps of a day or more between two confirmed orders of one customer; the cycle is learned from 5 (list only)
+     */
+    repurchasePairs?: number;
     createdAt: string;
     updatedAt?: string;
 };

@@ -5,6 +5,8 @@ export const ORDER_CONSTANTS = {
   /** The API's list maximum: enough for every group in a shop. */
   GROUP_PAGE_SIZE: 100,
   CUSTOMER_SEARCH_DEBOUNCE_MS: 250,
+  /** Repurchases the API needs before it learns a cycle (ORDER_LEARNED_CYCLE_MIN_PAIRS). */
+  LEARNED_CYCLE_MIN_PAIRS: 5,
 } as const;
 
 export const ORDER_QUERY_PARAMS = [

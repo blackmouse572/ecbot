@@ -29,6 +29,29 @@ export class ProductGroupGetResponseDto {
     repurchaseDays?: number | null;
 
     @Expose()
+    @ApiProperty({
+        required: false,
+        description: 'Confirmed orders holding the group (list only)',
+    })
+    confirmedOrders?: number;
+
+    @Expose()
+    @ApiProperty({
+        required: false,
+        description:
+            'Customers with a confirmed order of the group (list only)',
+    })
+    customers?: number;
+
+    @Expose()
+    @ApiProperty({
+        required: false,
+        description:
+            'Gaps of a day or more between two confirmed orders of one customer; the cycle is learned from 5 (list only)',
+    })
+    repurchasePairs?: number;
+
+    @Expose()
     @ApiProperty()
     createdAt: Date;
 

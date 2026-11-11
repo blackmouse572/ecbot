@@ -107,6 +107,9 @@ describe('E2E — workspace orders and product groups', () => {
         const serum = list.body.data.find((g: any) => g.id === groupId);
         expect(serum.learnedRepurchaseDays).toBe(30);
         expect(serum.repurchaseDays).toBe(30);
+        expect(serum.confirmedOrders).toBe(6);
+        expect(serum.customers).toBe(1);
+        expect(serum.repurchasePairs).toBe(5);
 
         // One more order holding two items of the group: the filter must
         // count and page orders, not item rows.
@@ -169,6 +172,8 @@ describe('E2E — workspace orders and product groups', () => {
         const mask = list.body.data.find((g: any) => g.id === groupId);
         expect(mask.learnedRepurchaseDays ?? null).toBeNull();
         expect(mask.repurchaseDays).toBe(40);
+        expect(mask.confirmedOrders).toBe(6);
+        expect(mask.repurchasePairs).toBe(0);
     });
 
     it('confirms a pending draft once, then cancels it', async () => {

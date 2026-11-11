@@ -3568,13 +3568,19 @@
         "name": "Nhóm hàng",
         "inUse": "Chu kỳ đang dùng",
         "yours": "Bạn đặt",
-        "learned": "Ecbot học được"
+        "learned": "Ecbot học được",
+        "orders": "Đơn đã xác nhận",
+        "customers": "Khách đã mua"
       },
       "days_one": "{{count}} ngày",
       "days_other": "{{count}} ngày",
       "none": "Chưa có",
       "setCycle": "Đặt chu kỳ",
       "notLearned": "Chưa đủ lần mua lại",
+      "fromPairs_one": "từ {{count}} lần mua lại",
+      "fromPairs_other": "từ {{count}} lần mua lại",
+      "needPairs_one": "Cần thêm {{count}} lần mua lại",
+      "needPairs_other": "Cần thêm {{count}} lần mua lại",
       "howLearned": "Ecbot học chu kỳ từ số ngày giữa hai lần mua cùng nhóm của một khách, lấy số ở giữa khi có từ 5 lần mua lại trở lên. Chưa đủ thì dùng số bạn đặt. Đơn huỷ và đơn chờ xác nhận không được tính.",
       "delete": {
         "title": "Xoá nhóm {{name}}?",

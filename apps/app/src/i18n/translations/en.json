@@ -3533,13 +3533,19 @@
         "name": "Product group",
         "inUse": "Cycle in use",
         "yours": "You set",
-        "learned": "Ecbot learned"
+        "learned": "Ecbot learned",
+        "orders": "Confirmed orders",
+        "customers": "Customers who bought"
       },
       "days_one": "{{count}} day",
       "days_other": "{{count}} days",
       "none": "None yet",
       "setCycle": "Set a cycle",
       "notLearned": "Not enough repurchases yet",
+      "fromPairs_one": "from {{count}} repurchase",
+      "fromPairs_other": "from {{count}} repurchases",
+      "needPairs_one": "{{count}} more repurchase needed",
+      "needPairs_other": "{{count}} more repurchases needed",
       "howLearned": "Ecbot learns the cycle from the days between two purchases in the same group by one customer, taking the middle value once there are 5 or more repurchases. Until then it uses the number you set. Cancelled and unconfirmed orders do not count.",
       "delete": {
         "title": "Delete group {{name}}?",
