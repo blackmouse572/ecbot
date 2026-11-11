@@ -3428,7 +3428,11 @@
       "permissionSet": "Offers: {{to}}",
       "consentAsked": "Asked if the customer wants offers",
       "hostileOn": "Upset: on",
-      "hostileOff": "Upset: off"
+      "hostileOff": "Upset: off",
+      "reactionSet": "Paused a product group until {{date}}",
+      "reactionEnded": "Product group pause ended",
+      "intent": "Product group interest: {{to}}",
+      "source": "Came through a source link"
     },
     "viewMessage": "View message"
   }

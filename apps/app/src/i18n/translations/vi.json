@@ -3463,7 +3463,11 @@
       "permissionSet": "Nhận ưu đãi: {{to}}",
       "consentAsked": "Đã hỏi khách có muốn nhận ưu đãi",
       "hostileOn": "Khó chịu: bật",
-      "hostileOff": "Khó chịu: tắt"
+      "hostileOff": "Khó chịu: tắt",
+      "reactionSet": "Tạm hoãn một nhóm hàng đến {{date}}",
+      "reactionEnded": "Hết tạm hoãn một nhóm hàng",
+      "intent": "Quan tâm theo nhóm hàng: {{to}}",
+      "source": "Đến qua link nguồn"
     },
     "viewMessage": "Xem tin nhắn"
   }

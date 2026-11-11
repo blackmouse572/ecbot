@@ -141,7 +141,7 @@ export const MarketingEditDrawer: FC<Props> = ({
                   : t(`${KEY}.description`)}
               </Drawer.Description>
             </Drawer.Header>
-            <Drawer.Body className="flex flex-1 flex-col gap-y-5 overflow-y-auto">
+            <Drawer.Body className="flex flex-1 flex-col gap-y-4 overflow-y-auto">
               <Form.Field
                 control={form.control}
                 name="stage"

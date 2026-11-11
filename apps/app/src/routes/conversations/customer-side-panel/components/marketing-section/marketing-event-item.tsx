@@ -18,6 +18,9 @@ const DOT_CLASS: Record<MarketingEventGetResponseDto["kind"], string> = {
   PERMISSION: "shadow-[0_0_0_1.5px_var(--tag-green-icon)]",
   CONSENT_ASKED: "shadow-[0_0_0_1.5px_var(--tag-blue-icon)]",
   HOSTILE: "shadow-[0_0_0_1.5px_var(--tag-red-icon)]",
+  REACTION: "shadow-[0_0_0_1.5px_var(--tag-purple-icon)]",
+  INTENT: "shadow-[0_0_0_1.5px_var(--tag-orange-icon)]",
+  SOURCE: "shadow-[0_0_0_1.5px_var(--tag-neutral-icon)]",
 };
 
 /** One label change: what changed, why, when and who. */

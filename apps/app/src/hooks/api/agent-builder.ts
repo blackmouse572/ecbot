@@ -8,7 +8,6 @@ import { useWorkspace } from "./workspace";
 
 export const useAgentBuilderSuggest = () => {
   const { workspace } = useWorkspace();
-
   return useMutation({
     mutationFn: (description: string) =>
       agentBuilderWorkspaceControllerSuggestV1({
@@ -25,7 +24,6 @@ export const useAgentBuilderSuggest = () => {
 /** Wakes the AI service, which scales to zero, before a description is sent (#256). */
 export const useAgentBuilderWarm = () => {
   const { workspace } = useWorkspace();
-
   return useMutation({
     mutationFn: () =>
       agentBuilderWorkspaceControllerWarmV1({

@@ -185,4 +185,23 @@ describe("MarketingSection", () => {
     expect(onViewMessage).toHaveBeenCalledWith("msg-1");
     expect(screen.getByRole("button", { name: "View all" })).toBeVisible();
   });
+
+  it("words product group and source events too", () => {
+    state.events = [
+      event({ kind: "REACTION", oldValue: null, newValue: "2026-04-15" }),
+      event({ kind: "REACTION", oldValue: "2026-04-15", newValue: null }),
+      event({ kind: "INTENT", newValue: "ASKED_PRICE" }),
+      event({ kind: "SOURCE", actor: "RULE" }),
+    ];
+    renderSection();
+
+    expect(
+      screen.getByText("Paused a product group until 4/15"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Product group pause ended")).toBeInTheDocument();
+    expect(
+      screen.getByText("Product group interest: Asked price"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Came through a source link")).toBeInTheDocument();
+  });
 });

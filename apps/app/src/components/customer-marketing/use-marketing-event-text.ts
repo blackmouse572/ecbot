@@ -10,7 +10,7 @@ const isReasonCode = (
 
 /** Turns a label change into the words the timeline shows. */
 export const useMarketingEventText = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   return useCallback(
     (event: MarketingEventGetResponseDto) => {
@@ -25,6 +25,19 @@ export const useMarketingEventText = () => {
           : t(`customerMarketing.event.${layer}Set`, { to });
       };
 
+      // A pause end is a day (YYYY-MM-DD), read as UTC so it never shifts.
+      const day = (value: string) => {
+        const date = new Date(value);
+        const sameYear = date.getUTCFullYear() === new Date().getFullYear();
+
+        return new Intl.DateTimeFormat(i18n.language, {
+          day: "numeric",
+          month: "numeric",
+          year: sameYear ? undefined : "numeric",
+          timeZone: "UTC",
+        }).format(date);
+      };
+
       const titles: Record<MarketingEventGetResponseDto["kind"], () => string> =
         {
           STAGE: () => change("stage"),
@@ -34,6 +47,17 @@ export const useMarketingEventText = () => {
             event.newValue === "true"
               ? t("customerMarketing.event.hostileOn")
               : t("customerMarketing.event.hostileOff"),
+          REACTION: () =>
+            event.newValue
+              ? t("customerMarketing.event.reactionSet", {
+                  date: day(event.newValue),
+                })
+              : t("customerMarketing.event.reactionEnded"),
+          INTENT: () =>
+            t("customerMarketing.event.intent", {
+              to: t(`customerMarketing.stage.${event.newValue}`),
+            }),
+          SOURCE: () => t("customerMarketing.event.source"),
         };
 
       const reason = event.reason
@@ -48,6 +72,6 @@ export const useMarketingEventText = () => {
         actor: t(`customerMarketing.actor.${event.actor}`),
       };
     },
-    [t],
+    [t, i18n.language],
   );
 };

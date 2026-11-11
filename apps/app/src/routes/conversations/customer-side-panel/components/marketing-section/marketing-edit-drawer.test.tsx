@@ -22,9 +22,10 @@ vi.mock("@/hooks/api/customer-marketing", () => ({
   useUpdateCustomerMarketing: () => ({ mutateAsync, isPending: false }),
 }));
 
+import type { CustomerMarketingStateGetResponseDto } from "@/hooks/api/customer-marketing";
 import { MarketingEditDrawer } from "./marketing-edit-drawer";
 
-const marketing = {
+const marketing: CustomerMarketingStateGetResponseDto = {
   stage: "ASKED_PRICE",
   permission: "GRANTED",
   permissionUntil: null,
@@ -34,7 +35,7 @@ const marketing = {
   permissionEvent: null,
   hostileEvent: null,
   freeWindows: [],
-} as const;
+};
 
 const renderDrawer = () => {
   const onOpenChange = vi.fn();

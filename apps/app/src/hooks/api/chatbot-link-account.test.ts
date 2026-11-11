@@ -18,7 +18,6 @@ import { useLinkChatbotAccount, useUnlinkChatbotAccount } from "./chatbot";
 const wrapperWith = (client: QueryClient) => {
   const Wrapper = ({ children }: PropsWithChildren) =>
     createElement(QueryClientProvider, { client }, children);
-
   return Wrapper;
 };
 
@@ -31,7 +30,6 @@ describe("useLinkChatbotAccount / useUnlinkChatbotAccount", () => {
     const client = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
-
     client.setQueryData(accountQueryKeys.listUnlinked(), {
       data: [{ id: "a1" }],
     });
@@ -39,7 +37,6 @@ describe("useLinkChatbotAccount / useUnlinkChatbotAccount", () => {
     const { result } = renderHook(() => useLinkChatbotAccount("bot-1"), {
       wrapper: wrapperWith(client),
     });
-
     result.current.mutate({ accounts: ["a1"] });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -52,13 +49,11 @@ describe("useLinkChatbotAccount / useUnlinkChatbotAccount", () => {
     const client = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
-
     client.setQueryData(accountQueryKeys.listUnlinked(), { data: [] });
 
     const { result } = renderHook(() => useUnlinkChatbotAccount("bot-1"), {
       wrapper: wrapperWith(client),
     });
-
     result.current.mutate({ accounts: ["a1"] });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
