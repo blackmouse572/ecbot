@@ -1414,6 +1414,59 @@ export type CustomerMarketingSystemPermissionRequestDto = {
     } | null;
 };
 
+export type OrderItemGetResponseDto = {
+    id: string;
+    name: string;
+    productGroupId?: string | null;
+    productGroupName?: string | null;
+    quantity: number;
+    unitPrice?: number | null;
+};
+
+export type OrderGetResponseDto = {
+    id: string;
+    code: string;
+    customerId: string;
+    customerName?: string | null;
+    customerPhone?: string | null;
+    /**
+     * Minor units
+     */
+    total: number;
+    currency: string;
+    status: 'PENDING' | 'CONFIRMED' | 'CANCELLED';
+    source: 'CHAT' | 'MANUAL' | 'IMPORT';
+    orderedAt: string;
+    confirmedAt?: {
+        [key: string]: unknown;
+    } | null;
+    note?: string | null;
+    conversationId?: string | null;
+    items: Array<OrderItemGetResponseDto>;
+    createdAt: string;
+    updatedAt?: string;
+};
+
+export type OrderItemRequestDto = {
+    name: string;
+    productGroupId?: string | null;
+    quantity: number;
+    /**
+     * Price of one unit in minor units
+     */
+    unitPrice?: number | null;
+};
+
+export type OrderSystemDraftRequestDto = {
+    items: Array<OrderItemRequestDto>;
+    /**
+     * Total the customer agreed to, in minor units
+     */
+    total?: number;
+    note?: string;
+    conversationId?: string;
+};
+
 export type FollowupScheduleRequestDto = {
     [key: string]: unknown;
 };
@@ -6825,49 +6878,6 @@ export type TrackedLinkUpdateRequestDto = {
     status?: 'ACTIVE' | 'STOPPED';
 };
 
-export type OrderItemGetResponseDto = {
-    id: string;
-    name: string;
-    productGroupId?: string | null;
-    productGroupName?: string | null;
-    quantity: number;
-    unitPrice?: number | null;
-};
-
-export type OrderGetResponseDto = {
-    id: string;
-    code: string;
-    customerId: string;
-    customerName?: string | null;
-    customerPhone?: string | null;
-    /**
-     * Minor units
-     */
-    total: number;
-    currency: string;
-    status: 'PENDING' | 'CONFIRMED' | 'CANCELLED';
-    source: 'CHAT' | 'MANUAL' | 'IMPORT';
-    orderedAt: string;
-    confirmedAt?: {
-        [key: string]: unknown;
-    } | null;
-    note?: string | null;
-    conversationId?: string | null;
-    items: Array<OrderItemGetResponseDto>;
-    createdAt: string;
-    updatedAt?: string;
-};
-
-export type OrderItemRequestDto = {
-    name: string;
-    productGroupId?: string | null;
-    quantity: number;
-    /**
-     * Price of one unit in minor units
-     */
-    unitPrice?: number | null;
-};
-
 export type OrderCreateRequestDto = {
     customerId: string;
     /**
@@ -6886,6 +6896,71 @@ export type OrderCreateRequestDto = {
      */
     orderedAt?: string;
     note?: string;
+};
+
+export type OrderImportInvalidRowResponseDto = {
+    /**
+     * Row number in the file, from 1
+     */
+    row: number;
+    reason: 'missingPhone' | 'badDate' | 'badNumber' | 'empty' | 'customerLimit' | 'failed';
+};
+
+export type OrderImportResponseDto = {
+    /**
+     * True when nothing was written
+     */
+    dryRun: boolean;
+    /**
+     * Orders imported, or that would be
+     */
+    orders: number;
+    /**
+     * Orders whose code already exists
+     */
+    skipped: number;
+    /**
+     * Customers created from unknown phones
+     */
+    newCustomers: number;
+    /**
+     * Product groups created
+     */
+    newGroups: Array<string>;
+    invalidRows: Array<OrderImportInvalidRowResponseDto>;
+};
+
+export type OrderImportRowRequestDto = {
+    code?: string;
+    phone?: string;
+    name?: string;
+    item?: string;
+    group?: string;
+    quantity?: string;
+    /**
+     * Price of one unit, a whole amount
+     */
+    unitPrice?: string;
+    /**
+     * Order total, a whole amount
+     */
+    total?: string;
+    /**
+     * ISO date or dd/mm/yyyy, optionally with hh:mm
+     */
+    orderedAt?: string;
+    /**
+     * Defaults to CONFIRMED
+     */
+    status?: 'PENDING' | 'CONFIRMED';
+};
+
+export type OrderImportRequestDto = {
+    rows: Array<OrderImportRowRequestDto>;
+    /**
+     * Count what would be imported without writing anything
+     */
+    dryRun?: boolean;
 };
 
 export type OrderUpdateRequestDto = {
@@ -11632,6 +11707,79 @@ export type CustomerMarketingSystemControllerSetPermissionV1Data = {
 export type CustomerMarketingSystemControllerSetPermissionV1Responses = {
     200: unknown;
 };
+
+export type OrderSystemControllerDraftV1Data = {
+    body: OrderSystemDraftRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        customerId: string;
+    };
+    query?: never;
+    url: '/api/v1/system/customers/{customerId}/orders/draft';
+};
+
+export type OrderSystemControllerDraftV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type OrderSystemControllerDraftV1Error = OrderSystemControllerDraftV1Errors[keyof OrderSystemControllerDraftV1Errors];
+
+export type OrderSystemControllerDraftV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: OrderGetResponseDto;
+    };
+};
+
+export type OrderSystemControllerDraftV1Response = OrderSystemControllerDraftV1Responses[keyof OrderSystemControllerDraftV1Responses];
 
 export type FollowupSystemControllerListV1Data = {
     body?: never;
@@ -34015,6 +34163,85 @@ export type OrderWorkspaceControllerUpdateV1Responses = {
 };
 
 export type OrderWorkspaceControllerUpdateV1Response = OrderWorkspaceControllerUpdateV1Responses[keyof OrderWorkspaceControllerUpdateV1Responses];
+
+export type OrderWorkspaceControllerImportV1Data = {
+    body: OrderImportRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/orders/import';
+};
+
+export type OrderWorkspaceControllerImportV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type OrderWorkspaceControllerImportV1Error = OrderWorkspaceControllerImportV1Errors[keyof OrderWorkspaceControllerImportV1Errors];
+
+export type OrderWorkspaceControllerImportV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: OrderImportResponseDto;
+    };
+};
+
+export type OrderWorkspaceControllerImportV1Response = OrderWorkspaceControllerImportV1Responses[keyof OrderWorkspaceControllerImportV1Responses];
 
 export type OrderWorkspaceControllerConfirmV1Data = {
     body?: never;

@@ -6,6 +6,7 @@ import { ConversationActivityEntity } from '@app/modules/conversation/repository
 import { ConversationReadEntity } from '@app/modules/conversation/repository/entities/conversation-read.entity';
 import { ConversationEntity } from '@app/modules/conversation/repository/entities/conversation.entity';
 import { MessageEntity } from '@app/modules/conversation/repository/entities/message.entity';
+import { ProductGroupRepository } from '@app/modules/order/repository/repositories/product-group.repository';
 import { FollowupEntity } from '@app/modules/platform/repository/entities/followup.entity';
 import { ToolInvocationEntity } from '@app/modules/tool/repository/entities/tool-invocation.entity';
 import {
@@ -176,10 +177,16 @@ export class CustomerRepository extends DatabaseRepository<CustomerEntity> {
                     workspace: workspaceId,
                 });
             }
+            // Their orders go with them (FK cascade), which changes the
+            // learned repurchase cycle of every group they bought from.
+            const productGroups = new ProductGroupRepository(em);
+            const groupIds =
+                await productGroups.groupIdsOfCustomers(customerIds);
             await em.nativeDelete(CustomerEntity, {
                 id: ids,
                 workspace: workspaceId,
             });
+            await productGroups.refreshLearnedRepurchaseDays(groupIds);
 
             const erased: ICustomerErasure = {
                 customerIds,

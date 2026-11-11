@@ -4,6 +4,8 @@ import { FacebookModule } from '@app/common/facebook/facebook.module';
 import { AuthModule } from '@app/modules/auth/auth.module';
 import { ConversationModule } from '@app/modules/conversation/conversation.module';
 import { CustomerModule } from '@app/modules/customer/customer.module';
+import { OrderSystemController } from '@app/modules/order/controllers/order.system.controller';
+import { OrderModule } from '@app/modules/order/order.module';
 import { Module } from '@nestjs/common';
 import { ApiKeyModule } from 'src/modules/api-key/api-key.module';
 import { CountrySystemController } from 'src/modules/country/controllers/country.system.controller';
@@ -37,6 +39,7 @@ import { CustomerMarketingSystemController } from 'src/modules/customer/controll
         CustomerSystemController,
         CustomerTagSystemController,
         CustomerMarketingSystemController,
+        OrderSystemController,
         FollowupSystemController,
         PocSystemController,
     ],
@@ -55,6 +58,7 @@ import { CustomerMarketingSystemController } from 'src/modules/customer/controll
         FacebookActivityModule,
         AuthModule,
         CustomerModule,
+        OrderModule,
         ConversationModule,
         PlatformModule,
     ],

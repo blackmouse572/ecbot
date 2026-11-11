@@ -87,6 +87,25 @@ export class ProductGroupService {
         return group;
     }
 
+    /**
+     * The group an item belongs to when nobody picked one: the longest group
+     * name found in the item name, ignoring case ("Kem chống nắng SPF50" is in
+     * "Kem chống nắng").
+     */
+    matchItemName(
+        itemName: string,
+        groups: ProductGroupEntity[]
+    ): ProductGroupEntity | undefined {
+        const name = itemName.toLocaleLowerCase('vi');
+        let best: ProductGroupEntity | undefined;
+        for (const group of groups) {
+            const groupName = group.name.toLocaleLowerCase('vi');
+            const longer = !best || group.name.length > best.name.length;
+            if (name.includes(groupName) && longer) best = group;
+        }
+        return best;
+    }
+
     /** Recompute the learned repurchase cycle of each group from its orders. */
     refreshLearnedCycles(ids: string[]): Promise<void> {
         return this.productGroupRepository.refreshLearnedRepurchaseDays(ids);

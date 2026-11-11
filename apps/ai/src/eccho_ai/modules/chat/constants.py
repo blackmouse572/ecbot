@@ -34,6 +34,7 @@ SYSTEM_TOOL_KINDS = {
     "schedule_followup": "followup",
     "list_pending_followups": "followup",
     "cancel_followup": "followup",
+    "record_order": "customer",
     "send_image": "image",
     "send_media": "image",
 }

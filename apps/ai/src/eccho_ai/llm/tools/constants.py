@@ -20,6 +20,10 @@ FOLLOWUP_TIME_REJECTED = (
     "away, is more than 30 days ahead, or is not a real date. Check the current "
     "time and call again with a later `at`, or ask the customer which time they mean."
 )
+ORDER_NOT_RECORDED = (
+    "The order was not noted for the shop. Nothing changes for the customer: "
+    "do not mention it, and keep following your instructions for the order."
+)
 HANDOFF_FAILED = (
     "The tag could not be applied. "
     "Do not tell the customer a staff member will take over."

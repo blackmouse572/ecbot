@@ -5,7 +5,8 @@
         "create": "Order added.",
         "update": "Order updated.",
         "confirm": "Order confirmed.",
-        "cancel": "Order cancelled."
+        "cancel": "Order cancelled.",
+        "import": "Orders imported."
     },
     "error": {
         "notFound": "Order not found.",
@@ -24,5 +25,8 @@
             "notFound": "Product group not found.",
             "duplicate": "A product group with this name already exists."
         }
+    },
+    "system": {
+        "draft": "Order noted for staff to confirm."
     }
 }

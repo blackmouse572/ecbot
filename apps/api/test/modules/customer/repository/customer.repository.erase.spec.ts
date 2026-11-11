@@ -7,6 +7,8 @@ import { CustomerMergeSuggestionEntity } from '@app/modules/customer/repository/
 import { CustomerTagAssignmentEntity } from '@app/modules/customer/repository/entities/customer-tag-assignment.entity';
 import { CustomerEntity } from '@app/modules/customer/repository/entities/customer.entity';
 import { CustomerRepository } from '@app/modules/customer/repository/repositories/customer.repository';
+import { OrderItemEntity } from '@app/modules/order/repository/entities/order-item.entity';
+import { ProductGroupRepository } from '@app/modules/order/repository/repositories/product-group.repository';
 import { FollowupEntity } from '@app/modules/platform/repository/entities/followup.entity';
 import { ToolInvocationEntity } from '@app/modules/tool/repository/entities/tool-invocation.entity';
 import { EntityManager } from '@mikro-orm/postgresql';
@@ -195,6 +197,35 @@ describe('CustomerRepository data subject scope', () => {
             );
 
             expect(beforeCommit).toHaveBeenCalledWith(result, tem);
+        });
+
+        it('refreshes the learned cycles of the groups the customer bought from, after the delete', async () => {
+            queue(CustomerEntity, [{ id: 'cust-1' }, { id: 'cust-old' }]);
+            queue(OrderItemEntity, [
+                { productGroup: { id: 'g1' } },
+                { productGroup: { id: 'g1' } },
+                { productGroup: { id: 'g2' } },
+            ]);
+            const refresh = jest
+                .spyOn(
+                    ProductGroupRepository.prototype,
+                    'refreshLearnedRepurchaseDays'
+                )
+                .mockImplementation(async () => {
+                    expect(tem.nativeDelete).toHaveBeenCalledWith(
+                        CustomerEntity,
+                        expect.anything()
+                    );
+                });
+
+            await repo.eraseInWorkspace('cust-1', 'ws-1');
+
+            expect(findWhere(OrderItemEntity)[0]).toEqual({
+                order: { customer: { $in: ['cust-1', 'cust-old'] } },
+                productGroup: { $ne: null },
+            });
+            expect(refresh).toHaveBeenCalledWith(['g1', 'g2']);
+            refresh.mockRestore();
         });
 
         it('rolls back when beforeCommit throws', async () => {
