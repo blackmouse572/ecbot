@@ -1,4 +1,4 @@
-import { readdirSync } from 'fs';
+import { readdirSync, statSync } from 'fs';
 import { join } from 'path';
 
 // Every in-process cron must fire only at minute :00 or :30. Production
@@ -6,13 +6,21 @@ import { join } from 'path';
 // inside the api, which uptime checks keep awake. A cron that queries the
 // database more often, or at odd minutes, wakes the database again before it
 // can suspend and burns the monthly compute allowance (November 2026).
+//
+// This applies to every in-process cron, not only the ones that touch the
+// database. Crons live in `*.scheduler.ts` files, the convention this walk
+// relies on, and it follows symlinks so a linked `src/ee` overlay is covered.
 const ALLOWED_MINUTES = new Set([0, 30]);
 const SRC = join(__dirname, '../../../src');
 
 function schedulerFiles(dir: string): string[] {
     return readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
         const path = join(dir, entry.name);
-        if (entry.isDirectory()) return schedulerFiles(path);
+        const isDir = entry.isSymbolicLink()
+            ? statSync(path).isDirectory()
+            : entry.isDirectory();
+
+        if (isDir) return schedulerFiles(path);
         return entry.name.endsWith('.scheduler.ts') ? [path] : [];
     });
 }
@@ -27,7 +35,14 @@ function expandField(field: string, max: number): number[] {
                   ? range.split('-').map(Number)
                   : [Number(range), part.includes('/') ? max : Number(range)];
         const values: number[] = [];
+
         for (let v = from; v <= to; v += Number(step)) values.push(v);
+
+        // Fail closed: a field we can't read must not pass as "no minutes".
+        if (!values.length || values.some(Number.isNaN)) {
+            throw new Error(`Unreadable cron field "${field}"`);
+        }
+
         return values;
     });
 }
@@ -35,9 +50,15 @@ function expandField(field: string, max: number): number[] {
 function cronMinutes(cronTime: string): number[] {
     const fields = cronTime.trim().split(/\s+/);
 
+    if (fields.length !== 5 && fields.length !== 6) {
+        throw new Error(`Not a cron expression: "${cronTime}"`);
+    }
+
     // Six fields start with seconds, which must be one fixed value.
     if (fields.length === 6) {
-        expect(expandField(fields[0], 59)).toHaveLength(1);
+        if (expandField(fields[0], 59).length !== 1) {
+            throw new Error(`Fires more than once a minute: "${cronTime}"`);
+        }
 
         return expandField(fields[1], 59);
     }
@@ -54,7 +75,7 @@ function collectCrons(): Array<[string, string]> {
         return exported
             .filter(
                 (value): value is { name: string; prototype: object } =>
-                    typeof value === 'function'
+                    typeof value === 'function' && Boolean(value.prototype)
             )
             .flatMap(cls =>
                 Object.getOwnPropertyNames(cls.prototype)
