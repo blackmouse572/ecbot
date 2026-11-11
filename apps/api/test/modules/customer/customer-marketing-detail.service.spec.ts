@@ -9,6 +9,7 @@ import {
 import { CustomerMarketingStateEntity } from '../../../src/modules/customer/repository/entities/customer-marketing-state.entity';
 import { CustomerMarketingService } from '../../../src/modules/customer/services/customer-marketing.service';
 import { ConversationRepository } from '../../../src/modules/conversation/repository/repositories/conversation.repository';
+import { PlatformAdapterRegistry } from '../../../src/modules/platform/services/platform-adapter.registry';
 
 // What the app reads about a Customer's marketing labels: the "why" behind
 // each layer, the free-message window per channel, the summary on list rows,
@@ -54,9 +55,19 @@ function makeHarness(opts: {
     const conversationRepository = {
         lastInboundByChannel: jest.fn(async () => opts.lastInbound ?? []),
     };
+    // Only Messenger has a free window in these tests.
+    const platformRegistry = {
+        has: (type: ENUM_ACCOUNT_TYPE) =>
+            type === ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+        get: () => ({ capabilities: { freeMessageWindowHours: 24 } }),
+    };
     const moduleRef = {
         get: jest.fn((token: any) =>
-            token === ConversationRepository ? conversationRepository : null
+            token === ConversationRepository
+                ? conversationRepository
+                : token === PlatformAdapterRegistry
+                  ? platformRegistry
+                  : null
         ),
     };
     const service = new CustomerMarketingService(

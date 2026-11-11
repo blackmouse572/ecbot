@@ -65,6 +65,7 @@ export class InstagramPlatformAdapter extends PlatformAdapter {
         deleteMessage: false,
         reactions: { inbound: true, outbound: true },
         typing: true,
+        freeMessageWindowHours: 24,
         markRead: true,
         // Instagram DMs take JPEG and PNG photos but no documents.
         uploads: uploadLimits(['image/jpeg', 'image/png'], false),

@@ -7,24 +7,39 @@ import { customerMarketingFreeWindows } from '../../../src/modules/customer/util
 const HOUR = 3_600_000;
 const now = new Date('2026-11-11T10:00:00Z');
 const ago = (hours: number) => new Date(now.getTime() - hours * HOUR);
+// Stands in for each channel adapter's freeMessageWindowHours.
+const HOURS: Partial<Record<ENUM_ACCOUNT_TYPE, number | null>> = {
+    [ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE]: 24,
+    [ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE]: 24,
+    [ENUM_ACCOUNT_TYPE.WHATSAPP_BUSINESS]: 24,
+    [ENUM_ACCOUNT_TYPE.ZALO_PAGE]: 48,
+    [ENUM_ACCOUNT_TYPE.TELEGRAM_BOT]: null,
+};
+const windowHours = (channel: ENUM_ACCOUNT_TYPE) => HOURS[channel];
 
 describe('customerMarketingFreeWindows', () => {
-    it('gives Messenger, Instagram and WhatsApp 24 hours and Zalo OA 48', () => {
-        const windows = customerMarketingFreeWindows([
-            {
-                channel: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
-                lastInboundAt: ago(18),
-            },
-            {
-                channel: ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE,
-                lastInboundAt: ago(30),
-            },
-            {
-                channel: ENUM_ACCOUNT_TYPE.WHATSAPP_BUSINESS,
-                lastInboundAt: ago(1),
-            },
-            { channel: ENUM_ACCOUNT_TYPE.ZALO_PAGE, lastInboundAt: ago(30) },
-        ]);
+    it("counts each channel's hours from the last message, newest first", () => {
+        const windows = customerMarketingFreeWindows(
+            [
+                {
+                    channel: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+                    lastInboundAt: ago(18),
+                },
+                {
+                    channel: ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE,
+                    lastInboundAt: ago(30),
+                },
+                {
+                    channel: ENUM_ACCOUNT_TYPE.WHATSAPP_BUSINESS,
+                    lastInboundAt: ago(1),
+                },
+                {
+                    channel: ENUM_ACCOUNT_TYPE.ZALO_PAGE,
+                    lastInboundAt: ago(30),
+                },
+            ],
+            windowHours
+        );
 
         expect(windows).toEqual([
             {
@@ -52,12 +67,15 @@ describe('customerMarketingFreeWindows', () => {
 
     it('keeps Telegram open with no end', () => {
         expect(
-            customerMarketingFreeWindows([
-                {
-                    channel: ENUM_ACCOUNT_TYPE.TELEGRAM_BOT,
-                    lastInboundAt: ago(500),
-                },
-            ])
+            customerMarketingFreeWindows(
+                [
+                    {
+                        channel: ENUM_ACCOUNT_TYPE.TELEGRAM_BOT,
+                        lastInboundAt: ago(500),
+                    },
+                ],
+                windowHours
+            )
         ).toEqual([
             {
                 channel: ENUM_ACCOUNT_TYPE.TELEGRAM_BOT,
@@ -69,20 +87,23 @@ describe('customerMarketingFreeWindows', () => {
 
     it('leaves out channels with no free route for offers', () => {
         expect(
-            customerMarketingFreeWindows([
-                {
-                    channel: ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
-                    lastInboundAt: ago(1),
-                },
-                {
-                    channel: ENUM_ACCOUNT_TYPE.API_CHANNEL,
-                    lastInboundAt: ago(1),
-                },
-                {
-                    channel: ENUM_ACCOUNT_TYPE.THREADS_ACCOUNT,
-                    lastInboundAt: ago(1),
-                },
-            ])
+            customerMarketingFreeWindows(
+                [
+                    {
+                        channel: ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
+                        lastInboundAt: ago(1),
+                    },
+                    {
+                        channel: ENUM_ACCOUNT_TYPE.API_CHANNEL,
+                        lastInboundAt: ago(1),
+                    },
+                    {
+                        channel: ENUM_ACCOUNT_TYPE.THREADS_ACCOUNT,
+                        lastInboundAt: ago(1),
+                    },
+                ],
+                windowHours
+            )
         ).toEqual([]);
     });
 });

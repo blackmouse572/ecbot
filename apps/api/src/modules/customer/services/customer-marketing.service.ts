@@ -1,6 +1,8 @@
+import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { IDatabaseFindAllOptions } from '@app/common/database/interfaces/database.interface';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '@app/common/pagination/enums/pagination.enum';
 import { ConversationRepository } from '@app/modules/conversation/repository/repositories/conversation.repository';
+import { PlatformAdapterRegistry } from '@app/modules/platform/services/platform-adapter.registry';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { EntityManager } from '@mikro-orm/postgresql';
 import {
@@ -141,7 +143,10 @@ export class CustomerMarketingService {
                 stageEvent,
                 permissionEvent,
                 hostileEvent,
-                freeWindows: customerMarketingFreeWindows(lastInbound),
+                freeWindows: customerMarketingFreeWindows(
+                    lastInbound,
+                    channel => this.freeMessageWindowHours(channel)
+                ),
             },
             { excludeExtraneousValues: true }
         );
@@ -491,6 +496,19 @@ export class CustomerMarketingService {
             em
         );
         return state;
+    }
+
+    // Each channel's adapter defines its window. Resolved lazily: the
+    // platform module already depends on this one.
+    private freeMessageWindowHours(
+        channel: ENUM_ACCOUNT_TYPE
+    ): number | null | undefined {
+        const registry = this.moduleRef.get(PlatformAdapterRegistry, {
+            strict: false,
+        });
+        return registry.has(channel)
+            ? registry.get(channel).capabilities.freeMessageWindowHours
+            : undefined;
     }
 
     private isDormant(state: CustomerMarketingStateEntity): boolean {

@@ -68,6 +68,7 @@ export class WhatsAppPlatformAdapter extends PlatformAdapter {
         deleteMessage: false,
         reactions: { inbound: true, outbound: true },
         typing: false,
+        freeMessageWindowHours: 24,
         markRead: false,
         // WhatsApp takes JPEG and PNG images up to 5 MB and documents up to 100 MB.
         uploads: uploadLimits(['image/jpeg', 'image/png'], true),
