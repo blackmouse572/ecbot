@@ -496,6 +496,11 @@ function getRouteMaps(): RouteObject[] {
                       lazy: () => import("./orders/order-create"),
                     },
                     {
+                      path: "import",
+                      ErrorBoundary: ErrorBoundary,
+                      lazy: () => import("./orders/order-import"),
+                    },
+                    {
                       path: ":orderId",
                       ErrorBoundary: ErrorBoundary,
                       lazy: () => import("./orders/order-detail"),

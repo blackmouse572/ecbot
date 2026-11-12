@@ -3580,13 +3580,20 @@
         "name": "Nhóm hàng",
         "inUse": "Chu kỳ đang dùng",
         "yours": "Bạn đặt",
-        "learned": "Ecbot học được"
+        "learned": "Ecbot học được",
+        "orders": "Đơn đã xác nhận",
+        "customers": "Khách đã mua"
       },
       "days_one": "{{count}} ngày",
       "days_other": "{{count}} ngày",
       "none": "Chưa có",
       "setCycle": "Đặt chu kỳ",
       "notLearned": "Chưa đủ lần mua lại",
+      "learnsNext": "Đủ lần mua lại, chu kỳ sẽ cập nhật ở đơn xác nhận tới",
+      "fromPairs_one": "từ {{count}} lần mua lại",
+      "fromPairs_other": "từ {{count}} lần mua lại",
+      "needPairs_one": "Cần thêm {{count}} lần mua lại",
+      "needPairs_other": "Cần thêm {{count}} lần mua lại",
       "howLearned": "Ecbot học chu kỳ từ số ngày giữa hai lần mua cùng nhóm của một khách, lấy số ở giữa khi có từ 5 lần mua lại trở lên. Chưa đủ thì dùng số bạn đặt. Đơn huỷ và đơn chờ xác nhận không được tính.",
       "delete": {
         "title": "Xoá nhóm {{name}}?",
@@ -3610,6 +3617,97 @@
           "nameTaken": "Đã có nhóm tên này"
         }
       }
+    },
+    "import": {
+      "open": "Nhập file",
+      "title": "Nhập đơn từ file",
+      "steps": {
+        "file": "Chọn file",
+        "map": "Ghép cột",
+        "done": "Nhập"
+      },
+      "file": {
+        "description": "Chọn file CSV xuất từ Excel, Google Sheets hay trang quản lý của sàn. Mỗi dòng là một sản phẩm trong một đơn.",
+        "label": "Kéo file vào đây hoặc bấm để chọn",
+        "hint": "File .csv, dòng đầu là tên các cột",
+        "empty": "File này không có dòng đơn nào.",
+        "meta": "{{rows}} dòng, {{columns}} cột",
+        "change": "Đổi file"
+      },
+      "template": {
+        "title": "File mẫu",
+        "description": "Tải file mẫu để xem Ecbot đọc những cột nào. Các dòng cùng mã đơn gộp thành một đơn.",
+        "sample": "3 đơn mẫu, CSV"
+      },
+      "map": {
+        "description": "Ghép mỗi cột trong file với một thông tin của đơn. Ecbot đã đoán sẵn, bạn chỉ cần kiểm lại.",
+        "columns": {
+          "file": "Cột trong file",
+          "field": "Thông tin của đơn",
+          "sample": "Dòng đầu tiên"
+        },
+        "skip": "Bỏ qua cột này",
+        "noStatus": "Không có cột trạng thái nên mọi đơn được tính là đã xác nhận.",
+        "withStatus": "Đơn chờ xác nhận được nhập ở trạng thái chờ, đơn đã huỷ được bỏ qua.",
+        "sameCode": "Nhiều dòng cùng mã đơn được gộp thành một đơn nhiều sản phẩm.",
+        "needPhone": "Ghép một cột với Số điện thoại khách để Ecbot biết mỗi dòng là đơn của ai.",
+        "needItem": "Ghép một cột với Tên sản phẩm hoặc Tổng tiền đơn."
+      },
+      "fields": {
+        "code": "Mã đơn",
+        "phone": "Số điện thoại khách",
+        "name": "Tên khách",
+        "item": "Tên sản phẩm",
+        "group": "Nhóm hàng",
+        "quantity": "Số lượng",
+        "unitPrice": "Đơn giá",
+        "total": "Tổng tiền đơn",
+        "orderedAt": "Ngày đặt",
+        "status": "Trạng thái"
+      },
+      "preview": {
+        "title": "Ecbot sẽ nhập",
+        "checking": "Đang kiểm tra file"
+      },
+      "summary": {
+        "orders": "đơn mới",
+        "skipped": "đơn trùng mã, bỏ qua",
+        "newCustomers": "khách mới",
+        "newGroups": "nhóm hàng mới",
+        "newGroupsNamed": "nhóm hàng mới: {{names}}"
+      },
+      "invalid": {
+        "rows_one": "{{count}} dòng {{reason}}",
+        "rows_other": "{{count}} dòng {{reason}}",
+        "count_one": "{{count}} dòng",
+        "count_other": "{{count}} dòng",
+        "after": "sẽ không được nhập.",
+        "afterDone": "không được nhập.",
+        "show_one": "Xem {{count}} dòng",
+        "show_other": "Xem {{count}} dòng",
+        "hide": "Ẩn",
+        "line": "Dòng {{line}}"
+      },
+      "reasons": {
+        "missingPhone": "thiếu số điện thoại",
+        "badDate": "có ngày không đọc được",
+        "badNumber": "có số không đọc được",
+        "empty": "không có sản phẩm hay tổng tiền",
+        "customerLimit": "vượt số khách gói của bạn cho phép",
+        "failed": "lưu bị lỗi",
+        "cancelled": "là đơn đã huỷ"
+      },
+      "submit_one": "Nhập {{count}} đơn",
+      "submit_other": "Nhập {{count}} đơn",
+      "nothing": "Không có đơn mới nào để nhập.",
+      "done": {
+        "title_one": "Đã nhập {{count}} đơn",
+        "title_other": "Đã nhập {{count}} đơn",
+        "description": "Đơn đã xác nhận giờ được tính vào chu kỳ mua lại của từng nhóm hàng.",
+        "view": "Xem đơn hàng"
+      },
+      "partial_one": "Nhập dừng giữa chừng, đã nhập {{count}} đơn. Nhập lại file này sẽ bỏ qua các đơn có mã đã nhập.",
+      "partial_other": "Nhập dừng giữa chừng, đã nhập {{count}} đơn. Nhập lại file này sẽ bỏ qua các đơn có mã đã nhập."
     }
   },
   "customerMarketing": {

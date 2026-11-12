@@ -55,3 +55,15 @@ export const OrderDocQueryFilters = [
         description: 'Only orders with an item in this product group',
     },
 ];
+
+export const ProductGroupDocQueryStats = [
+    {
+        name: 'withStats',
+        allowEmptyValue: true,
+        required: false,
+        type: 'boolean',
+        example: true,
+        description:
+            'Add confirmedOrders, customers and repurchasePairs to each group',
+    },
+];

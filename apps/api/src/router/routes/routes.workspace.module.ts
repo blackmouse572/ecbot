@@ -64,6 +64,7 @@ import { OrderModule } from '@app/modules/order/order.module';
 import { KnowledgeBaseServicesModule } from '../../modules/knowledge-base/services/services.module';
 
 import { CustomerMarketingWorkspaceController } from '@app/modules/customer/controllers/customer-marketing.workspace.controller';
+import { CustomerMarketingBackfillWorkspaceController } from '@app/modules/customer/controllers/customer-marketing-backfill.workspace.controller';
 import { CustomerProductReactionWorkspaceController } from '@app/modules/customer/controllers/customer-product-reaction.workspace.controller';
 @Module({
     controllers: [
@@ -87,6 +88,7 @@ import { CustomerProductReactionWorkspaceController } from '@app/modules/custome
         ExportWorkspaceController,
         ContactPointWorkspaceController,
         CustomerTagWorkspaceController,
+        CustomerMarketingBackfillWorkspaceController,
         CustomerMarketingWorkspaceController,
         CustomerProductReactionWorkspaceController,
         CustomerTagAssignmentWorkspaceController,

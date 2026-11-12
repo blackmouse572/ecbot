@@ -34,6 +34,14 @@ export interface IProductGroupInput {
     defaultRepurchaseDays?: number | null;
 }
 
+/** What a group's confirmed orders add up to, for the groups tab. */
+export interface IProductGroupStats {
+    confirmedOrders: number;
+    customers: number;
+    // Gaps of a day or more between a customer's orders, what the cycle learns from.
+    repurchasePairs: number;
+}
+
 export interface IOrderCreateOptions {
     // An import refreshes the learned cycles once at the end instead.
     refreshCycles?: boolean;

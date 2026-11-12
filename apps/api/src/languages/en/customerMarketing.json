@@ -13,5 +13,10 @@
     "reaction": {
         "update": "Product group postponed for this customer.",
         "delete": "This customer can be offered the product group again."
+    },
+    "backfill": {
+        "get": "Backfill progress retrieved.",
+        "start": "Reading the last 90 days of conversations.",
+        "processed": "Backfill batch processed."
     }
 }

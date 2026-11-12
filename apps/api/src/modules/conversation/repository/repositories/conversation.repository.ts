@@ -83,6 +83,59 @@ export class ConversationRepository extends DatabaseRepository<ConversationEntit
     }
 
     /**
+     * The marketing backfill (#500): conversations with a Customer and a
+     * message since `since`, newest first, after the cursor.
+     */
+    async findForMarketingBackfill(
+        workspaceId: string,
+        since: Date,
+        cursor: { at: Date; id: string } | null,
+        limit: number
+    ): Promise<ConversationEntity[]> {
+        const after = cursor
+            ? {
+                  $or: [
+                      { lastMessageAt: { $lt: cursor.at } },
+                      { lastMessageAt: cursor.at, id: { $lt: cursor.id } },
+                  ],
+              }
+            : {};
+        return this.em.find(
+            ConversationEntity,
+            {
+                ...this.marketingBackfillFilter(workspaceId, since),
+                ...after,
+            },
+            {
+                orderBy: {
+                    lastMessageAt: QueryOrder.DESC,
+                    id: QueryOrder.DESC,
+                },
+                limit,
+            }
+        );
+    }
+
+    countForMarketingBackfill(
+        workspaceId: string,
+        since: Date
+    ): Promise<number> {
+        return this.em.count(
+            ConversationEntity,
+            this.marketingBackfillFilter(workspaceId, since)
+        );
+    }
+
+    private marketingBackfillFilter(workspaceId: string, since: Date) {
+        return {
+            chatbot: { workspace: workspaceId },
+            contactPoint: { customer: { $ne: null } },
+            lastMessageAt: { $gte: since },
+            deletedAt: null,
+        };
+    }
+
+    /**
      * Per customer: how many conversations they have and on which channels.
      * Joined via chatbots so only the given workspace is counted.
      */

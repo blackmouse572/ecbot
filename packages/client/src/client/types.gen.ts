@@ -1551,6 +1551,11 @@ export type CustomerTagClassifierTaskDto = {
     snapshotKey: string;
 };
 
+export type CustomerMarketingBackfillTaskDto = {
+    jobName: 'batch';
+    runId: string;
+};
+
 export type UserUpdateClaimUsernameRequestDto = {
     [key: string]: unknown;
 };
@@ -6732,6 +6737,26 @@ export type CustomerTagUpdateRequestDto = {
     notifiesTeam?: boolean;
 };
 
+export type MarketingBackfillGetResponseDto = {
+    status: 'NOT_STARTED' | 'RUNNING' | 'DONE' | 'STOPPED_BUDGET';
+    /**
+     * Conversations to read
+     */
+    total?: number;
+    /**
+     * Conversations read so far
+     */
+    processed?: number;
+    /**
+     * Running, but no batch has finished for 15 minutes. Starting it again resumes it.
+     */
+    stalled?: boolean;
+    startedAt?: string;
+    finishedAt?: {
+        [key: string]: unknown;
+    } | null;
+};
+
 export type MarketingEventGetResponseDto = {
     /**
      * Alias id of api key
@@ -7087,6 +7112,18 @@ export type ProductGroupGetResponseDto = {
      * The cycle in use: the learned one when there is enough data, else the default
      */
     repurchaseDays?: number | null;
+    /**
+     * Confirmed orders holding the group (list only)
+     */
+    confirmedOrders?: number;
+    /**
+     * Customers with a confirmed order of the group (list only)
+     */
+    customers?: number;
+    /**
+     * Gaps of a day or more between two confirmed orders of one customer; the cycle is learned from 5 (list only)
+     */
+    repurchasePairs?: number;
     createdAt: string;
     updatedAt?: string;
 };
@@ -12436,6 +12473,76 @@ export type CustomerTagClassifierTaskControllerHandleV1Responses = {
 };
 
 export type CustomerTagClassifierTaskControllerHandleV1Response = CustomerTagClassifierTaskControllerHandleV1Responses[keyof CustomerTagClassifierTaskControllerHandleV1Responses];
+
+export type CustomerMarketingBackfillTaskControllerHandleV1Data = {
+    body: CustomerMarketingBackfillTaskDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/system/tasks/customer-marketing-backfill';
+};
+
+export type CustomerMarketingBackfillTaskControllerHandleV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerMarketingBackfillTaskControllerHandleV1Error = CustomerMarketingBackfillTaskControllerHandleV1Errors[keyof CustomerMarketingBackfillTaskControllerHandleV1Errors];
+
+export type CustomerMarketingBackfillTaskControllerHandleV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerMarketingBackfillTaskControllerHandleV1Response = CustomerMarketingBackfillTaskControllerHandleV1Responses[keyof CustomerMarketingBackfillTaskControllerHandleV1Responses];
 
 export type UserUserControllerDeleteV1Data = {
     body?: never;
@@ -32901,6 +33008,150 @@ export type CustomerTagWorkspaceControllerUpdateV1Responses = {
 
 export type CustomerTagWorkspaceControllerUpdateV1Response = CustomerTagWorkspaceControllerUpdateV1Responses[keyof CustomerTagWorkspaceControllerUpdateV1Responses];
 
+export type CustomerMarketingBackfillWorkspaceControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/customers/marketing/backfill';
+};
+
+export type CustomerMarketingBackfillWorkspaceControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerMarketingBackfillWorkspaceControllerGetV1Error = CustomerMarketingBackfillWorkspaceControllerGetV1Errors[keyof CustomerMarketingBackfillWorkspaceControllerGetV1Errors];
+
+export type CustomerMarketingBackfillWorkspaceControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MarketingBackfillGetResponseDto;
+    };
+};
+
+export type CustomerMarketingBackfillWorkspaceControllerGetV1Response = CustomerMarketingBackfillWorkspaceControllerGetV1Responses[keyof CustomerMarketingBackfillWorkspaceControllerGetV1Responses];
+
+export type CustomerMarketingBackfillWorkspaceControllerStartV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/customers/marketing/backfill';
+};
+
+export type CustomerMarketingBackfillWorkspaceControllerStartV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type CustomerMarketingBackfillWorkspaceControllerStartV1Error = CustomerMarketingBackfillWorkspaceControllerStartV1Errors[keyof CustomerMarketingBackfillWorkspaceControllerStartV1Errors];
+
+export type CustomerMarketingBackfillWorkspaceControllerStartV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MarketingBackfillGetResponseDto;
+    };
+};
+
+export type CustomerMarketingBackfillWorkspaceControllerStartV1Response = CustomerMarketingBackfillWorkspaceControllerStartV1Responses[keyof CustomerMarketingBackfillWorkspaceControllerStartV1Responses];
+
 export type CustomerMarketingWorkspaceControllerGetV1Data = {
     body?: never;
     headers?: {
@@ -34689,6 +34940,10 @@ export type ProductGroupWorkspaceControllerListV1Data = {
         workspace: string;
     };
     query?: {
+        /**
+         * Add confirmedOrders, customers and repurchasePairs to each group
+         */
+        withStats?: boolean;
         /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
          */
