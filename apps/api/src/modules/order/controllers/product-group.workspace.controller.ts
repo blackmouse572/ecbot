@@ -21,13 +21,16 @@ import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/work
 import {
     Body,
     Controller,
+    DefaultValuePipe,
     Delete,
     Get,
     HttpCode,
     HttpStatus,
     Param,
+    ParseBoolPipe,
     Patch,
     Post,
+    Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { PaginationQuery } from 'src/common/pagination/decorators/pagination.decorator';
@@ -88,7 +91,9 @@ export class ProductGroupWorkspaceController {
             defaultOrderBy: 'name',
             defaultOrderDirection: ENUM_PAGINATION_ORDER_DIRECTION_TYPE.ASC,
         })
-        { _search, _limit, _offset, _order }: PaginationListDto
+        { _search, _limit, _offset, _order }: PaginationListDto,
+        @Query('withStats', new DefaultValuePipe(false), ParseBoolPipe)
+        withStats: boolean
     ): Promise<IResponsePaging<ProductGroupGetResponseDto>> {
         const find: Record<string, any> = { ..._search };
         const [groups, total] = await Promise.all([
@@ -98,12 +103,18 @@ export class ProductGroupWorkspaceController {
             }),
             this.productGroupService.getTotal(workspace.id, find),
         ]);
+        // Only the Nhóm hàng tab asks: the order form selects list plainly.
+        const stats = withStats
+            ? await this.productGroupService.statsOf(
+                  groups.map(group => group.id)
+              )
+            : undefined;
         return {
             _pagination: {
                 total,
                 totalPage: this.paginationService.totalPage(total, _limit),
             },
-            data: this.productGroupService.mapList(groups),
+            data: this.productGroupService.mapList(groups, stats),
         };
     }
 

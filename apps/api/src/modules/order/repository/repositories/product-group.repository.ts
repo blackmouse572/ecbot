@@ -3,6 +3,7 @@ import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import { ORDER_LEARNED_CYCLE_MIN_PAIRS } from '../../constants/order.constant';
 import { ENUM_ORDER_STATUS } from '../../enums/order.enum';
+import { IProductGroupStats } from '../../interfaces/order.interface';
 import { OrderItemEntity } from '../entities/order-item.entity';
 import { ProductGroupEntity } from '../entities/product-group.entity';
 
@@ -92,5 +93,53 @@ export class ProductGroupRepository extends DatabaseRepository<ProductGroupEntit
         const row = rows[0];
         if (!row || row.pairs < ORDER_LEARNED_CYCLE_MIN_PAIRS) return null;
         return row.median === null ? null : Math.round(Number(row.median));
+    }
+
+    /**
+     * Confirmed orders, distinct customers and repurchase pairs of each
+     * group, counted the way computeLearnedRepurchaseDays counts them. A
+     * group with no confirmed order is left out of the map.
+     */
+    async statsOf(ids: string[]): Promise<Map<string, IProductGroupStats>> {
+        if (!ids.length) return new Map();
+        const rows: {
+            group_id: string;
+            orders: number;
+            customers: number;
+            pairs: number;
+        }[] = await this.em.execute(
+            `with o as (
+                select distinct i.product_group_id as group_id, ord.id,
+                       ord.customer_id, ord.ordered_at
+                  from orders ord
+                  join order_items i on i.order_id = ord.id
+                 where i.product_group_id in (${ids.map(() => '?').join(', ')})
+                   and ord.status = ?
+                   and ord.deleted = false
+                   and i.deleted = false
+             ), gaps as (
+                select group_id, customer_id,
+                       extract(epoch from ordered_at - lag(ordered_at)
+                           over (partition by group_id, customer_id order by ordered_at)) / 86400 as days
+                  from o
+             )
+             select group_id,
+                    count(*)::int as orders,
+                    count(distinct customer_id)::int as customers,
+                    count(*) filter (where days >= 1)::int as pairs
+               from gaps
+              group by group_id`,
+            [...ids, ENUM_ORDER_STATUS.CONFIRMED]
+        );
+        return new Map(
+            rows.map(row => [
+                row.group_id,
+                {
+                    confirmedOrders: row.orders,
+                    customers: row.customers,
+                    repurchasePairs: row.pairs,
+                },
+            ])
+        );
     }
 }

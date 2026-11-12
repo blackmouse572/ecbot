@@ -3533,13 +3533,20 @@
         "name": "Product group",
         "inUse": "Cycle in use",
         "yours": "You set",
-        "learned": "Ecbot learned"
+        "learned": "Ecbot learned",
+        "orders": "Confirmed orders",
+        "customers": "Customers who bought"
       },
       "days_one": "{{count}} day",
       "days_other": "{{count}} days",
       "none": "None yet",
       "setCycle": "Set a cycle",
       "notLearned": "Not enough repurchases yet",
+      "learnsNext": "Enough repurchases, the cycle updates with the next confirmed order",
+      "fromPairs_one": "from {{count}} repurchase",
+      "fromPairs_other": "from {{count}} repurchases",
+      "needPairs_one": "{{count}} more repurchase needed",
+      "needPairs_other": "{{count}} more repurchases needed",
       "howLearned": "Ecbot learns the cycle from the days between two purchases in the same group by one customer, taking the middle value once there are 5 or more repurchases. Until then it uses the number you set. Cancelled and unconfirmed orders do not count.",
       "delete": {
         "title": "Delete group {{name}}?",
@@ -3563,6 +3570,97 @@
           "nameTaken": "A group with this name exists"
         }
       }
+    },
+    "import": {
+      "open": "Import file",
+      "title": "Import orders from a file",
+      "steps": {
+        "file": "Choose file",
+        "map": "Match columns",
+        "done": "Import"
+      },
+      "file": {
+        "description": "Choose a CSV file exported from Excel, Google Sheets or your marketplace dashboard. Each row is one product in an order.",
+        "label": "Drop a file here or click to choose",
+        "hint": "A .csv file with the column names on the first row",
+        "empty": "This file has no order rows.",
+        "meta": "{{rows}} rows, {{columns}} columns",
+        "change": "Change file"
+      },
+      "template": {
+        "title": "Import template",
+        "description": "Download the sample file to see which columns Ecbot reads. Rows with the same order code become one order.",
+        "sample": "3 sample orders, CSV"
+      },
+      "map": {
+        "description": "Match each column in the file to a detail of the order. Ecbot has guessed already, you only need to check.",
+        "columns": {
+          "file": "Column in the file",
+          "field": "Order detail",
+          "sample": "First row"
+        },
+        "skip": "Skip this column",
+        "noStatus": "There is no status column, so every order counts as confirmed.",
+        "withStatus": "Orders awaiting confirmation come in as pending, and cancelled orders are skipped.",
+        "sameCode": "Rows with the same order code become one order with several products.",
+        "needPhone": "Match a column to Customer phone so Ecbot knows whose order each row is.",
+        "needItem": "Match a column to Product name or Order total."
+      },
+      "fields": {
+        "code": "Order code",
+        "phone": "Customer phone",
+        "name": "Customer name",
+        "item": "Product name",
+        "group": "Product group",
+        "quantity": "Quantity",
+        "unitPrice": "Unit price",
+        "total": "Order total",
+        "orderedAt": "Order date",
+        "status": "Status"
+      },
+      "preview": {
+        "title": "Ecbot will import",
+        "checking": "Checking the file"
+      },
+      "summary": {
+        "orders": "new orders",
+        "skipped": "orders whose code is taken, skipped",
+        "newCustomers": "new customers",
+        "newGroups": "new product groups",
+        "newGroupsNamed": "new product groups: {{names}}"
+      },
+      "invalid": {
+        "rows_one": "{{count}} row {{reason}}",
+        "rows_other": "{{count}} rows {{reason}}",
+        "count_one": "{{count}} row",
+        "count_other": "{{count}} rows",
+        "after": "will not be imported.",
+        "afterDone": "were not imported.",
+        "show_one": "Show {{count}} row",
+        "show_other": "Show {{count}} rows",
+        "hide": "Hide",
+        "line": "Line {{line}}"
+      },
+      "reasons": {
+        "missingPhone": "missing a phone number",
+        "badDate": "with a date Ecbot cannot read",
+        "badNumber": "with a number Ecbot cannot read",
+        "empty": "with no product or total",
+        "customerLimit": "over your plan's customer limit",
+        "failed": "that failed to save",
+        "cancelled": "of cancelled orders"
+      },
+      "submit_one": "Import {{count}} order",
+      "submit_other": "Import {{count}} orders",
+      "nothing": "There are no new orders to import.",
+      "done": {
+        "title_one": "Imported {{count}} order",
+        "title_other": "Imported {{count}} orders",
+        "description": "Confirmed orders now count toward the repurchase cycle of each product group.",
+        "view": "View orders"
+      },
+      "partial_one": "The import stopped part way: {{count}} order was imported. Importing the file again skips orders whose code is already in.",
+      "partial_other": "The import stopped part way: {{count}} orders were imported. Importing the file again skips orders whose code is already in."
     }
   },
   "customerMarketing": {

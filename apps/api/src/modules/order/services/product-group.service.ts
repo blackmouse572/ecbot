@@ -6,9 +6,18 @@ import {
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { ProductGroupGetResponseDto } from '../dtos/response/product-group.get.response.dto';
-import { IProductGroupInput } from '../interfaces/order.interface';
+import {
+    IProductGroupInput,
+    IProductGroupStats,
+} from '../interfaces/order.interface';
 import { ProductGroupEntity } from '../repository/entities/product-group.entity';
 import { ProductGroupRepository } from '../repository/repositories/product-group.repository';
+
+const EMPTY_STATS: IProductGroupStats = {
+    confirmedOrders: 0,
+    customers: 0,
+    repurchasePairs: 0,
+};
 
 @Injectable()
 export class ProductGroupService {
@@ -111,11 +120,19 @@ export class ProductGroupService {
         return this.productGroupRepository.refreshLearnedRepurchaseDays(ids);
     }
 
-    mapGet(group: ProductGroupEntity): ProductGroupGetResponseDto {
+    statsOf(ids: string[]): Promise<Map<string, IProductGroupStats>> {
+        return this.productGroupRepository.statsOf(ids);
+    }
+
+    mapGet(
+        group: ProductGroupEntity,
+        stats?: IProductGroupStats
+    ): ProductGroupGetResponseDto {
         return plainToInstance(
             ProductGroupGetResponseDto,
             {
                 ...group,
+                ...stats,
                 repurchaseDays:
                     group.learnedRepurchaseDays ??
                     group.defaultRepurchaseDays ??
@@ -125,8 +142,17 @@ export class ProductGroupService {
         );
     }
 
-    mapList(groups: ProductGroupEntity[]): ProductGroupGetResponseDto[] {
-        return groups.map(group => this.mapGet(group));
+    mapList(
+        groups: ProductGroupEntity[],
+        stats?: Map<string, IProductGroupStats>
+    ): ProductGroupGetResponseDto[] {
+        // A group with no confirmed order is missing from the stats: zero.
+        return groups.map(group =>
+            this.mapGet(
+                group,
+                stats ? (stats.get(group.id) ?? EMPTY_STATS) : undefined
+            )
+        );
     }
 
     private async assertNameFree(
