@@ -4,6 +4,8 @@ import { ContactPointEntity } from './entities/contact-point.entity';
 import { CustomerMarketingStateEntity } from './entities/customer-marketing-state.entity';
 import { CustomerProductReactionEntity } from './entities/customer-product-reaction.entity';
 import { MarketingEventEntity } from './entities/marketing-event.entity';
+import { MarketingBackfillRunEntity } from './entities/marketing-backfill-run.entity';
+import { MarketingBackfillRunRepository } from './repositories/marketing-backfill-run.repository';
 import { CustomerMarketingStateRepository } from './repositories/customer-marketing-state.repository';
 import { CustomerProductReactionRepository } from './repositories/customer-product-reaction.repository';
 import { MarketingEventRepository } from './repositories/marketing-event.repository';
@@ -33,6 +35,7 @@ import { TrackedLinkRepository } from './repositories/tracked-link.repository';
             CustomerMarketingStateEntity,
             MarketingEventEntity,
             CustomerProductReactionEntity,
+            MarketingBackfillRunEntity,
             TrackedLinkEntity,
         ]),
     ],
@@ -46,6 +49,7 @@ import { TrackedLinkRepository } from './repositories/tracked-link.repository';
         CustomerMarketingStateRepository,
         MarketingEventRepository,
         CustomerProductReactionRepository,
+        MarketingBackfillRunRepository,
         TrackedLinkRepository,
     ],
     exports: [
@@ -58,6 +62,7 @@ import { TrackedLinkRepository } from './repositories/tracked-link.repository';
         CustomerMarketingStateRepository,
         MarketingEventRepository,
         CustomerProductReactionRepository,
+        MarketingBackfillRunRepository,
         TrackedLinkRepository,
     ],
 })

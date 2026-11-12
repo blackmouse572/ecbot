@@ -24,7 +24,10 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
     let service: CustomerTagClassifierTaskService;
 
     const conversationRepository = { findOneById: jest.fn() };
-    const messageRepository = { findByConversation: jest.fn() };
+    const messageRepository = {
+        findByConversation: jest.fn(),
+        findByConversationSince: jest.fn(),
+    };
     const customerRepository = { updateEntity: jest.fn() };
     const customerTagService = { findAllByWorkspace: jest.fn() };
     const customerTagAssignmentService = {
@@ -37,6 +40,10 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
             (date: Date | undefined, status: string) =>
                 `${date ? date.toISOString() : 'null'}:${status}`
         ),
+    };
+    const marketingSignalService = {
+        listProductGroups: jest.fn(),
+        apply: jest.fn(),
     };
     const httpService = { post: jest.fn() };
     const configService = {
@@ -87,6 +94,8 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
         ]);
         customerTagService.findAllByWorkspace.mockResolvedValue([]);
         customerTagAssignmentService.listByCustomer.mockResolvedValue([]);
+        marketingSignalService.listProductGroups.mockResolvedValue([]);
+        marketingSignalService.apply.mockResolvedValue(0);
         httpService.post.mockReturnValue(
             classifierResponse({
                 tags_to_add: [],
@@ -101,6 +110,7 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
             customerTagService as any,
             customerTagAssignmentService as any,
             classifierService as any,
+            marketingSignalService as any,
             httpService as any,
             configService as any
         );
@@ -114,6 +124,142 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
             Authorization: 'Bearer gcp-id-token',
             'X-Internal-Token': 'test-token',
             'Content-Type': 'application/json',
+        });
+    });
+
+    // #500: marketing signals come back from the same call.
+    it('sends the product groups and applies the signals against the messages sent', async () => {
+        const sentAt = new Date('2026-06-15T11:55:00Z');
+        messageRepository.findByConversation.mockResolvedValue([
+            {
+                id: 'msg-1',
+                authorType: ENUM_MESSAGE_AUTHOR.USER,
+                direction: ENUM_MESSAGE_DIRECTION.INBOUND,
+                text: 'serum để sau nha',
+                dateSent: sentAt,
+            },
+        ]);
+        marketingSignalService.listProductGroups.mockResolvedValue([
+            { id: 'pg-serum', name: 'Serum' },
+        ]);
+        const signals = [
+            {
+                kind: 'later',
+                product_group: 'Serum',
+                product_group_id: 'pg-serum',
+                defer_days: 60,
+                message_index: 0,
+                quote: 'serum để sau nha',
+            },
+        ];
+        httpService.post.mockReturnValue(
+            classifierResponse({ marketing_signals: signals })
+        );
+
+        await service.handle(dto() as any, 0);
+
+        const [, body] = httpService.post.mock.calls[0];
+        expect(body.product_groups).toEqual([
+            { id: 'pg-serum', name: 'Serum' },
+        ]);
+        expect(marketingSignalService.listProductGroups).toHaveBeenCalledWith(
+            'ws-1'
+        );
+        expect(marketingSignalService.apply).toHaveBeenCalledWith(
+            {
+                customerId: 'cust-1',
+                workspaceId: 'ws-1',
+                conversationId: 'conv-1',
+                messages: [{ id: 'msg-1', dateSent: sentAt }],
+            },
+            signals
+        );
+    });
+
+    it('applies no signals when an older AI service returns none', async () => {
+        await service.handle(dto() as any, 0);
+
+        expect(marketingSignalService.apply).toHaveBeenCalledWith(
+            expect.anything(),
+            []
+        );
+    });
+
+    // #500: the 90-day backfill reads marketing labels only.
+    describe('classifyMarketing', () => {
+        const since = new Date('2026-03-17T00:00:00Z');
+        const sentAt = new Date('2026-05-01T09:00:00Z');
+
+        beforeEach(() => {
+            messageRepository.findByConversationSince.mockResolvedValue([
+                {
+                    id: 'msg-9',
+                    authorType: ENUM_MESSAGE_AUTHOR.USER,
+                    direction: ENUM_MESSAGE_DIRECTION.INBOUND,
+                    text: 'serum giá sao shop',
+                    dateSent: sentAt,
+                },
+            ]);
+            marketingSignalService.listProductGroups.mockResolvedValue([
+                { id: 'pg-serum', name: 'Serum' },
+            ]);
+        });
+
+        it('sends only the messages in the window, with no tags, and applies the signals', async () => {
+            const signals = [
+                {
+                    kind: 'asked_price',
+                    product_group_id: 'pg-serum',
+                    message_index: 0,
+                    quote: 'serum giá sao shop',
+                },
+            ];
+            httpService.post.mockReturnValue(
+                classifierResponse({
+                    tags_to_add: ['VIP'],
+                    profile_summary: 'Old news.',
+                    marketing_signals: signals,
+                })
+            );
+
+            await service.classifyMarketing('conv-1', since);
+
+            expect(
+                messageRepository.findByConversationSince
+            ).toHaveBeenCalledWith('conv-1', since, 50);
+            const [, body] = httpService.post.mock.calls[0];
+            expect(body).toMatchObject({
+                available_tags: [],
+                current_tags: [],
+                product_groups: [{ id: 'pg-serum', name: 'Serum' }],
+            });
+            expect(body.recent_messages).toEqual([
+                {
+                    role: 'user',
+                    text: 'serum giá sao shop',
+                    ts: sentAt.toISOString(),
+                },
+            ]);
+            expect(marketingSignalService.apply).toHaveBeenCalledWith(
+                {
+                    customerId: 'cust-1',
+                    workspaceId: 'ws-1',
+                    conversationId: 'conv-1',
+                    messages: [{ id: 'msg-9', dateSent: sentAt }],
+                },
+                signals
+            );
+            // An old conversation never overwrites tags or the summary.
+            expect(customerTagAssignmentService.apply).not.toHaveBeenCalled();
+            expect(customerRepository.updateEntity).not.toHaveBeenCalled();
+        });
+
+        it('skips a conversation with no message in the window', async () => {
+            messageRepository.findByConversationSince.mockResolvedValue([]);
+
+            await service.classifyMarketing('conv-1', since);
+
+            expect(httpService.post).not.toHaveBeenCalled();
         });
     });
 
@@ -132,6 +278,7 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
         expect(customerTagAssignmentService.apply).not.toHaveBeenCalled();
         expect(customerTagAssignmentService.remove).not.toHaveBeenCalled();
         expect(customerRepository.updateEntity).not.toHaveBeenCalled();
+        expect(marketingSignalService.apply).not.toHaveBeenCalled();
     });
 
     it('filters handoff tags before calling the classifier and never assigns them', async () => {
@@ -419,6 +566,7 @@ describe('CustomerTagClassifierTaskService (#170 — Cloud Tasks handler)', () =
                 customerTagService as any,
                 customerTagAssignmentService as any,
                 classifierService as any,
+                marketingSignalService as any,
                 httpService as any,
                 configService as any,
                 meter as any

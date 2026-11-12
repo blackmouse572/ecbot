@@ -52,3 +52,9 @@ export const CUSTOMER_MARKETING_REASON_TRACKED_LINK = 'tracked_link';
 
 /** "Not now" from the agent pauses offers this long unless it says otherwise. */
 export const CUSTOMER_MARKETING_AGENT_PAUSE_DAYS = 30;
+
+/** "Để sau" from the classifier postpones a product group this long by default. */
+export const CUSTOMER_MARKETING_DEFER_DAYS = 60;
+
+/** An insult older than this does not mark the customer Khó chịu (Jaden, 2026-11-11). */
+export const CUSTOMER_MARKETING_HOSTILE_MAX_AGE_DAYS = 30;

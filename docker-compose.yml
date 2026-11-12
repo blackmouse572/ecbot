@@ -304,6 +304,7 @@ services:
       - -initial-queue=projects/eccho-dev/locations/asia-southeast1/queues/followup
       - -initial-queue=projects/eccho-dev/locations/asia-southeast1/queues/knowledge-ingest
       - -initial-queue=projects/eccho-dev/locations/asia-southeast1/queues/customer-tag-classifier
+      - -initial-queue=projects/eccho-dev/locations/asia-southeast1/queues/customer-marketing-backfill
       - -initial-queue=projects/eccho-dev/locations/asia-southeast1/queues/session
       - -initial-queue=projects/eccho-dev/locations/asia-southeast1/queues/inbound-event
       - -initial-queue=projects/eccho-dev/locations/asia-southeast1/queues/conversation-memory
