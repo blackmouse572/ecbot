@@ -35,6 +35,8 @@ const marketing: CustomerMarketingStateGetResponseDto = {
   permissionEvent: null,
   hostileEvent: null,
   freeWindows: [],
+  reactions: [],
+  firstSource: null,
 };
 
 const renderDrawer = () => {

@@ -1,5 +1,6 @@
 import {
     PaginationQuery,
+    PaginationQueryFilterEqual,
     PaginationQueryFilterInBoolean,
     PaginationQueryFilterInEnum,
 } from '@app/common/pagination/decorators/pagination.decorator';
@@ -98,12 +99,19 @@ export class CustomerClientController {
         )
         permission?: Record<string, any>,
         @PaginationQueryFilterInBoolean('dormant', [true, false])
-        dormant?: Record<string, any>
+        dormant?: Record<string, any>,
+        @PaginationQueryFilterEqual('source', { raw: true })
+        source?: Record<string, any>
     ): Promise<IResponsePaging<CustomerGetResponseDto>> {
         const find: Record<string, any> = {
             ..._search,
             ...this.marketingService.customerListFilter(
-                customerMarketingListFilterFromQuery(stage, permission, dormant)
+                customerMarketingListFilterFromQuery(
+                    stage,
+                    permission,
+                    dormant,
+                    source
+                )
             ),
         };
 

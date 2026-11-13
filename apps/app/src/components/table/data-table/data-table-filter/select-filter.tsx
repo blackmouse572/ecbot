@@ -22,6 +22,7 @@ interface SelectFilterProps extends IFilter {
   readonly?: boolean;
   multiple?: boolean;
   searchable?: boolean;
+  onSearchChange?: (value: string) => void;
 }
 
 const REMOVE_WHEN_EMPTY_DELAY_MS = 200;
@@ -36,6 +37,7 @@ export const SelectFilter = ({
   readonly,
   multiple,
   searchable,
+  onSearchChange,
   options,
   openOnMount,
 }: SelectFilterProps) => {
@@ -81,6 +83,7 @@ export const SelectFilter = ({
 
   const handleClearSearch = () => {
     setSearch(() => "");
+    onSearchChange?.("");
     searchRef?.focus();
   };
 
@@ -116,6 +119,10 @@ export const SelectFilter = ({
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
+    if (onSearchChange) {
+      onSearchChange(value);
+      return;
+    }
     const needle = value.toLowerCase();
     setFilteredOptions(
       needle

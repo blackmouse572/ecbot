@@ -131,7 +131,32 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
                 id: filter.dormant ? { $in: dormantIds } : { $nin: dormantIds },
             });
         }
+
+        if (filter.sourceId) {
+            const fromSource = this.customerIds({
+                $or: [
+                    { firstTrackedLink: filter.sourceId },
+                    { firstTrackedLink: { parent: filter.sourceId } },
+                ],
+            });
+
+            conditions.push({ id: { $in: fromSource } });
+        }
+
         return conditions.length ? { $and: conditions } : {};
+    }
+
+    /** Loads Nguồn đầu tiên: the link, its source and its channel. */
+    async populateFirstSource(
+        states: CustomerMarketingStateEntity[]
+    ): Promise<void> {
+        const withSource = states.filter(s => s.firstTrackedLink);
+
+        if (withSource.length === 0) return;
+        await this.em.populate(withSource, [
+            'firstTrackedLink.parent',
+            'firstTrackedLink.account',
+        ]);
     }
 
     /** Customers whose row matches, plus those without a row when the default matches. */

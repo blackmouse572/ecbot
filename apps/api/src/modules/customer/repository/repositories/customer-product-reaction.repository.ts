@@ -8,4 +8,14 @@ export class CustomerProductReactionRepository extends DatabaseRepository<Custom
     constructor(em: EntityManager) {
         super(em, CustomerProductReactionEntity);
     }
+
+    /** The "Tạm hoãn" still running, soonest end first, with the product group. */
+    findActiveByCustomer(
+        customerId: string
+    ): Promise<CustomerProductReactionEntity[]> {
+        return this.find(
+            { customer: customerId, until: { $gt: new Date() } },
+            { populate: ['productGroup'], orderBy: { until: 'ASC' } }
+        );
+    }
 }

@@ -53,8 +53,11 @@ import { CustomerEntity } from '../repository/entities/customer.entity';
 import { MarketingEventEntity } from '../repository/entities/marketing-event.entity';
 import { TrackedLinkEntity } from '../repository/entities/tracked-link.entity';
 import { CustomerMarketingStateRepository } from '../repository/repositories/customer-marketing-state.repository';
+import { CustomerProductReactionRepository } from '../repository/repositories/customer-product-reaction.repository';
 import { CustomerRepository } from '../repository/repositories/customer.repository';
 import { MarketingEventRepository } from '../repository/repositories/marketing-event.repository';
+import { customerProductReactionResponse } from '../utils/customer-product-reaction.util';
+import { customerMarketingFirstSource } from '../utils/customer-marketing-first-source.util';
 import { customerMarketingFreeWindows } from '../utils/customer-marketing-free-window.util';
 import { isMarketingOptOutMessage } from '../utils/customer-marketing-opt-out.util';
 
@@ -73,6 +76,7 @@ export class CustomerMarketingService {
         private readonly stateRepository: CustomerMarketingStateRepository,
         private readonly eventRepository: MarketingEventRepository,
         private readonly customerRepository: CustomerRepository,
+        private readonly reactionRepository: CustomerProductReactionRepository,
         private readonly moduleRef: ModuleRef
     ) {}
 
@@ -178,37 +182,48 @@ export class CustomerMarketingService {
         workspaceId: string
     ): Promise<CustomerMarketingStateGetResponseDto> {
         const state = await this.getState(customerId, workspaceId);
-        // Resolved lazily: the conversation module already depends on this one.
+
+        // Resolved lazily: the conversation module already depends on this
+        // one.
         const conversationRepository = this.moduleRef.get(
             ConversationRepository,
             { strict: false }
         );
-        const [stageEvent, permissionEvent, hostileEvent, lastInbound] =
-            await Promise.all([
-                this.latestEvent(
-                    customerId,
-                    workspaceId,
-                    ENUM_MARKETING_EVENT_KIND.STAGE,
-                    state.stage
-                ),
-                this.latestEvent(
-                    customerId,
-                    workspaceId,
-                    ENUM_MARKETING_EVENT_KIND.PERMISSION,
-                    state.permission
-                ),
-                state.hostile
-                    ? this.latestEvent(
-                          customerId,
-                          workspaceId,
-                          ENUM_MARKETING_EVENT_KIND.HOSTILE
-                      )
-                    : null,
-                conversationRepository.lastInboundByChannel(
-                    customerId,
-                    workspaceId
-                ),
-            ]);
+
+        const [
+            stageEvent,
+            permissionEvent,
+            hostileEvent,
+            lastInbound,
+            reactions,
+        ] = await Promise.all([
+            this.latestEvent(
+                customerId,
+                workspaceId,
+                ENUM_MARKETING_EVENT_KIND.STAGE,
+                state.stage
+            ),
+            this.latestEvent(
+                customerId,
+                workspaceId,
+                ENUM_MARKETING_EVENT_KIND.PERMISSION,
+                state.permission
+            ),
+            state.hostile
+                ? this.latestEvent(
+                      customerId,
+                      workspaceId,
+                      ENUM_MARKETING_EVENT_KIND.HOSTILE
+                  )
+                : null,
+            conversationRepository.lastInboundByChannel(
+                customerId,
+                workspaceId
+            ),
+            this.reactionRepository.findActiveByCustomer(customerId),
+            this.stateRepository.populateFirstSource([state]),
+        ]);
+
         return plainToInstance(
             CustomerMarketingStateGetResponseDto,
             {
@@ -221,6 +236,8 @@ export class CustomerMarketingService {
                     lastInbound,
                     channel => this.freeMessageWindowHours(channel)
                 ),
+                firstSource: customerMarketingFirstSource(state),
+                reactions: reactions.map(customerProductReactionResponse),
             },
             { excludeExtraneousValues: true }
         );
@@ -266,6 +283,8 @@ export class CustomerMarketingService {
         const states = await this.stateRepository.find({
             customer: { $in: customerIds },
         });
+
+        await this.stateRepository.populateFirstSource(states);
         const byCustomer = new Map(states.map(s => [s.customer.id, s]));
         return new Map(
             customerIds.map(id => {
@@ -275,7 +294,11 @@ export class CustomerMarketingService {
                     id,
                     plainToInstance(
                         CustomerMarketingSummaryResponseDto,
-                        { ...state, dormant: this.isDormant(state) },
+                        {
+                            ...state,
+                            dormant: this.isDormant(state),
+                            firstSource: customerMarketingFirstSource(state),
+                        },
                         { excludeExtraneousValues: true }
                     ),
                 ];

@@ -44,6 +44,7 @@ function makeHarness(
     };
     const stateRepository = {
         findByCustomer: jest.fn(async (id: string) => states.get(id) ?? null),
+        populateFirstSource: jest.fn(async () => undefined),
     };
     const eventRepository = {
         findWithPaging: jest.fn(),
@@ -71,6 +72,7 @@ function makeHarness(
         stateRepository as any,
         eventRepository as any,
         customerRepository as any,
+        {} as any,
         { get: jest.fn() } as any
     );
     return { service, states, events, em };

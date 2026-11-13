@@ -37,6 +37,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from 'src/common/pagination/enums/pagination.enum';
 import {
     PaginationQuery,
+    PaginationQueryFilterEqual,
     PaginationQueryFilterInBoolean,
     PaginationQueryFilterInEnum,
 } from 'src/common/pagination/decorators/pagination.decorator';
@@ -119,12 +120,19 @@ export class CustomerWorkspaceController {
         )
         permission?: Record<string, any>,
         @PaginationQueryFilterInBoolean('dormant', [true, false])
-        dormant?: Record<string, any>
+        dormant?: Record<string, any>,
+        @PaginationQueryFilterEqual('source', { raw: true })
+        source?: Record<string, any>
     ): Promise<IResponsePaging<CustomerGetResponseDto>> {
         const find: Record<string, any> = {
             ..._search,
             ...this.marketingService.customerListFilter(
-                customerMarketingListFilterFromQuery(stage, permission, dormant)
+                customerMarketingListFilterFromQuery(
+                    stage,
+                    permission,
+                    dormant,
+                    source
+                )
             ),
         };
 

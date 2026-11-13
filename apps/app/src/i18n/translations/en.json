@@ -2536,6 +2536,16 @@
             "save": "Save labels",
             "saved": "Labels saved",
             "saveFailed": "Couldn't save the labels. Try again."
+          },
+          "productGroups": {
+            "title": "Product groups",
+            "paused": "{{group}} paused until {{date}}",
+            "othersStillSend": "Offers for other product groups can still go out."
+          },
+          "firstSource": {
+            "title": "First source",
+            "viaCode": "Through {{code}}, {{date}}",
+            "viaSource": "Through the source link, {{date}}"
           }
         }
       }
@@ -2639,7 +2649,9 @@
       "dormantOptions": {
         "true": "Inactive only",
         "false": "Hide inactive"
-      }
+      },
+      "firstSource": "First source",
+      "source": "Source"
     }
   },
   "settings": {
@@ -3727,6 +3739,9 @@
       "intent": "Product group interest: {{to}}",
       "source": "Came through a source link"
     },
-    "viewMessage": "View message"
+    "viewMessage": "View message",
+    "firstSource": {
+      "direct": "Messaged the page directly"
+    }
   }
 }

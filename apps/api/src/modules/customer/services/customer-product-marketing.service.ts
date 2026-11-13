@@ -4,7 +4,6 @@ import { ProductGroupEntity } from '@app/modules/order/repository/entities/produ
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { plainToInstance } from 'class-transformer';
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
 import { CustomerProductReactionGetResponseDto } from '../dtos/response/customer-product-reaction.get.response.dto';
 import { ENUM_MARKETING_EVENT_KIND } from '../enums/customer-marketing.enum';
@@ -21,6 +20,7 @@ import {
     ICustomerProductIntent,
 } from '../utils/customer-product-intent.util';
 import { CustomerMarketingService } from './customer-marketing.service';
+import { customerProductReactionResponse } from '../utils/customer-product-reaction.util';
 
 const toDay = (date?: Date | null) => date?.toISOString().slice(0, 10) ?? null;
 
@@ -131,15 +131,6 @@ export class CustomerProductMarketingService {
         );
     }
 
-    listActiveReactions(
-        customerId: string
-    ): Promise<CustomerProductReactionEntity[]> {
-        return this.reactionRepository.find(
-            { customer: customerId, until: { $gt: new Date() } },
-            { populate: ['productGroup'], orderBy: { until: 'ASC' } }
-        );
-    }
-
     /** Includes intents of Customers merged into this one. */
     async listActiveIntents(
         customerId: string
@@ -181,16 +172,7 @@ export class CustomerProductMarketingService {
     mapReaction(
         reaction: CustomerProductReactionEntity
     ): CustomerProductReactionGetResponseDto {
-        return plainToInstance(
-            CustomerProductReactionGetResponseDto,
-            {
-                productGroupId: reaction.productGroup.id,
-                productGroupName: reaction.productGroup.name,
-                until: reaction.until,
-                reason: reaction.reason ?? null,
-            },
-            { excludeExtraneousValues: true }
-        );
+        return customerProductReactionResponse(reaction);
     }
 
     private async applyDefer(

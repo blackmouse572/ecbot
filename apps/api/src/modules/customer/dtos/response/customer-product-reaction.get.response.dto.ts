@@ -16,6 +16,6 @@ export class CustomerProductReactionGetResponseDto {
     until: Date;
 
     @Expose()
-    @ApiProperty({ required: false, nullable: true })
+    @ApiProperty({ type: String, required: false, nullable: true })
     reason?: string | null;
 }
