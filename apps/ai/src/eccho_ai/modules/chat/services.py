@@ -13,6 +13,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables.config import RunnableConfig
 
 from eccho_ai.core.app_logger import get_logger
+from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.agents.agent import AgentContext, get_agent  # re-exported
 from eccho_ai.llm.prompts.reply_language import reply_language_note
 from eccho_ai.llm.retrievers.retrieval import (
@@ -211,8 +212,8 @@ def get_agent_context(
         steer_after_message_id=chat_request.steer_after_message_id,
         agent_timezone=chat_request.agent_timezone,
         customer_timezone=chat_request.customer_timezone,
+        provider_sort=chat_request.provider_sort or AppVars.OPENROUTER_PROVIDER_SORT or None,
     )
-
 
 
 def get_agent_config(chat_request: ChatRequest, request: Request) -> RunnableConfig:

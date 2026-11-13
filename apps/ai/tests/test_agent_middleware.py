@@ -109,11 +109,11 @@ class _CapturingRequest:
         return self
 
 
-async def _run_middleware(monkeypatch, model, *, conversation_id):
+async def _run_middleware(monkeypatch, model, *, conversation_id, provider_sort=None):
     monkeypatch.setattr(mw, "build_chat_model", lambda **kw: model)
     monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot: "sys")
     ctx = AgentRequestContext(
-        chatbot=MagicMock(), chatbot_id="x", conversation_id=conversation_id
+        chatbot=MagicMock(), chatbot_id="x", conversation_id=conversation_id, provider_sort=provider_sort
     )
     request = _CapturingRequest(ctx)
 
@@ -152,6 +152,28 @@ async def test_no_session_id_without_conversation(monkeypatch):
     model = await _run_middleware(monkeypatch, base, conversation_id=None)
     assert model is base
     assert model.extra_body is None
+
+
+async def test_provider_sort_reaches_openrouter_beside_the_session(monkeypatch):
+    """OpenRouter hosts one model at many providers; `provider.sort` ranks
+    them (perf review 2026-11-13: `throughput` cut the median reply from 5.9 s
+    to 4.1 s). Merged like session_id, never replacing extra_body."""
+    from langchain_openai import ChatOpenAI
+
+    base = ChatOpenAI(model="deepseek/deepseek-v4.1-flash", api_key="sk-test")
+    model = await _run_middleware(monkeypatch, base, conversation_id="conv-1", provider_sort="throughput")
+
+    assert isinstance(model, ChatOpenAI)
+    assert model.extra_body == {"session_id": "conv-1", "provider": {"sort": "throughput"}}
+    assert base.extra_body is None
+
+
+async def test_no_provider_sort_keeps_openrouters_default_routing(monkeypatch):
+    from langchain_openai import ChatOpenAI
+
+    base = ChatOpenAI(model="deepseek/deepseek-v4.1-flash", api_key="sk-test")
+    model = await _run_middleware(monkeypatch, base, conversation_id=None)
+    assert model is base
 
 
 # ── Per-turn clock (#285) ────────────────────────────────────────────────────

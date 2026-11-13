@@ -52,6 +52,17 @@ def _with_sticky_session(model, conversation_id: str | None):
     )
 
 
+def _with_provider_sort(model, sort: str | None):
+    """Rank OpenRouter's providers for this model by `sort` ("throughput" is
+    the fastest; perf review 2026-11-13). Merged into `extra_body` and copied,
+    like the sticky session above."""
+    if not sort:
+        return model
+    return model.model_copy(
+        update={"extra_body": {**(model.extra_body or {}), "provider": {"sort": sort}}}
+    )
+
+
 def _turn_context(context: AgentRequestContext) -> str:
     """The clock, then the open/closed status when the agent has weekly hours
     (#289). Hours are the business's, so they use the agent zone; only the
@@ -77,8 +88,9 @@ class ChatbotConfigMiddleware(AgentMiddleware[AgentState[Any], AgentRequestConte
                 max_tokens=chatbot.max_tokens,
             )
             request = request.override(
-                model=_with_sticky_session(
-                    model, getattr(context, "conversation_id", None)
+                model=_with_provider_sort(
+                    _with_sticky_session(model, getattr(context, "conversation_id", None)),
+                    getattr(context, "provider_sort", None),
                 ),
                 tools=[*request.tools, *injected],
                 system_prompt=render_system_prompt(chatbot),

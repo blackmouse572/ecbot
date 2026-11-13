@@ -303,6 +303,7 @@ export class WidgetChatService {
             upstream = await this.chatbotAIService.streamChat(
                 {
                     chatbot_id: chatbot.id,
+                    workspace_id: account.workspace.id,
                     user_id: visitorId,
                     provider_id: chatbot.modelProvider,
                     // The typed text plus the photo descriptions and file
