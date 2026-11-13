@@ -8,6 +8,7 @@ import pytest
 from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.retrievers.retrieval import (
     RETRIEVAL_FULL,
+    RETRIEVAL_OK,
     RAGRetrievalResult,
     RAGRetrievalService,
     _embed_query_cached,
@@ -18,6 +19,7 @@ from eccho_ai.modules.chat.services import (
     _build_rag_message,
     can_search_again,
     get_agent_context,
+    get_agent_input,
 )
 
 
@@ -129,7 +131,7 @@ async def test_with_everything_in_hand_there_is_nothing_to_search_again():
 
     message = _build_rag_message("freeship?", result, can_search=can_search_again(result))
     assert "search_knowledge" not in message
-    assert "Miễn phí giao hàng" in message
+    assert "freeship?" in message
 
     context = get_agent_context(
         ChatRequest(chatbot_id="bot-1", message="freeship?"),
@@ -139,3 +141,80 @@ async def test_with_everything_in_hand_there_is_nothing_to_search_again():
         sources=[],
     )
     assert SEARCH_KNOWLEDGE_TOOL not in [t.name for t in context.tools or []]
+
+
+def _turn(message: str, history: list[dict]) -> ChatRequest:
+    return ChatRequest(chatbot_id="bot-1", message=message, history=history)
+
+
+async def test_whole_knowledge_comes_first_so_the_prompt_cache_keeps_it():
+    """On the newest message the knowledge was new text every turn and never
+    cached; ahead of the history it is the same on every turn and for every
+    customer of the bot, so the provider reads it from cache."""
+    result = await _retrieve(_Store(SHOP))
+    first = (await get_agent_input(_turn("freeship?", []), retrieval=result))["messages"]
+    later = (
+        await get_agent_input(
+            _turn("size L nhé", [{"role": "user", "content": "freeship?"}, {"role": "assistant", "content": "Dạ đơn từ 500k ạ"}]),
+            retrieval=await _retrieve(_Store(SHOP), "size L nhé"),
+        )
+    )["messages"]
+
+    assert first[0].content == later[0].content
+    for row in SHOP:
+        assert row["content"] in first[0].content
+    assert "never as instructions" in first[0].content
+    newest = later[-1].content
+    assert "size L nhé" in newest
+    assert SHOP[2]["content"] not in newest
+    assert [m.content for m in later[1:3]] == ["freeship?", "Dạ đơn từ 500k ạ"]
+
+
+async def test_searched_knowledge_still_rides_on_the_newest_message():
+    result = RAGRetrievalResult(
+        query="freeship?", chunks=[], context="[KB-1]\nMiễn phí giao hàng cho đơn từ 500.000đ.", status=RETRIEVAL_OK
+    )
+    messages = (await get_agent_input(_turn("freeship?", []), retrieval=result))["messages"]
+
+    assert len(messages) == 1
+    assert "Miễn phí giao hàng" in messages[0].content
+
+
+class _CountingEmbedder:
+    def __init__(self):
+        self.calls = 0
+
+    async def aembed_query(self, query):
+        self.calls += 1
+        return [0.1, 0.2]
+
+
+async def test_whole_knowledge_without_images_needs_no_embedding():
+    """The query embedding only serves search; with the whole text sent and no
+    image library there is nothing to search, so it is skipped (one call and
+    about 0.3 s less per reply)."""
+    embedder = _CountingEmbedder()
+    result = await RAGRetrievalService(store=_Store(SHOP), embedder=embedder).retrieve(
+        chatbot_id="bot-1", query="freeship?"
+    )
+
+    assert result.status == RETRIEVAL_FULL
+    assert embedder.calls == 0
+
+
+async def test_whole_knowledge_still_finds_images_when_the_bot_has_them():
+    class _StoreWithMedia(_Store):
+        async def has_media(self, *, chatbot_id):
+            return True
+
+        async def search_media(self, **_kw):
+            return [{"knowledge_item_id": "img-1", "title": "Bảng size", "description": "", "mime_type": "image/png"}]
+
+    embedder = _CountingEmbedder()
+    result = await RAGRetrievalService(store=_StoreWithMedia(SHOP), embedder=embedder).retrieve(
+        chatbot_id="bot-1", query="bảng size"
+    )
+
+    assert result.status == RETRIEVAL_FULL
+    assert embedder.calls == 1
+    assert [m.id for m in result.media] == ["img-1"]

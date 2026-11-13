@@ -30,6 +30,8 @@ from eccho_ai.llm.tools.resolve import resolve_chatbot_tools
 from eccho_ai.models.chat import Chatbots
 from eccho_ai.modules.chat.constants import (
     DEFAULT_MAX_TOOL_ITERATIONS,
+    FULL_KNOWLEDGE_MESSAGE_TEMPLATE,
+    FULL_KNOWLEDGE_TEMPLATE,
     MEDIA_LIBRARY_DESCRIPTION_CHARS,
     MEDIA_LIBRARY_TEMPLATE,
     NO_ANSWER_FALLBACK,
@@ -116,7 +118,10 @@ def _build_rag_message(
     if retrieval is None or retrieval.status == RETRIEVAL_ERROR:
         return message
     fallback = SEARCH_FIRST_FALLBACK if can_search else NO_ANSWER_FALLBACK
-    if not retrieval.has_context:
+    if retrieval.status == RETRIEVAL_FULL:
+        # The knowledge itself leads the conversation (get_agent_input).
+        built = FULL_KNOWLEDGE_MESSAGE_TEMPLATE.format(message=message, fallback=fallback)
+    elif not retrieval.has_context:
         built = NO_KNOWLEDGE_MESSAGE_TEMPLATE.format(message=message, fallback=fallback)
     else:
         built = RAG_MESSAGE_TEMPLATE.format(
@@ -149,6 +154,9 @@ async def get_agent_input(
     # changes whenever a tag or field does, so it rides with the newest
     # message (like <current_time>, see llm/prompts/current_time.py).
     messages: list[Any] = []
+    if retrieval is not None and retrieval.status == RETRIEVAL_FULL:
+        # The most stable block of all: first, so the prompt cache keeps it.
+        messages.append(HumanMessage(content=FULL_KNOWLEDGE_TEMPLATE.format(context=retrieval.context)))
     if chat_request.summary:
         messages.append(HumanMessage(content=render_summary_block(chat_request.summary)))
 

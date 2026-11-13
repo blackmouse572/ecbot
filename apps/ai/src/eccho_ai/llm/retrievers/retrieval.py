@@ -249,11 +249,28 @@ class RAGRetrievalService:
 
         try:
             document_count = await self.store.count_completed_documents(chatbot_id=chatbot_id)
-            # Only a bot without text knowledge pays for this check: an
-            # image-only library still needs the query embedded.
-            has_media = document_count > 0 or await self.store.has_media(chatbot_id=chatbot_id)
+            full = await self._small_knowledge(chatbot_id) if document_count > 0 else []
+            # A searched library needs the embedding anyway, so only a bot
+            # sent its whole text, or one without text knowledge, pays for
+            # this check: an image-only library still needs the query embedded.
+            has_media = (
+                await self.store.has_media(chatbot_id=chatbot_id)
+                if full or document_count == 0
+                else True
+            )
         except Exception as exc:
             raise RetrievalStageError("store_failed") from exc
+        if full:
+            # The embedding only serves search: a bot without images skips it.
+            media = await self._search_media(await self._embed(clean_query), chatbot_id) if has_media else []
+            return RAGRetrievalResult(
+                query=clean_query,
+                chunks=full,
+                # Already within RAG_FULL_KNOWLEDGE_MAX_CHARS: never cut it.
+                context=format_context(full, max_chars=sys.maxsize),
+                status=RETRIEVAL_FULL,
+                media=media,
+            )
         if not has_media:
             return RAGRetrievalResult(
                 query=clean_query,
@@ -262,10 +279,7 @@ class RAGRetrievalService:
                 status=RETRIEVAL_NO_DOCUMENTS,
             )
 
-        try:
-            query_embedding = await self._embed_query(clean_query)
-        except Exception as exc:
-            raise RetrievalStageError("embedding_failed") from exc
+        query_embedding = await self._embed(clean_query)
         media_search = asyncio.ensure_future(self._search_media(query_embedding, chatbot_id))
         if document_count == 0:
             return RAGRetrievalResult(
@@ -273,16 +287,6 @@ class RAGRetrievalService:
                 chunks=[],
                 context="",
                 status=RETRIEVAL_NO_DOCUMENTS,
-                media=await media_search,
-            )
-        full = await self._small_knowledge(chatbot_id, media_search)
-        if full:
-            return RAGRetrievalResult(
-                query=clean_query,
-                chunks=full,
-                # Already within RAG_FULL_KNOWLEDGE_MAX_CHARS: never cut it.
-                context=format_context(full, max_chars=sys.maxsize),
-                status=RETRIEVAL_FULL,
                 media=await media_search,
             )
         try:
@@ -325,18 +329,14 @@ class RAGRetrievalService:
             media=await media_search,
         )
 
-    async def _small_knowledge(self, chatbot_id: str, media_search: asyncio.Future) -> list[RetrievedChunk]:
+    async def _small_knowledge(self, chatbot_id: str) -> list[RetrievedChunk]:
         """All of the chatbot's chunks, in document order, when together they
         fit RAG_FULL_KNOWLEDGE_MAX_CHARS (0 turns this off); otherwise none.
         A search can miss slang or a follow-up; the whole text cannot."""
         limit = AppVars.RAG_FULL_KNOWLEDGE_MAX_CHARS
         if limit <= 0:
             return []
-        try:
-            rows = await self.store.small_knowledge_chunks(chatbot_id=chatbot_id, max_chars=limit)
-        except Exception as exc:
-            media_search.cancel()
-            raise RetrievalStageError("store_failed") from exc
+        rows = await self.store.small_knowledge_chunks(chatbot_id=chatbot_id, max_chars=limit)
         return [self._candidate_from_row(row) for row in rows or []]
 
     async def _search_media(self, embedding: list[float], chatbot_id: str) -> list[RetrievedMedia]:
@@ -361,6 +361,12 @@ class RAGRetrievalService:
 
     def format_context(self, chunks: list[RetrievedChunk]) -> str:
         return format_context(chunks)
+
+    async def _embed(self, query: str) -> list[float]:
+        try:
+            return await self._embed_query(query)
+        except Exception as exc:
+            raise RetrievalStageError("embedding_failed") from exc
 
     async def _embed_query(self, query: str) -> list[float]:
         return await _embed_query_cached(
