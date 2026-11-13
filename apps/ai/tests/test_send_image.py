@@ -94,6 +94,8 @@ async def test_send_image_rejects_an_unknown_url(monkeypatch):
 
 
 def test_system_tool_names_cover_every_system_tool():
+    from eccho_ai.llm.tools.knowledge_tool import SEARCH_KNOWLEDGE_TOOL
     from eccho_ai.modules.chat.constants import SYSTEM_TOOL_NAMES
 
-    assert {t.name for t in st.SYSTEM_TOOLS} == SYSTEM_TOOL_NAMES
+    # search_knowledge is built per request (it knows the turn's chatbot and sources).
+    assert {t.name for t in st.SYSTEM_TOOLS} | {SEARCH_KNOWLEDGE_TOOL} == SYSTEM_TOOL_NAMES

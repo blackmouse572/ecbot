@@ -16,20 +16,25 @@ from eccho_ai.core.app_logger import get_logger
 from eccho_ai.llm.agents.agent import AgentContext, get_agent  # re-exported
 from eccho_ai.llm.prompts.reply_language import reply_language_note
 from eccho_ai.llm.retrievers.retrieval import (
+    RETRIEVAL_DISABLED,
     RETRIEVAL_ERROR,
+    RETRIEVAL_NO_DOCUMENTS,
     RAGRetrievalResult,
     RAGRetrievalService,
     RetrievalStageError,
     RetrievedMedia,
 )
+from eccho_ai.llm.tools.knowledge_tool import build_search_knowledge_tool
 from eccho_ai.llm.tools.resolve import resolve_chatbot_tools
 from eccho_ai.models.chat import Chatbots
 from eccho_ai.modules.chat.constants import (
     DEFAULT_MAX_TOOL_ITERATIONS,
     MEDIA_LIBRARY_DESCRIPTION_CHARS,
     MEDIA_LIBRARY_TEMPLATE,
+    NO_ANSWER_FALLBACK,
     NO_KNOWLEDGE_MESSAGE_TEMPLATE,
     RAG_MESSAGE_TEMPLATE,
+    SEARCH_FIRST_FALLBACK,
 )
 from eccho_ai.modules.chat.customer_context import build_customer_context_block
 from eccho_ai.modules.chat.models.agent_models import AgentRequestContext
@@ -93,13 +98,24 @@ def _media_line(media: RetrievedMedia) -> str:
     return f"- id={media.id} | {kind} | {media.title}" + (f" | {about}" if about else "")
 
 
-def _build_rag_message(message: str, retrieval: RAGRetrievalResult | None) -> str:
+def has_knowledge(retrieval: RAGRetrievalResult | None) -> bool:
+    """Whether the chatbot has knowledge to search again (search_knowledge).
+    A failed search still counts: the documents are there."""
+    return retrieval is not None and retrieval.status not in (RETRIEVAL_NO_DOCUMENTS, RETRIEVAL_DISABLED)
+
+
+def _build_rag_message(
+    message: str, retrieval: RAGRetrievalResult | None, can_search: bool = False
+) -> str:
     if retrieval is None or retrieval.status == RETRIEVAL_ERROR:
         return message
+    fallback = SEARCH_FIRST_FALLBACK if can_search else NO_ANSWER_FALLBACK
     if not retrieval.has_context:
-        built = NO_KNOWLEDGE_MESSAGE_TEMPLATE.format(message=message)
+        built = NO_KNOWLEDGE_MESSAGE_TEMPLATE.format(message=message, fallback=fallback)
     else:
-        built = RAG_MESSAGE_TEMPLATE.format(context=retrieval.context, message=message)
+        built = RAG_MESSAGE_TEMPLATE.format(
+            context=retrieval.context, message=message, fallback=fallback
+        )
     if not retrieval.media:
         return built
     library = MEDIA_LIBRARY_TEMPLATE.format(items="\n".join(map(_media_line, retrieval.media)))
@@ -140,7 +156,7 @@ async def get_agent_input(
     note = reply_language_note(customer_message)
     if note:
         customer_message = f"{note}\n\n{customer_message}"
-    message = _build_rag_message(customer_message, retrieval)
+    message = _build_rag_message(customer_message, retrieval, can_search=has_knowledge(retrieval))
     block = await build_customer_context_block(chat_request.customer_id)
     if block:
         message = f"{block}\n\n{message}"
@@ -149,11 +165,27 @@ async def get_agent_input(
 
 
 def get_agent_context(
-    chat_request: ChatRequest, request: Request, chatbot: Chatbots | None = None
+    chat_request: ChatRequest,
+    request: Request,
+    chatbot: Chatbots | None = None,
+    retrieval: RAGRetrievalResult | None = None,
+    sources: list[dict[str, Any]] | None = None,
 ) -> AgentRequestContext:
+    """`retrieval` is the turn's first search; when the chatbot has knowledge the
+    agent also gets search_knowledge, which appends what it finds to `sources`."""
+    tools = resolve_chatbot_tools(chatbot) if chatbot is not None else []
+    if has_knowledge(retrieval):
+        tools = [
+            *tools,
+            build_search_knowledge_tool(
+                chat_request.chatbot_id,
+                sources if sources is not None else [],
+                rag_retrieval_service,
+            ),
+        ]
     return AgentRequestContext(
         chatbot=chatbot,
-        tools=resolve_chatbot_tools(chatbot) if chatbot is not None else None,
+        tools=tools or None,
         request_id=request.state.request_id,
         chatbot_id=chat_request.chatbot_id,
         conversation_id=chat_request.conversation_id,
