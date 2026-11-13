@@ -2,6 +2,7 @@
     "workspace": {
         "list": "Orders retrieved successfully.",
         "get": "Order retrieved successfully.",
+        "summary": "Order summary retrieved successfully.",
         "create": "Order added.",
         "update": "Order updated.",
         "confirm": "Order confirmed.",

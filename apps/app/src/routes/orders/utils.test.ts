@@ -3,6 +3,7 @@ import {
   formatAmountInput,
   formatMoney,
   formatOrderedAt,
+  itemsSummary,
   orderGroupNames,
   orderedAtLabel,
   parseAmountInput,
@@ -10,6 +11,20 @@ import {
   withDay,
   withTime,
 } from "./utils";
+
+describe("itemsSummary", () => {
+  it("lists each item with its quantity", () => {
+    expect(
+      itemsSummary({
+        items: [
+          { id: "1", name: "Kem", quantity: 2 },
+          { id: "2", name: "Serum C", quantity: 1 },
+          // SAFETY: itemsSummary reads only the name and quantity.
+        ] as never,
+      }),
+    ).toBe("Kem × 2, Serum C × 1");
+  });
+});
 
 describe("order utils", () => {
   it("formats đồng the Vietnamese way", () => {

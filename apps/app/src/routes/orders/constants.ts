@@ -15,6 +15,7 @@ export const ORDER_QUERY_PARAMS = [
   "status",
   "source",
   "productGroup",
+  "customer",
 ];
 
 export const PRODUCT_GROUP_QUERY_PARAMS = ["page", "search"];

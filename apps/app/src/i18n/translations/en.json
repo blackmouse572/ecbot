@@ -3673,6 +3673,24 @@
       },
       "partial_one": "The import stopped part way: {{count}} order was imported. Importing the file again skips orders whose code is already in.",
       "partial_other": "The import stopped part way: {{count}} orders were imported. Importing the file again skips orders whose code is already in."
+    },
+    "panel": {
+      "title": "Orders",
+      "add": "Add order",
+      "stats": {
+        "orders": "orders bought",
+        "spent": "total spent",
+        "last": "last bought"
+      },
+      "botNoted": "Noted by the bot in chat, {{when}}",
+      "pendingHint": "An order awaiting confirmation does not count as bought yet. Confirm it once the customer has paid or received it.",
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "latest": "Confirmed orders, newest first",
+      "viewAll": "View all orders",
+      "none": "No orders yet. Orders the bot notes in chat show up here for you to confirm.",
+      "filtered": "Showing the orders of {{name}}",
+      "clearFilter": "Show all orders"
     }
   },
   "customerMarketing": {

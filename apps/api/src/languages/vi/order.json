@@ -2,6 +2,7 @@
     "workspace": {
         "list": "Đã tải danh sách đơn hàng.",
         "get": "Đã tải đơn hàng.",
+        "summary": "Đã tải tổng quan đơn hàng.",
         "create": "Đã thêm đơn hàng.",
         "update": "Đã cập nhật đơn hàng.",
         "confirm": "Đã xác nhận đơn hàng.",
