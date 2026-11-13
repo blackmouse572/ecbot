@@ -17,6 +17,7 @@ import {
     ORDER_DEFAULT_CURRENCY,
 } from '../constants/order.constant';
 import { OrderGetResponseDto } from '../dtos/response/order.get.response.dto';
+import { OrderSummaryResponseDto } from '../dtos/response/order.summary.response.dto';
 import { ENUM_ORDER_SOURCE, ENUM_ORDER_STATUS } from '../enums/order.enum';
 import {
     IOrderChatDraft,
@@ -50,6 +51,20 @@ export class OrderService {
         return this.orderRepository.find(
             { ...find, workspace: workspaceId, deletedAt: null },
             options
+        );
+    }
+
+    async summaryOfCustomer(
+        workspaceId: string,
+        customerId: string
+    ): Promise<OrderSummaryResponseDto> {
+        return plainToInstance(
+            OrderSummaryResponseDto,
+            await this.orderRepository.summaryOfCustomer(
+                workspaceId,
+                customerId
+            ),
+            { excludeExtraneousValues: true }
         );
     }
 

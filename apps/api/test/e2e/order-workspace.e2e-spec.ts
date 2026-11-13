@@ -150,6 +150,30 @@ describe('E2E — workspace orders and product groups', () => {
         expect(new Set(ids).size).toBe(7);
     });
 
+    it("sums a customer's confirmed orders", async () => {
+        // The orders above: six of 300.000 and one of two items without a price.
+        const res = await http(ctx.app)
+            .get(`${ordersUrl()}/summary?customer=${customerId}`)
+            .set(...auth(ownerToken));
+        expect(res.status).toBe(200);
+        expect(res.body.data.confirmedOrders).toBe(7);
+        expect(res.body.data.totalSpent).toBe(1_800_000);
+        expect(new Date(res.body.data.lastOrderedAt).getTime()).toBeGreaterThan(
+            Date.now() - 60_000
+        );
+
+        const stranger = await http(ctx.app)
+            .get(`${ordersUrl()}/summary?customer=${customerId}`)
+            .set(...auth(strangerToken));
+        expect(stranger.status).toBeGreaterThanOrEqual(403);
+        expect(stranger.status).toBeLessThan(500);
+
+        const missing = await http(ctx.app)
+            .get(`${ordersUrl()}/summary`)
+            .set(...auth(ownerToken));
+        expect(missing.status).toBe(422);
+    });
+
     it('does not learn a 0-day cycle from orders on the same day', async () => {
         const group = await http(ctx.app)
             .post(groupsUrl())

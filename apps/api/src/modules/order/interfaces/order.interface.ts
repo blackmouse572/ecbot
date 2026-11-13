@@ -34,6 +34,13 @@ export interface IProductGroupInput {
     defaultRepurchaseDays?: number | null;
 }
 
+/** What a customer's confirmed orders add up to. */
+export interface IOrderCustomerSummary {
+    confirmedOrders: number;
+    totalSpent: number;
+    lastOrderedAt: Date | null;
+}
+
 /** What a group's confirmed orders add up to, for the groups tab. */
 export interface IProductGroupStats {
     confirmedOrders: number;

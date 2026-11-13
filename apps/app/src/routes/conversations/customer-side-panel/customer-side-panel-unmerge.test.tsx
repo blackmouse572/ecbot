@@ -22,6 +22,9 @@ const updateMutateAsync = vi.fn();
 const unmergeMutateAsync = vi.fn();
 const promptFn = vi.fn();
 
+// Orders have their own test (components/orders-section).
+vi.mock("./components/orders-section", () => ({ OrdersSection: () => null }));
+
 vi.mock("@/hooks/api/customers", () => ({
   useExportCustomer: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
   useEraseCustomer: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),

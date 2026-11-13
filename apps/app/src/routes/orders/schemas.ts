@@ -52,3 +52,6 @@ export const productGroupFormSchema = zod.object({
 });
 
 export type ProductGroupFormData = zod.infer<typeof productGroupFormSchema>;
+
+/** Where Thêm đơn returns to when opened from another page: a path in the app. */
+export const backPathSchema = zod.string().startsWith("/");

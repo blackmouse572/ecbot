@@ -3696,6 +3696,24 @@
       },
       "partial_one": "Nhập dừng giữa chừng, đã nhập {{count}} đơn. Nhập lại file này sẽ bỏ qua các đơn có mã đã nhập.",
       "partial_other": "Nhập dừng giữa chừng, đã nhập {{count}} đơn. Nhập lại file này sẽ bỏ qua các đơn có mã đã nhập."
+    },
+    "panel": {
+      "title": "Đơn hàng",
+      "add": "Thêm đơn",
+      "stats": {
+        "orders": "đơn đã mua",
+        "spent": "tổng chi",
+        "last": "mua gần nhất"
+      },
+      "botNoted": "Bot ghi từ chat, {{when}}",
+      "pendingHint": "Đơn chờ xác nhận chưa được tính là đã mua. Xác nhận khi khách đã chuyển khoản hoặc nhận hàng.",
+      "confirm": "Xác nhận",
+      "cancel": "Huỷ",
+      "latest": "Đơn đã xác nhận, mới nhất trước",
+      "viewAll": "Xem tất cả đơn",
+      "none": "Chưa có đơn nào. Đơn bot ghi từ chat sẽ hiện ở đây để bạn xác nhận.",
+      "filtered": "Đang xem đơn của {{name}}",
+      "clearFilter": "Xem mọi đơn"
     }
   },
   "customerMarketing": {
