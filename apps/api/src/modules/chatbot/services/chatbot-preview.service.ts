@@ -163,6 +163,7 @@ export class ChatbotPreviewService {
             upstream = await this.chatbotAIService.streamChat(
                 {
                     chatbot_id: chatbot.id,
+                    workspace_id: chatbot.workspace.id,
                     user_id: userId,
                     provider_id: chatbot.modelProvider,
                     message,

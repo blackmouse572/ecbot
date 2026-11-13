@@ -42,6 +42,9 @@ class _Store:
     async def count_completed_documents(self, *, chatbot_id):
         return self.documents
 
+    async def small_knowledge_chunks(self, *, chatbot_id, max_chars):
+        return None  # larger than the full-knowledge budget: searched
+
     async def has_media(self, *, chatbot_id):
         return self._has_media
 

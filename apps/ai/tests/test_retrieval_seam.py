@@ -28,6 +28,9 @@ async def test_retrieval_embeds_via_injected_embedder():
         async def count_completed_documents(self, *, chatbot_id):
             return 3
 
+        async def small_knowledge_chunks(self, *, chatbot_id, max_chars):
+            return None  # larger than the full-knowledge budget: searched
+
         async def similarity_search_chunks(self, **kw):
             seen["embedded"] = kw.get("embedding")
             return []
@@ -55,6 +58,9 @@ async def test_repeated_query_is_embedded_once():
     class _FakeStore:
         async def count_completed_documents(self, *, chatbot_id):
             return 3
+
+        async def small_knowledge_chunks(self, *, chatbot_id, max_chars):
+            return None  # larger than the full-knowledge budget: searched
 
         async def similarity_search_chunks(self, **kw):
             return []

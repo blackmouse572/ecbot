@@ -13,11 +13,13 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables.config import RunnableConfig
 
 from eccho_ai.core.app_logger import get_logger
+from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.agents.agent import AgentContext, get_agent  # re-exported
 from eccho_ai.llm.prompts.reply_language import reply_language_note
 from eccho_ai.llm.retrievers.retrieval import (
     RETRIEVAL_DISABLED,
     RETRIEVAL_ERROR,
+    RETRIEVAL_FULL,
     RETRIEVAL_NO_DOCUMENTS,
     RAGRetrievalResult,
     RAGRetrievalService,
@@ -29,6 +31,8 @@ from eccho_ai.llm.tools.resolve import resolve_chatbot_tools
 from eccho_ai.models.chat import Chatbots
 from eccho_ai.modules.chat.constants import (
     DEFAULT_MAX_TOOL_ITERATIONS,
+    FULL_KNOWLEDGE_MESSAGE_TEMPLATE,
+    FULL_KNOWLEDGE_TEMPLATE,
     MEDIA_LIBRARY_DESCRIPTION_CHARS,
     MEDIA_LIBRARY_TEMPLATE,
     NO_ANSWER_FALLBACK,
@@ -98,10 +102,15 @@ def _media_line(media: RetrievedMedia) -> str:
     return f"- id={media.id} | {kind} | {media.title}" + (f" | {about}" if about else "")
 
 
-def has_knowledge(retrieval: RAGRetrievalResult | None) -> bool:
-    """Whether the chatbot has knowledge to search again (search_knowledge).
-    A failed search still counts: the documents are there."""
-    return retrieval is not None and retrieval.status not in (RETRIEVAL_NO_DOCUMENTS, RETRIEVAL_DISABLED)
+def can_search_again(retrieval: RAGRetrievalResult | None) -> bool:
+    """Whether the agent gets search_knowledge: the chatbot has knowledge the
+    first search may have missed. A failed search counts (the documents are
+    there); knowledge sent whole (RETRIEVAL_FULL) does not: nothing is left."""
+    return retrieval is not None and retrieval.status not in (
+        RETRIEVAL_NO_DOCUMENTS,
+        RETRIEVAL_DISABLED,
+        RETRIEVAL_FULL,
+    )
 
 
 def _build_rag_message(
@@ -110,7 +119,10 @@ def _build_rag_message(
     if retrieval is None or retrieval.status == RETRIEVAL_ERROR:
         return message
     fallback = SEARCH_FIRST_FALLBACK if can_search else NO_ANSWER_FALLBACK
-    if not retrieval.has_context:
+    if retrieval.status == RETRIEVAL_FULL:
+        # The knowledge itself leads the conversation (get_agent_input).
+        built = FULL_KNOWLEDGE_MESSAGE_TEMPLATE.format(message=message, fallback=fallback)
+    elif not retrieval.has_context:
         built = NO_KNOWLEDGE_MESSAGE_TEMPLATE.format(message=message, fallback=fallback)
     else:
         built = RAG_MESSAGE_TEMPLATE.format(
@@ -143,6 +155,9 @@ async def get_agent_input(
     # changes whenever a tag or field does, so it rides with the newest
     # message (like <current_time>, see llm/prompts/current_time.py).
     messages: list[Any] = []
+    if retrieval is not None and retrieval.status == RETRIEVAL_FULL:
+        # The most stable block of all: first, so the prompt cache keeps it.
+        messages.append(HumanMessage(content=FULL_KNOWLEDGE_TEMPLATE.format(context=retrieval.context)))
     if chat_request.summary:
         messages.append(HumanMessage(content=render_summary_block(chat_request.summary)))
 
@@ -156,7 +171,7 @@ async def get_agent_input(
     note = reply_language_note(customer_message)
     if note:
         customer_message = f"{note}\n\n{customer_message}"
-    message = _build_rag_message(customer_message, retrieval, can_search=has_knowledge(retrieval))
+    message = _build_rag_message(customer_message, retrieval, can_search=can_search_again(retrieval))
     block = await build_customer_context_block(chat_request.customer_id)
     if block:
         message = f"{block}\n\n{message}"
@@ -174,7 +189,7 @@ def get_agent_context(
     """`retrieval` is the turn's first search; when the chatbot has knowledge the
     agent also gets search_knowledge, which appends what it finds to `sources`."""
     tools = resolve_chatbot_tools(chatbot) if chatbot is not None else []
-    if has_knowledge(retrieval):
+    if can_search_again(retrieval):
         tools = [
             *tools,
             build_search_knowledge_tool(
@@ -197,8 +212,8 @@ def get_agent_context(
         steer_after_message_id=chat_request.steer_after_message_id,
         agent_timezone=chat_request.agent_timezone,
         customer_timezone=chat_request.customer_timezone,
+        provider_sort=chat_request.provider_sort or AppVars.OPENROUTER_PROVIDER_SORT or None,
     )
-
 
 
 def get_agent_config(chat_request: ChatRequest, request: Request) -> RunnableConfig:

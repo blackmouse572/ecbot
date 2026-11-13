@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 import asyncio
+import sys
 import hashlib
 import math
 import re
@@ -105,6 +106,9 @@ RETRIEVAL_BELOW_THRESHOLD = "below_threshold"
 RETRIEVAL_ERROR = "error"
 RETRIEVAL_DISABLED = "disabled"
 RETRIEVAL_NO_QUERY = "no_query"
+# The chatbot's whole knowledge fit RAG_FULL_KNOWLEDGE_MAX_CHARS and was sent
+# as is, without a search.
+RETRIEVAL_FULL = "full"
 
 
 class RetrievalStageError(Exception):
@@ -196,15 +200,19 @@ class RAGRetrievalResult:
         return sources
 
 
-def format_context(chunks: list[RetrievedChunk], start: int = 1) -> str:
+def format_context(
+    chunks: list[RetrievedChunk], start: int = 1, max_chars: int | None = None
+) -> str:
     """The chunks as [KB-n] blocks, n counting from `start` (a later search in
-    the same turn continues the numbering), cut at the context budget."""
+    the same turn continues the numbering), cut at `max_chars` (by default the
+    search context budget)."""
     if not chunks:
         return ""
 
     parts: list[str] = []
     used_chars = 0
-    max_chars = AppVars.RAG_RETRIEVAL_CONTEXT_MAX_CHARS
+    if max_chars is None:
+        max_chars = AppVars.RAG_RETRIEVAL_CONTEXT_MAX_CHARS
 
     for index, chunk in enumerate(chunks, start=start):
         source_url = public_source_url(chunk)
@@ -241,11 +249,28 @@ class RAGRetrievalService:
 
         try:
             document_count = await self.store.count_completed_documents(chatbot_id=chatbot_id)
-            # Only a bot without text knowledge pays for this check: an
-            # image-only library still needs the query embedded.
-            has_media = document_count > 0 or await self.store.has_media(chatbot_id=chatbot_id)
+            full = await self._small_knowledge(chatbot_id) if document_count > 0 else []
+            # A searched library needs the embedding anyway, so only a bot
+            # sent its whole text, or one without text knowledge, pays for
+            # this check: an image-only library still needs the query embedded.
+            has_media = (
+                await self.store.has_media(chatbot_id=chatbot_id)
+                if full or document_count == 0
+                else True
+            )
         except Exception as exc:
             raise RetrievalStageError("store_failed") from exc
+        if full:
+            # The embedding only serves search: a bot without images skips it.
+            media = await self._search_media(await self._embed(clean_query), chatbot_id) if has_media else []
+            return RAGRetrievalResult(
+                query=clean_query,
+                chunks=full,
+                # Already within RAG_FULL_KNOWLEDGE_MAX_CHARS: never cut it.
+                context=format_context(full, max_chars=sys.maxsize),
+                status=RETRIEVAL_FULL,
+                media=media,
+            )
         if not has_media:
             return RAGRetrievalResult(
                 query=clean_query,
@@ -254,10 +279,7 @@ class RAGRetrievalService:
                 status=RETRIEVAL_NO_DOCUMENTS,
             )
 
-        try:
-            query_embedding = await self._embed_query(clean_query)
-        except Exception as exc:
-            raise RetrievalStageError("embedding_failed") from exc
+        query_embedding = await self._embed(clean_query)
         media_search = asyncio.ensure_future(self._search_media(query_embedding, chatbot_id))
         if document_count == 0:
             return RAGRetrievalResult(
@@ -307,6 +329,16 @@ class RAGRetrievalService:
             media=await media_search,
         )
 
+    async def _small_knowledge(self, chatbot_id: str) -> list[RetrievedChunk]:
+        """All of the chatbot's chunks, in document order, when together they
+        fit RAG_FULL_KNOWLEDGE_MAX_CHARS (0 turns this off); otherwise none.
+        A search can miss slang or a follow-up; the whole text cannot."""
+        limit = AppVars.RAG_FULL_KNOWLEDGE_MAX_CHARS
+        if limit <= 0:
+            return []
+        rows = await self.store.small_knowledge_chunks(chatbot_id=chatbot_id, max_chars=limit)
+        return [self._candidate_from_row(row) for row in rows or []]
+
     async def _search_media(self, embedding: list[float], chatbot_id: str) -> list[RetrievedMedia]:
         """No relevance cutoff: query and description similarity barely tells
         a menu from a dish photo, so the agent picks from the nearest few."""
@@ -329,6 +361,12 @@ class RAGRetrievalService:
 
     def format_context(self, chunks: list[RetrievedChunk]) -> str:
         return format_context(chunks)
+
+    async def _embed(self, query: str) -> list[float]:
+        try:
+            return await self._embed_query(query)
+        except Exception as exc:
+            raise RetrievalStageError("embedding_failed") from exc
 
     async def _embed_query(self, query: str) -> list[float]:
         return await _embed_query_cached(
