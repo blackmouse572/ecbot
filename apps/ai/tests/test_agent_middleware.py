@@ -94,6 +94,13 @@ async def test_middleware_passthrough_without_chatbot():
 # ── OpenRouter sticky routing (#318) ─────────────────────────────────────────
 
 
+_FILTERS = {
+    "require_parameters": True,
+    "quantizations": ["fp6", "fp8", "fp16", "bf16", "fp32", "unknown"],
+    "data_collection": "deny",
+}
+
+
 class _CapturingRequest:
     """Minimal ModelRequest stand-in that records what the middleware overrides."""
 
@@ -140,6 +147,7 @@ async def test_sticky_session_id_preserves_cache_control(monkeypatch):
     assert model.extra_body == {
         "cache_control": {"type": "ephemeral"},
         "session_id": "conv-1",
+        "provider": _FILTERS,
     }
     # The lru_cache'd shared client must not be mutated.
     assert base.extra_body == {"cache_control": {"type": "ephemeral"}}
@@ -150,8 +158,8 @@ async def test_no_session_id_without_conversation(monkeypatch):
 
     base = ChatOpenAI(model="google/gemini-2.5-flash", api_key="sk-test")
     model = await _run_middleware(monkeypatch, base, conversation_id=None)
-    assert model is base
-    assert model.extra_body is None
+    assert "session_id" not in model.extra_body
+    assert base.extra_body is None
 
 
 async def test_provider_sort_reaches_openrouter_beside_the_session(monkeypatch):
@@ -166,24 +174,48 @@ async def test_provider_sort_reaches_openrouter_beside_the_session(monkeypatch):
     assert isinstance(model, ChatOpenAI)
     assert model.extra_body == {
         "session_id": "conv-1",
-        "provider": {
-            "sort": "throughput",
-            # Only among providers that run our tools and full-size weights,
-            # and do not keep customer messages.
-            "require_parameters": True,
-            "quantizations": ["fp6", "fp8", "fp16", "bf16", "fp32", "unknown"],
-            "data_collection": "deny",
-        },
+        "provider": {"sort": "throughput", **_FILTERS},
     }
     assert base.extra_body is None
 
 
-async def test_no_provider_sort_keeps_openrouters_default_routing(monkeypatch):
+async def test_every_reply_skips_weak_or_data_keeping_providers(monkeypatch):
+    """No sort keeps OpenRouter's own ranking, among the same providers."""
     from langchain_openai import ChatOpenAI
 
     base = ChatOpenAI(model="deepseek/deepseek-v4.1-flash", api_key="sk-test")
     model = await _run_middleware(monkeypatch, base, conversation_id=None)
-    assert model is base
+    assert model.extra_body == {"provider": _FILTERS}
+
+
+async def test_a_model_no_provider_passes_still_replies_unfiltered(monkeypatch):
+    """OpenRouter answers 404 when no provider passes the filters (a model
+    served only by fp4 or data-keeping hosts): reply anyway, without them."""
+    import httpx
+    import openai
+    from langchain_openai import ChatOpenAI
+
+    base = ChatOpenAI(model="some/niche-model", api_key="sk-test")
+    monkeypatch.setattr(mw, "build_chat_model", lambda **kw: base)
+    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot: "sys")
+    request = _CapturingRequest(
+        AgentRequestContext(chatbot=MagicMock(), chatbot_id="x", conversation_id="conv-1")
+    )
+    seen = []
+
+    async def _handler(req):
+        body = req.overrides["model"].extra_body
+        seen.append(body)
+        if "provider" in body:
+            raise openai.NotFoundError(
+                "No endpoints found matching your data policy",
+                response=httpx.Response(404, request=httpx.Request("POST", "https://x")),
+                body=None,
+            )
+        return "reply"
+
+    assert await ChatbotConfigMiddleware().awrap_model_call(request, _handler) == "reply"
+    assert seen == [{"session_id": "conv-1", "provider": _FILTERS}, {"session_id": "conv-1"}]
 
 
 # ── Per-turn clock (#285) ────────────────────────────────────────────────────
