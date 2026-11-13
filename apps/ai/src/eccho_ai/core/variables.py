@@ -95,6 +95,10 @@ class _AppVars(BaseSettings):
     RAG_RETRIEVAL_CANDIDATE_LIMIT: int = 24
     RAG_RETRIEVAL_CONTEXT_MAX_CHARS: int = 6000
     RAG_RETRIEVAL_MIN_SCORE: float = 0.05
+    # A chatbot whose whole knowledge is at most this many characters gets all
+    # of it every turn instead of a search (0 turns this off). About the size
+    # of a full search result (RAG_RETRIEVAL_CONTEXT_MAX_CHARS), so no turn costs more.
+    RAG_FULL_KNOWLEDGE_MAX_CHARS: int = 6000
     # Media items listed to the agent per turn (send_media), nearest first.
     RAG_MEDIA_LIMIT: int = 8
     # When False, skip the cross-encoder reranker (no sentence-transformers/torch

@@ -18,6 +18,7 @@ from eccho_ai.llm.prompts.reply_language import reply_language_note
 from eccho_ai.llm.retrievers.retrieval import (
     RETRIEVAL_DISABLED,
     RETRIEVAL_ERROR,
+    RETRIEVAL_FULL,
     RETRIEVAL_NO_DOCUMENTS,
     RAGRetrievalResult,
     RAGRetrievalService,
@@ -98,10 +99,15 @@ def _media_line(media: RetrievedMedia) -> str:
     return f"- id={media.id} | {kind} | {media.title}" + (f" | {about}" if about else "")
 
 
-def has_knowledge(retrieval: RAGRetrievalResult | None) -> bool:
-    """Whether the chatbot has knowledge to search again (search_knowledge).
-    A failed search still counts: the documents are there."""
-    return retrieval is not None and retrieval.status not in (RETRIEVAL_NO_DOCUMENTS, RETRIEVAL_DISABLED)
+def can_search_again(retrieval: RAGRetrievalResult | None) -> bool:
+    """Whether the agent gets search_knowledge: the chatbot has knowledge the
+    first search may have missed. A failed search counts (the documents are
+    there); knowledge sent whole (RETRIEVAL_FULL) does not: nothing is left."""
+    return retrieval is not None and retrieval.status not in (
+        RETRIEVAL_NO_DOCUMENTS,
+        RETRIEVAL_DISABLED,
+        RETRIEVAL_FULL,
+    )
 
 
 def _build_rag_message(
@@ -156,7 +162,7 @@ async def get_agent_input(
     note = reply_language_note(customer_message)
     if note:
         customer_message = f"{note}\n\n{customer_message}"
-    message = _build_rag_message(customer_message, retrieval, can_search=has_knowledge(retrieval))
+    message = _build_rag_message(customer_message, retrieval, can_search=can_search_again(retrieval))
     block = await build_customer_context_block(chat_request.customer_id)
     if block:
         message = f"{block}\n\n{message}"
@@ -174,7 +180,7 @@ def get_agent_context(
     """`retrieval` is the turn's first search; when the chatbot has knowledge the
     agent also gets search_knowledge, which appends what it finds to `sources`."""
     tools = resolve_chatbot_tools(chatbot) if chatbot is not None else []
-    if has_knowledge(retrieval):
+    if can_search_again(retrieval):
         tools = [
             *tools,
             build_search_knowledge_tool(

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 import asyncio
+import sys
 import hashlib
 import math
 import re
@@ -105,6 +106,9 @@ RETRIEVAL_BELOW_THRESHOLD = "below_threshold"
 RETRIEVAL_ERROR = "error"
 RETRIEVAL_DISABLED = "disabled"
 RETRIEVAL_NO_QUERY = "no_query"
+# The chatbot's whole knowledge fit RAG_FULL_KNOWLEDGE_MAX_CHARS and was sent
+# as is, without a search.
+RETRIEVAL_FULL = "full"
 
 
 class RetrievalStageError(Exception):
@@ -196,15 +200,19 @@ class RAGRetrievalResult:
         return sources
 
 
-def format_context(chunks: list[RetrievedChunk], start: int = 1) -> str:
+def format_context(
+    chunks: list[RetrievedChunk], start: int = 1, max_chars: int | None = None
+) -> str:
     """The chunks as [KB-n] blocks, n counting from `start` (a later search in
-    the same turn continues the numbering), cut at the context budget."""
+    the same turn continues the numbering), cut at `max_chars` (by default the
+    search context budget)."""
     if not chunks:
         return ""
 
     parts: list[str] = []
     used_chars = 0
-    max_chars = AppVars.RAG_RETRIEVAL_CONTEXT_MAX_CHARS
+    if max_chars is None:
+        max_chars = AppVars.RAG_RETRIEVAL_CONTEXT_MAX_CHARS
 
     for index, chunk in enumerate(chunks, start=start):
         source_url = public_source_url(chunk)
@@ -267,6 +275,16 @@ class RAGRetrievalService:
                 status=RETRIEVAL_NO_DOCUMENTS,
                 media=await media_search,
             )
+        full = await self._small_knowledge(chatbot_id, media_search)
+        if full:
+            return RAGRetrievalResult(
+                query=clean_query,
+                chunks=full,
+                # Already within RAG_FULL_KNOWLEDGE_MAX_CHARS: never cut it.
+                context=format_context(full, max_chars=sys.maxsize),
+                status=RETRIEVAL_FULL,
+                media=await media_search,
+            )
         try:
             similarity_rows, fts_rows = await asyncio.gather(
                 self.store.similarity_search_chunks(
@@ -306,6 +324,20 @@ class RAGRetrievalService:
             top_score=ranked[0].rerank_score if ranked else None,
             media=await media_search,
         )
+
+    async def _small_knowledge(self, chatbot_id: str, media_search: asyncio.Future) -> list[RetrievedChunk]:
+        """All of the chatbot's chunks, in document order, when together they
+        fit RAG_FULL_KNOWLEDGE_MAX_CHARS (0 turns this off); otherwise none.
+        A search can miss slang or a follow-up; the whole text cannot."""
+        limit = AppVars.RAG_FULL_KNOWLEDGE_MAX_CHARS
+        if limit <= 0:
+            return []
+        try:
+            rows = await self.store.small_knowledge_chunks(chatbot_id=chatbot_id, max_chars=limit)
+        except Exception as exc:
+            media_search.cancel()
+            raise RetrievalStageError("store_failed") from exc
+        return [self._candidate_from_row(row) for row in rows or []]
 
     async def _search_media(self, embedding: list[float], chatbot_id: str) -> list[RetrievedMedia]:
         """No relevance cutoff: query and description similarity barely tells

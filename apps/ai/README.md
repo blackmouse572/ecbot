@@ -162,7 +162,7 @@ Configured with the `/api/rag` prefix.
   - Debug endpoint for retrieving knowledge-base context before the chat agent answers.
   - Response includes formatted context, chunks, rerank scores, and `sources`.
 
-Chat requests automatically run RAG retrieval for completed documents attached to the chatbot through `rag_documents.metadata.chatbot_id`. Retrieval uses PostgreSQL full-text search and pgvector cosine similarity, then reranks candidates with a cross-encoder model before injecting context into the user prompt. When a chatbot has knowledge, the agent also gets the `search_knowledge` tool (`llm/tools/knowledge_tool.py`): if the context it was given does not answer the customer, it searches again with its own query in the shop's words (at most twice per turn) before saying it does not know, and what it finds is added to the turn's sources. When an answer uses RAG context, the assistant answers from the retrieved context and never writes `[KB-n]` labels, source ids, document names or file names. Those are stripped server-side, and sources only travel in message metadata.
+Chat requests automatically run RAG retrieval for completed documents attached to the chatbot through `rag_documents.metadata.chatbot_id`. Retrieval uses PostgreSQL full-text search and pgvector cosine similarity, then reranks candidates with a cross-encoder model before injecting context into the user prompt. When everything a chatbot knows fits `RAG_FULL_KNOWLEDGE_MAX_CHARS` (6000 characters by default, 0 turns it off), every turn gets all of it instead of a search (retrieval status `full`), so slang and follow-ups cannot miss. Otherwise, the agent also gets the `search_knowledge` tool (`llm/tools/knowledge_tool.py`): if the context it was given does not answer the customer, it searches again with its own query in the shop's words (at most twice per turn) before saying it does not know, and what it finds is added to the turn's sources. When an answer uses RAG context, the assistant answers from the retrieved context and never writes `[KB-n]` labels, source ids, document names or file names. Those are stripped server-side, and sources only travel in message metadata.
 
 ### RAG Environment Variables
 
@@ -178,6 +178,7 @@ RAG_RETRIEVAL_TOP_K=5
 RAG_RETRIEVAL_CANDIDATE_LIMIT=24
 RAG_RETRIEVAL_CONTEXT_MAX_CHARS=6000
 RAG_RETRIEVAL_MIN_SCORE=0.05
+RAG_FULL_KNOWLEDGE_MAX_CHARS=6000
 RAG_RERANK_CROSS_ENCODER_MODEL=cross-encoder/ms-marco-MiniLM-L-6-v2
 RAG_RERANK_BATCH_SIZE=16
 FIRECRAWL_API_KEY=
