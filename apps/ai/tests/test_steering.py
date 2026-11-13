@@ -39,7 +39,7 @@ def _patch(monkeypatch, rows, *, blocked=()):
     async def screen(text, chatbot):
         return "blocked" if text in blocked else None
 
-    async def knowledge(text, chatbot_id):
+    async def knowledge(text, chatbot_id, can_search=False):
         return f"<kb>{text}"
 
     async def dispatch(name, data):

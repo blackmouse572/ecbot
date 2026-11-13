@@ -162,7 +162,7 @@ Configured with the `/api/rag` prefix.
   - Debug endpoint for retrieving knowledge-base context before the chat agent answers.
   - Response includes formatted context, chunks, rerank scores, and `sources`.
 
-Chat requests automatically run RAG retrieval for completed documents attached to the chatbot through `rag_documents.metadata.chatbot_id`. Retrieval uses PostgreSQL full-text search and pgvector cosine similarity, then reranks candidates with a cross-encoder model before injecting context into the user prompt. When an answer uses RAG context, the assistant answers from the retrieved context and never writes `[KB-n]` labels, source ids, document names or file names. Those are stripped server-side, and sources only travel in message metadata.
+Chat requests automatically run RAG retrieval for completed documents attached to the chatbot through `rag_documents.metadata.chatbot_id`. Retrieval uses PostgreSQL full-text search and pgvector cosine similarity, then reranks candidates with a cross-encoder model before injecting context into the user prompt. When a chatbot has knowledge, the agent also gets the `search_knowledge` tool (`llm/tools/knowledge_tool.py`): if the context it was given does not answer the customer, it searches again with its own query in the shop's words (at most twice per turn) before saying it does not know, and what it finds is added to the turn's sources. When an answer uses RAG context, the assistant answers from the retrieved context and never writes `[KB-n]` labels, source ids, document names or file names. Those are stripped server-side, and sources only travel in message metadata.
 
 ### RAG Environment Variables
 

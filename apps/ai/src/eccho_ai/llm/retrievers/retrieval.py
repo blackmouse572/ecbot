@@ -196,6 +196,35 @@ class RAGRetrievalResult:
         return sources
 
 
+def format_context(chunks: list[RetrievedChunk], start: int = 1) -> str:
+    """The chunks as [KB-n] blocks, n counting from `start` (a later search in
+    the same turn continues the numbering), cut at the context budget."""
+    if not chunks:
+        return ""
+
+    parts: list[str] = []
+    used_chars = 0
+    max_chars = AppVars.RAG_RETRIEVAL_CONTEXT_MAX_CHARS
+
+    for index, chunk in enumerate(chunks, start=start):
+        source_url = public_source_url(chunk)
+        # Only the label (and a public page URL) — storage filenames and ids
+        # are internal and must not end up quoted to the customer.
+        header = f"[KB-{index}]"
+        if source_url:
+            header += f"; url={source_url}"
+        block = f"{header}\n{chunk.content.strip()}"
+        remaining = max_chars - used_chars
+        if remaining <= 0:
+            break
+        if len(block) > remaining:
+            block = block[:remaining].rstrip()
+        parts.append(block)
+        used_chars += len(block) + 2
+
+    return "\n\n".join(parts)
+
+
 class RAGRetrievalService:
     def __init__(self, store=None, embedder=None):
         self.embedding_dimension = AppVars.RAG_EMBEDDING_DIMENSION
@@ -299,30 +328,7 @@ class RAGRetrievalService:
         ]
 
     def format_context(self, chunks: list[RetrievedChunk]) -> str:
-        if not chunks:
-            return ""
-
-        parts: list[str] = []
-        used_chars = 0
-        max_chars = AppVars.RAG_RETRIEVAL_CONTEXT_MAX_CHARS
-
-        for index, chunk in enumerate(chunks, start=1):
-            source_url = public_source_url(chunk)
-            # Only the label (and a public page URL) — storage filenames and ids
-            # are internal and must not end up quoted to the customer.
-            header = f"[KB-{index}]"
-            if source_url:
-                header += f"; url={source_url}"
-            block = f"{header}\n{chunk.content.strip()}"
-            remaining = max_chars - used_chars
-            if remaining <= 0:
-                break
-            if len(block) > remaining:
-                block = block[:remaining].rstrip()
-            parts.append(block)
-            used_chars += len(block) + 2
-
-        return "\n\n".join(parts)
+        return format_context(chunks)
 
     async def _embed_query(self, query: str) -> list[float]:
         return await _embed_query_cached(

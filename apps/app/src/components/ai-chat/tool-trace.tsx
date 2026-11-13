@@ -38,6 +38,7 @@ const CALL_KINDS = new Set([
   "tag",
   "followup",
   "image",
+  "knowledge",
 ]);
 const KnowledgeIcon = TOOL_STEP_ICONS.knowledge;
 
