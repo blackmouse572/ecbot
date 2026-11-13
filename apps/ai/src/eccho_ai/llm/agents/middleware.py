@@ -52,14 +52,26 @@ def _with_sticky_session(model, conversation_id: str | None):
     )
 
 
+# A ranked reply only goes to providers that support every parameter we send
+# (tools, reasoning), run the model at 6 bits or more (fp4/int4 copies lose
+# quality; "unknown" keeps Google, Together and Fireworks), and do not keep
+# prompts, which hold customer messages.
+_PROVIDER_FILTERS = {
+    "require_parameters": True,
+    "quantizations": ["fp6", "fp8", "fp16", "bf16", "fp32", "unknown"],
+    "data_collection": "deny",
+}
+
+
 def _with_provider_sort(model, sort: str | None):
     """Rank OpenRouter's providers for this model by `sort` ("throughput" is
-    the fastest; perf review 2026-11-13). Merged into `extra_body` and copied,
-    like the sticky session above."""
+    the fastest; perf review 2026-11-13), among the ones _PROVIDER_FILTERS
+    allows. Merged into `extra_body` and copied, like the sticky session."""
     if not sort:
         return model
+    provider = {"sort": sort, **_PROVIDER_FILTERS}
     return model.model_copy(
-        update={"extra_body": {**(model.extra_body or {}), "provider": {"sort": sort}}}
+        update={"extra_body": {**(model.extra_body or {}), "provider": provider}}
     )
 
 

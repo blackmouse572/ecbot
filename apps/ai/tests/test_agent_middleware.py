@@ -164,7 +164,17 @@ async def test_provider_sort_reaches_openrouter_beside_the_session(monkeypatch):
     model = await _run_middleware(monkeypatch, base, conversation_id="conv-1", provider_sort="throughput")
 
     assert isinstance(model, ChatOpenAI)
-    assert model.extra_body == {"session_id": "conv-1", "provider": {"sort": "throughput"}}
+    assert model.extra_body == {
+        "session_id": "conv-1",
+        "provider": {
+            "sort": "throughput",
+            # Only among providers that run our tools and full-size weights,
+            # and do not keep customer messages.
+            "require_parameters": True,
+            "quantizations": ["fp6", "fp8", "fp16", "bf16", "fp32", "unknown"],
+            "data_collection": "deny",
+        },
+    }
     assert base.extra_body is None
 
 
