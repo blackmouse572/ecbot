@@ -26,6 +26,7 @@ export default defineConfig({
     include: [
       "src/**/*.{test,spec}.{ts,tsx}",
       "test/**/*.{test,spec}.{ts,tsx}",
+      "worker/**/*.{test,spec}.{ts,tsx}",
     ],
     css: false,
   },
