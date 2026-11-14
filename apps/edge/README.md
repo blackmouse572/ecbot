@@ -9,15 +9,35 @@ consumer instead (see References).
 
 ## Routes
 
-| Method | Path                      | Behavior                                               |
-| ------ | ------------------------- | ------------------------------------------------------- |
-| GET    | `/health`                 | Liveness check                                           |
-| GET    | `/robots.txt`             | `Disallow: /` for every crawler (see Bots & crawlers)     |
-| GET    | `/webhooks/:platform`     | Meta `hub.challenge` verification (Messenger, WhatsApp, Instagram, Threads), checked locally (see Env / bindings); 404 for every other slug |
-| POST   | `/webhooks/telegram/:botId` | Telegram (botId comes from the URL, not the payload)   |
-| POST   | `/webhooks/:platform`     | Every other platform (slug-based)                        |
+| Method | Path                        | Behavior                                                                                                                                    |
+| ------ | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/health`                   | Liveness check                                                                                                                              |
+| GET    | `/robots.txt`               | `Disallow: /` for every crawler (see Bots & crawlers)                                                                                       |
+| GET    | `/webhooks/:platform`       | Meta `hub.challenge` verification (Messenger, WhatsApp, Instagram, Threads), checked locally (see Env / bindings); 404 for every other slug |
+| POST   | `/webhooks/telegram/:botId` | Telegram (botId comes from the URL, not the payload)                                                                                        |
+| POST   | `/webhooks/:platform`       | Every other platform (slug-based)                                                                                                           |
 
 ## Webhook configuration per platform
+
+### Which callback URL goes where
+
+Meta configures one callback URL per app product, and the four are not
+interchangeable: each product signs with its own app secret, and a product
+pointed at another product's slug has its events dropped, not misread — the
+Messenger adapter logs a warning naming the slug to use instead (see
+`apps/api/src/modules/platform/adapters/messenger/`).
+
+| Meta app product | Callback URL in the dashboard                                                        | Signature key          |
+| ---------------- | ------------------------------------------------------------------------------------ | ---------------------- |
+| Messenger        | `https://edge.ecbot.dev/webhooks/messenger` (`/webhooks/facebook` is the same route) | `FACEBOOK_APP_SECRET`  |
+| WhatsApp         | `https://edge.ecbot.dev/webhooks/whatsapp`                                           | `FACEBOOK_APP_SECRET`  |
+| Instagram        | `https://edge.ecbot.dev/webhooks/instagram`                                          | `INSTAGRAM_APP_SECRET` |
+| Threads          | `https://edge.ecbot.dev/webhooks/threads`                                            | `THREADS_APP_SECRET`   |
+
+Messenger and WhatsApp run on one Meta app; Instagram has its own app, and
+Threads runs on a separate Threads app (`THREADS_APP_ID` / `THREADS_APP_SECRET`).
+The only thing all four share is the handshake token: `FACEBOOK_WEBHOOK_SECRET`
+is the `hub.verify_token` for every one of them.
 
 ### Facebook Messenger
 

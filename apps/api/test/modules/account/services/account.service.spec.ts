@@ -799,6 +799,74 @@ describe('AccountService - deleteFacebookUserData', () => {
     });
 });
 
+// Meta deauthorize callback: the person removed the app, so the grant behind
+// every token it issued them is gone. The logins are marked disconnected and
+// the pages connected through them lose their dead token — nothing is deleted.
+describe('AccountService - deauthorizeFacebookUserData', () => {
+    let service: AccountService;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockEm.transactional.mockImplementation(cb => cb(mockTem));
+        mockTem.find.mockResolvedValue([]);
+        mockOAuthFactory.getService.mockReturnValue(mockPlatformService);
+        service = buildService();
+    });
+
+    it('looks up only Facebook logins with that app-scoped user id', async () => {
+        mockAccountRepository.find.mockResolvedValue([]);
+
+        await service.deauthorizeFacebookUserData('fb-user-1');
+
+        expect(mockAccountRepository.find).toHaveBeenCalledWith({
+            externalId: 'fb-user-1',
+            type: ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
+            deletedAt: null,
+        });
+    });
+
+    it('marks the login and the pages linked through it inactive, clearing both tokens', async () => {
+        mockAccountRepository.find.mockResolvedValue([
+            { id: 'account-uuid-1', workspace: { id: 'ws-1' } },
+        ]);
+
+        const ids = await service.deauthorizeFacebookUserData('fb-user-1');
+
+        expect(ids).toEqual(['account-uuid-1']);
+        expect(mockAccountRepository.updateManyRaw).toHaveBeenCalledWith(
+            {
+                account: { $in: ['account-uuid-1'] },
+                type: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+            },
+            { accessToken: '', status: ENUM_ACCOUNT_STATUS.INACTIVE }
+        );
+        expect(mockAccountRepository.updateManyRaw).toHaveBeenCalledWith(
+            { id: { $in: ['account-uuid-1'] } },
+            { accessToken: '', status: ENUM_ACCOUNT_STATUS.INACTIVE }
+        );
+    });
+
+    it('deletes nothing — deauthorizing is not a deletion request', async () => {
+        mockAccountRepository.find.mockResolvedValue([
+            { id: 'account-uuid-1', workspace: { id: 'ws-1' } },
+        ]);
+
+        await service.deauthorizeFacebookUserData('fb-user-1');
+
+        expect(mockTem.nativeDelete).not.toHaveBeenCalled();
+        expect(mockEm.transactional).not.toHaveBeenCalled();
+    });
+
+    it('returns nothing and writes nothing when we hold nothing for that person', async () => {
+        mockAccountRepository.find.mockResolvedValue([]);
+
+        await expect(
+            service.deauthorizeFacebookUserData('unknown')
+        ).resolves.toEqual([]);
+        expect(mockAccountRepository.updateManyRaw).not.toHaveBeenCalled();
+    });
+});
+
 // S-7: the admin write paths (create / upsert / update) used to store the
 // token exactly as the DTO carried it, so a plaintext row later decrypted to
 // garbage and the refresh cron blocked the account. Every write path must put
