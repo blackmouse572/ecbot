@@ -46,6 +46,14 @@ const GRAPH_API_BASE = 'https://graph.facebook.com';
 const DEFAULT_API_VERSION = 'v21.0';
 const MESSAGE_LIMIT = 2000;
 
+// Webhook `object` per Meta product, for the ones that reach this adapter by
+// mistake. Messenger is `page`; these carry their own callback URL.
+const META_OBJECT_PLATFORM: Record<string, string> = {
+    instagram: 'instagram',
+    threads: 'threads',
+    whatsapp_business_account: 'whatsapp',
+};
+
 @Injectable()
 export class MessengerPlatformAdapter extends PlatformAdapter {
     readonly type = ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE;
@@ -147,6 +155,16 @@ export class MessengerPlatformAdapter extends PlatformAdapter {
         }
         if (!payload || typeof payload !== 'object') return [];
         if (payload.object !== 'page' || !Array.isArray(payload.entry)) {
+            // Meta gives each app product its own callback URL (see
+            // docs/platforms.md). One pointed at this slug arrives here, where
+            // the Messenger envelope would parse into nothing — say which slug
+            // it belongs on instead of dropping it silently.
+            const slug = META_OBJECT_PLATFORM[payload.object];
+            this.logger.warn(
+                slug
+                    ? `Meta ${payload.object} payload received on the messenger webhook — point that product's callback URL at /webhooks/${slug}`
+                    : `Meta payload object "${payload.object}" received on the messenger webhook — expected "page", dropped`
+            );
             return [];
         }
         const events: PlatformWebhookEvent[] = [];

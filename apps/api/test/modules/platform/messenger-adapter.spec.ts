@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { createHmac } from 'crypto';
 import { MessengerPlatformAdapter } from '../../../src/modules/platform/adapters/messenger/messenger.platform-adapter';
 
@@ -397,6 +398,69 @@ describe('MessengerPlatformAdapter.parse', () => {
     it('returns [] for parse("123") without throwing', () => {
         const a = makeAdapter();
         expect(a.parse('123')).toEqual([]);
+    });
+
+    // One callback URL per Meta product: a product pointed at the Messenger
+    // slug lands here, where its envelope parses into nothing.
+    describe('payload from another Meta product', () => {
+        const parseAs = (object: string) => {
+            const warn = jest
+                .spyOn(Logger.prototype, 'warn')
+                .mockImplementation();
+            const events = makeAdapter().parse(
+                JSON.stringify({ object, entry: [{ id: 'X', time: 1 }] })
+            );
+            const message = warn.mock.calls[0]?.[0] as string;
+            warn.mockRestore();
+            return { events, message };
+        };
+
+        it('names /webhooks/instagram for an Instagram payload', () => {
+            const { events, message } = parseAs('instagram');
+
+            expect(events).toEqual([]);
+            expect(message).toContain('/webhooks/instagram');
+        });
+
+        it('names /webhooks/threads for a Threads payload', () => {
+            const { events, message } = parseAs('threads');
+
+            expect(events).toEqual([]);
+            expect(message).toContain('/webhooks/threads');
+        });
+
+        it('names /webhooks/whatsapp for a WhatsApp payload', () => {
+            const { events, message } = parseAs('whatsapp_business_account');
+
+            expect(events).toEqual([]);
+            expect(message).toContain('/webhooks/whatsapp');
+        });
+
+        it('still warns, without suggesting a slug, for an object it does not know', () => {
+            const { events, message } = parseAs('something_else');
+
+            expect(events).toEqual([]);
+            expect(message).toContain('something_else');
+        });
+
+        it('says nothing about a Messenger payload, which is what this slug serves', () => {
+            const warn = jest
+                .spyOn(Logger.prototype, 'warn')
+                .mockImplementation();
+
+            const events = makeAdapter().parse(
+                wrap({
+                    sender: { id: 'S' },
+                    recipient: { id: 'PAGE' },
+                    timestamp: 1,
+                    message: { mid: 'm1', text: 'hi' },
+                })
+            );
+
+            expect(events).toHaveLength(1);
+            expect(warn).not.toHaveBeenCalled();
+            warn.mockRestore();
+        });
     });
 });
 
