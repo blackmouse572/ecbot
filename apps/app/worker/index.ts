@@ -50,4 +50,27 @@ app.get("/widget/:key", async (c) => {
   });
 });
 
+/**
+ * SPA fallback. React Router owns /login, /verify-email,
+ * /auth/:platform/callback and every /[workspace]/** URL, and OAuth popups,
+ * verification mails and bookmarks all hard-load them into a fresh document.
+ * Real files never get here — the assets layer answers them before the Worker
+ * runs — so any remaining GET is a client route that must render the shell
+ * instead of Hono's default 404.
+ *
+ * `/api/*` is excluded: that namespace belongs to this Worker's own JSON route,
+ * so an unknown path under it must keep answering 404 rather than HTML.
+ */
+app.get("*", async (c) => {
+  if (new URL(c.req.url).pathname.startsWith("/api/")) return c.notFound();
+
+  const shell = await c.env.ASSETS.fetch(new URL("/", c.req.url));
+  const html = await shell.text();
+
+  return c.html(html, 200, {
+    // The shell names the hashed bundle; a stale copy would point at dead files.
+    "Cache-Control": "no-store",
+  });
+});
+
 export default app;
