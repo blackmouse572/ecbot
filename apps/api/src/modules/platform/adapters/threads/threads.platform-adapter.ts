@@ -37,7 +37,9 @@ const INBOUND_FIELDS = new Set(['replies', 'mentions']);
 
 /**
  * Threads (Meta). The account is one Threads profile: `account.externalId` is
- * its Threads user id, which every webhook carries as `target_id`.
+ * its Threads user id. `target_id` only carries that id for `mentions`; a
+ * `replies` webhook puts the *post's* id there, so those are routed on the
+ * root post's owner (see {@link accountKeyFor}).
  *
  * Threads has no direct messages. The inbound "messages" are replies to the
  * profile's posts and posts that mention it; the conversation is keyed on the
@@ -146,7 +148,11 @@ export class ThreadsPlatformAdapter extends PlatformAdapter {
                 ? payload.values
                 : [payload.values];
             for (const change of values) {
-                changes.push({ accountKey: String(payload.target_id), change });
+                const accountKey = this.accountKeyFor(
+                    change,
+                    payload.target_id
+                );
+                if (accountKey) changes.push({ accountKey, change });
             }
         }
         for (const entry of payload.entry ?? []) {
@@ -162,6 +168,26 @@ export class ThreadsPlatformAdapter extends PlatformAdapter {
             const event = this.normalize(accountKey, change, fallbackTime);
             return event ? [event] : [];
         });
+    }
+
+    /**
+     * The profile a change belongs to. Meta's docs are explicit that
+     * `target_id` is "the media's ID for a replies or delete webhook, or the
+     * mentioned Threads user's app-scoped user ID for a mentions webhook", so
+     * keying every event on it made the processor look a post up as if it were
+     * a profile and drop the whole comment. For replies the linked profile is
+     * the root post's owner; a reply with no root-post owner cannot be routed,
+     * so it is dropped (our own replies come back on this feed too).
+     */
+    private accountKeyFor(
+        change: ThreadsWebhookChange,
+        targetId: string
+    ): string | null {
+        if (change?.field === 'replies') {
+            const ownerId = change.value?.root_post?.owner_id;
+            return ownerId ? String(ownerId) : null;
+        }
+        return String(targetId);
     }
 
     private normalize(

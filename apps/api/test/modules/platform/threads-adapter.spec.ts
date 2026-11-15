@@ -27,7 +27,8 @@ const sign = (body: string) =>
     'sha256=' +
     createHmac('sha256', APP_SECRET).update(body, 'utf8').digest('hex');
 
-const ME = '1789';
+const ME = '39520620810916023';
+const MEDIA = '17997005763099368';
 const ACCOUNT = { id: 'acc-1', accessToken: 'e', externalId: ME } as any;
 
 const reply = (value: Record<string, unknown> = {}, field = 'replies') => ({
@@ -38,17 +39,26 @@ const reply = (value: Record<string, unknown> = {}, field = 'replies') => ({
         text: 'Còn size M không shop?',
         media_type: 'TEXT_POST',
         timestamp: '2026-10-07T08:00:00+0000',
-        replied_to: { id: 'P1' },
-        root_post: { id: 'P1', owner_id: ME, username: 'eccho.shop' },
+        replied_to: { id: MEDIA },
+        root_post: { id: MEDIA, owner_id: ME, username: 'eccho.shop' },
         ...value,
     },
 });
 
-const envelope = (values: unknown) =>
+/**
+ * Meta's Threads envelope. `target_id` is NOT always the linked profile: for a
+ * `replies` webhook it is the id of the post that received the reply, and only
+ * `mentions` carries the mentioned user's app-scoped id (see
+ * https://developers.facebook.com/docs/threads/webhooks).
+ */
+const envelope = (values: unknown, targetId = MEDIA) =>
     JSON.stringify({
         app_id: 'APP',
-        topic: 'moderate',
-        target_id: ME,
+        topic:
+            values && (values as any).field === 'mentions'
+                ? 'interaction'
+                : 'moderate',
+        target_id: targetId,
         time: 1791360000,
         values,
     });
@@ -90,8 +100,11 @@ describe('ThreadsPlatformAdapter.verifyChallenge', () => {
 });
 
 describe('ThreadsPlatformAdapter.parse', () => {
-    it('turns a reply into a message keyed on the target profile', () => {
-        const [event] = makeAdapter().parse(envelope(reply()));
+    // Regression: Meta puts the post id in `target_id` for `replies`, so keying
+    // the event on it looked the post up as if it were a profile and every
+    // comment was dropped with "No account for externalId=<post id>".
+    it('keys a reply on the post owner, not on the post id in target_id', () => {
+        const [event] = makeAdapter().parse(envelope(reply(), MEDIA));
         expect(event).toMatchObject({
             kind: 'message',
             accountKey: ME,
@@ -104,17 +117,29 @@ describe('ThreadsPlatformAdapter.parse', () => {
         expect(event.timestamp.toISOString()).toBe('2026-10-07T08:00:00.000Z');
     });
 
-    it('turns a mention into a message', () => {
+    it('keys a mention on the mentioned profile in target_id', () => {
         const events = makeAdapter().parse(
             envelope(
                 reply(
                     { id: 'M1', root_post: undefined, replied_to: undefined },
                     'mentions'
-                )
+                ),
+                ME
             )
         );
         expect(events).toHaveLength(1);
-        expect(events[0].externalMessageId).toBe('M1');
+        expect(events[0]).toMatchObject({
+            accountKey: ME,
+            externalMessageId: 'M1',
+        });
+    });
+
+    it('drops a reply whose root post carries no owner to route on', () => {
+        expect(
+            makeAdapter().parse(
+                envelope(reply({ root_post: { id: MEDIA, username: 'x' } }))
+            )
+        ).toEqual([]);
     });
 
     it('reads a batched values list', () => {
@@ -156,7 +181,7 @@ describe('ThreadsPlatformAdapter.parse', () => {
         ).toEqual([]);
     });
 
-    it('keeps a reply under a post owned by someone else', () => {
+    it('keeps a reply under a post owned by someone else, keyed on that owner', () => {
         const events = makeAdapter().parse(
             envelope(
                 reply({
@@ -166,6 +191,7 @@ describe('ThreadsPlatformAdapter.parse', () => {
             )
         );
         expect(events).toHaveLength(1);
+        expect(events[0].accountKey).toBe('42');
     });
 
     it('ignores publish and delete notifications', () => {
