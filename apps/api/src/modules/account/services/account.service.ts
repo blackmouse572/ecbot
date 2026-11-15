@@ -689,6 +689,40 @@ export class AccountService implements IAccountService {
     }
 
     /**
+     * Meta deauthorize callback: the person removed the app from Facebook,
+     * which revokes the grant behind every token it issued them. Their
+     * Facebook logins are marked disconnected in every workspace, and the
+     * pages connected through them lose a page token that no longer works, so
+     * nothing keeps reporting as connected until a send fails. Unlike data
+     * deletion nothing is removed — this only unlinks. Returns the ids of the
+     * logins that were marked.
+     */
+    async deauthorizeFacebookUserData(
+        facebookUserId: string
+    ): Promise<string[]> {
+        const accounts = await this.accountRepository.find({
+            externalId: facebookUserId,
+            type: ENUM_ACCOUNT_TYPE.FACEBOOK_ACCOUNT,
+            deletedAt: null,
+        });
+        if (accounts.length === 0) return [];
+
+        const accountIds = accounts.map(account => account.id);
+        await this.accountRepository.updateManyRaw(
+            {
+                account: { $in: accountIds },
+                type: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+            },
+            { accessToken: '', status: ENUM_ACCOUNT_STATUS.INACTIVE }
+        );
+        await this.accountRepository.updateManyRaw(
+            { id: { $in: accountIds } },
+            { accessToken: '', status: ENUM_ACCOUNT_STATUS.INACTIVE }
+        );
+        return accountIds;
+    }
+
+    /**
      * Best-effort per-platform cleanup on unlink (e.g. Telegram deregisters its
      * webhook). Resolved generically via the OAuth platform registry; platforms
      * that don't need cleanup simply don't implement `onUnlink`. Never aborts
