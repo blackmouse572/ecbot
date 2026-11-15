@@ -402,6 +402,48 @@ class PgVectorStore:
                 chatbot_id,
             )
 
+    async def small_knowledge_chunks(self, *, chatbot_id: str, max_chars: int) -> list[dict[str, Any]] | None:
+        """Every chunk of the chatbot's completed documents, oldest document
+        first and in chunk order, or None when together they exceed `max_chars`."""
+        pool = await get_pool()
+        async with pool.acquire() as conn:
+            total = await conn.fetchval(
+                """
+                SELECT COALESCE(SUM(c.content_chars), 0)
+                FROM rag.rag_document_chunks c
+                JOIN rag.rag_documents d ON d.id = c.document_id
+                WHERE
+                    d.status = 'COMPLETED'
+                    AND (d.metadata->'chatbot_ids' ? $1 OR d.metadata->>'chatbot_id' = $1)
+                """,
+                chatbot_id,
+            )
+            if total > max_chars:
+                return None
+            rows = await conn.fetch(
+                """
+                SELECT
+                    c.id AS chunk_id,
+                    c.document_id,
+                    c.chunk_index,
+                    c.content,
+                    c.content_chars,
+                    c.metadata AS chunk_metadata,
+                    d.source_filename AS filename,
+                    d.local_path AS stored_path,
+                    d.metadata AS document_metadata,
+                    d.created_at AS document_created_at
+                FROM rag.rag_document_chunks c
+                JOIN rag.rag_documents d ON d.id = c.document_id
+                WHERE
+                    d.status = 'COMPLETED'
+                    AND (d.metadata->'chatbot_ids' ? $1 OR d.metadata->>'chatbot_id' = $1)
+                ORDER BY d.created_at, c.document_id, c.chunk_index
+                """,
+                chatbot_id,
+            )
+            return [_chunk_row(row) for row in rows]
+
     async def full_text_search_chunks(
         self,
         *,

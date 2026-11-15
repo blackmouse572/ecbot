@@ -29,6 +29,7 @@ from sqlmodel import select
 
 from eccho_ai.core.app_logger import get_logger
 from eccho_ai.core.postgres import PostgresRepo
+from eccho_ai.llm.tools.knowledge_tool import SEARCH_KNOWLEDGE_TOOL
 from eccho_ai.models.messages import Messages
 from eccho_ai.modules.chat.models.agent_models import AgentRequestContext
 
@@ -69,7 +70,7 @@ async def screen_input(text: str, chatbot: Any) -> str | None:
     return await run_input_guardrail(text, chatbot) if chatbot is not None else None
 
 
-async def with_knowledge(text: str, chatbot_id: str) -> str:
+async def with_knowledge(text: str, chatbot_id: str, can_search: bool = False) -> str:
     """`text` wrapped with its knowledge retrieval, as the turn's first message is."""
     # Imported here: chat.services imports this package (agent.py).
     from eccho_ai.modules.chat.services import _build_rag_message, rag_retrieval_service
@@ -79,7 +80,12 @@ async def with_knowledge(text: str, chatbot_id: str) -> str:
     except Exception as exc:  # noqa: BLE001 (never fail the turn)
         logger.warning("steer_retrieval_failed", error=str(exc), chatbot_id=chatbot_id)
         return text
-    return _build_rag_message(text, retrieval)
+    return _build_rag_message(text, retrieval, can_search=can_search)
+
+
+def _can_search(context: Any) -> bool:
+    """Whether the turn's agent has search_knowledge (a chatbot with knowledge)."""
+    return any(t.name == SEARCH_KNOWLEDGE_TOOL for t in (getattr(context, "tools", None) or []))
 
 
 def _already_steered(messages: list[Any]) -> set[str]:
@@ -121,7 +127,7 @@ class SteeringMiddleware(AgentMiddleware[AgentState[Any], AgentRequestContext]):
 
         ids = [str(r.id) for r in taken]
         text = "\n".join((r.text or "").strip() for r in taken)
-        content = await with_knowledge(text, context.chatbot_id)
+        content = await with_knowledge(text, context.chatbot_id, can_search=_can_search(context))
         await adispatch_custom_event(STEERED_EVENT, {"message_ids": ids})
         logger.info("turn_steered", conversation_id=conversation_id, count=len(ids))
         return {"messages": [HumanMessage(content=content, additional_kwargs={STEERED_IDS_KEY: ids})]}

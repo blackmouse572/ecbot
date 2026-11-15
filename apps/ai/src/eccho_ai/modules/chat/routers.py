@@ -82,7 +82,9 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
         with apply_cassette(cassette_name_for(chat_request.message)):
             response = await ctx.agent.ainvoke(
                 input=await get_agent_input(chat_request, retrieval=retrieval),
-                context=get_agent_context(chat_request, request, ctx.chatbot),
+                context=get_agent_context(
+                    chat_request, request, ctx.chatbot, retrieval=retrieval, sources=source_attributions
+                ),
                 config=config,
                 version="v2",
             )
@@ -267,7 +269,9 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
         with apply_cassette(cassette_name_for(message)):
             async for event in ctx.agent.astream_events(
                 input=await get_agent_input(chat_request, retrieval=retrieval),
-                context=get_agent_context(chat_request, request, ctx.chatbot),
+                context=get_agent_context(
+                    chat_request, request, ctx.chatbot, retrieval=retrieval, sources=source_attributions
+                ),
                 config=config,
                 version="v2",
             ):

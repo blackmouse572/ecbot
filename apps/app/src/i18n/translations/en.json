@@ -1224,6 +1224,7 @@
           "handoff": "handoff",
           "followup": "follow-up",
           "image": "image",
+          "knowledge": "knowledge",
           "tool": "tool",
           "knowledge": "knowledge"
         }

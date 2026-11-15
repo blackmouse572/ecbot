@@ -1,7 +1,10 @@
 import { createHash, createHmac, timingSafeEqual } from 'crypto';
 
 // Shared by every channel delivered through a Meta app webhook (Messenger,
-// WhatsApp): the same `hub.*` handshake and `x-hub-signature-256` HMAC.
+// WhatsApp, Instagram, Threads): the same `hub.*` handshake and
+// `x-hub-signature-256` HMAC. The handshake token is one value for all four
+// (FACEBOOK_WEBHOOK_SECRET); the HMAC key is each adapter's own app secret,
+// since Instagram and Threads run on their own Meta apps.
 
 export function verifyMetaChallenge(
     req: Request,

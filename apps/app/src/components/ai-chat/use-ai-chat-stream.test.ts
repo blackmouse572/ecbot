@@ -608,6 +608,7 @@ describe("tool kinds", () => {
     expect(kind("schedule_followup")).toBe("followup");
     expect(kind("apply_customer_tag")).toBe("tag");
     expect(kind("get_customer_field")).toBe("customer");
+    expect(kind("search_knowledge")).toBe("knowledge");
     expect(kind("lookup_order")).toBe("tool");
   });
 

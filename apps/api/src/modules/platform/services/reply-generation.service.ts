@@ -227,6 +227,7 @@ export class ReplyGenerationService {
                 const stream = await this.chatbotAIService.streamChat(
                     {
                         chatbot_id: chatbot.id,
+                        workspace_id: chatbot.workspace.id,
                         user_id: senderId,
                         provider_id: account.id,
                         message,

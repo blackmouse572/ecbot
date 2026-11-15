@@ -31,6 +31,7 @@ export const BUILT_IN_TOOL_KINDS: Record<string, ToolKind> = {
   cancel_followup: "followup",
   send_image: "image",
   send_media: "image",
+  search_knowledge: "knowledge",
 };
 
 // Motion for the chat (tool trace, text swaps, bubbles). Curves mirror the
@@ -47,8 +48,8 @@ export const CHAT_ACCORDION_DURATION = 0.32;
 // The live elapsed counter ticks at this rate while a call runs.
 export const ELAPSED_TICK_MS = 120;
 
-// Icon per kind of step in the tool trace (`knowledge` is the RAG search row).
-export const TOOL_STEP_ICONS: Record<ToolKind | "knowledge", Icon> = {
+// Icon per kind of step in the tool trace (`knowledge` is also the RAG search row).
+export const TOOL_STEP_ICONS: Record<ToolKind, Icon> = {
   http: IconFunction,
   tool: IconFunction,
   mcp: IconPlug,

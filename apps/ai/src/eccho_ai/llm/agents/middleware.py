@@ -16,8 +16,10 @@ from __future__ import annotations
 
 from typing import Any
 
+import openai
 from langchain.agents.middleware import AgentMiddleware, AgentState
 
+from eccho_ai.core.app_logger import get_logger
 from eccho_ai.llm.prompts.current_time import (
     render_current_time,
     with_current_time,
@@ -27,6 +29,8 @@ from eccho_ai.llm.prompts.loader import render_system_prompt
 from eccho_ai.llm.prompts.opening_hours import render_opening_hours
 from eccho_ai.llm.providers.chat_model import build_chat_model
 from eccho_ai.modules.chat.models.agent_models import AgentRequestContext
+
+logger = get_logger(__name__)
 
 
 def _context_from(request) -> object | None:
@@ -49,6 +53,30 @@ def _with_sticky_session(model, conversation_id: str | None):
         return model
     return model.model_copy(
         update={"extra_body": {**(model.extra_body or {}), "session_id": conversation_id}}
+    )
+
+
+# Every reply only goes to providers that support every parameter we send
+# (tools, reasoning), run the model at 6 bits or more (fp4/int4 copies lose
+# quality; "unknown" keeps Google, Together and Fireworks), and do not keep
+# prompts, which hold customer messages.
+_PROVIDER_FILTERS = {
+    "require_parameters": True,
+    "quantizations": ["fp6", "fp8", "fp16", "bf16", "fp32", "unknown"],
+    "data_collection": "deny",
+}
+
+
+def _with_provider_routing(model, sort: str | None):
+    """Filter OpenRouter's providers for this model by _PROVIDER_FILTERS and,
+    when `sort` is set, rank the rest by it ("throughput" is the fastest; perf
+    review 2026-11-13). Merged into `extra_body` and copied, like the sticky
+    session."""
+    if "extra_body" not in type(model).model_fields:
+        return model  # not an OpenRouter client (test doubles)
+    provider = {"sort": sort, **_PROVIDER_FILTERS} if sort else dict(_PROVIDER_FILTERS)
+    return model.model_copy(
+        update={"extra_body": {**(model.extra_body or {}), "provider": provider}}
     )
 
 
@@ -76,14 +104,19 @@ class ChatbotConfigMiddleware(AgentMiddleware[AgentState[Any], AgentRequestConte
                 temperature=chatbot.model_temperature,
                 max_tokens=chatbot.max_tokens,
             )
+            sticky = _with_sticky_session(model, getattr(context, "conversation_id", None))
             request = request.override(
-                model=_with_sticky_session(
-                    model, getattr(context, "conversation_id", None)
-                ),
+                model=_with_provider_routing(sticky, getattr(context, "provider_sort", None)),
                 tools=[*request.tools, *injected],
                 system_prompt=render_system_prompt(chatbot),
                 messages=with_current_time(request.messages, _turn_context(context)),
             )
+            try:
+                return await handler(request)
+            except openai.NotFoundError:
+                # No provider of this model passes the filters: reply anyway.
+                logger.warning("provider_filters_unmet", model=chatbot.model_text_name)
+                return await handler(request.override(model=sticky))
         return await handler(request)
 
     async def awrap_tool_call(self, request, handler):

@@ -142,4 +142,63 @@ describe('ChatbotAIService', () => {
 
         expect(roles).not.toContain(system);
     });
+
+    // Which OpenRouter provider serves the reply. The public build has no
+    // routing and sends nothing, so OpenRouter routes as it always did.
+    describe('reply routing', () => {
+        const withRouting = (providerSort: jest.Mock) =>
+            new ChatbotAIService(
+                { axiosRef: { post, delete: del } } as any,
+                configService as any,
+                new ChatbotTimezoneService({
+                    get: () => 'Asia/Ho_Chi_Minh',
+                } as any),
+                { providerSort }
+            );
+        const params = { workspace_id: 'ws-1', zones: { chatbot: {} } } as any;
+
+        it('sends nothing without a routing provider', async () => {
+            post.mockResolvedValue({ data: {} });
+
+            await service.streamChat(params);
+
+            const body = post.mock.calls[0][1];
+            expect(body).not.toHaveProperty('provider_sort');
+            expect(body).not.toHaveProperty('workspace_id');
+        });
+
+        it("sends the workspace's provider sort", async () => {
+            post.mockResolvedValue({ data: {} });
+            const providerSort = jest.fn().mockResolvedValue('throughput');
+
+            await withRouting(providerSort).streamChat(params);
+
+            expect(providerSort).toHaveBeenCalledWith('ws-1');
+            expect(post.mock.calls[0][1]).toMatchObject({
+                provider_sort: 'throughput',
+            });
+            expect(post.mock.calls[0][1]).not.toHaveProperty('workspace_id');
+        });
+
+        it('sends nothing when the workspace keeps the default routing', async () => {
+            post.mockResolvedValue({ data: {} });
+
+            await withRouting(jest.fn().mockResolvedValue(null)).streamChat(
+                params
+            );
+
+            expect(post.mock.calls[0][1]).not.toHaveProperty('provider_sort');
+        });
+
+        it('still replies when the routing lookup fails', async () => {
+            post.mockResolvedValue({ data: {} });
+
+            await withRouting(
+                jest.fn().mockRejectedValue(new Error('db down'))
+            ).streamChat(params);
+
+            expect(post).toHaveBeenCalledTimes(1);
+            expect(post.mock.calls[0][1]).not.toHaveProperty('provider_sort');
+        });
+    });
 });

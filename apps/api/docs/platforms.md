@@ -151,15 +151,51 @@ A `PlatformWebhookEvent` is the normalized shape every adapter must produce:
 
 All providers POST to the same controller, distinguished by slug:
 
-| Slug                           | Account type     | Adapter                           |
-| ------------------------------ | ---------------- | --------------------------------- |
-| `messenger` (alias `facebook`) | `FACEBOOK_PAGE`  | `MessengerPlatformAdapter`        |
-| `zalo`                         | `ZALO_PAGE`      | `ZaloPlatformAdapter` (stub)      |
-| `instagram`                    | `INSTAGRAM_PAGE` | `InstagramPlatformAdapter` (stub) |
-| `tiktok`                       | `TIKTOK_SHOP`    | `TiktokPlatformAdapter` (stub)    |
-| `shopee`                       | `SHOPEE_SHOP`    | `ShopeePlatformAdapter` (stub)    |
+| Slug                           | Account type        | Adapter                        |
+| ------------------------------ | ------------------- | ------------------------------ |
+| `messenger` (alias `facebook`) | `FACEBOOK_PAGE`     | `MessengerPlatformAdapter`     |
+| `instagram`                    | `INSTAGRAM_PAGE`    | `InstagramPlatformAdapter`     |
+| `whatsapp`                     | `WHATSAPP_BUSINESS` | `WhatsAppPlatformAdapter`      |
+| `threads`                      | `THREADS_ACCOUNT`   | `ThreadsPlatformAdapter`       |
+| `telegram`                     | `TELEGRAM_BOT`      | `TelegramPlatformAdapter`      |
+| `zalo`                         | `ZALO_PAGE`         | `ZaloPlatformAdapter` (stub)   |
+| `tiktok`                       | `TIKTOK_SHOP`       | `TiktokPlatformAdapter` (stub) |
+| `shopee`                       | `SHOPEE_SHOP`       | `ShopeePlatformAdapter` (stub) |
 
 The map lives in `constants/platform-slug.constant.ts`.
+
+### Meta app products → callback URL
+
+Meta configures one callback URL per app product, on either the edge Worker
+(`apps/edge`) or this API — but never both for the same product, and never a
+product on another product's slug. Each product signs with its own app secret,
+so a payload arriving on the wrong slug is dropped rather than parsed:
+`MessengerPlatformAdapter.parse` logs the slug the product belongs on and
+returns no events.
+
+| Meta app product | Callback URL                                                                        | Signature key          |
+| ---------------- | ----------------------------------------------------------------------------------- | ---------------------- |
+| Messenger        | `https://edge.ecbot.dev/webhooks/messenger` (`/webhooks/facebook` is the same slug) | `FACEBOOK_APP_SECRET`  |
+| WhatsApp         | `https://edge.ecbot.dev/webhooks/whatsapp`                                          | `FACEBOOK_APP_SECRET`  |
+| Instagram        | `https://edge.ecbot.dev/webhooks/instagram`                                         | `INSTAGRAM_APP_SECRET` |
+| Threads          | `https://edge.ecbot.dev/webhooks/threads`                                           | `THREADS_APP_SECRET`   |
+
+Without the Worker, the same four slugs work against this API directly:
+`https://<api-host>/api/v1/public/webhooks/<slug>`.
+
+Messenger and WhatsApp run on one Meta app; Instagram has its own app, and
+Threads runs on a separate Threads app. The `hub.verify_token` is the one shared
+value — `FACEBOOK_WEBHOOK_SECRET` for all four.
+
+### Deauthorize callback
+
+Facebook Login → **Deauthorize Callback URL** should point at
+`https://<api-host>/api/v1/public/deauthorization/facebook`. Meta POSTs a
+`signed_request` when a person removes the app; the endpoint verifies it with
+`FACEBOOK_APP_SECRET`, marks that person's Facebook logins disconnected and
+clears the page tokens issued under the revoked grant, then answers `200`. It
+never deletes anything — the data deletion callback
+(`/api/v1/public/data-deletion/facebook`) owns that.
 
 ### GET — challenge handshake
 

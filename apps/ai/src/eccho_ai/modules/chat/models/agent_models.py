@@ -25,6 +25,8 @@ class AgentRequestContext(BaseModel):
     request_id: str | None = Field(default=None)
     chatbot_id: str = Field(default=...)
     conversation_id: str | None = Field(default=None)
+    # OpenRouter `provider.sort` for this reply; None keeps its own routing.
+    provider_sort: str | None = Field(default=None)
     user_id: str | None = Field(default=None)
     provider_id: str | None = Field(default=None)
     # Customer-aware fields injected by apps/api when resolving the inbound

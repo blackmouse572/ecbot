@@ -1,6 +1,6 @@
 import { ChatbotTimezoneService } from './chatbot-timezone.service';
 import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IncomingMessage } from 'http';
 import { getInternalAuthHeader } from '@app/common/utils/gcp-id-token.util';
@@ -14,6 +14,10 @@ import {
     AI_STREAM_IDLE_TIMEOUT_MS,
     CONVERSATION_MEMORY_HTTP_TIMEOUT_MS,
 } from '../constants/chatbot-ai.constant';
+import {
+    REPLY_ROUTING,
+    ReplyRouting,
+} from '../interfaces/reply-routing.interface';
 
 export interface AIChatHistoryMessage {
     role: 'user' | 'assistant';
@@ -22,6 +26,8 @@ export interface AIChatHistoryMessage {
 
 interface AIChatStreamParams {
     chatbot_id: string;
+    /** Whose plan picks the reply's provider (REPLY_ROUTING); not sent. */
+    workspace_id: string;
     user_id: string;
     provider_id: string;
     message: string;
@@ -81,12 +87,16 @@ export interface AISummary {
 
 @Injectable()
 export class ChatbotAIService {
+    private readonly logger = new Logger(ChatbotAIService.name);
     private readonly aiBackendUrl: string;
 
     constructor(
         private readonly httpService: HttpService,
         private readonly configService: ConfigService,
-        private readonly timezoneService: ChatbotTimezoneService
+        private readonly timezoneService: ChatbotTimezoneService,
+        @Optional()
+        @Inject(REPLY_ROUTING)
+        private readonly routing?: ReplyRouting
     ) {
         this.aiBackendUrl = this.configService.get<string>('ai.backend.url');
     }
@@ -100,17 +110,19 @@ export class ChatbotAIService {
         if (params.conversation_id) {
             headers['X-Request-ID'] = params.conversation_id;
         }
-        const { zones, ...body } = params;
+        const { zones, workspace_id, ...body } = params;
         const resolved = this.timezoneService.resolve(
             zones.chatbot,
             zones.conversation
         );
+        const providerSort = await this.providerSort(workspace_id);
         const response = await this.httpService.axiosRef.post(
             `${this.aiBackendUrl}/api/chat/stream`,
             {
                 ...body,
                 agent_timezone: resolved.agent,
                 customer_timezone: resolved.customer,
+                ...(providerSort ? { provider_sort: providerSort } : {}),
             },
             {
                 responseType: 'stream',
@@ -120,6 +132,21 @@ export class ChatbotAIService {
             }
         );
         return response.data as IncomingMessage;
+    }
+
+    /** Routing only speeds a reply up: a failed lookup keeps the default. */
+    private async providerSort(workspaceId: string) {
+        if (!this.routing) {
+            return null;
+        }
+        try {
+            return await this.routing.providerSort(workspaceId);
+        } catch (error: unknown) {
+            this.logger.warn(
+                `Reply routing lookup failed for workspace ${workspaceId}: ${String(error)}`
+            );
+            return null;
+        }
     }
 
     async describeImages(

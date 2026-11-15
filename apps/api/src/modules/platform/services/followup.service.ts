@@ -404,6 +404,7 @@ export class FollowupService {
             const stream = await this.chatbotAIService.streamChat(
                 {
                     chatbot_id: chatbotId,
+                    workspace_id: chatbot.workspace.id,
                     user_id: userId,
                     provider_id: providerId,
                     message: prompt,

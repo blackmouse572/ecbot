@@ -19,7 +19,8 @@ export interface ThreadsWebhookChange {
 }
 
 /**
- * Threads delivers its own envelope: the linked user is `target_id` and the
+ * Threads delivers its own envelope: `target_id` identifies what the change is
+ * about (the post for `replies`, the mentioned profile for `mentions`) and the
  * change sits in `values` (one object, or a list when Meta batches). The
  * classic Meta `entry[].changes[]` envelope is accepted as well, keyed on
  * `entry.id`.
