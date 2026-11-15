@@ -134,14 +134,6 @@ describe('ThreadsPlatformAdapter.parse', () => {
         });
     });
 
-    it('drops a reply whose root post carries no owner to route on', () => {
-        expect(
-            makeAdapter().parse(
-                envelope(reply({ root_post: { id: MEDIA, username: 'x' } }))
-            )
-        ).toEqual([]);
-    });
-
     it('reads a batched values list', () => {
         const events = makeAdapter().parse(
             envelope([reply({ id: 'R1' }), reply({ id: 'R2' })])
@@ -166,7 +158,7 @@ describe('ThreadsPlatformAdapter.parse', () => {
         ).toEqual([]);
     });
 
-    it('drops a reply whose root post is missing, since it may be our own', () => {
+    it('drops a reply with no root post owner to route on', () => {
         expect(
             makeAdapter().parse(
                 envelope(
