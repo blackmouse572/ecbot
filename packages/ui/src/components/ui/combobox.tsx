@@ -56,8 +56,16 @@ function ComboboxInput({
   );
 }
 
+// The popup is portaled to document.body, outside the modal Radix Dialog
+// (Medusa's Drawer/Dialog) that may contain the input. That dialog sets
+// pointer-events: none on the body while open, and the portal inherits it:
+// clicks and wheel hit-tests pass through the list to the dialog underneath,
+// so it cannot be hovered, clicked or scrolled. Inline style (not a utility
+// class) so the escape does not depend on the Tailwind build and can be
+// asserted in tests.
 function ComboboxContent({
   className,
+  style,
   side = "bottom",
   sideOffset = 6,
   align = "start",
@@ -86,6 +94,7 @@ function ComboboxContent({
             "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 duration-100",
             className,
           )}
+          style={{ pointerEvents: "auto", ...style }}
           {...props}
         />
       </ComboboxPrimitive.Positioner>

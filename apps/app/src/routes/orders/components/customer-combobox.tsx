@@ -89,7 +89,7 @@ export function CustomerCombobox({
           inputProps.onBlur?.(event);
         }}
       />
-      <ComboboxContent className="pointer-events-auto">
+      <ComboboxContent>
         {isLoading ? (
           <div className="txt-compact-small text-ui-fg-muted px-3 py-2">
             {t("general.loading")}
