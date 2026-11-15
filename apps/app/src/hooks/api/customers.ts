@@ -48,6 +48,8 @@ export type CustomerListQuery = {
   stage?: string;
   permission?: string;
   dormant?: boolean;
+  // A source id: its own customers and those of its codes.
+  source?: string;
 };
 
 export const customerQueryKeys = {

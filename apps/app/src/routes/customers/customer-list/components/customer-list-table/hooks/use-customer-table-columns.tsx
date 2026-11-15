@@ -10,6 +10,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { ConversationsCell } from "../components/conversations-cell";
+import { FirstSourceCell } from "../components/first-source-cell";
 
 const columnHelper = createColumnHelper<CustomerGetResponseDto>();
 
@@ -65,6 +66,14 @@ export const useCustomerTableColumns = () => {
             />
           ) : null;
         },
+      }),
+      columnHelper.display({
+        id: "firstSource",
+        header: () => t("customers.list.firstSource"),
+        cell: ({ row }) =>
+          row.original.marketing ? (
+            <FirstSourceCell source={row.original.marketing.firstSource} />
+          ) : null,
       }),
       columnHelper.display({
         id: "conversations",

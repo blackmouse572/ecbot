@@ -14,6 +14,7 @@ describe('E2E — customer marketing labels', () => {
     let ownerToken: string;
     let strangerToken: string;
     let workspaceId: string;
+    let sourceId: string;
     const ids: Record<'asked' | 'stopped' | 'fresh' | 'buyer', string> = {
         asked: '',
         stopped: '',
@@ -96,6 +97,44 @@ describe('E2E — customer marketing labels', () => {
              values (gen_random_uuid(), ?, ?, 'Page', ?, 'FACEBOOK_PAGE', 't', now(), now()) returning id`,
             [workspaceId, `page-${Date.now()}`, `page-${Date.now()}`]
         );
+        // First sources: "Hỏi giá" opened the flyer link itself, "Mua gần
+        // đây" its KOL code, "Đã dừng" another source.
+        const insertLink = async (
+            name: string,
+            code: string,
+            parentId: string | null
+        ) =>
+            (
+                await sql.execute(
+                    `insert into tracked_links (id, workspace_id, account_id, parent_id, kind, name, code, created_at)
+                     values (gen_random_uuid(), ?, ?, ?, 'LINK', ?, ?, now()) returning id`,
+                    [workspaceId, account.id, parentId, name, code]
+                )
+            )[0].id as string;
+        sourceId = await insertLink('Tờ rơi Tết', `flyer-${Date.now()}`, null);
+        const kolCode = await insertLink(
+            'KOL Minh Thư',
+            `kol-${Date.now()}`,
+            sourceId
+        );
+        const otherSource = await insertLink(
+            'Quảng cáo',
+            `ad-${Date.now()}`,
+            null
+        );
+        for (const [customerId, linkId] of [
+            [ids.asked, sourceId],
+            [ids.buyer, kolCode],
+            [ids.stopped, otherSource],
+        ]) {
+            await sql.execute(
+                `update customer_marketing_states
+                    set first_tracked_link_id = ?, first_source_at = now()
+                  where customer_id = ?`,
+                [linkId, customerId]
+            );
+        }
+
         const [contactPoint] = await sql.execute(
             `insert into contact_points (id, workspace_id, customer_id, platform, external_sender_id, created_at, updated_at)
              values (gen_random_uuid(), ?, ?, 'FACEBOOK_PAGE', 'psid-1', now(), now()) returning id`,
@@ -182,6 +221,35 @@ describe('E2E — customer marketing labels', () => {
             .get(`${customersUrl()}?stage=ASKED_PRICE,NEW`)
             .set(...auth(ownerToken));
         expect(page.body._metadata.pagination.total).toBe(2);
+    });
+
+    it('filters by first source, its codes included, and names the code on each row', async () => {
+        expect(await listNames(`source=${sourceId}`)).toEqual(
+            ['Hỏi giá', 'Mua gần đây'].sort()
+        );
+        await new Promise(resolve => setTimeout(resolve, 60));
+        const res = await http(ctx.app)
+            .get(`${customersUrl()}?source=${sourceId}`)
+            .set(...auth(ownerToken));
+        const byName = Object.fromEntries(
+            res.body.data.map((c: any) => [c.name, c.marketing.firstSource])
+        );
+        expect(byName['Mua gần đây']).toEqual(
+            expect.objectContaining({
+                sourceId,
+                sourceName: 'Tờ rơi Tết',
+                codeName: 'KOL Minh Thư',
+                channel: 'FACEBOOK_PAGE',
+            })
+        );
+        expect(byName['Hỏi giá']).toEqual(
+            expect.objectContaining({ sourceId, codeName: null })
+        );
+        await new Promise(resolve => setTimeout(resolve, 60));
+        const bad = await http(ctx.app)
+            .get(`${customersUrl()}?source=not-a-uuid`)
+            .set(...auth(ownerToken));
+        expect(bad.status).toBe(400);
     });
 
     it('keeps the reason of an operator edit and shows it as the why', async () => {

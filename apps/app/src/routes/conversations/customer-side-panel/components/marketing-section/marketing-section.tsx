@@ -14,8 +14,10 @@ import { useTranslation } from "react-i18next";
 import { EVENT_LIST_CLASS, LATEST_EVENT_COUNT } from "./constants";
 import { MarketingEditDrawer } from "./marketing-edit-drawer";
 import { MarketingEventItem } from "./marketing-event-item";
+import { MarketingFirstSource } from "./marketing-first-source";
 import { MarketingFreeWindows } from "./marketing-free-windows";
 import { MarketingLayerRow } from "./marketing-layer-row";
+import { MarketingProductReactions } from "./marketing-product-reactions";
 import { MarketingTimelineDrawer } from "./marketing-timeline-drawer";
 
 type Props = {
@@ -81,6 +83,14 @@ export const MarketingSection: FC<Props> = ({
                 dormant={marketing.dormant}
               />
             </MarketingLayerRow>
+            {marketing.reactions.length > 0 && (
+              <MarketingLayerRow
+                label={t(`${KEY}.productGroups.title`)}
+                event={null}
+              >
+                <MarketingProductReactions reactions={marketing.reactions} />
+              </MarketingLayerRow>
+            )}
             <MarketingLayerRow
               label={t(`${KEY}.permission`)}
               event={
@@ -105,6 +115,13 @@ export const MarketingSection: FC<Props> = ({
               <MarketingFreeWindows windows={marketing.freeWindows} />
             </div>
           )}
+
+          <div className="flex flex-col gap-y-1">
+            <Text size="small" weight="plus">
+              {t(`${KEY}.firstSource.title`)}
+            </Text>
+            <MarketingFirstSource source={marketing.firstSource} />
+          </div>
 
           <div className="flex flex-col gap-y-2">
             <div className="flex items-center justify-between">

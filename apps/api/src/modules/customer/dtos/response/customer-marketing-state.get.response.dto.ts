@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { CustomerMarketingFreeWindowResponseDto } from './customer-marketing-free-window.response.dto';
+import { CustomerProductReactionGetResponseDto } from './customer-product-reaction.get.response.dto';
 import { CustomerMarketingSummaryResponseDto } from './customer-marketing-summary.response.dto';
 import { MarketingEventGetResponseDto } from './marketing-event.get.response.dto';
 
@@ -49,4 +50,13 @@ export class CustomerMarketingStateGetResponseDto extends CustomerMarketingSumma
             'Free-message window on each channel with a free route, most recent first.',
     })
     freeWindows: CustomerMarketingFreeWindowResponseDto[];
+
+    @Expose()
+    @Type(() => CustomerProductReactionGetResponseDto)
+    @ApiProperty({
+        type: [CustomerProductReactionGetResponseDto],
+        description:
+            'Với nhóm hàng: the active "Tạm hoãn" per product group, soonest end first.',
+    })
+    reactions: CustomerProductReactionGetResponseDto[];
 }

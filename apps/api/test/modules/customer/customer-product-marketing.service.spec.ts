@@ -79,6 +79,7 @@ function makeHarness() {
         stateRepository as any,
         {} as any,
         customerRepository as any,
+        {} as any,
         {} as any
     );
     const service = new CustomerProductMarketingService(

@@ -55,11 +55,22 @@ export interface ICustomerMarketingFreeWindow {
     openUntil: Date | null;
 }
 
+/** Nguồn đầu tiên, as the panel and list rows show it. */
+export interface ICustomerMarketingFirstSource {
+    sourceId: string;
+    sourceName: string;
+    codeName: string | null;
+    channel: ENUM_ACCOUNT_TYPE;
+    at: Date;
+}
+
 /** Customers list filters on the marketing labels. */
 export interface ICustomerMarketingListFilter {
     stages?: ENUM_CUSTOMER_JOURNEY_STAGE[];
     permissions?: ENUM_CUSTOMER_MARKETING_PERMISSION[];
     dormant?: boolean;
+    /** First source, or one of its codes. */
+    sourceId?: string;
 }
 
 /** What a merge changed on the survivor's "Tạm hoãn" rows. */

@@ -1,4 +1,8 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+    BadRequestException,
+    ForbiddenException,
+    NotFoundException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthImpersonationReadOnlyInterceptor } from '../../../src/modules/auth/interceptors/auth.impersonation-read-only.interceptor';
 import { CustomerWorkspaceController } from '../../../src/modules/customer/controllers/customer.workspace.controller';
@@ -67,6 +71,8 @@ function buildController(): CustomerWorkspaceController {
         mockMarketingService as any
     );
 }
+
+const SOURCE_ID = '0193a5d2-7c1e-7b3a-9f1e-2b8c4d6e8f10';
 
 describe('CustomerWorkspaceController', () => {
     let controller: CustomerWorkspaceController;
@@ -197,7 +203,8 @@ describe('CustomerWorkspaceController', () => {
                 { _search: search, _limit: 20, _offset: 0, _order: {} } as any,
                 { stage: { $in: ['NEW', 'ASKED_PRICE'] } },
                 { permission: { $in: ['STOPPED'] } },
-                { dormant: { $in: [true] } }
+                { dormant: { $in: [true] } },
+                { source: SOURCE_ID }
             );
 
             expect(
@@ -206,6 +213,7 @@ describe('CustomerWorkspaceController', () => {
                 stages: ['NEW', 'ASKED_PRICE'],
                 permissions: ['STOPPED'],
                 dormant: true,
+                sourceId: SOURCE_ID,
             });
             const find = { ...search, ...labelFind };
             expect(mockCustomerService.findByWorkspace).toHaveBeenCalledWith(
@@ -227,7 +235,7 @@ describe('CustomerWorkspaceController', () => {
             );
         });
 
-        it('does not filter on Ngủ đông when both values or none are asked', async () => {
+        it('does not filter on Lâu không nhắn when both values or none are asked', async () => {
             mockCustomerService.findByWorkspace.mockResolvedValue([]);
             mockCustomerService.countByWorkspace.mockResolvedValue(0);
             mockCustomerService.summarizeConversations.mockResolvedValue(
@@ -249,7 +257,24 @@ describe('CustomerWorkspaceController', () => {
                 stages: undefined,
                 permissions: undefined,
                 dormant: undefined,
+                sourceId: undefined,
             });
+        });
+        it.each([
+            ['a repeated source', [SOURCE_ID, SOURCE_ID]],
+            ['a source that is not an id', 'not-a-uuid'],
+        ])('rejects %s', async (_case, value) => {
+            await expect(
+                controller.list(
+                    { id: 'ws-1' } as any,
+                    { _search: {}, _limit: 20, _offset: 0, _order: {} } as any,
+                    undefined,
+                    undefined,
+                    undefined,
+                    { source: value }
+                )
+            ).rejects.toBeInstanceOf(BadRequestException);
+            expect(mockCustomerService.findByWorkspace).not.toHaveBeenCalled();
         });
     });
 

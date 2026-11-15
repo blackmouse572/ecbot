@@ -6449,6 +6449,23 @@ export type AttachSkillRequestDto = {
     enabled?: boolean;
 };
 
+export type CustomerMarketingFirstSourceResponseDto = {
+    /**
+     * The source (a top-level tracked link).
+     */
+    sourceId: string;
+    sourceName: string;
+    /**
+     * The QR, KOL or other code of the source they used; null when they used the source link itself.
+     */
+    codeName: string | null;
+    channel: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
+    /**
+     * When they first arrived through it.
+     */
+    at: string;
+};
+
 export type CustomerMarketingSummaryResponseDto = {
     stage: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'BOUGHT_ONCE' | 'BOUGHT_REPEAT';
     permission: 'PENDING' | 'GRANTED' | 'PAUSED' | 'STOPPED';
@@ -6458,9 +6475,13 @@ export type CustomerMarketingSummaryResponseDto = {
      */
     hostile: boolean;
     /**
-     * Ngủ đông: no message for 120 days.
+     * Lâu không nhắn: no message and no order for 120 days.
      */
     dormant: boolean;
+    /**
+     * Nguồn đầu tiên; null when they wrote in directly.
+     */
+    firstSource: CustomerMarketingFirstSourceResponseDto | null;
 };
 
 export type CustomerGetResponseDto = {
@@ -6802,6 +6823,13 @@ export type CustomerMarketingFreeWindowResponseDto = {
     openUntil: string | null;
 };
 
+export type CustomerProductReactionGetResponseDto = {
+    productGroupId: string;
+    productGroupName: string;
+    until: string;
+    reason?: string | null;
+};
+
 export type CustomerMarketingStateGetResponseDto = {
     stage: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'BOUGHT_ONCE' | 'BOUGHT_REPEAT';
     permission: 'PENDING' | 'GRANTED' | 'PAUSED' | 'STOPPED';
@@ -6811,9 +6839,13 @@ export type CustomerMarketingStateGetResponseDto = {
      */
     hostile: boolean;
     /**
-     * Ngủ đông: no message for 120 days.
+     * Lâu không nhắn: no message and no order for 120 days.
      */
     dormant: boolean;
+    /**
+     * Nguồn đầu tiên; null when they wrote in directly.
+     */
+    firstSource: CustomerMarketingFirstSourceResponseDto | null;
     consentAskedAt?: string | null;
     lastInboundAt?: string | null;
     /**
@@ -6832,6 +6864,10 @@ export type CustomerMarketingStateGetResponseDto = {
      * Free-message window on each channel with a free route, most recent first.
      */
     freeWindows: Array<CustomerMarketingFreeWindowResponseDto>;
+    /**
+     * Với nhóm hàng: the active "Tạm hoãn" per product group, soonest end first.
+     */
+    reactions: Array<CustomerProductReactionGetResponseDto>;
 };
 
 export type CustomerMarketingStateUpdateRequestDto = {
@@ -6846,15 +6882,6 @@ export type CustomerMarketingStateUpdateRequestDto = {
      */
     hostile?: boolean;
     reason: string;
-};
-
-export type CustomerProductReactionGetResponseDto = {
-    productGroupId: string;
-    productGroupName: string;
-    until: string;
-    reason?: {
-        [key: string]: unknown;
-    } | null;
 };
 
 export type CustomerProductReactionUpdateRequestDto = {
@@ -32116,9 +32143,13 @@ export type CustomerWorkspaceControllerListV1Data = {
          */
         permission?: string;
         /**
-         * Ngủ đông: true for only dormant customers, false to leave them out.
+         * Lâu không nhắn: true for only customers with no message and no order for 120 days, false to leave them out.
          */
         dormant?: boolean;
+        /**
+         * A source id: customers whose first source is that source or one of its codes.
+         */
+        source?: string;
         /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
          */
@@ -38526,9 +38557,13 @@ export type CustomerClientControllerListV1Data = {
          */
         permission?: string;
         /**
-         * Ngủ đông: true for only dormant customers, false to leave them out.
+         * Lâu không nhắn: true for only customers with no message and no order for 120 days, false to leave them out.
          */
         dormant?: boolean;
+        /**
+         * A source id: customers whose first source is that source or one of its codes.
+         */
+        source?: string;
         /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
          */

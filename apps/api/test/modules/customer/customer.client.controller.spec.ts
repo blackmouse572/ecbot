@@ -142,13 +142,15 @@ describe('CustomerClientController', () => {
             { _limit: 20, _offset: 0, _order: {}, _search: {} } as any,
             { stage: { $in: ['NEW'] } },
             undefined,
-            { dormant: { $in: [false] } }
+            { dormant: { $in: [false] } },
+            { source: '0193a5d2-7c1e-7b3a-9f1e-2b8c4d6e8f10' }
         );
 
         expect(mockMarketingService.customerListFilter).toHaveBeenCalledWith({
             stages: ['NEW'],
             permissions: undefined,
             dormant: false,
+            sourceId: '0193a5d2-7c1e-7b3a-9f1e-2b8c4d6e8f10',
         });
         expect(mockCustomerService.findByWorkspace).toHaveBeenCalledWith(
             'workspace-1',

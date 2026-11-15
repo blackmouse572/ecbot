@@ -2574,6 +2574,16 @@
             "save": "Lưu nhãn",
             "saved": "Đã lưu nhãn",
             "saveFailed": "Không lưu được nhãn. Thử lại."
+          },
+          "productGroups": {
+            "title": "Với nhóm hàng",
+            "paused": "Tạm hoãn {{group}} đến {{date}}",
+            "othersStillSend": "Ưu đãi nhóm hàng khác vẫn gửi được."
+          },
+          "firstSource": {
+            "title": "Nguồn đầu tiên",
+            "viaCode": "Qua link {{code}}, {{date}}",
+            "viaSource": "Qua link nguồn, {{date}}"
           }
         }
       }
@@ -2676,7 +2686,9 @@
       "dormantOptions": {
         "true": "Chỉ khách lâu không nhắn",
         "false": "Ẩn khách lâu không nhắn"
-      }
+      },
+      "firstSource": "Nguồn đầu tiên",
+      "source": "Nguồn"
     }
   },
   "settings": {
@@ -3762,6 +3774,9 @@
       "intent": "Quan tâm theo nhóm hàng: {{to}}",
       "source": "Đến qua link nguồn"
     },
-    "viewMessage": "Xem tin nhắn"
+    "viewMessage": "Xem tin nhắn",
+    "firstSource": {
+      "direct": "Nhắn thẳng vào trang"
+    }
   }
 }
