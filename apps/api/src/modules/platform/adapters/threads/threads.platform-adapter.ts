@@ -3,7 +3,11 @@ import { AccountEntity } from '@app/modules/account/repository/entities/account.
 import { AccountService } from '@app/modules/account/services/account.service';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
 import { HttpService } from '@nestjs/axios';
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import {
+    Injectable,
+    Logger,
+    UnprocessableEntityException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
     AdapterCapabilities,
@@ -25,7 +29,6 @@ import {
     ThreadsProfile,
     ThreadsWebhookChange,
     ThreadsWebhookPayload,
-    ThreadsWebhookValue,
 } from './threads.types';
 
 const THREADS_GRAPH_URL = 'https://graph.threads.net/v1.0';
@@ -37,7 +40,9 @@ const INBOUND_FIELDS = new Set(['replies', 'mentions']);
 
 /**
  * Threads (Meta). The account is one Threads profile: `account.externalId` is
- * its Threads user id, which every webhook carries as `target_id`.
+ * its Threads user id. `target_id` only carries that id for `mentions`; a
+ * `replies` webhook puts the *post's* id there, so those are routed on the
+ * root post's owner (see {@link accountKeyFor}).
  *
  * Threads has no direct messages. The inbound "messages" are replies to the
  * profile's posts and posts that mention it; the conversation is keyed on the
@@ -46,6 +51,8 @@ const INBOUND_FIELDS = new Set(['replies', 'mentions']);
  */
 @Injectable()
 export class ThreadsPlatformAdapter extends PlatformAdapter {
+    private readonly logger = new Logger(ThreadsPlatformAdapter.name);
+
     readonly type = ENUM_ACCOUNT_TYPE.THREADS_ACCOUNT;
     readonly capabilities: AdapterCapabilities = {
         cards: false,
@@ -146,9 +153,24 @@ export class ThreadsPlatformAdapter extends PlatformAdapter {
                 ? payload.values
                 : [payload.values];
             for (const change of values) {
-                changes.push({ accountKey: String(payload.target_id), change });
+                const accountKey = this.accountKeyFor(
+                    change,
+                    payload.target_id
+                );
+                if (!accountKey) {
+                    // A reply we cannot route would otherwise disappear
+                    // silently, including from logInboundLag's events= count.
+                    this.logger.warn(
+                        `Threads reply dropped, no root post owner to route on: id=${change?.value?.id}`
+                    );
+                    continue;
+                }
+                changes.push({ accountKey, change });
             }
         }
+        // The classic envelope (not what Threads actually sends, but accepted
+        // for symmetry with the other Meta platforms) keys each change on
+        // `entry.id`, which is the receiving profile there — not a post id.
         for (const entry of payload.entry ?? []) {
             for (const change of entry.changes ?? []) {
                 changes.push({ accountKey: String(entry.id), change });
@@ -164,6 +186,26 @@ export class ThreadsPlatformAdapter extends PlatformAdapter {
         });
     }
 
+    /**
+     * The profile a change belongs to. Meta's docs are explicit that
+     * `target_id` is "the media's ID for a replies or delete webhook, or the
+     * mentioned Threads user's app-scoped user ID for a mentions webhook", so
+     * keying every event on it made the processor look a post up as if it were
+     * a profile and drop the whole comment. For replies the linked profile is
+     * the root post's owner; a reply with no root-post owner cannot be routed,
+     * so it is dropped (our own replies come back on this feed too).
+     */
+    private accountKeyFor(
+        change: ThreadsWebhookChange,
+        targetId: string
+    ): string | null {
+        if (change?.field === 'replies') {
+            const ownerId = change.value?.root_post?.owner_id;
+            return ownerId ? String(ownerId) : null;
+        }
+        return String(targetId);
+    }
+
     private normalize(
         accountKey: string,
         change: ThreadsWebhookChange,
@@ -171,7 +213,16 @@ export class ThreadsPlatformAdapter extends PlatformAdapter {
     ): PlatformWebhookEvent | null {
         const value = change?.value;
         if (!INBOUND_FIELDS.has(change?.field) || !value?.id) return null;
-        if (!value.username || this.isOwnReply(accountKey, change.field, value))
+        if (!value.username) return null;
+        // Our own replies land in the `replies` feed of our posts too, and
+        // answering ourselves would loop. Routing already established that the
+        // root post belongs to this account (see accountKeyFor), so the author
+        // is the only remaining tell: if it is the root post's own author, it
+        // is us.
+        if (
+            change.field === 'replies' &&
+            value.root_post?.username === value.username
+        )
             return null;
 
         const timestamp = value.timestamp ? new Date(value.timestamp) : null;
@@ -193,27 +244,6 @@ export class ThreadsPlatformAdapter extends PlatformAdapter {
                     ? [{ type: 'image', url: value.media_url }]
                     : undefined,
         };
-    }
-
-    /**
-     * Our own replies land in the `replies` feed of our posts too. Only the
-     * owner of the root post can be its own author there, so drop those
-     * instead of answering ourselves. A reply without its root post's owner
-     * can't be told apart from our own, so it is dropped as well: answering
-     * ourselves would loop.
-     */
-    private isOwnReply(
-        accountKey: string,
-        field: string,
-        value: ThreadsWebhookValue
-    ) {
-        if (field !== 'replies') return false;
-        const root = value.root_post;
-        if (!root?.owner_id || !root.username) return true;
-        return (
-            String(root.owner_id) === accountKey &&
-            root.username === value.username
-        );
     }
 
     // ----- fetch -----
