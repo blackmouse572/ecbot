@@ -23,6 +23,18 @@ const unmergeMutateAsync = vi.fn();
 const promptFn = vi.fn();
 
 // Orders have their own test (components/orders-section).
+const featureFlags = vi.hoisted(() => ({
+  orders: true,
+  customerSources: true,
+}));
+vi.mock("@/hooks/api/feature-flags", () => ({
+  useFeatureFlags: () => ({
+    flags: featureFlags,
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 vi.mock("./components/orders-section", () => ({ OrdersSection: () => null }));
 
 vi.mock("@/hooks/api/customers", () => ({

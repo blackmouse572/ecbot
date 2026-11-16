@@ -1,3 +1,4 @@
+import { useFeatureFlags } from "@/hooks/api/feature-flags";
 import {
   MarketingPermissionLabel,
   MarketingStageBadge,
@@ -37,6 +38,7 @@ export const MarketingSection: FC<Props> = ({
   onViewMessage,
 }) => {
   const { t } = useTranslation();
+  const { flags } = useFeatureFlags();
   const { marketing, isPending, isError } = useCustomerMarketing(customerId);
   const timeline = useCustomerMarketingEvents(customerId);
   const [editOpen, setEditOpen] = useState(false);
@@ -116,12 +118,14 @@ export const MarketingSection: FC<Props> = ({
             </div>
           )}
 
-          <div className="flex flex-col gap-y-1">
-            <Text size="small" weight="plus">
-              {t(`${KEY}.firstSource.title`)}
-            </Text>
-            <MarketingFirstSource source={marketing.firstSource} />
-          </div>
+          {flags.customerSources && (
+            <div className="flex flex-col gap-y-1">
+              <Text size="small" weight="plus">
+                {t(`${KEY}.firstSource.title`)}
+              </Text>
+              <MarketingFirstSource source={marketing.firstSource} />
+            </div>
+          )}
 
           <div className="flex flex-col gap-y-2">
             <div className="flex items-center justify-between">

@@ -1,3 +1,4 @@
+import { useFeatureFlags } from "@/hooks/api/feature-flags";
 import { useWorkspace } from "@/hooks/api/workspace";
 import {
   AcademicCap,
@@ -26,7 +27,23 @@ import { ToolsAttentionBadge } from "./tools-attention-badge";
 export const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
   const { t } = useTranslation();
   const { workspace } = useWorkspace();
+  const { flags } = useFeatureFlags();
   const baseUrl = `/${workspace?.slug}`;
+
+  const ordersItem: Omit<INavItem, "pathname"> = {
+    label: t("orders.title"),
+    to: `${baseUrl}/${ROUTES.Orders}`,
+    icon: <Receipt />,
+    ability: {
+      action: "manage",
+      subject: "CUSTOMER",
+    },
+    badge: (
+      <Badge size="2xsmall" color="blue">
+        {t("app.nav.marketing.new")}
+      </Badge>
+    ),
+  };
 
   return [
     {
@@ -64,20 +81,7 @@ export const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
         },
       ],
     },
-    {
-      label: t("orders.title"),
-      to: `${baseUrl}/${ROUTES.Orders}`,
-      icon: <Receipt />,
-      ability: {
-        action: "manage",
-        subject: "CUSTOMER",
-      },
-      badge: (
-        <Badge size="2xsmall" color="blue">
-          {t("app.nav.marketing.new")}
-        </Badge>
-      ),
-    },
+    ...(flags.orders ? [ordersItem] : []),
     {
       label: t("conversations.title"),
       to: `${baseUrl}/${ROUTES.Conversations}`,

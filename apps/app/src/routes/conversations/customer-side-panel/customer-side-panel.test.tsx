@@ -6,8 +6,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mutateAsync = vi.fn();
 
+const featureFlags = vi.hoisted(() => ({
+  orders: true,
+  customerSources: true,
+}));
+vi.mock("@/hooks/api/feature-flags", () => ({
+  useFeatureFlags: () => ({
+    flags: featureFlags,
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 // Orders have their own test (components/orders-section).
-vi.mock("./components/orders-section", () => ({ OrdersSection: () => null }));
+vi.mock("./components/orders-section", () => ({
+  OrdersSection: () => "orders-section",
+}));
 
 vi.mock("@/hooks/api/customers", () => ({
   useExportCustomer: vi.fn(() => ({ mutateAsync: vi.fn(), isPending: false })),
@@ -127,6 +141,26 @@ describe("CustomerSidePanel", () => {
     const { container } = render(<CustomerSidePanel customerId={null} />);
 
     expect(container.firstChild).toBeNull();
+  });
+
+  it("shows the orders section only while the orders flag is on", async () => {
+    useCustomerMock.mockReturnValue({
+      customer: customerFixture,
+      isLoading: false,
+    } as unknown as UseCustomerReturn);
+    useContactPointsMock.mockReturnValue({
+      contactPoints: [],
+    } as unknown as UseContactPointsReturn);
+
+    const { unmount } = render(<CustomerSidePanel customerId="cust-1" />);
+    expect(await screen.findByText("orders-section")).toBeInTheDocument();
+    unmount();
+
+    featureFlags.orders = false;
+    render(<CustomerSidePanel customerId="cust-1" />);
+    await screen.findByDisplayValue("Alice Nguyen");
+    expect(screen.queryByText("orders-section")).not.toBeInTheDocument();
+    featureFlags.orders = true;
   });
 
   it("renders the customer's name in the editable Name field", async () => {

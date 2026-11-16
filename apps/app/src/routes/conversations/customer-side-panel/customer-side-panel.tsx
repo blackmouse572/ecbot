@@ -21,6 +21,7 @@ import {
 } from "@/hooks/api/customers";
 import { downloadJson } from "@/utils";
 import { useUnmergeCustomer } from "@/hooks/api/customer-merge-suggestions";
+import { useFeatureFlags } from "@/hooks/api/feature-flags";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import { ConversationsSection } from "./components/conversations-section";
 import { CustomerTagPicker } from "./components/customer-tag-picker";
@@ -98,6 +99,7 @@ export function CustomerSidePanel({
   onCustomerErased,
 }: Props) {
   const { t } = useTranslation();
+  const { flags } = useFeatureFlags();
   const { customer, isLoading } = useCustomer(customerId);
   const { contactPoints } = useContactPointsByCustomer(customerId);
   const { mutateAsync, isPending } = useUpdateCustomer(customerId);
@@ -346,7 +348,7 @@ export function CustomerSidePanel({
               conversationId={conversationId}
               onViewMessage={onViewMessage}
             />
-            <OrdersSection customerId={customerId} />
+            {flags.orders && <OrdersSection customerId={customerId} />}
           </div>
 
           {conversationId && (

@@ -16,6 +16,7 @@ export * from "./reset-password";
 export * from "./sessions";
 export * from "./users";
 export * from "./workspace";
+export * from "./feature-flags";
 export * from "./workspace-activities";
 export * from "./workspace-member";
 export * from "./workspace-roles";

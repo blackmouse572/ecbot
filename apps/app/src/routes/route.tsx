@@ -12,6 +12,7 @@ import { t } from "i18next";
 import { Navigate, type RouteObject, type UIMatch } from "react-router-dom";
 import { ProtectedRoute } from "../components/auth/protected-routes";
 import { ErrorBoundary } from "../components/error";
+import { FeatureRoute } from "../components/feature-route";
 import { ROUTES } from "./constants";
 import { enterpriseRoutes } from "./enterprise.routes";
 import { enterpriseSettingsRoutes } from "./enterprise.settings";
@@ -435,6 +436,7 @@ function getRouteMaps(): RouteObject[] {
                 breadcrumb: () => t("customerSources.title"),
               },
               ErrorBoundary: ErrorBoundary,
+              element: <FeatureRoute flag="customerSources" />,
               children: [
                 {
                   path: "",
@@ -485,6 +487,7 @@ function getRouteMaps(): RouteObject[] {
                 breadcrumb: () => t("orders.title"),
               },
               ErrorBoundary: ErrorBoundary,
+              element: <FeatureRoute flag="orders" />,
               children: [
                 {
                   path: "",
