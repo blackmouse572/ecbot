@@ -2,6 +2,15 @@ import { ENUM_FEATURE_FLAG } from 'src/modules/feature-flag/enums/feature-flag.e
 import { FeatureFlagService } from 'src/modules/feature-flag/services/feature-flag.service';
 
 describe('FeatureFlagService', () => {
+    let now: number;
+
+    beforeEach(() => {
+        now = 1_000_000;
+        jest.spyOn(Date, 'now').mockImplementation(() => now);
+    });
+
+    afterEach(() => jest.restoreAllMocks());
+
     const config = (values: Record<string, boolean>) => ({
         get: jest.fn((key: string) => values[key]),
     });
@@ -42,6 +51,41 @@ describe('FeatureFlagService', () => {
                 service.isEnabled(ENUM_FEATURE_FLAG.ORDERS, 'w1')
             ).resolves.toBe(true);
             expect(provider.isEnabled).toHaveBeenCalledWith('orders', 'w1');
+        });
+
+        it('asks the provider once a minute per flag and workspace', async () => {
+            const provider = { isEnabled: jest.fn().mockResolvedValue(true) };
+            const service = new FeatureFlagService(config({}) as any, provider);
+
+            await service.isEnabled(ENUM_FEATURE_FLAG.ORDERS, 'w1');
+            await service.isEnabled(ENUM_FEATURE_FLAG.ORDERS, 'w1');
+            expect(provider.isEnabled).toHaveBeenCalledTimes(1);
+
+            await service.isEnabled(ENUM_FEATURE_FLAG.ORDERS, 'w2');
+            expect(provider.isEnabled).toHaveBeenCalledTimes(2);
+
+            now += 61_000;
+            provider.isEnabled.mockResolvedValue(false);
+            await expect(
+                service.isEnabled(ENUM_FEATURE_FLAG.ORDERS, 'w1')
+            ).resolves.toBe(false);
+        });
+
+        it('keeps the last answer through a short provider outage', async () => {
+            const provider = { isEnabled: jest.fn().mockResolvedValue(true) };
+            const service = new FeatureFlagService(config({}) as any, provider);
+            await service.isEnabled(ENUM_FEATURE_FLAG.ORDERS, 'w1');
+            provider.isEnabled.mockRejectedValue(new Error('timeout'));
+
+            now += 5 * 60_000;
+            await expect(
+                service.isEnabled(ENUM_FEATURE_FLAG.ORDERS, 'w1')
+            ).resolves.toBe(true);
+
+            now += 6 * 60_000;
+            await expect(
+                service.isEnabled(ENUM_FEATURE_FLAG.ORDERS, 'w1')
+            ).resolves.toBe(false);
         });
 
         it('reads a failed lookup as off', async () => {

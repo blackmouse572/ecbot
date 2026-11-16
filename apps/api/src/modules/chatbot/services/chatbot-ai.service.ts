@@ -1,4 +1,5 @@
 import { ChatbotTimezoneService } from './chatbot-timezone.service';
+import { ENUM_FEATURE_FLAG } from '@app/modules/feature-flag/enums/feature-flag.enum';
 import { FeatureFlagService } from '@app/modules/feature-flag/services/feature-flag.service';
 import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
@@ -117,9 +118,12 @@ export class ChatbotAIService {
             zones.chatbot,
             zones.conversation
         );
-        const [providerSort, features] = await Promise.all([
+        const [providerSort, ordersEnabled] = await Promise.all([
             this.providerSort(workspace_id),
-            this.featureFlagService.forWorkspace(workspace_id),
+            this.featureFlagService.isEnabled(
+                ENUM_FEATURE_FLAG.ORDERS,
+                workspace_id
+            ),
         ]);
         const response = await this.httpService.axiosRef.post(
             `${this.aiBackendUrl}/api/chat/stream`,
@@ -129,7 +133,7 @@ export class ChatbotAIService {
                 customer_timezone: resolved.customer,
                 ...(providerSort ? { provider_sort: providerSort } : {}),
                 // Off: apps/ai leaves out record_order and its prompt lines.
-                orders_enabled: features.orders,
+                orders_enabled: ordersEnabled,
             },
             {
                 responseType: 'stream',

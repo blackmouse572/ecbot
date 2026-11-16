@@ -22,10 +22,7 @@ describe('ChatbotAIService', () => {
     };
 
     const featureFlagService = {
-        forWorkspace: jest.fn(async () => ({
-            orders: true,
-            customerSources: false,
-        })),
+        isEnabled: jest.fn(async () => true),
     };
 
     beforeEach(() => {
@@ -221,7 +218,11 @@ describe('ChatbotAIService', () => {
             zones: { chatbot: {} },
         } as any);
 
-        expect(featureFlagService.forWorkspace).toHaveBeenCalledWith('ws-1');
+        expect(featureFlagService.isEnabled).toHaveBeenCalledTimes(1);
+        expect(featureFlagService.isEnabled).toHaveBeenCalledWith(
+            'orders',
+            'ws-1'
+        );
         expect(post.mock.calls[0][1]).toMatchObject({ orders_enabled: true });
     });
 });

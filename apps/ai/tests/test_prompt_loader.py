@@ -105,3 +105,30 @@ def test_orders_on_is_the_default(monkeypatch):
     monkeypatch.setattr(AppVars, "AGENT_PROMPT_PATH", None)
     stub = _chatbot_stub()
     assert render_system_prompt(stub, orders_enabled=True) == render_system_prompt(stub)
+
+
+def test_orders_off_warns_when_a_custom_prompt_still_names_record_order(monkeypatch, tmp_path):
+    """An AGENT_PROMPT_PATH prompt worded differently is not stripped: say so loudly."""
+    import eccho_ai.llm.prompts.loader as loader
+
+    custom = tmp_path / "custom.md"
+    custom.write_text("Call record_order when the customer agrees.\n", encoding="utf-8")
+    monkeypatch.setattr(AppVars, "AGENT_PROMPT_PATH", custom)
+    warn = []
+    monkeypatch.setattr(loader.logger, "warning", lambda event, **kw: warn.append(event))
+
+    render_system_prompt(_chatbot_stub(), orders_enabled=False)
+
+    assert warn == ["orders_prompt_not_stripped"]
+
+
+def test_orders_off_does_not_warn_for_the_bundled_prompt(monkeypatch):
+    import eccho_ai.llm.prompts.loader as loader
+
+    monkeypatch.setattr(AppVars, "AGENT_PROMPT_PATH", None)
+    warn = []
+    monkeypatch.setattr(loader.logger, "warning", lambda event, **kw: warn.append(event))
+
+    render_system_prompt(_chatbot_stub(), orders_enabled=False)
+
+    assert warn == []

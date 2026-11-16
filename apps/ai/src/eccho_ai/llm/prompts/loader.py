@@ -15,6 +15,7 @@ from functools import lru_cache
 from importlib.resources import files
 from typing import TYPE_CHECKING
 
+from eccho_ai.core.app_logger import get_logger
 from eccho_ai.core.variables import AppVars
 
 if TYPE_CHECKING:
@@ -32,6 +33,8 @@ def sanitize_config_value(value: str) -> str:
     """Neutralize structural prompt breakouts in operator-supplied config."""
     return value.replace("<", "‹").replace(">", "›")
 
+
+logger = get_logger(__name__)
 
 # What the prompt says about record_order, left out while the workspace's
 # orders flag is off (tests/test_prompt_loader.py checks nothing is left).
@@ -53,4 +56,8 @@ def render_system_prompt(chatbot: "Chatbots", orders_enabled: bool = True) -> st
         rendered = rendered.replace(token, sanitize_config_value(value))
     if not orders_enabled:
         rendered = _ORDERS_NOTE.sub("", _ORDERS_BLOCK.sub("", rendered))
+        if "record_order" in rendered:
+            # A prompt from AGENT_PROMPT_PATH worded unlike AGENT.md: the tool
+            # is gone but the prompt still names it. Fix that prompt.
+            logger.warning("orders_prompt_not_stripped")
     return rendered
