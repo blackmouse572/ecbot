@@ -46,7 +46,8 @@ export async function bootstrapE2E(): Promise<E2EContext> {
     process.env.WORK_SPACE_INVITATION_TOKEN_EXPIRED = '7d';
     process.env.WORK_SPACE_INVITATION_TOKEN_SECRET_KEY ??= 'super_23';
     // The e2e covers flagged features (orders, tracked links): keep them on
-    // unless a spec turns one off.
+    // unless a spec (or your shell) sets one first. An exported
+    // FEATURE_*_ENABLE=false turns that feature's routes into 404s.
     process.env.FEATURE_ORDERS_ENABLE ??= 'true';
     process.env.FEATURE_CUSTOMER_SOURCES_ENABLE ??= 'true';
 
