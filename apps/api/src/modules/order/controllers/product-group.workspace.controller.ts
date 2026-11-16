@@ -1,3 +1,5 @@
+import { FeatureFlagProtected } from '@app/modules/feature-flag/decorators/feature-flag.decorator';
+import { ENUM_FEATURE_FLAG } from '@app/modules/feature-flag/enums/feature-flag.enum';
 import {
     IResponse,
     IResponsePaging,
@@ -65,6 +67,7 @@ import { ProductGroupEntity } from '../repository/entities/product-group.entity'
 import { ProductGroupService } from '../services/product-group.service';
 
 @ApiTags('modules.workspace.productGroup')
+@FeatureFlagProtected(ENUM_FEATURE_FLAG.ORDERS)
 @Controller({
     version: '1',
     path: '/:workspace/product-groups',

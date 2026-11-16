@@ -1,3 +1,5 @@
+import { FeatureFlagProtected } from '@app/modules/feature-flag/decorators/feature-flag.decorator';
+import { ENUM_FEATURE_FLAG } from '@app/modules/feature-flag/enums/feature-flag.enum';
 import {
     IResponse,
     IResponsePaging,
@@ -77,6 +79,7 @@ import { OrderImportService } from '../services/order-import.service';
 import { OrderService } from '../services/order.service';
 
 @ApiTags('modules.workspace.order')
+@FeatureFlagProtected(ENUM_FEATURE_FLAG.ORDERS)
 @Controller({
     version: '1',
     path: '/:workspace/orders',

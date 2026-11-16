@@ -1,3 +1,5 @@
+import { ENUM_FEATURE_FLAG } from '@app/modules/feature-flag/enums/feature-flag.enum';
+import { FeatureFlagService } from '@app/modules/feature-flag/services/feature-flag.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { ENUM_CUSTOMER_MARKETING_PERMISSION } from '../enums/customer-marketing.enum';
 import { ENUM_CUSTOMER_TAG_EVENT_ACTOR } from '../enums/customer-tag.enum';
@@ -20,14 +22,22 @@ export class TrackedLinkAttributionService {
     constructor(
         private readonly trackedLinkRepository: TrackedLinkRepository,
         private readonly marketing: CustomerMarketingService,
-        private readonly tags: CustomerTagAssignmentService
+        private readonly tags: CustomerTagAssignmentService,
+        private readonly featureFlagService: FeatureFlagService
     ) {}
 
-    /** Null when the code is not a live link of this workspace, or this visit
-     *  was already logged; otherwise the greeting the agent should send. */
+    /** Null when customer sources are off, the code is not a live link of
+     *  this workspace, or this visit was already logged; otherwise the
+     *  greeting the agent should send. */
     async recordArrival(
         input: ITrackedLinkArrival
     ): Promise<{ greeting: string | null } | null> {
+        const enabled = await this.featureFlagService.isEnabled(
+            ENUM_FEATURE_FLAG.CUSTOMER_SOURCES,
+            input.workspaceId
+        );
+        if (!enabled) return null;
+
         const link = await this.trackedLinkRepository.findOne(
             { workspace: input.workspaceId, code: input.code, deletedAt: null },
             { populate: ['parent'] }

@@ -1,0 +1,8 @@
+{
+    "workspace": {
+        "get": "Feature flags loaded."
+    },
+    "error": {
+        "off": "This feature is not available."
+    }
+}

@@ -3,6 +3,7 @@ import {
     IsEmail,
     IsBoolean,
     IsEnum,
+    IsIn,
     IsInt,
     IsNotEmpty,
     IsNumber,
@@ -541,6 +542,15 @@ export class AppEnvDto {
     @IsOptional()
     @IsString()
     LOCAL_TUNNEL_SUBDOMAIN?: string;
+
+    // Feature flags when no flag provider is bound (see feature-flag.config.ts)
+    @IsOptional()
+    @IsIn(['true', 'false'])
+    FEATURE_ORDERS_ENABLE?: string;
+
+    @IsOptional()
+    @IsIn(['true', 'false'])
+    FEATURE_CUSTOMER_SOURCES_ENABLE?: string;
 
     // Composio Tool Registry marketplace
     @IsOptional()

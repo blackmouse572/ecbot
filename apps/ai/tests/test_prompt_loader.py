@@ -82,3 +82,26 @@ def test_render_system_prompt_unset_matches_bundled_template(monkeypatch):
         expected = expected.replace(token, sanitize_config_value(value))
 
     assert render_system_prompt(stub) == expected
+
+
+# Orders flag (apps/api `orders_enabled`): off, the model never hears of
+# record_order; on, the prompt is unchanged.
+def test_orders_off_leaves_out_record_order(monkeypatch):
+    monkeypatch.setattr(AppVars, "AGENT_PROMPT_PATH", None)
+    stub = _chatbot_stub()
+
+    on = render_system_prompt(stub)
+    off = render_system_prompt(stub, orders_enabled=False)
+
+    assert "record_order" in on
+    assert "record_order" not in off
+    assert "<orders>" not in off
+    assert "</privacy>\n\n    <escalation>" in off
+    # The handover rule keeps its sentence around the removed note.
+    assert "customer is upset). Pick the marked tag" in off
+
+
+def test_orders_on_is_the_default(monkeypatch):
+    monkeypatch.setattr(AppVars, "AGENT_PROMPT_PATH", None)
+    stub = _chatbot_stub()
+    assert render_system_prompt(stub, orders_enabled=True) == render_system_prompt(stub)

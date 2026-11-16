@@ -63,6 +63,7 @@ class ChatRequest(BaseModel):
     customer_timezone: Optional[str] = Field(None, description="IANA zone of the customer, resolved by apps/api (conversation timezone, else the agent's).")
     max_tool_iterations: Optional[int] = Field(None, ge=1, le=50, description="Caps the agent's tool-call rounds this turn; bounds the LangGraph recursion_limit (see get_agent_config). Defaults to 10 when omitted.")
     provider_sort: Optional[Literal["price", "throughput", "latency"]] = Field(None, description="How OpenRouter picks the provider for this reply (its `provider.sort`). Omitted, the install's OPENROUTER_PROVIDER_SORT applies, else OpenRouter's own routing.")
+    orders_enabled: bool = Field(False, description="apps/api's orders feature flag for the workspace. Off (or omitted), the agent gets no record_order tool and no prompt lines about it.")
 
 
 class ChatResponse(BaseModel):

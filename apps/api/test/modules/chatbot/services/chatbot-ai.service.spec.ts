@@ -21,6 +21,13 @@ describe('ChatbotAIService', () => {
         ),
     };
 
+    const featureFlagService = {
+        forWorkspace: jest.fn(async () => ({
+            orders: true,
+            customerSources: false,
+        })),
+    };
+
     beforeEach(() => {
         jest.clearAllMocks();
         configService.get.mockImplementation((key: string) =>
@@ -31,7 +38,8 @@ describe('ChatbotAIService', () => {
             configService as any,
             new ChatbotTimezoneService({
                 get: () => 'Asia/Ho_Chi_Minh',
-            } as any)
+            } as any),
+            featureFlagService as any
         );
     });
 
@@ -96,6 +104,7 @@ describe('ChatbotAIService', () => {
             chatbot_id: 'bot-1',
             agent_timezone: 'Asia/Ho_Chi_Minh',
             customer_timezone: 'America/New_York',
+            orders_enabled: true,
         });
     });
 
@@ -153,6 +162,7 @@ describe('ChatbotAIService', () => {
                 new ChatbotTimezoneService({
                     get: () => 'Asia/Ho_Chi_Minh',
                 } as any),
+                featureFlagService as any,
                 { providerSort }
             );
         const params = { workspace_id: 'ws-1', zones: { chatbot: {} } } as any;
@@ -200,5 +210,18 @@ describe('ChatbotAIService', () => {
             expect(post).toHaveBeenCalledTimes(1);
             expect(post.mock.calls[0][1]).not.toHaveProperty('provider_sort');
         });
+    });
+
+    // apps/ai leaves out record_order and its prompt lines while orders are off.
+    it("sends the workspace's orders flag", async () => {
+        post.mockResolvedValue({ data: {} });
+
+        await service.streamChat({
+            workspace_id: 'ws-1',
+            zones: { chatbot: {} },
+        } as any);
+
+        expect(featureFlagService.forWorkspace).toHaveBeenCalledWith('ws-1');
+        expect(post.mock.calls[0][1]).toMatchObject({ orders_enabled: true });
     });
 });

@@ -45,6 +45,10 @@ export async function bootstrapE2E(): Promise<E2EContext> {
     // independent of that.
     process.env.WORK_SPACE_INVITATION_TOKEN_EXPIRED = '7d';
     process.env.WORK_SPACE_INVITATION_TOKEN_SECRET_KEY ??= 'super_23';
+    // The e2e covers flagged features (orders, tracked links): keep them on
+    // unless a spec turns one off.
+    process.env.FEATURE_ORDERS_ENABLE ??= 'true';
+    process.env.FEATURE_CUSTOMER_SOURCES_ENABLE ??= 'true';
 
     const { Test } = await import('@nestjs/testing');
 

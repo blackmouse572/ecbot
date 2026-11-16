@@ -1,4 +1,5 @@
 import { ChatbotTimezoneService } from './chatbot-timezone.service';
+import { FeatureFlagService } from '@app/modules/feature-flag/services/feature-flag.service';
 import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -94,6 +95,7 @@ export class ChatbotAIService {
         private readonly httpService: HttpService,
         private readonly configService: ConfigService,
         private readonly timezoneService: ChatbotTimezoneService,
+        private readonly featureFlagService: FeatureFlagService,
         @Optional()
         @Inject(REPLY_ROUTING)
         private readonly routing?: ReplyRouting
@@ -115,7 +117,10 @@ export class ChatbotAIService {
             zones.chatbot,
             zones.conversation
         );
-        const providerSort = await this.providerSort(workspace_id);
+        const [providerSort, features] = await Promise.all([
+            this.providerSort(workspace_id),
+            this.featureFlagService.forWorkspace(workspace_id),
+        ]);
         const response = await this.httpService.axiosRef.post(
             `${this.aiBackendUrl}/api/chat/stream`,
             {
@@ -123,6 +128,8 @@ export class ChatbotAIService {
                 agent_timezone: resolved.agent,
                 customer_timezone: resolved.customer,
                 ...(providerSort ? { provider_sort: providerSort } : {}),
+                // Off: apps/ai leaves out record_order and its prompt lines.
+                orders_enabled: features.orders,
             },
             {
                 responseType: 'stream',

@@ -1,4 +1,5 @@
 import KeyvRedis from '@keyv/redis';
+import { FeatureFlagModule } from 'src/modules/feature-flag/feature-flag.module';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { CacheModule, CacheOptions } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
@@ -31,6 +32,7 @@ import { REDIS_AVAILABLE } from './redis/redis-availability.provider';
     providers: [],
     imports: [
         RedisAvailabilityModule,
+        FeatureFlagModule,
         ClsModule.forRoot({
             global: true,
             middleware: { mount: true, saveReq: true },
