@@ -1,3 +1,4 @@
+import { useFeatureFlags } from "@/hooks/api/feature-flags";
 import { useWorkspace } from "@/hooks/api/workspace";
 import { Link } from "@medusajs/icons";
 import type { INavItem } from "@repo/ui/layout";
@@ -9,7 +10,10 @@ import { ROUTES } from "@/routes";
 export const useMarketingRoutes = (): Omit<INavItem, "pathname">[] => {
   const { t } = useTranslation();
   const { workspace } = useWorkspace();
+  const { flags } = useFeatureFlags();
   const baseUrl = `/${workspace?.slug}`;
+
+  if (!flags.customerSources) return [];
 
   return [
     {

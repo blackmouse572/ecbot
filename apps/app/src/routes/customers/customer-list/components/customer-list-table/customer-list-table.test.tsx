@@ -25,6 +25,18 @@ if (!HTMLElement.prototype.scroll) {
 Element.prototype.scrollIntoView = vi.fn();
 
 // jsdom has no layout, so the real virtualizer measures zero rows.
+const featureFlags = vi.hoisted(() => ({
+  orders: true,
+  customerSources: true,
+}));
+vi.mock("@/hooks/api/feature-flags", () => ({
+  useFeatureFlags: () => ({
+    flags: featureFlags,
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 vi.mock("@tanstack/react-virtual", () => ({
   useVirtualizer: ({ count }: { count: number }) => ({
     getTotalSize: () => count * 32,
@@ -141,6 +153,26 @@ describe("CustomerListTable", () => {
   afterEach(() => {
     state.empty = false;
     state.sourceSearches = [];
+    featureFlags.customerSources = true;
+  });
+
+  it("hides the first source column and never loads sources while the flag is off", () => {
+    featureFlags.customerSources = false;
+    renderTable();
+
+    expect(screen.getByText("Lan Anh")).toBeInTheDocument();
+    expect(screen.queryByText("First source")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Tờ rơi Tết, KOL Minh Thư"),
+    ).not.toBeInTheDocument();
+    expect(state.sourceSearches).toEqual([]);
+  });
+
+  it("ignores a source in the URL while the flag is off", () => {
+    featureFlags.customerSources = false;
+    renderTable("/acme/customers?source=src-1");
+
+    expect(state.lastQuery).toMatchObject({ source: undefined });
   });
 
   it("lists the customers the bot collected, with their contact details", () => {

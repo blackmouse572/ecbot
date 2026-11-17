@@ -7170,6 +7170,17 @@ export type NavCountGetResponseDto = {
     toolsNeedingAttention: number;
 };
 
+export type FeatureFlagGetResponseDto = {
+    /**
+     * Đơn hàng: orders, product groups, import
+     */
+    orders: boolean;
+    /**
+     * Nguồn khách: tracked links and first source
+     */
+    customerSources: boolean;
+};
+
 export type AnalyticsPeriodValueDto = {
     current: number;
     previous: number;
@@ -35418,6 +35429,78 @@ export type NavCountWorkspaceControllerGetV1Responses = {
 };
 
 export type NavCountWorkspaceControllerGetV1Response = NavCountWorkspaceControllerGetV1Responses[keyof NavCountWorkspaceControllerGetV1Responses];
+
+export type FeatureFlagWorkspaceControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/feature-flags';
+};
+
+export type FeatureFlagWorkspaceControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type FeatureFlagWorkspaceControllerGetV1Error = FeatureFlagWorkspaceControllerGetV1Errors[keyof FeatureFlagWorkspaceControllerGetV1Errors];
+
+export type FeatureFlagWorkspaceControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: FeatureFlagGetResponseDto;
+    };
+};
+
+export type FeatureFlagWorkspaceControllerGetV1Response = FeatureFlagWorkspaceControllerGetV1Responses[keyof FeatureFlagWorkspaceControllerGetV1Responses];
 
 export type AnalyticsWorkspaceControllerConversionV1Data = {
     body?: never;

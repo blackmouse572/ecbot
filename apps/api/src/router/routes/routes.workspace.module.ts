@@ -22,6 +22,7 @@ import { ExportModule } from '@app/modules/export/export.module';
 import { InvitationWorkspaceController } from '@app/modules/invitation/controllers/invitation.workspace.controller';
 import { InvitationModule } from '@app/modules/invitation/invitation.module';
 import { NavCountWorkspaceController } from '@app/modules/nav-count/controllers/nav-count.workspace.controller';
+import { FeatureFlagWorkspaceController } from '@app/modules/feature-flag/controllers/feature-flag.workspace.controller';
 import { NavCountModule } from '@app/modules/nav-count/nav-count.module';
 import { FollowupWorkspaceController } from '@app/modules/platform/controllers/followup.workspace.controller';
 import { PlatformModule } from '@app/modules/platform/platform.module';
@@ -97,6 +98,7 @@ import { CustomerProductReactionWorkspaceController } from '@app/modules/custome
         OrderWorkspaceController,
         ProductGroupWorkspaceController,
         NavCountWorkspaceController,
+        FeatureFlagWorkspaceController,
         AnalyticsWorkspaceController,
         FollowupWorkspaceController,
         ClientCredentialWorkspaceController,

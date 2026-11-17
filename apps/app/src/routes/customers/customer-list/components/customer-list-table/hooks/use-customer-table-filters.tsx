@@ -3,6 +3,7 @@ import {
   CUSTOMER_STAGES,
 } from "@/components/customer-marketing";
 import type { Filter } from "@/components/table/data-table";
+import { useFeatureFlags } from "@/hooks/api/feature-flags";
 import {
   trackedLinkListQueryOptions,
   useTrackedLink,
@@ -22,6 +23,7 @@ export const useCustomerTableFilters = (): Filter[] => {
   const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
   const [searchParams] = useSearchParams();
+  const { flags } = useFeatureFlags();
   const [sourceSearch, setSourceSearch] = useState("");
   const onSourceSearch = useDebounceCallback(
     setSourceSearch,
@@ -34,7 +36,7 @@ export const useCustomerTableFilters = (): Filter[] => {
       perPage: 100,
       search: sourceSearch || undefined,
     }),
-    enabled: !!workspaceSlug,
+    enabled: !!workspaceSlug && flags.customerSources,
     placeholderData: keepPreviousData,
   });
   // ResponsePagingDto types `data` as loose records; narrow to the link shape.
@@ -45,7 +47,7 @@ export const useCustomerTableFilters = (): Filter[] => {
   const pickedMissing = !!pickedId && !matches.some((l) => l.id === pickedId);
   const { link: picked } = useTrackedLink(
     workspaceSlug,
-    pickedMissing ? pickedId : "",
+    pickedMissing && flags.customerSources ? pickedId : "",
   );
   const sources = useMemo(
     () => (pickedMissing && picked ? [picked, ...matches] : matches),
@@ -83,15 +85,22 @@ export const useCustomerTableFilters = (): Filter[] => {
           label: t(`customers.list.dormantOptions.${value}`),
         })),
       },
-      {
-        key: "source",
-        label: t("customers.list.source"),
-        type: "select",
-        searchable: true,
-        onSearchChange: onSourceSearch,
-        options: sources.map((link) => ({ value: link.id, label: link.name })),
-      },
+      ...(flags.customerSources
+        ? [
+            {
+              key: "source",
+              label: t("customers.list.source"),
+              type: "select" as const,
+              searchable: true,
+              onSearchChange: onSourceSearch,
+              options: sources.map((link) => ({
+                value: link.id,
+                label: link.name,
+              })),
+            },
+          ]
+        : []),
     ],
-    [t, sources, onSourceSearch],
+    [t, sources, onSourceSearch, flags.customerSources],
   );
 };

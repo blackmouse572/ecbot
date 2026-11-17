@@ -3,6 +3,7 @@ import {
   MarketingStageBadge,
 } from "@/components/customer-marketing";
 import type { CustomerGetResponseDto } from "@/hooks/api";
+import { useFeatureFlags } from "@/hooks/api/feature-flags";
 import { CreatedAtCell } from "@/components/table/table-cells/common/created-at-cell";
 import { TextCell } from "@/components/table/table-cells/common/text-cell";
 import { Text } from "@medusajs/ui";
@@ -16,6 +17,7 @@ const columnHelper = createColumnHelper<CustomerGetResponseDto>();
 
 export const useCustomerTableColumns = () => {
   const { t } = useTranslation();
+  const { flags } = useFeatureFlags();
 
   return useMemo(
     () => [
@@ -67,14 +69,20 @@ export const useCustomerTableColumns = () => {
           ) : null;
         },
       }),
-      columnHelper.display({
-        id: "firstSource",
-        header: () => t("customers.list.firstSource"),
-        cell: ({ row }) =>
-          row.original.marketing ? (
-            <FirstSourceCell source={row.original.marketing.firstSource} />
-          ) : null,
-      }),
+      ...(flags.customerSources
+        ? [
+            columnHelper.display({
+              id: "firstSource",
+              header: () => t("customers.list.firstSource"),
+              cell: ({ row }) =>
+                row.original.marketing ? (
+                  <FirstSourceCell
+                    source={row.original.marketing.firstSource}
+                  />
+                ) : null,
+            }),
+          ]
+        : []),
       columnHelper.display({
         id: "conversations",
         header: () => t("customers.list.conversations"),
@@ -90,6 +98,6 @@ export const useCustomerTableColumns = () => {
         cell: ({ getValue }) => <CreatedAtCell date={getValue()} />,
       }),
     ],
-    [t],
+    [t, flags.customerSources],
   );
 };

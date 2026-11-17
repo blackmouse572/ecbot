@@ -12,6 +12,11 @@ import { t } from "i18next";
 import { Navigate, type RouteObject, type UIMatch } from "react-router-dom";
 import { ProtectedRoute } from "../components/auth/protected-routes";
 import { ErrorBoundary } from "../components/error";
+import {
+  FeatureRoute,
+  featureBreadcrumb,
+  featureRouteLoader,
+} from "../components/feature-route";
 import { ROUTES } from "./constants";
 import { enterpriseRoutes } from "./enterprise.routes";
 import { enterpriseSettingsRoutes } from "./enterprise.settings";
@@ -432,9 +437,13 @@ function getRouteMaps(): RouteObject[] {
             {
               path: ROUTES.CustomerSources,
               handle: {
-                breadcrumb: () => t("customerSources.title"),
+                breadcrumb: featureBreadcrumb("customerSources", () =>
+                  t("customerSources.title"),
+                ),
               },
+              loader: featureRouteLoader,
               ErrorBoundary: ErrorBoundary,
+              element: <FeatureRoute flag="customerSources" />,
               children: [
                 {
                   path: "",
@@ -482,9 +491,13 @@ function getRouteMaps(): RouteObject[] {
               path: ROUTES.Orders,
               handle: {
                 private: true,
-                breadcrumb: () => t("orders.title"),
+                breadcrumb: featureBreadcrumb("orders", () =>
+                  t("orders.title"),
+                ),
               },
+              loader: featureRouteLoader,
               ErrorBoundary: ErrorBoundary,
+              element: <FeatureRoute flag="orders" />,
               children: [
                 {
                   path: "",

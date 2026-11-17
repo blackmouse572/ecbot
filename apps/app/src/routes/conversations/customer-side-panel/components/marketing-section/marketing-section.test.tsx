@@ -22,6 +22,18 @@ const state = vi.hoisted(() => ({
   events: [] as unknown[],
 }));
 
+const featureFlags = vi.hoisted(() => ({
+  orders: true,
+  customerSources: true,
+}));
+vi.mock("@/hooks/api/feature-flags", () => ({
+  useFeatureFlags: () => ({
+    flags: featureFlags,
+    isLoading: false,
+    isError: false,
+  }),
+}));
+
 vi.mock("@/hooks/api/customer-marketing", () => ({
   useCustomerMarketing: () => ({
     marketing: state.marketing,
@@ -82,6 +94,7 @@ const renderSection = (onViewMessage = vi.fn()) => {
 
 describe("MarketingSection", () => {
   beforeEach(() => {
+    featureFlags.customerSources = true;
     vi.useFakeTimers({ now: NOW, toFake: ["Date"] });
     state.marketing = {
       stage: "ASKED_PRICE",
@@ -262,6 +275,13 @@ describe("MarketingSection", () => {
       screen.getByRole("link", { name: "Tờ rơi trong hộp quà Tết" }),
     ).toHaveAttribute("href", "/lumi/sources/src-1");
     expect(screen.getByText(/^Through KOL Minh Thư, /)).toBeInTheDocument();
+  });
+
+  it("leaves out the first source while the flag is off", () => {
+    featureFlags.customerSources = false;
+    renderSection();
+
+    expect(screen.queryByText("First source")).not.toBeInTheDocument();
   });
 
   it("says the customer wrote in directly when there is no source", () => {

@@ -1,3 +1,4 @@
+import { useFeatureFlags } from "@/hooks/api/feature-flags";
 import { useQueryParams } from "@repo/ui/hooks";
 import { CUSTOMER_LIST_PAGE_SIZE } from "../../../../constants";
 
@@ -11,9 +12,13 @@ const CUSTOMER_TABLE_PARAMS = [
   "source",
 ];
 
-/** Shapes the URL params into the customer list endpoint query. */
+/**
+ * Shapes the URL params into the customer list endpoint query. A source in the
+ * URL is ignored while Nguồn khách is off, since its filter is hidden.
+ */
 export const useCustomerTableQuery = (pageSize = CUSTOMER_LIST_PAGE_SIZE) => {
   const raw = useQueryParams(CUSTOMER_TABLE_PARAMS);
+  const { flags } = useFeatureFlags();
 
   return {
     raw,
@@ -24,7 +29,7 @@ export const useCustomerTableQuery = (pageSize = CUSTOMER_LIST_PAGE_SIZE) => {
       stage: raw.stage || undefined,
       permission: raw.permission || undefined,
       dormant: raw.dormant ? raw.dormant === "true" : undefined,
-      source: raw.source || undefined,
+      source: (flags.customerSources && raw.source) || undefined,
     },
   };
 };
