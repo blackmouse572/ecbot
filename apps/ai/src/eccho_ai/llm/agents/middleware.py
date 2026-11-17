@@ -105,10 +105,12 @@ class ChatbotConfigMiddleware(AgentMiddleware[AgentState[Any], AgentRequestConte
                 max_tokens=chatbot.max_tokens,
             )
             sticky = _with_sticky_session(model, getattr(context, "conversation_id", None))
+            orders_enabled = getattr(context, "orders_enabled", False)
+            builtin = [t for t in request.tools if orders_enabled or getattr(t, "name", None) != "record_order"]
             request = request.override(
                 model=_with_provider_routing(sticky, getattr(context, "provider_sort", None)),
-                tools=[*request.tools, *injected],
-                system_prompt=render_system_prompt(chatbot),
+                tools=[*builtin, *injected],
+                system_prompt=render_system_prompt(chatbot, orders_enabled=orders_enabled),
                 messages=with_current_time(request.messages, _turn_context(context)),
             )
             try:

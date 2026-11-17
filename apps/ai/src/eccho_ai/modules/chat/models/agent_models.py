@@ -27,6 +27,9 @@ class AgentRequestContext(BaseModel):
     conversation_id: str | None = Field(default=None)
     # OpenRouter `provider.sort` for this reply; None keeps its own routing.
     provider_sort: str | None = Field(default=None)
+    # apps/api's orders feature flag: off, record_order and its prompt lines
+    # are left out (ChatbotConfigMiddleware).
+    orders_enabled: bool = Field(default=False)
     user_id: str | None = Field(default=None)
     provider_id: str | None = Field(default=None)
     # Customer-aware fields injected by apps/api when resolving the inbound

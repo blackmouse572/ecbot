@@ -213,6 +213,7 @@ def get_agent_context(
         agent_timezone=chat_request.agent_timezone,
         customer_timezone=chat_request.customer_timezone,
         provider_sort=chat_request.provider_sort or AppVars.OPENROUTER_PROVIDER_SORT or None,
+        orders_enabled=chat_request.orders_enabled,
     )
 
 

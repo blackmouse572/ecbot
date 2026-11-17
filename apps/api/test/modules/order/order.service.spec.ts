@@ -36,13 +36,17 @@ describe('OrderService', () => {
         matchItemName: ProductGroupService.prototype.matchItemName,
     };
     const customerMarketingService = { onOrderConfirmed: jest.fn() };
+    const featureFlagService = {
+        isEnabled: jest.fn(async (): Promise<boolean> => true),
+    };
 
     const service = new OrderService(
         orderRepository as any,
         productGroupRepository as any,
         customerRepository as any,
         productGroupService as any,
-        customerMarketingService as any
+        customerMarketingService as any,
+        featureFlagService as any
     );
 
     const order = (extra: Record<string, any> = {}) => ({
@@ -327,6 +331,21 @@ describe('OrderService', () => {
             await expect(
                 service.recordChatDraft('c9', draft)
             ).rejects.toBeInstanceOf(NotFoundException);
+        });
+
+        // An apps/ai that still offers record_order must not write orders
+        // the shop cannot see.
+        it('records nothing while the orders flag is off', async () => {
+            featureFlagService.isEnabled.mockResolvedValueOnce(false);
+            await expect(
+                service.recordChatDraft('c1', draft)
+            ).rejects.toBeInstanceOf(NotFoundException);
+            expect(featureFlagService.isEnabled).toHaveBeenCalledWith(
+                'orders',
+                workspaceId
+            );
+            expect(orderRepository.create).not.toHaveBeenCalled();
+            expect(orderRepository.replaceItems).not.toHaveBeenCalled();
         });
     });
 });

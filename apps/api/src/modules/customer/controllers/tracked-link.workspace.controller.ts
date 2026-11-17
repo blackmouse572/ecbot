@@ -1,3 +1,5 @@
+import { FeatureFlagProtected } from '@app/modules/feature-flag/decorators/feature-flag.decorator';
+import { ENUM_FEATURE_FLAG } from '@app/modules/feature-flag/enums/feature-flag.enum';
 import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { ActivityService } from '@app/modules/activity/services/activity.service';
 import { ApiKeyProtected } from '@app/modules/api-key/decorators/api-key.decorator';
@@ -65,6 +67,7 @@ import { ENUM_TRACKED_LINK_STATUS } from '../enums/tracked-link.enum';
 import { TrackedLinkService } from '../services/tracked-link.service';
 
 @ApiTags('modules.workspace.trackedLink')
+@FeatureFlagProtected(ENUM_FEATURE_FLAG.CUSTOMER_SOURCES)
 @Controller({
     version: '1',
     path: ':workspace/tracked-links',

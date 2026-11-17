@@ -45,10 +45,14 @@ describe('TrackedLinkAttributionService', () => {
             return {};
         }),
     };
+    const featureFlagService = {
+        isEnabled: jest.fn(async (): Promise<boolean> => true),
+    };
     const service = new TrackedLinkAttributionService(
         trackedLinkRepository as any,
         marketing as any,
-        tags as any
+        tags as any,
+        featureFlagService as any
     );
     const arrival = {
         customerId: 'c1',
@@ -59,6 +63,22 @@ describe('TrackedLinkAttributionService', () => {
     };
 
     beforeEach(() => jest.clearAllMocks());
+
+    // Sources hidden by its flag: no first source, no tags, no greeting.
+    it('does nothing while the customer sources flag is off', async () => {
+        featureFlagService.isEnabled.mockResolvedValueOnce(false);
+
+        const result = await service.recordArrival(arrival);
+
+        expect(result).toBeNull();
+        expect(featureFlagService.isEnabled).toHaveBeenCalledWith(
+            'customer-sources',
+            'w1'
+        );
+        expect(trackedLinkRepository.findOne).not.toHaveBeenCalled();
+        expect(marketing.recordSource).not.toHaveBeenCalled();
+        expect(tags.apply).not.toHaveBeenCalled();
+    });
 
     it('records the visit, tags the customer and gives the greeting', async () => {
         const result = await service.recordArrival(arrival);

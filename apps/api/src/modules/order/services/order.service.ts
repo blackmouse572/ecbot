@@ -1,3 +1,5 @@
+import { ENUM_FEATURE_FLAG } from '@app/modules/feature-flag/enums/feature-flag.enum';
+import { FeatureFlagService } from '@app/modules/feature-flag/services/feature-flag.service';
 import { IDatabaseFindAllOptions } from '@app/common/database/interfaces/database.interface';
 import { CustomerRepository } from '@app/modules/customer/repository/repositories/customer.repository';
 import { CustomerMarketingService } from '@app/modules/customer/services/customer-marketing.service';
@@ -40,7 +42,8 @@ export class OrderService {
         private readonly productGroupRepository: ProductGroupRepository,
         private readonly customerRepository: CustomerRepository,
         private readonly productGroupService: ProductGroupService,
-        private readonly customerMarketingService: CustomerMarketingService
+        private readonly customerMarketingService: CustomerMarketingService,
+        private readonly featureFlagService: FeatureFlagService
     ) {}
 
     findAll(
@@ -161,6 +164,16 @@ export class OrderService {
             });
         }
         const workspaceId = customer.workspace.id;
+        const enabled = await this.featureFlagService.isEnabled(
+            ENUM_FEATURE_FLAG.ORDERS,
+            workspaceId
+        );
+        if (!enabled) {
+            throw new NotFoundException({
+                message: 'featureFlag.error.off',
+                statusCode: 404,
+            });
+        }
         const groups = await this.productGroupService.findAll(workspaceId, {});
         const items = input.items.map(item => ({
             ...item,

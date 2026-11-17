@@ -61,7 +61,7 @@ async def test_middleware_injects_and_executes_operator_tool(monkeypatch):
     fake = _tool_then_final()  # one shared instance so the script advances across turns
 
     monkeypatch.setattr(mw, "build_chat_model", lambda **kw: fake)
-    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot: "sys")
+    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot, **kw: "sys")
 
     # Toolset is resolved once and carried on the context — both hooks read it.
     ctx = AgentRequestContext(chatbot=MagicMock(), chatbot_id="x", tools=[dyn])
@@ -118,7 +118,7 @@ class _CapturingRequest:
 
 async def _run_middleware(monkeypatch, model, *, conversation_id, provider_sort=None):
     monkeypatch.setattr(mw, "build_chat_model", lambda **kw: model)
-    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot: "sys")
+    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot, **kw: "sys")
     ctx = AgentRequestContext(
         chatbot=MagicMock(), chatbot_id="x", conversation_id=conversation_id, provider_sort=provider_sort
     )
@@ -197,7 +197,7 @@ async def test_a_model_no_provider_passes_still_replies_unfiltered(monkeypatch):
 
     base = ChatOpenAI(model="some/niche-model", api_key="sk-test")
     monkeypatch.setattr(mw, "build_chat_model", lambda **kw: base)
-    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot: "sys")
+    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot, **kw: "sys")
     request = _CapturingRequest(
         AgentRequestContext(chatbot=MagicMock(), chatbot_id="x", conversation_id="conv-1")
     )
@@ -233,7 +233,7 @@ async def test_current_time_rides_the_newest_turn_not_the_system_prompt(monkeypa
 
     fake = _RecordingModel(messages=iter([AIMessage(content="ok")]))
     monkeypatch.setattr(mw, "build_chat_model", lambda **kw: fake)
-    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot: "sys")
+    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot, **kw: "sys")
 
     ctx = AgentRequestContext(
         chatbot=MagicMock(),
@@ -264,7 +264,7 @@ async def test_a_conversation_timezone_adds_the_customer_clock(monkeypatch):
 
     fake = _RecordingModel(messages=iter([AIMessage(content="ok")]))
     monkeypatch.setattr(mw, "build_chat_model", lambda **kw: fake)
-    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot: "sys")
+    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot, **kw: "sys")
 
     ctx = AgentRequestContext(
         chatbot=MagicMock(),
@@ -292,7 +292,7 @@ async def test_opening_status_follows_the_clock_on_the_newest_turn(monkeypatch):
 
     fake = _RecordingModel(messages=iter([AIMessage(content="ok")]))
     monkeypatch.setattr(mw, "build_chat_model", lambda **kw: fake)
-    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot: "sys")
+    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot, **kw: "sys")
 
     chatbot = MagicMock(
         agent_profile={"openingHours": {"tue": [{"open": "08:00", "close": "22:00"}]}},
@@ -310,3 +310,37 @@ async def test_opening_status_follows_the_clock_on_the_newest_turn(monkeypatch):
         "<opening_hours>Closed now. Opens next Tuesday at 08:00. "
         "Today (Tuesday): 08:00-22:00.</opening_hours>\n\nopen?"
     )
+
+
+# ── Orders flag ──────────────────────────────────────────────────────────────
+
+
+async def _model_overrides(monkeypatch, *, orders_enabled):
+    monkeypatch.setattr(mw, "build_chat_model", lambda **kw: MagicMock())
+    monkeypatch.setattr(mw, "_with_sticky_session", lambda model, _conversation_id: model)
+    monkeypatch.setattr(mw, "_with_provider_routing", lambda model, _sort: model)
+    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot, **kw: f"orders={kw.get('orders_enabled')}")
+    ctx = AgentRequestContext(chatbot=MagicMock(), chatbot_id="x", orders_enabled=orders_enabled)
+    request = _CapturingRequest(ctx)
+    request.tools = [
+        StructuredTool.from_function(func=lambda: "", name="record_order", description="d"),
+        StructuredTool.from_function(func=lambda: "", name="apply_customer_tag", description="d"),
+    ]
+
+    async def _handler(req):
+        return req
+
+    await ChatbotConfigMiddleware().awrap_model_call(request, _handler)
+    return request.overrides
+
+
+async def test_orders_off_drops_record_order(monkeypatch):
+    overrides = await _model_overrides(monkeypatch, orders_enabled=False)
+    assert [t.name for t in overrides["tools"]] == ["apply_customer_tag"]
+    assert overrides["system_prompt"] == "orders=False"
+
+
+async def test_orders_on_keeps_record_order(monkeypatch):
+    overrides = await _model_overrides(monkeypatch, orders_enabled=True)
+    assert [t.name for t in overrides["tools"]] == ["record_order", "apply_customer_tag"]
+    assert overrides["system_prompt"] == "orders=True"

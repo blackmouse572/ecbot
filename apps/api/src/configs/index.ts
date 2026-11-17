@@ -12,6 +12,7 @@ import DebugConfig from 'src/configs/debug.config';
 import DocConfig from 'src/configs/doc.config';
 import EmailConfig from 'src/configs/email.config';
 import FacebookConfig from 'src/configs/facebook.config';
+import FeatureFlagConfig from 'src/configs/feature-flag.config';
 import HelperConfig from 'src/configs/helper.config';
 import OAuthConfig from 'src/configs/oauth.config';
 import TelegramConfig from 'src/configs/telegram.config';
@@ -47,6 +48,7 @@ export default [
     SessionConfig,
     WorkspaceConfig,
     FacebookConfig,
+    FeatureFlagConfig,
     OAuthConfig,
     TelegramConfig,
     ComposioConfig,

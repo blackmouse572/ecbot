@@ -1,3 +1,4 @@
+import { FeatureFlagModule } from 'src/modules/feature-flag/feature-flag.module';
 import { NotificationModule } from '@app/modules/notification/notification.module';
 import { VerificationModule } from '@app/modules/verification/verification.module';
 import { Module } from '@nestjs/common';
@@ -34,6 +35,7 @@ import { MigrationUserCreateSeed } from './seeds/migration.user-create.seed';
 @Module({
     imports: [
         CommonModule,
+        FeatureFlagModule,
         CommandModule,
         AccountRepositoryModule,
         OAuthModule,

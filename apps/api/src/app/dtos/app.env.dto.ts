@@ -542,6 +542,18 @@ export class AppEnvDto {
     @IsString()
     LOCAL_TUNNEL_SUBDOMAIN?: string;
 
+    // Feature flags when no flag provider is bound. feature-flag.config.ts
+    // reads only the literal 'true' as on, so any other value is off.
+    @IsOptional()
+    @IsBoolean()
+    @Type(() => Boolean)
+    FEATURE_ORDERS_ENABLE?: boolean;
+
+    @IsOptional()
+    @IsBoolean()
+    @Type(() => Boolean)
+    FEATURE_CUSTOMER_SOURCES_ENABLE?: boolean;
+
     // Composio Tool Registry marketplace
     @IsOptional()
     @IsString()

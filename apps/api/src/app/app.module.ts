@@ -1,3 +1,4 @@
+import { FeatureFlagModule } from 'src/modules/feature-flag/feature-flag.module';
 import { Module } from '@nestjs/common';
 import { RouterModule } from 'src/router/router.module';
 import { CommonModule } from 'src/common/common.module';
@@ -16,6 +17,7 @@ import { MeteringStatusLogger } from 'src/app/metering-status.logger';
         // Common
         CommonModule,
         AppMiddlewareModule,
+        FeatureFlagModule,
 
         // Routes
         RouterModule,
