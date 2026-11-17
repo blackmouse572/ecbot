@@ -94,6 +94,7 @@ const renderSection = (onViewMessage = vi.fn()) => {
 
 describe("MarketingSection", () => {
   beforeEach(() => {
+    featureFlags.customerSources = true;
     vi.useFakeTimers({ now: NOW, toFake: ["Date"] });
     state.marketing = {
       stage: "ASKED_PRICE",
@@ -279,7 +280,6 @@ describe("MarketingSection", () => {
   it("leaves out the first source while the flag is off", () => {
     featureFlags.customerSources = false;
     renderSection();
-    featureFlags.customerSources = true;
 
     expect(screen.queryByText("First source")).not.toBeInTheDocument();
   });

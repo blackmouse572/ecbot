@@ -126,6 +126,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.clearAllMocks();
+  featureFlags.orders = true;
 });
 
 describe("CustomerSidePanel", () => {
@@ -160,7 +161,6 @@ describe("CustomerSidePanel", () => {
     render(<CustomerSidePanel customerId="cust-1" />);
     await screen.findByDisplayValue("Alice Nguyen");
     expect(screen.queryByText("orders-section")).not.toBeInTheDocument();
-    featureFlags.orders = true;
   });
 
   it("renders the customer's name in the editable Name field", async () => {

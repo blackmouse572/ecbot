@@ -168,6 +168,13 @@ describe("CustomerListTable", () => {
     expect(state.sourceSearches).toEqual([]);
   });
 
+  it("ignores a source in the URL while the flag is off", () => {
+    featureFlags.customerSources = false;
+    renderTable("/acme/customers?source=src-1");
+
+    expect(state.lastQuery).toMatchObject({ source: undefined });
+  });
+
   it("lists the customers the bot collected, with their contact details", () => {
     renderTable();
 
