@@ -52,6 +52,7 @@ describe('AnalyticsService', () => {
         unhappyCustomers: jest.fn(),
         botDaily: jest.fn(),
         botByChatbot: jest.fn(),
+        botCountsByChatbot: jest.fn(),
         handoffReasons: jest.fn(),
         customerTags: jest.fn(),
         customerTotals: jest.fn(),
@@ -218,23 +219,17 @@ describe('AnalyticsService', () => {
     });
 
     it('turns bot counts into rates and labels handoff reasons', async () => {
-        repo.botDaily
-            .mockResolvedValueOnce([
-                {
-                    day: '2026-10-14',
-                    conversations: 8,
-                    botResolved: 6,
-                    handedOver: 2,
-                },
-            ])
-            .mockResolvedValueOnce([
-                {
-                    day: '2026-10-07',
-                    conversations: 4,
-                    botResolved: 2,
-                    handedOver: 2,
-                },
-            ]);
+        repo.botDaily.mockResolvedValueOnce([
+            {
+                day: '2026-10-14',
+                conversations: 8,
+                botResolved: 6,
+                handedOver: 2,
+            },
+        ]);
+        repo.botCountsByChatbot.mockResolvedValueOnce([
+            { id: 'b1', conversations: 4, botResolved: 2, handedOver: 2 },
+        ]);
         repo.botByChatbot.mockResolvedValue([
             {
                 id: 'b1',
@@ -308,37 +303,37 @@ describe('AnalyticsService', () => {
         ]);
     });
 
-    it('adds each agent over the period before, for its change', async () => {
-        const row = (conversations: number, botResolved: number) => ({
-            id: 'b1',
-            name: 'Shop bot',
-            conversations,
-            botResolved,
-            handedOver: conversations - botResolved,
-            firstReplySeconds: 5,
-            toolCalls: 0,
-            toolErrors: 0,
-        });
+    it('reads the period before from one counts-only query per agent', async () => {
         repo.botDaily.mockResolvedValue([]);
         repo.handoffReasons.mockResolvedValue([]);
-        repo.botByChatbot
-            .mockResolvedValueOnce([row(10, 9)])
-            .mockResolvedValueOnce([row(8, 6)]);
+        repo.botByChatbot.mockResolvedValue([]);
+        repo.botCountsByChatbot.mockResolvedValue([
+            { id: 'b1', conversations: 8, botResolved: 6, handedOver: 2 },
+            { id: 'b2', conversations: 2, botResolved: 0, handedOver: 2 },
+        ]);
 
         const result = await service.getBot(...args);
 
-        expect(result.byChatbot[0]).toMatchObject({
-            conversations: 10,
-            botResolvedRate: 90,
-        });
+        // The heavy per-agent query (first reply, tool errors) runs once,
+        // and the daily query only for the current period.
+        expect(repo.botByChatbot).toHaveBeenCalledTimes(1);
+        expect(repo.botDaily).toHaveBeenCalledTimes(1);
         expect(result.byChatbotPrevious).toEqual([
-            expect.objectContaining({
+            {
                 id: 'b1',
                 conversations: 8,
                 botResolvedRate: 75,
                 handoffRate: 25,
-            }),
+            },
+            {
+                id: 'b2',
+                conversations: 2,
+                botResolvedRate: 0,
+                handoffRate: 100,
+            },
         ]);
+        // The workspace's previous handoff rate is the sum over agents.
+        expect(result.handoffRate.previous).toBe(40);
     });
 
     it('counts customers by tag, untagged and channel', async () => {

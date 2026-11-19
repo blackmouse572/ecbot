@@ -173,34 +173,30 @@ export class AnalyticsService {
             timezone,
             now,
             async ({ current, previous, days }) => {
-                const [daily, before, byChatbot, byChatbotBefore, reasons] =
-                    await Promise.all([
-                        this.analyticsRepository.botDaily(current),
-                        this.analyticsRepository.botDaily(previous),
-                        this.analyticsRepository.botByChatbot(current),
-                        this.analyticsRepository.botByChatbot(previous),
-                        this.analyticsRepository.handoffReasons(current),
-                    ]);
-                const perChatbot = (rows: typeof byChatbot) =>
-                    rows.map(row => ({
-                        id: row.id,
-                        name: row.name,
-                        conversations: row.conversations,
-                        botResolvedRate: percent(
-                            row.botResolved,
-                            row.conversations
-                        ),
-                        handoffRate: percent(row.handedOver, row.conversations),
-                        firstReplySeconds: Math.round(
-                            row.firstReplySeconds ?? 0
-                        ),
-                        toolErrorRate: percent(row.toolErrors, row.toolCalls),
-                    }));
-                const rate = (rows: typeof daily) =>
+                // Every bot conversation belongs to an agent, so the period
+                // before's per-agent counts also sum to its workspace total.
+                const [daily, byChatbot, before, reasons] = await Promise.all([
+                    this.analyticsRepository.botDaily(current),
+                    this.analyticsRepository.botByChatbot(current),
+                    this.analyticsRepository.botCountsByChatbot(previous),
+                    this.analyticsRepository.handoffReasons(current),
+                ]);
+                const rate = (
+                    rows: { handedOver: number; conversations: number }[]
+                ) =>
                     percent(
                         sum(rows, r => r.handedOver),
                         sum(rows, r => r.conversations)
                     );
+                const rates = (row: (typeof before)[number]) => ({
+                    id: row.id,
+                    conversations: row.conversations,
+                    botResolvedRate: percent(
+                        row.botResolved,
+                        row.conversations
+                    ),
+                    handoffRate: percent(row.handedOver, row.conversations),
+                });
                 return {
                     generatedAt: now.toISOString(),
                     handoffRate: {
@@ -217,8 +213,15 @@ export class AnalyticsService {
                         { botResolved: 0, handedOver: 0 }
                     ),
                     reasons: this.mapReasons(reasons),
-                    byChatbot: perChatbot(byChatbot),
-                    byChatbotPrevious: perChatbot(byChatbotBefore),
+                    byChatbot: byChatbot.map(row => ({
+                        ...rates(row),
+                        name: row.name,
+                        firstReplySeconds: Math.round(
+                            row.firstReplySeconds ?? 0
+                        ),
+                        toolErrorRate: percent(row.toolErrors, row.toolCalls),
+                    })),
+                    byChatbotPrevious: before.map(rates),
                 };
             }
         );

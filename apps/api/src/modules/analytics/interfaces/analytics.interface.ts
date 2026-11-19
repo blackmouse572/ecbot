@@ -54,6 +54,13 @@ export interface IAnalyticsBotDayRow {
     handedOver: number;
 }
 
+export interface IAnalyticsBotChatbotCountsRow {
+    id: string;
+    conversations: number;
+    botResolved: number;
+    handedOver: number;
+}
+
 export interface IAnalyticsBotChatbotRow {
     id: string;
     name: string;

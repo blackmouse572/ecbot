@@ -1,6 +1,6 @@
 import { useWorkspaceAnalytics } from "@/hooks/api/workspace-analytics";
 import { StatCard } from "@repo/ui/charts";
-import type { AnalyticsBotChatbotDto } from "@repo/client";
+import type { AnalyticsBotChatbotCountsDto } from "@repo/client";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -24,8 +24,10 @@ export const ChatbotStatsSection: FC<Props> = ({ chatbotId }) => {
 
   // Undefined while loading, or (for last week) from a response cached
   // before the API sent it.
-  const valueIn = (rows: AnalyticsBotChatbotDto[] | undefined, key: Metric) =>
-    rows ? (rows.find((r) => r.id === chatbotId)?.[key] ?? 0) : undefined;
+  const valueIn = (
+    rows: AnalyticsBotChatbotCountsDto[] | undefined,
+    key: Metric,
+  ) => (rows ? (rows.find((r) => r.id === chatbotId)?.[key] ?? 0) : undefined);
 
   const card = (
     label: string,
