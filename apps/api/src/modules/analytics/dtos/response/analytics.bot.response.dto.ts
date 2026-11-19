@@ -94,4 +94,13 @@ export class AnalyticsBotResponseDto {
     @ApiProperty({ type: [AnalyticsBotChatbotDto] })
     @Type(() => AnalyticsBotChatbotDto)
     byChatbot: AnalyticsBotChatbotDto[];
+
+    @Expose()
+    @ApiProperty({
+        type: [AnalyticsBotChatbotDto],
+        description:
+            'The same per-agent rows over the period before, for the change on the agent page',
+    })
+    @Type(() => AnalyticsBotChatbotDto)
+    byChatbotPrevious: AnalyticsBotChatbotDto[];
 }

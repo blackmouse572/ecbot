@@ -173,12 +173,29 @@ export class AnalyticsService {
             timezone,
             now,
             async ({ current, previous, days }) => {
-                const [daily, before, byChatbot, reasons] = await Promise.all([
-                    this.analyticsRepository.botDaily(current),
-                    this.analyticsRepository.botDaily(previous),
-                    this.analyticsRepository.botByChatbot(current),
-                    this.analyticsRepository.handoffReasons(current),
-                ]);
+                const [daily, before, byChatbot, byChatbotBefore, reasons] =
+                    await Promise.all([
+                        this.analyticsRepository.botDaily(current),
+                        this.analyticsRepository.botDaily(previous),
+                        this.analyticsRepository.botByChatbot(current),
+                        this.analyticsRepository.botByChatbot(previous),
+                        this.analyticsRepository.handoffReasons(current),
+                    ]);
+                const perChatbot = (rows: typeof byChatbot) =>
+                    rows.map(row => ({
+                        id: row.id,
+                        name: row.name,
+                        conversations: row.conversations,
+                        botResolvedRate: percent(
+                            row.botResolved,
+                            row.conversations
+                        ),
+                        handoffRate: percent(row.handedOver, row.conversations),
+                        firstReplySeconds: Math.round(
+                            row.firstReplySeconds ?? 0
+                        ),
+                        toolErrorRate: percent(row.toolErrors, row.toolCalls),
+                    }));
                 const rate = (rows: typeof daily) =>
                     percent(
                         sum(rows, r => r.handedOver),
@@ -200,20 +217,8 @@ export class AnalyticsService {
                         { botResolved: 0, handedOver: 0 }
                     ),
                     reasons: this.mapReasons(reasons),
-                    byChatbot: byChatbot.map(row => ({
-                        id: row.id,
-                        name: row.name,
-                        conversations: row.conversations,
-                        botResolvedRate: percent(
-                            row.botResolved,
-                            row.conversations
-                        ),
-                        handoffRate: percent(row.handedOver, row.conversations),
-                        firstReplySeconds: Math.round(
-                            row.firstReplySeconds ?? 0
-                        ),
-                        toolErrorRate: percent(row.toolErrors, row.toolCalls),
-                    })),
+                    byChatbot: perChatbot(byChatbot),
+                    byChatbotPrevious: perChatbot(byChatbotBefore),
                 };
             }
         );

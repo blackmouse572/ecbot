@@ -1391,7 +1391,8 @@
       "stats": {
         "conversations": "Hội thoại 7 ngày",
         "botResolved": "Tự trả lời hết",
-        "handedOver": "Chuyển cho nhân viên"
+        "handedOver": "Chuyển cho nhân viên",
+        "lastWeek": "Tuần trước: {{value}}"
       },
       "nextSteps": {
         "title": "Việc nên làm tiếp",

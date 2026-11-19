@@ -7311,6 +7311,10 @@ export type AnalyticsBotResponseDto = {
     daily: Array<AnalyticsBotDayDto>;
     reasons: Array<AnalyticsHandoffReasonDto>;
     byChatbot: Array<AnalyticsBotChatbotDto>;
+    /**
+     * The same per-agent rows over the period before, for the change on the agent page
+     */
+    byChatbotPrevious: Array<AnalyticsBotChatbotDto>;
 };
 
 export type AnalyticsTagCountDto = {

@@ -3,7 +3,7 @@ import "@/i18n";
 import { describe, expect, it, vi } from "vitest";
 
 const analytics = vi.hoisted(() => ({
-  data: {} as { bot?: { byChatbot: unknown[] } },
+  data: {} as { bot?: { byChatbot: unknown[]; byChatbotPrevious?: unknown[] } },
   isLoading: false,
 }));
 
@@ -40,5 +40,27 @@ describe("ChatbotStatsSection", () => {
 
     expect(screen.getByText("0")).toBeInTheDocument();
     expect(screen.getAllByText("0%")).toHaveLength(2);
+  });
+
+  it("compares each number with the week before", () => {
+    const row = (conversations: number, resolved: number, handoff: number) => ({
+      id: "bot-1",
+      conversations,
+      botResolvedRate: resolved,
+      handoffRate: handoff,
+    });
+    analytics.data = {
+      bot: {
+        byChatbot: [row(1284, 86, 9)],
+        byChatbotPrevious: [row(1088, 82, 11)],
+      },
+    };
+    render(<ChatbotStatsSection chatbotId="bot-1" />);
+
+    expect(screen.getByText("+18%")).toBeInTheDocument();
+    expect(screen.getByText("+5%")).toBeInTheDocument();
+    expect(screen.getByText("-18%")).toBeInTheDocument();
+    expect(screen.getByText("Last week: 1,088")).toBeInTheDocument();
+    expect(screen.getByText("Last week: 82%")).toBeInTheDocument();
   });
 });

@@ -308,6 +308,39 @@ describe('AnalyticsService', () => {
         ]);
     });
 
+    it('adds each agent over the period before, for its change', async () => {
+        const row = (conversations: number, botResolved: number) => ({
+            id: 'b1',
+            name: 'Shop bot',
+            conversations,
+            botResolved,
+            handedOver: conversations - botResolved,
+            firstReplySeconds: 5,
+            toolCalls: 0,
+            toolErrors: 0,
+        });
+        repo.botDaily.mockResolvedValue([]);
+        repo.handoffReasons.mockResolvedValue([]);
+        repo.botByChatbot
+            .mockResolvedValueOnce([row(10, 9)])
+            .mockResolvedValueOnce([row(8, 6)]);
+
+        const result = await service.getBot(...args);
+
+        expect(result.byChatbot[0]).toMatchObject({
+            conversations: 10,
+            botResolvedRate: 90,
+        });
+        expect(result.byChatbotPrevious).toEqual([
+            expect.objectContaining({
+                id: 'b1',
+                conversations: 8,
+                botResolvedRate: 75,
+                handoffRate: 25,
+            }),
+        ]);
+    });
+
     it('counts customers by tag, untagged and channel', async () => {
         repo.customerTags.mockResolvedValue([
             { id: 't1', name: 'VIP', emoji: null, count: 4 },

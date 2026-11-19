@@ -1171,7 +1171,8 @@
       "stats": {
         "conversations": "Conversations (7 days)",
         "botResolved": "Answered without help",
-        "handedOver": "Handed to your team"
+        "handedOver": "Handed to your team",
+        "lastWeek": "Last week: {{value}}"
       },
       "nextSteps": {
         "title": "What to do next",
