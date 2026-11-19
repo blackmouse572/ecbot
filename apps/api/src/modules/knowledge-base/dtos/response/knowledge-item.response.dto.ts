@@ -92,6 +92,14 @@ export class KnowledgeItemResponseDto extends DatabaseDto {
     attachment?: AwsS3ResponseDto;
 
     @ApiPropertyOptional({
+        description:
+            'How many agents use this item. Only list responses fill it.',
+        example: 2,
+    })
+    @Expose()
+    chatbotCount?: number;
+
+    @ApiPropertyOptional({
         description: 'Type-specific metadata',
         example: { mimeType: 'application/pdf' },
     })

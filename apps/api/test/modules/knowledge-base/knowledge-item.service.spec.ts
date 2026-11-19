@@ -303,3 +303,33 @@ describe('KnowledgeItemService storage limit', () => {
         expect(storageQuota.assertCanSaveContent).not.toHaveBeenCalled();
     });
 });
+
+describe('KnowledgeItemService.mapList', () => {
+    type Ctor = ConstructorParameters<typeof KnowledgeItemService>;
+    // mapList touches no collaborator.
+    const service = new KnowledgeItemService(
+        undefined as unknown as Ctor[0],
+        undefined as unknown as Ctor[1],
+        undefined as unknown as Ctor[2],
+        undefined as unknown as Ctor[3],
+        undefined as unknown as Ctor[4],
+        undefined as unknown as Ctor[5],
+        undefined as unknown as Ctor[6],
+        undefined as unknown as Ctor[7]
+    );
+    // SAFETY: mapGet reads only id, title and tagArray from these.
+    const items = [
+        { id: 'item-a', title: 'A', tagArray: [] },
+        { id: 'item-b', title: 'B', tagArray: [] },
+    ] as unknown as Parameters<KnowledgeItemService['mapList']>[0];
+
+    it('adds how many agents use each item, 0 for none', () => {
+        const result = service.mapList(items, new Map([['item-a', 2]]));
+
+        expect(result.map(item => item.chatbotCount)).toEqual([2, 0]);
+    });
+
+    it('leaves the count out when it was not loaded', () => {
+        expect(service.mapList(items)[0].chatbotCount).toBeUndefined();
+    });
+});

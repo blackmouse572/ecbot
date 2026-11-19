@@ -1,4 +1,4 @@
-import "@/i18n";
+import i18n from "@/i18n";
 import { TooltipProvider } from "@medusajs/ui";
 import type { ChatbotKnowledgeItemResponseDto } from "@repo/client";
 import { render, screen } from "@testing-library/react";
@@ -60,4 +60,24 @@ describe("ChatbotRAGSectionItem", () => {
       ).toBeInTheDocument();
     },
   );
+
+  it("says how many other agents share the item", () => {
+    renderItem("COMPLETED", { chatbotCount: 3 });
+
+    expect(
+      screen.getByText(
+        i18n.t("chatbot.details.capabilities.sharedWith", { count: 2 }),
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("shows no shared badge when only this agent uses the item", () => {
+    renderItem("COMPLETED", { chatbotCount: 1 });
+
+    expect(
+      screen.queryByText(
+        i18n.t("chatbot.details.capabilities.sharedWith", { count: 0 }),
+      ),
+    ).not.toBeInTheDocument();
+  });
 });

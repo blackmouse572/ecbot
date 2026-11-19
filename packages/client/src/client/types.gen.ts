@@ -5452,6 +5452,10 @@ export type KnowledgeItemResponseDto = {
      */
     attachment?: AwsS3ResponseDto;
     /**
+     * How many agents use this item. Only list responses fill it.
+     */
+    chatbotCount?: number;
+    /**
      * Type-specific metadata
      */
     metadata?: {

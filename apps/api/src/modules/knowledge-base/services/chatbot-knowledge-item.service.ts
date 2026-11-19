@@ -224,9 +224,26 @@ export class ChatbotKnowledgeItemService {
         );
     }
 
+    /** How many live agents use each item, for the "used by N agents" badge. */
+    countChatbotsByItems(itemIds: string[]): Promise<Map<string, number>> {
+        return this.chatbotKnowledgeItemRepository.countChatbotsByItems(
+            itemIds
+        );
+    }
+
     mapList(
-        data: ChatbotKnowledgeItemEntity[]
+        data: ChatbotKnowledgeItemEntity[],
+        chatbotCounts?: Map<string, number>
     ): ChatbotKnowledgeItemResponseDto[] {
-        return data.map(item => this.mapGet(item));
+        return data.map(item => {
+            const dto = this.mapGet(item);
+
+            if (chatbotCounts && dto.knowledgeItem) {
+                dto.knowledgeItem.chatbotCount =
+                    chatbotCounts.get(dto.knowledgeItemId) ?? 0;
+            }
+
+            return dto;
+        });
     }
 }

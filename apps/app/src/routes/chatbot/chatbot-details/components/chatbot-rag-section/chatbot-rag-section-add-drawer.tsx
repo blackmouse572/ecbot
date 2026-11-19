@@ -2,6 +2,7 @@ import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes/constants";
 import {
   Button,
+  clx,
   createDataTableColumnHelper,
   createDataTableFilterHelper,
   DataTable,
@@ -145,6 +146,26 @@ export function ChatbotRAGSectionAddDrawer({
             processedAt={row.original.processedAt}
           />
         ),
+      }),
+      columnHelper.accessor("chatbotCount", {
+        header: t("knowledgeBase.list.columns.inUse"),
+        cell: ({ getValue }) => {
+          const count = getValue() ?? 0;
+
+          return (
+            <Text
+              size="small"
+              className={clx(
+                "whitespace-nowrap",
+                count === 0 ? "text-ui-fg-muted" : "text-ui-fg-subtle",
+              )}
+            >
+              {count === 0
+                ? t("knowledgeBase.list.notUsed")
+                : t("knowledgeBase.list.usedBy", { count })}
+            </Text>
+          );
+        },
       }),
       columnHelper.accessor("tags", {
         header: t("knowledgeBase.list.columns.tags"),
