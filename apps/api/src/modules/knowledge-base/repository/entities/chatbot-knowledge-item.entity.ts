@@ -1,9 +1,14 @@
-import { Entity, ManyToOne, Property } from '@mikro-orm/postgresql';
+import { Entity, Index, ManyToOne, Property } from '@mikro-orm/postgresql';
 import { DatabaseEntityBase } from 'src/common/database/bases/database.entity';
 import { ChatbotEntity } from 'src/modules/chatbot/repository/entities/chatbot.entity';
 import { KnowledgeItemEntity } from './knowledge-item.entity';
 
 @Entity({ tableName: 'chatbot_knowledge_items' })
+// Counting the agents that use an item filters on it (knowledge lists).
+@Index({
+    name: 'chatbot_knowledge_items_knowledge_item_id_index',
+    properties: ['knowledgeItem'],
+})
 export class ChatbotKnowledgeItemEntity extends DatabaseEntityBase {
     @ManyToOne(() => ChatbotEntity)
     chatbot: ChatbotEntity;

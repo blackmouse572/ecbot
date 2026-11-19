@@ -238,7 +238,7 @@ export class ChatbotKnowledgeItemService {
         return data.map(item => {
             const dto = this.mapGet(item);
 
-            if (chatbotCounts && dto.knowledgeItem) {
+            if (chatbotCounts) {
                 dto.knowledgeItem.chatbotCount =
                     chatbotCounts.get(dto.knowledgeItemId) ?? 0;
             }

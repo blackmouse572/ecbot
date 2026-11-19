@@ -93,7 +93,7 @@ export class KnowledgeItemResponseDto extends DatabaseDto {
 
     @ApiPropertyOptional({
         description:
-            'How many agents use this item. Only list responses fill it.',
+            'How many agents use this item. Only the workspace list responses fill it.',
         example: 2,
     })
     @Expose()
