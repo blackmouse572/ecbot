@@ -4,10 +4,9 @@ import { TwoColumnPageSkeleton } from "@repo/ui/common-components";
 import { SingleColumnPage, TwoColumnPage } from "@repo/ui/layout";
 import { useChatbotKnowledgeItems } from "@/hooks/api/knowledge-base";
 import { Container, Tabs } from "@medusajs/ui";
-import { useEffect, useMemo, useState } from "react";
-import { useLoaderData, useParams, useSearchParams } from "react-router-dom";
+import { useMemo } from "react";
+import { useLoaderData, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { CHATBOT_DETAIL_TABS, type ChatbotDetailTab } from "../constants";
 import {
   AccountList,
   ChatbotCapabilitiesSection,
@@ -21,6 +20,8 @@ import {
   ChatbotStatsSection,
 } from "./components";
 
+import { CHATBOT_DETAIL_TABS } from "../constants";
+import { useDetailTab } from "./hooks/use-detail-tab";
 import type { chatbotDetailsLoader } from "./loader";
 import { AIChatCard } from "../../../components/ai-chat/ai-chat-card";
 import { TestChatNotice } from "../../../components/ai-chat/test-chat-notice";
@@ -28,41 +29,6 @@ import { AIChatInput } from "../../../components/ai-chat/ai-chat-input";
 import { workspaceChatTransport } from "../../../components/ai-chat/use-ai-chat-stream";
 import { useAuthToken } from "@/modules/auth";
 import { ChatbotShareDialog } from "./components/chatbot-share-dialog";
-
-const isTab = (value: string | null): value is ChatbotDetailTab =>
-  CHATBOT_DETAIL_TABS.some((tab) => tab === value);
-
-/**
- * The open tab. It lives in state so it survives an edit drawer's route
- * (which drops the query), and follows `?tab=` when a link sets it.
- */
-const useDetailTab = () => {
-  const [params, setParams] = useSearchParams();
-  const fromUrl = params.get("tab");
-
-  const [tab, setTab] = useState<ChatbotDetailTab>(
-    isTab(fromUrl) ? fromUrl : "overview",
-  );
-
-  useEffect(() => {
-    if (isTab(fromUrl)) setTab(fromUrl);
-  }, [fromUrl]);
-
-  const open = (value: string) => {
-    if (!isTab(value)) return;
-    setTab(value);
-    setParams(
-      (prev) => {
-        prev.set("tab", value);
-
-        return prev;
-      },
-      { replace: true },
-    );
-  };
-
-  return [tab, open] as const;
-};
 
 export function ChatbotDetails() {
   const { t } = useTranslation();

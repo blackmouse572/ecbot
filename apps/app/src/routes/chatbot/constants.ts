@@ -246,6 +246,9 @@ export const CHATBOT_FORM_DEFAULTS: Partial<ChatbotFormData> = {
 export const CHATBOT_GENERAL_FIELDS = [
   "name",
   "type",
+] as const satisfies readonly (keyof ChatbotFormData)[];
+
+export const CHATBOT_LANGUAGE_FIELDS = [
   "primaryLanguage",
   "deferedLanguage",
   "timezone",
@@ -284,6 +287,11 @@ export const CHATBOT_MESSAGE_WHEN_KEYS = {
  * general card's drawer is plain `edit`; any other slug closes the drawer.
  */
 export const CHATBOT_EDIT_SECTIONS = {
+  language: {
+    path: "edit/language",
+    titleKey: "chatbot.details.language.editTitle",
+    fields: CHATBOT_LANGUAGE_FIELDS,
+  },
   messages: {
     path: "edit/messages",
     titleKey: "chatbot.details.messages.editTitle",

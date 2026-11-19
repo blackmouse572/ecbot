@@ -4,6 +4,7 @@ import type { ChatbotGetDetailResponseDto } from "@repo/client";
 import { SectionRow } from "@repo/ui/common-components";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
+import { CHATBOT_EDIT_SECTIONS } from "../../constants";
 import { ChatbotSectionEditButton } from "./chatbot-section-edit-button";
 import { ChatbotSectionHeader } from "./chatbot-section-header";
 
@@ -18,7 +19,9 @@ export const ChatbotLanguageSection: FC<Props> = ({ item }) => {
     <Container className="divide-y p-0">
       <ChatbotSectionHeader
         title={t("chatbot.details.language.title")}
-        actions={<ChatbotSectionEditButton to="edit" />}
+        actions={
+          <ChatbotSectionEditButton to={CHATBOT_EDIT_SECTIONS.language.path} />
+        }
       />
       <SectionRow
         title={t("chatbot.create.primaryLanguage")}

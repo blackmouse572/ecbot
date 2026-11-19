@@ -1,4 +1,5 @@
 import { useWorkspaceAnalytics } from "@/hooks/api/workspace-analytics";
+import { useAnalyticsFormat } from "@/routes/dashboard/components/analytics/use-analytics-format";
 import { StatCard } from "@repo/ui/charts";
 import type { AnalyticsBotChatbotCountsDto } from "@repo/client";
 import type { FC } from "react";
@@ -16,11 +17,9 @@ type Metric = "conversations" | "botResolvedRate" | "handoffRate";
  * so that week reads as zero.
  */
 export const ChatbotStatsSection: FC<Props> = ({ chatbotId }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { data, isLoading } = useWorkspaceAnalytics("7d", BOT_TAB);
-  const number = new Intl.NumberFormat(i18n.language);
-  const count = (v: number) => number.format(v);
-  const percent = (v: number) => `${number.format(v)}%`;
+  const f = useAnalyticsFormat();
 
   // Undefined while loading, or (for last week) from a response cached
   // before the API sent it.
@@ -55,9 +54,9 @@ export const ChatbotStatsSection: FC<Props> = ({ chatbotId }) => {
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-      {card("chatbot.details.stats.conversations", "conversations", count)}
-      {card("chatbot.details.stats.botResolved", "botResolvedRate", percent)}
-      {card("chatbot.details.stats.handedOver", "handoffRate", percent, true)}
+      {card("chatbot.details.stats.conversations", "conversations", f.number)}
+      {card("chatbot.details.stats.botResolved", "botResolvedRate", f.percent)}
+      {card("chatbot.details.stats.handedOver", "handoffRate", f.percent, true)}
     </div>
   );
 };

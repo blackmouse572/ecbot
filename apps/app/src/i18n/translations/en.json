@@ -1129,7 +1129,6 @@
       "noAccountsDescription": "Connect a Facebook page, Zalo OA, or another channel so this agent can start replying to customers.",
       "general": {
         "channels": "Channels it answers on",
-        "createdAt": "Created {{date}}",
         "updatedAt": "Last edited {{date}}",
         "summary_one": "Answers on {{count}} channel",
         "summary_other": "Answers on {{count}} channels"
@@ -1166,6 +1165,7 @@
         "advanced": "Advanced"
       },
       "language": {
+        "editTitle": "Edit language and time zone",
         "title": "Language and time zone"
       },
       "stats": {

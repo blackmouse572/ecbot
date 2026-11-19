@@ -1351,7 +1351,6 @@
       "generalKnowledge": "Kiến thức chung",
       "general": {
         "channels": "Kênh đang trả lời",
-        "createdAt": "Tạo lúc {{date}}",
         "updatedAt": "Sửa lần cuối {{date}}",
         "summary_other": "Trả lời trên {{count}} kênh"
       },
@@ -1386,6 +1385,7 @@
         "advanced": "Nâng cao"
       },
       "language": {
+        "editTitle": "Sửa ngôn ngữ và múi giờ",
         "title": "Ngôn ngữ và múi giờ"
       },
       "stats": {
