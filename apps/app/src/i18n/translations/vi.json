@@ -1352,7 +1352,8 @@
       "general": {
         "channels": "Kênh đang trả lời",
         "createdAt": "Tạo lúc {{date}}",
-        "updatedAt": "Sửa lần cuối {{date}}"
+        "updatedAt": "Sửa lần cuối {{date}}",
+        "summary_other": "Trả lời trên {{count}} kênh"
       },
       "profile": {
         "title": "Hồ sơ agent",
@@ -1377,6 +1378,38 @@
         "title": "Năng lực",
         "description": "Những gì agent tra cứu và làm được ngoài trò chuyện.",
         "knowledgeDescription": "Tài liệu và trang agent đọc để trả lời."
+      },
+      "tabs": {
+        "overview": "Tổng quan",
+        "behaviour": "Cách trả lời",
+        "knowledge": "Kiến thức",
+        "advanced": "Nâng cao"
+      },
+      "language": {
+        "title": "Ngôn ngữ và múi giờ"
+      },
+      "stats": {
+        "conversations": "Hội thoại 7 ngày",
+        "botResolved": "Tự trả lời hết",
+        "handedOver": "Chuyển cho nhân viên"
+      },
+      "nextSteps": {
+        "title": "Việc nên làm tiếp",
+        "description": "Những việc giúp agent trả lời tốt hơn.",
+        "steps": {
+          "channel": {
+            "title": "Kết nối kênh",
+            "description": "Agent chỉ trả lời trên các kênh đã gắn với nó."
+          },
+          "knowledge": {
+            "title": "Thêm kiến thức",
+            "description": "Giá, chính sách và thông tin sản phẩm để agent đọc trước khi trả lời."
+          },
+          "welcome": {
+            "title": "Đặt lời chào",
+            "description": "Tin nhắn đầu tiên khách mới nhận được."
+          }
+        }
       }
     },
     "rag": {

@@ -304,3 +304,13 @@ export const CHATBOT_PROFILE_VISIBLE_GROUPS = 2;
 
 /** Above this many prompt tokens from one tool's actions, warn the owner. */
 export const MCP_HEAVY_PROMPT_TOKENS = 10_000;
+
+/** The agent page's tabs, in order; `?tab=` picks one. */
+export const CHATBOT_DETAIL_TABS = [
+  "overview",
+  "behaviour",
+  "knowledge",
+  "advanced",
+] as const;
+
+export type ChatbotDetailTab = (typeof CHATBOT_DETAIL_TABS)[number];
