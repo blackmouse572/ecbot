@@ -1,16 +1,13 @@
-import { headerLabel } from "@/components/table/columns";
 import { CreatedAtCell } from "@/components/table/table-cells/common/created-at-cell";
-import { useWorkspaceParams } from "@/hooks/use-workspace-params";
-import { ROUTES } from "@/routes/constants";
-import { EyeMini } from "@medusajs/icons";
-import { StatusBadge } from "@medusajs/ui";
-import type { ChatbotListResponseDto } from "@repo/client";
-import { IconCodeDots } from "@tabler/icons-react";
+import type {
+  AccountGetDetailResponseDto,
+  ChatbotListResponseDto,
+} from "@repo/client";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
 import { CHATBOT_TYPE_CONFIG } from "../../../../constants";
+import { ChatbotChannelsCell } from "../chatbot-channels-cell";
 import { ChatbotNameCell } from "../chatbot-name-cell";
 import { ChatbotStatusCell } from "../chatbot-status-cell";
 import { ChatbotTypeBadge } from "../chatbot-type-badge";
@@ -19,24 +16,20 @@ const columnHelper = createColumnHelper<ChatbotListResponseDto>();
 
 type ChatbotType = keyof typeof CHATBOT_TYPE_CONFIG;
 
-/** The list endpoint also returns the author; the generated DTO omits it. */
-type ChatbotRow = ChatbotListResponseDto & {
-  addedBy?: { id: string; name: string; avatar?: string };
-};
+type ChatbotAccounts = Pick<
+  AccountGetDetailResponseDto,
+  "id" | "type" | "name"
+>[];
 
-export const useChatbotTableColumns = () => {
-  const { t } = useTranslation();
-  const { workspaceSlug } = useWorkspaceParams();
+/**
+ * Agent list columns. `conversations` maps an agent id to its conversations
+ * in the last 7 days; until it loads the column shows a dash.
+ */
+export const useChatbotTableColumns = (conversations?: Map<string, number>) => {
+  const { t, i18n } = useTranslation();
 
   return useMemo(() => {
-    /** Reads an on/off chatbot setting as an enabled / disabled badge. */
-    const toggleBadge = (on?: boolean) => (
-      <StatusBadge color={on ? "green" : "grey"}>
-        {on ? t("actions.enable") : t("actions.disable")}
-      </StatusBadge>
-    );
-
-    const missing = <div className="text-ui-fg-muted">-</div>;
+    const missing = <span className="text-ui-fg-muted">-</span>;
 
     return [
       columnHelper.display({
@@ -65,49 +58,30 @@ export const useChatbotTableColumns = () => {
         cell: ({ row }) => <ChatbotStatusCell item={row.original} />,
       }),
       columnHelper.display({
-        id: "autoRead",
-        header: () =>
-          headerLabel(
-            <>
-              <EyeMini />
-              {t("chatbot.details.autoRead")}
-            </>,
-          ),
-        cell: ({ row }) => toggleBadge(row.original.autoRead),
+        id: "channels",
+        header: () => t("chatbot.list.columns.channels"),
+        // SAFETY: the list endpoint populates `accounts` with account objects
+        // (ChatbotListResponseDto @Type), the generated client types them as ids.
+        cell: ({ row }) => (
+          <ChatbotChannelsCell
+            accounts={
+              (row.original.accounts ?? []) as unknown as ChatbotAccounts
+            }
+          />
+        ),
       }),
       columnHelper.display({
-        id: "typingIndicator",
-        header: () =>
-          headerLabel(
-            <>
-              <IconCodeDots className="size-5" />
-              {t("chatbot.details.typingIndicator")}
-            </>,
-          ),
-        cell: ({ row }) => toggleBadge(row.original.typingIndicator),
-      }),
-
-      columnHelper.display({
-        id: "linkedAccounts",
-        header: () => t("chatbot.list.columns.linkedAccounts"),
-        cell: ({ row }) => row.original.accounts?.length || 0,
-      }),
-      columnHelper.display({
-        id: "addedBy",
-        header: () => t("fields.addedBy"),
+        id: "conversations",
+        header: () => t("chatbot.list.columns.conversations7d"),
         cell: ({ row }) => {
-          const { addedBy } = row.original as ChatbotRow;
+          const count = conversations?.get(row.original.id) ?? 0;
 
-          if (!addedBy) {
-            return missing;
-          }
-
-          const memberPath = `${ROUTES.Settings}/${ROUTES.WorkspaceMember}`;
-
-          return (
-            <Link to={`/${workspaceSlug}/${memberPath}/${addedBy.id}`}>
-              <ChatbotNameCell name={addedBy.name} avatar={addedBy.avatar} />
-            </Link>
+          return count ? (
+            <span className="tabular-nums">
+              {count.toLocaleString(i18n.language)}
+            </span>
+          ) : (
+            missing
           );
         },
       }),
@@ -122,5 +96,5 @@ export const useChatbotTableColumns = () => {
           ),
       }),
     ];
-  }, [t, workspaceSlug]);
+  }, [t, i18n.language, conversations]);
 };

@@ -1225,8 +1225,7 @@
           "followup": "follow-up",
           "image": "image",
           "knowledge": "knowledge",
-          "tool": "tool",
-          "knowledge": "knowledge"
+          "tool": "tool"
         }
       },
       "sources": {
@@ -1316,7 +1315,12 @@
           "active": "Active",
           "inactive": "Inactive",
           "archived": "Archived"
-        }
+        },
+        "channels": "Channels",
+        "conversations7d": "Conversations (7 days)",
+        "accountCount_one": "{{count}} account",
+        "accountCount_other": "{{count}} accounts",
+        "connectChannel": "Connect a channel to turn on"
       },
       "filters": {
         "status": {

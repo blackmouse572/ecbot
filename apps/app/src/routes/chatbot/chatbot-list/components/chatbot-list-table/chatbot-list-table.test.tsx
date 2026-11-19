@@ -38,6 +38,10 @@ vi.mock("@/hooks/api", () => ({
   useAccounts: () => ({ accounts: [], count: 0, isLoading: false }),
 }));
 
+vi.mock("@/hooks/api/workspace-analytics", () => ({
+  useWorkspaceAnalytics: () => ({ data: {} }),
+}));
+
 vi.mock("react-router-dom", async () => {
   const actual =
     await vi.importActual<typeof import("react-router-dom")>(

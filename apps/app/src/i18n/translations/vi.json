@@ -1195,8 +1195,7 @@
           "followup": "nhắc hẹn",
           "image": "hình ảnh",
           "knowledge": "kiến thức",
-          "tool": "công cụ",
-          "knowledge": "kiến thức"
+          "tool": "công cụ"
         }
       },
       "sources": {
@@ -1286,7 +1285,11 @@
           "active": "Đang hoạt động",
           "inactive": "Không hoạt động",
           "archived": "Đã lưu trữ"
-        }
+        },
+        "channels": "Kênh",
+        "conversations7d": "Hội thoại 7 ngày",
+        "accountCount_other": "{{count}} tài khoản",
+        "connectChannel": "Kết nối kênh để bật"
       },
       "filters": {
         "status": {
