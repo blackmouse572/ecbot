@@ -2,11 +2,20 @@ import { TooltipProvider } from "@medusajs/ui";
 import { render as rtlRender, screen } from "@testing-library/react";
 import type { ReactElement } from "react";
 import "@/i18n";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { ChatbotChannelsCell } from "./chatbot-channels-cell";
 
 const render = (ui: ReactElement) =>
-  rtlRender(ui, { wrapper: TooltipProvider });
+  rtlRender(
+    <MemoryRouter initialEntries={["/acme"]}>
+      <TooltipProvider>
+        <Routes>
+          <Route path="/:workspaceSlug" element={ui} />
+        </Routes>
+      </TooltipProvider>
+    </MemoryRouter>,
+  );
 
 const account = (id: string, type: string, name = id) => ({ id, type, name });
 
@@ -40,11 +49,13 @@ describe("ChatbotChannelsCell", () => {
     expect(screen.getByText("6 accounts")).toBeInTheDocument();
   });
 
-  it("asks to connect a channel when the agent has none", () => {
+  it("links to the channels page when the agent has none", () => {
     render(<ChatbotChannelsCell accounts={[]} />);
 
     expect(
-      screen.getByText("Connect a channel to turn on"),
-    ).toBeInTheDocument();
+      screen.getByRole("link", {
+        name: "Connect a channel to enable this agent",
+      }),
+    ).toHaveAttribute("href", "/acme/accounts");
   });
 });

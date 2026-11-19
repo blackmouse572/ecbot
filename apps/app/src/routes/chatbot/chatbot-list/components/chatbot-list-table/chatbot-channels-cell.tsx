@@ -1,11 +1,12 @@
-import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import { channelOf } from "@/components/platform-icon/channel-catalog";
+import { PlatformIconStack } from "@/components/platform-icon/platform-icon-stack";
+import { useWorkspaceParams } from "@/hooks/use-workspace-params";
+import { ROUTES } from "@/routes/constants";
 import { Text, Tooltip } from "@medusajs/ui";
 import type { AccountGetDetailResponseDto } from "@repo/client";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
-
-const MAX_LOGOS = 4;
+import { Link } from "react-router-dom";
 
 type Props = {
   accounts: Pick<AccountGetDetailResponseDto, "id" | "type" | "name">[];
@@ -18,21 +19,20 @@ type Props = {
  */
 export const ChatbotChannelsCell: FC<Props> = ({ accounts }) => {
   const { t } = useTranslation();
+  const { workspaceSlug } = useWorkspaceParams();
 
   if (accounts.length === 0) {
     return (
-      <Text
-        size="small"
-        weight="plus"
-        className="text-ui-fg-interactive whitespace-nowrap"
+      <Link
+        to={`/${workspaceSlug}/${ROUTES.Accounts}`}
+        // The row itself opens the agent.
+        onClick={(event) => event.stopPropagation()}
+        className="txt-compact-small-plus text-ui-fg-interactive hover:text-ui-fg-interactive-hover whitespace-nowrap"
       >
         {t("chatbot.list.columns.connectChannel")}
-      </Text>
+      </Link>
     );
   }
-
-  const shown = accounts.slice(0, MAX_LOGOS);
-  const hidden = accounts.length - shown.length;
 
   return (
     <Tooltip
@@ -47,21 +47,7 @@ export const ChatbotChannelsCell: FC<Props> = ({ accounts }) => {
       }
     >
       <div className="flex items-center gap-x-2">
-        <div className="flex shrink-0 items-center -space-x-1.5">
-          {shown.map((account) => (
-            <PlatformIcon
-              key={account.id}
-              type={account.type}
-              size={20}
-              className="ring-ui-bg-base shrink-0 ring-2"
-            />
-          ))}
-          {hidden > 0 && (
-            <span className="bg-ui-bg-subtle text-ui-fg-subtle ring-ui-bg-base flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1 text-[10px] leading-none ring-2">
-              +{hidden}
-            </span>
-          )}
-        </div>
+        <PlatformIconStack types={accounts.map((account) => account.type)} />
         <Text size="small" className="text-ui-fg-subtle truncate">
           {t("chatbot.list.columns.accountCount", { count: accounts.length })}
         </Text>

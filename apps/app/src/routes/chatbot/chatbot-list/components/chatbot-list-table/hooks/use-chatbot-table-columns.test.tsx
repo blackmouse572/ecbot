@@ -14,6 +14,7 @@ const wrapper = ({ children }: { children: ReactNode }) => (
   </MemoryRouter>
 );
 
+// The list endpoint's shape: accounts arrive as account objects.
 const row = {
   id: "a",
   name: "Alpha",
@@ -57,7 +58,13 @@ describe("useChatbotTableColumns", () => {
     expect(screen.getByText("1,284")).toBeInTheDocument();
   });
 
-  it("shows a dash while the counts are unknown or zero", () => {
+  it("shows 0 for an agent with no conversations once the counts load", () => {
+    render(<ConversationsCell counts={new Map()} />, { wrapper });
+
+    expect(screen.getByText("0")).toBeInTheDocument();
+  });
+
+  it("shows a dash only while the counts are unknown", () => {
     render(<ConversationsCell />, { wrapper });
 
     expect(screen.getByText("-")).toBeInTheDocument();

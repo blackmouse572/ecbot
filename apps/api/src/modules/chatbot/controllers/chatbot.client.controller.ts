@@ -118,7 +118,6 @@ export class ChatbotClientController {
             },
             order: _order,
             populate: ['createdBy', 'accounts'],
-            select: ['accounts.id'],
         });
         const total: number = await this.chatbotService.getTotal(find);
 

@@ -1,8 +1,5 @@
 import { CreatedAtCell } from "@/components/table/table-cells/common/created-at-cell";
-import type {
-  AccountGetDetailResponseDto,
-  ChatbotListResponseDto,
-} from "@repo/client";
+import type { ChatbotListResponseDto } from "@repo/client";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,14 +13,10 @@ const columnHelper = createColumnHelper<ChatbotListResponseDto>();
 
 type ChatbotType = keyof typeof CHATBOT_TYPE_CONFIG;
 
-type ChatbotAccounts = Pick<
-  AccountGetDetailResponseDto,
-  "id" | "type" | "name"
->[];
-
 /**
  * Agent list columns. `conversations` maps an agent id to its conversations
- * in the last 7 days; until it loads the column shows a dash.
+ * in the last 7 days (an agent missing from it had none); until it loads the
+ * column shows a dash.
  */
 export const useChatbotTableColumns = (conversations?: Map<string, number>) => {
   const { t, i18n } = useTranslation();
@@ -60,30 +53,23 @@ export const useChatbotTableColumns = (conversations?: Map<string, number>) => {
       columnHelper.display({
         id: "channels",
         header: () => t("chatbot.list.columns.channels"),
-        // SAFETY: the list endpoint populates `accounts` with account objects
-        // (ChatbotListResponseDto @Type), the generated client types them as ids.
         cell: ({ row }) => (
-          <ChatbotChannelsCell
-            accounts={
-              (row.original.accounts ?? []) as unknown as ChatbotAccounts
-            }
-          />
+          <ChatbotChannelsCell accounts={row.original.accounts ?? []} />
         ),
       }),
       columnHelper.display({
         id: "conversations",
         header: () => t("chatbot.list.columns.conversations7d"),
-        cell: ({ row }) => {
-          const count = conversations?.get(row.original.id) ?? 0;
-
-          return count ? (
+        cell: ({ row }) =>
+          conversations ? (
             <span className="tabular-nums">
-              {count.toLocaleString(i18n.language)}
+              {(conversations.get(row.original.id) ?? 0).toLocaleString(
+                i18n.language,
+              )}
             </span>
           ) : (
             missing
-          );
-        },
+          ),
       }),
       columnHelper.display({
         id: "updatedAt",

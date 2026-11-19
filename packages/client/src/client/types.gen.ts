@@ -4509,9 +4509,9 @@ export type ChatbotListResponseDto = {
      */
     workspace: string;
     /**
-     * Accounts associated with the chatbot
+     * Accounts associated with the chatbot, as account objects where the endpoint populates them (the list endpoint does).
      */
-    accounts: Array<string>;
+    accounts: Array<AccountGetDetailResponseDto>;
     /**
      * Whether guardrails are enabled for this chatbot
      */

@@ -1121,8 +1121,6 @@
       "accountLinkFailed": "Failed to link account",
       "generalKnowledgeSaved": "General knowledge saved",
       "generalKnowledgeSaveFailed": "Failed to save general knowledge",
-      "typingIndicator": "Show typing",
-      "autoRead": "Mark as read",
       "generalKnowledge": "General knowledge",
       "account": {
         "active": "Active"
@@ -1292,9 +1290,6 @@
         "profile": "Profile",
         "type": "Type",
         "status": "Status",
-        "linkedAccounts": "Linked Accounts",
-        "addedBy": "Added By",
-        "lastUpdated": "Last updated at",
         "typeOptions": {
           "beauty": "Beauty",
           "fashion": "Fashion",
@@ -1320,7 +1315,7 @@
         "conversations7d": "Conversations (7 days)",
         "accountCount_one": "{{count}} account",
         "accountCount_other": "{{count}} accounts",
-        "connectChannel": "Connect a channel to turn on"
+        "connectChannel": "Connect a channel to enable this agent"
       },
       "filters": {
         "status": {
