@@ -7,6 +7,7 @@ import type { FC } from "react";
 import { Navigate, useParams } from "react-router-dom";
 import {
   ChatbotGeneralFields,
+  ChatbotLanguageFields,
   ChatbotMessageFields,
   ChatbotSettingsFields,
 } from "../components/chatbot-form";
@@ -14,13 +15,14 @@ import { CHATBOT_EDIT_SECTIONS, CHATBOT_GENERAL_FIELDS } from "../constants";
 import { ChatbotEditForm } from "./components";
 
 const SECTION_FIELDS = {
+  language: ChatbotLanguageFields,
   messages: ChatbotMessageFields,
   settings: ChatbotSettingsFields,
 } satisfies Record<keyof typeof CHATBOT_EDIT_SECTIONS, FC>;
 
 /**
  * A detail-page card's edit drawer: `edit` for the general card,
- * `edit/messages` and `edit/settings` for theirs. Each saves only its card's
+ * `edit/language`, `edit/messages` and `edit/settings` for theirs. Each saves only its card's
  * fields, so no Edit button changes what another card shows.
  */
 export function ChatbotEdit() {

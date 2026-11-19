@@ -173,17 +173,30 @@ export class AnalyticsService {
             timezone,
             now,
             async ({ current, previous, days }) => {
-                const [daily, before, byChatbot, reasons] = await Promise.all([
+                // Every bot conversation belongs to an agent, so the period
+                // before's per-agent counts also sum to its workspace total.
+                const [daily, byChatbot, before, reasons] = await Promise.all([
                     this.analyticsRepository.botDaily(current),
-                    this.analyticsRepository.botDaily(previous),
                     this.analyticsRepository.botByChatbot(current),
+                    this.analyticsRepository.botCountsByChatbot(previous),
                     this.analyticsRepository.handoffReasons(current),
                 ]);
-                const rate = (rows: typeof daily) =>
+                const rate = (
+                    rows: { handedOver: number; conversations: number }[]
+                ) =>
                     percent(
                         sum(rows, r => r.handedOver),
                         sum(rows, r => r.conversations)
                     );
+                const rates = (row: (typeof before)[number]) => ({
+                    id: row.id,
+                    conversations: row.conversations,
+                    botResolvedRate: percent(
+                        row.botResolved,
+                        row.conversations
+                    ),
+                    handoffRate: percent(row.handedOver, row.conversations),
+                });
                 return {
                     generatedAt: now.toISOString(),
                     handoffRate: {
@@ -201,19 +214,14 @@ export class AnalyticsService {
                     ),
                     reasons: this.mapReasons(reasons),
                     byChatbot: byChatbot.map(row => ({
-                        id: row.id,
+                        ...rates(row),
                         name: row.name,
-                        conversations: row.conversations,
-                        botResolvedRate: percent(
-                            row.botResolved,
-                            row.conversations
-                        ),
-                        handoffRate: percent(row.handedOver, row.conversations),
                         firstReplySeconds: Math.round(
                             row.firstReplySeconds ?? 0
                         ),
                         toolErrorRate: percent(row.toolErrors, row.toolCalls),
                     })),
+                    byChatbotPrevious: before.map(rates),
                 };
             }
         );

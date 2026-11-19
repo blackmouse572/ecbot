@@ -197,6 +197,20 @@ export function mockWorkspaceAnalytics(
           toolErrorRate: 3.4,
         },
       ],
+      byChatbotPrevious: [
+        {
+          id: "c1",
+          conversations: r(352),
+          botResolvedRate: 77,
+          handoffRate: 23,
+        },
+        {
+          id: "c2",
+          conversations: r(150),
+          botResolvedRate: 70,
+          handoffRate: 30,
+        },
+      ],
     },
     customers: {
       generatedAt,

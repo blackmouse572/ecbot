@@ -37,6 +37,25 @@ export class AnalyticsHandoffReasonDto {
     count: number;
 }
 
+/** An agent's counts for a period, without the costlier per-agent figures. */
+export class AnalyticsBotChatbotCountsDto {
+    @Expose()
+    @ApiProperty()
+    id: string;
+
+    @Expose()
+    @ApiProperty()
+    conversations: number;
+
+    @Expose()
+    @ApiProperty()
+    botResolvedRate: number;
+
+    @Expose()
+    @ApiProperty()
+    handoffRate: number;
+}
+
 export class AnalyticsBotChatbotDto {
     @Expose()
     @ApiProperty()
@@ -94,4 +113,13 @@ export class AnalyticsBotResponseDto {
     @ApiProperty({ type: [AnalyticsBotChatbotDto] })
     @Type(() => AnalyticsBotChatbotDto)
     byChatbot: AnalyticsBotChatbotDto[];
+
+    @Expose()
+    @ApiProperty({
+        type: [AnalyticsBotChatbotCountsDto],
+        description:
+            'Each agent over the period before, counts only, for the change on the agent page',
+    })
+    @Type(() => AnalyticsBotChatbotCountsDto)
+    byChatbotPrevious: AnalyticsBotChatbotCountsDto[];
 }

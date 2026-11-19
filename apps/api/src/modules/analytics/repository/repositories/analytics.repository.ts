@@ -11,6 +11,7 @@ import {
     ANALYTICS_UNHAPPY_KEYS,
 } from '../../constants/analytics.constant';
 import {
+    IAnalyticsBotChatbotCountsRow,
     IAnalyticsBotChatbotRow,
     IAnalyticsBotDayRow,
     IAnalyticsChannelCountRow,
@@ -431,6 +432,33 @@ export class AnalyticsRepository extends DatabaseRepository<CustomerEntity> {
         );
         return rows.map(r => ({
             day: r.day as string,
+            conversations: num(r.conversations),
+            botResolved: num(r.bot_resolved),
+            handedOver: num(r.handed_over),
+        }));
+    }
+
+    /**
+     * The same counts per chatbot and nothing else: no message or tool scans,
+     * so the period before costs no more than botDaily did.
+     */
+    async botCountsByChatbot(
+        w: IAnalyticsWindow
+    ): Promise<IAnalyticsBotChatbotCountsRow[]> {
+        const rows = await this.run(
+            `WITH ${WINDOW}, ${BOT_CONVERSATIONS}
+            SELECT cs.chatbot_id AS id,
+                   COUNT(*) AS conversations,
+                   COUNT(*) FILTER (
+                       WHERE NOT cs.handed_over AND NOT cs.has_operator
+                   ) AS bot_resolved,
+                   COUNT(*) FILTER (WHERE cs.handed_over) AS handed_over
+            FROM cs
+            GROUP BY cs.chatbot_id`,
+            windowParams(w)
+        );
+        return rows.map(r => ({
+            id: r.id as string,
             conversations: num(r.conversations),
             botResolved: num(r.bot_resolved),
             handedOver: num(r.handed_over),

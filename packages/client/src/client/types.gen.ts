@@ -7302,6 +7302,13 @@ export type AnalyticsBotChatbotDto = {
     toolErrorRate: number;
 };
 
+export type AnalyticsBotChatbotCountsDto = {
+    id: string;
+    conversations: number;
+    botResolvedRate: number;
+    handoffRate: number;
+};
+
 export type AnalyticsBotResponseDto = {
     generatedAt: string;
     /**
@@ -7311,6 +7318,10 @@ export type AnalyticsBotResponseDto = {
     daily: Array<AnalyticsBotDayDto>;
     reasons: Array<AnalyticsHandoffReasonDto>;
     byChatbot: Array<AnalyticsBotChatbotDto>;
+    /**
+     * Each agent over the period before, counts only, for the change on the agent page
+     */
+    byChatbotPrevious: Array<AnalyticsBotChatbotCountsDto>;
 };
 
 export type AnalyticsTagCountDto = {

@@ -1129,8 +1129,9 @@
       "noAccountsDescription": "Connect a Facebook page, Zalo OA, or another channel so this agent can start replying to customers.",
       "general": {
         "channels": "Channels it answers on",
-        "createdAt": "Created {{date}}",
-        "updatedAt": "Last edited {{date}}"
+        "updatedAt": "Last edited {{date}}",
+        "summary_one": "Answers on {{count}} channel",
+        "summary_other": "Answers on {{count}} channels"
       },
       "profile": {
         "title": "Agent profile",
@@ -1156,6 +1157,40 @@
         "title": "Capabilities",
         "description": "What the agent can look up and do besides chatting.",
         "knowledgeDescription": "Documents and pages the agent reads to answer."
+      },
+      "tabs": {
+        "overview": "Overview",
+        "behaviour": "How it replies",
+        "knowledge": "Knowledge",
+        "advanced": "Advanced"
+      },
+      "language": {
+        "editTitle": "Edit language and time zone",
+        "title": "Language and time zone"
+      },
+      "stats": {
+        "conversations": "Conversations (7 days)",
+        "botResolved": "Answered without help",
+        "handedOver": "Handed to your team",
+        "lastWeek": "Last week: {{value}}"
+      },
+      "nextSteps": {
+        "title": "What to do next",
+        "description": "Things that would help this agent answer better.",
+        "steps": {
+          "channel": {
+            "title": "Connect a channel",
+            "description": "The agent replies only on the channels linked to it."
+          },
+          "knowledge": {
+            "title": "Add knowledge",
+            "description": "Prices, policies and product details the agent reads before it answers."
+          },
+          "welcome": {
+            "title": "Set a welcome message",
+            "description": "The first message a new customer gets."
+          }
+        }
       }
     },
     "edit": {
