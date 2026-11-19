@@ -7688,6 +7688,10 @@ export type KnowledgeItemShortResponseDto = {
      * Tags
      */
     tags?: Array<string>;
+    /**
+     * How many agents use this item. Only list responses fill it.
+     */
+    chatbotCount?: number;
 };
 
 export type KnowledgeItemClientCreateRequestDto = {
