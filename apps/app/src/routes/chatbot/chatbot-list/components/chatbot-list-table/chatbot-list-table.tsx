@@ -23,6 +23,7 @@ import { CHATBOT_CONSTANTS } from "../../../constants";
 import { chatbotLoader } from "../../loader";
 import { ChatbotActions } from "./chatbot-actions";
 import {
+  useChatbotConversationCounts,
   useChatbotTableColumns,
   useChatbotTableFilters,
   useChatbotTableQuery,
@@ -167,7 +168,7 @@ const useCommands = () => {
 
 const columnHelper = createColumnHelper<ChatbotListResponseDto>();
 const useColumns = () => {
-  const base = useChatbotTableColumns();
+  const base = useChatbotTableColumns(useChatbotConversationCounts());
 
   const columns = useMemo(
     () => [

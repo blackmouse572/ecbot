@@ -246,12 +246,14 @@ export class ChatbotListResponseDto extends DatabaseDto {
     workspace: string;
 
     @ApiProperty({
-        description: 'Accounts associated with the chatbot',
+        description:
+            'Accounts associated with the chatbot, as account objects where the endpoint populates them (the list endpoint does).',
+        type: [AccountGetDetailResponseDto],
     })
     @Expose()
     @IsArray()
     @Type(() => AccountGetDetailResponseDto)
-    accounts: string[];
+    accounts: AccountGetDetailResponseDto[];
 
     @ApiProperty({
         description: 'Whether guardrails are enabled for this chatbot',

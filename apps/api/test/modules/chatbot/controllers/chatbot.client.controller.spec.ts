@@ -143,7 +143,6 @@ describe('ChatbotClientController', () => {
                 paging: { limit: 20, offset: 20 },
                 order: { name: 'asc' },
                 populate: ['createdBy', 'accounts'],
-                select: ['accounts.id'],
             });
             expect(mockChatbotService.getTotal).toHaveBeenCalledWith(find);
             expect(result).toEqual({

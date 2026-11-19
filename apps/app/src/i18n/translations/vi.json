@@ -1195,8 +1195,7 @@
           "followup": "nhắc hẹn",
           "image": "hình ảnh",
           "knowledge": "kiến thức",
-          "tool": "công cụ",
-          "knowledge": "kiến thức"
+          "tool": "công cụ"
         }
       },
       "sources": {
@@ -1263,9 +1262,6 @@
         "profile": "Hồ sơ",
         "type": "Loại",
         "status": "Trạng thái",
-        "linkedAccounts": "Tài khoản liên kết",
-        "addedBy": "Được thêm bởi",
-        "lastUpdated": "Cập nhật lần cuối",
         "typeOptions": {
           "beauty": "Làm đẹp",
           "fashion": "Thời trang",
@@ -1286,7 +1282,11 @@
           "active": "Đang hoạt động",
           "inactive": "Không hoạt động",
           "archived": "Đã lưu trữ"
-        }
+        },
+        "channels": "Kênh",
+        "conversations7d": "Hội thoại 7 ngày",
+        "accountCount_other": "{{count}} tài khoản",
+        "connectChannel": "Kết nối kênh để bật"
       },
       "filters": {
         "status": {
@@ -1345,8 +1345,6 @@
       "account": {
         "active": "Hoạt động"
       },
-      "autoRead": "Tự đánh dấu đã xem",
-      "typingIndicator": "Hiện đang soạn tin",
       "noAccounts": "Chưa liên kết tài khoản nào",
       "noAccountsDescription": "Liên kết Fanpage Facebook, Zalo OA hoặc kênh khác để agent này bắt đầu trả lời khách hàng.",
       "title": "Chi tiết agent",
