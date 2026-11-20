@@ -1,0 +1,68 @@
+# After staff handled a handed-over order and switched the bot back on, a
+# plain ok or thanks must not hand the same order over again; a real change
+# must. History is what apps/api sends: staff replies as "[Staff] ..." and the
+# "[Handled by staff]" note. Source: prompt-tests/repeat-handoff, RESULTS.md.
+area: repeat-handoff
+agent: florist
+x-history: &handled_order
+  - customer:
+      vi: Chào shop, mình đặt 2 bó hoa hồng giao tới 12 Lê Lợi, Quận 1 nha. Mình tên Lan, sđt 0901234567.
+      en: Hi, I want 2 rose bouquets delivered to 12 Le Loi, District 1. I'm Lan, 0901234567.
+  - bot:
+      vi: "Dạ chị Lan, em xác nhận đơn nhé: 2 bó hoa hồng (700.000đ), giao tới 12 Lê Lợi, Quận 1, sđt 0901234567. Em chốt đơn nha chị?"
+      en: "Got it Lan! Your order: 2 rose bouquets (700,000 VND), delivered to 12 Le Loi, District 1, phone 0901234567. Shall I go ahead?"
+  - customer:
+      vi: Ok chốt nhé.
+      en: Yes please.
+  - bot:
+      vi: Dạ em đã chuyển đơn cho nhân viên, bên em sẽ liên hệ xác nhận với chị ngay ạ.
+      en: Thanks Lan! I've passed your order to our staff, they will confirm it with you shortly.
+  - staff:
+      vi: Chào chị Lan, em là Hoa bên shop. Đơn của chị đã được xác nhận, chiều nay bên em giao nhé. Tổng 700.000đ, thanh toán khi nhận hàng ạ.
+      en: Hi Lan, this is Hoa from the shop. Your order is confirmed, we'll deliver this afternoon. Total 700,000 VND, pay on delivery.
+  - handled: ""
+x-customer: &lan
+  vi: {name: Lan, applied_tags: [Đơn hàng mới]}
+  en: {name: Lan, applied_tags: [New order]}
+
+cases:
+  - id: ok
+    history: *handled_order
+    customer: *lan
+    message: {vi: "Ok vậy mình chờ nha.", en: "Ok, I'll wait then."}
+    expect:
+      - handoff: false
+
+  - id: thanks
+    history: *handled_order
+    customer: *lan
+    message: {vi: "Ok cảm ơn shop nha", en: "Great, thank you!"}
+    expect:
+      - handoff: false
+
+  - id: confirm
+    history: *handled_order
+    customer: *lan
+    message: {vi: "Đúng rồi em, giao giúp chị nha.", en: "Yes that's right, deliver it please."}
+    expect:
+      - handoff: false
+
+  - id: new_question
+    history: *handled_order
+    customer: *lan
+    message: {vi: "À shop có hoa tulip không, hộp tulip giá bao nhiêu vậy?", en: "By the way, do you have tulips? How much is a tulip bouquet?"}
+    expect:
+      - handoff: false
+
+  - id: changed_order
+    note: a changed order is new work for staff, so it is handed over again
+    history:
+      - *handled_order
+      - customer: {vi: "À cho mình đổi thành 3 bó nha shop.", en: "Actually make it 3 bouquets please."}
+      - bot:
+          vi: "Dạ chị Lan, em xác nhận lại: 3 bó hoa hồng (1.050.000đ), giao tới 12 Lê Lợi, Quận 1, sđt 0901234567. Đúng không chị?"
+          en: "Sure Lan! So that's 3 rose bouquets (1,050,000 VND) to 12 Le Loi, District 1, phone 0901234567. Is that right?"
+    customer: *lan
+    message: {vi: "Đúng rồi em.", en: "Yes, that's right."}
+    expect:
+      - handoff: true

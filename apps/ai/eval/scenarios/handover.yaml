@@ -1,0 +1,72 @@
+# Who gets handed to staff in the same turn, and who doesn't.
+# Sources: #191, #282 (prompt-tests/191), agent-reply-fixes (2026-11-17).
+area: handover
+agent: restaurant
+cases:
+  - id: angry_late_order
+    note: "#191: an angry customer is tagged and handed over in the same turn"
+    message:
+      vi: Đặt đồ ăn cả tiếng rồi mà chưa thấy đâu. Đói muốn xỉu luôn 😤
+      en: I ordered an hour ago and it still hasn't arrived. I'm starving 😤
+    expect:
+      - handoff: true
+
+  - id: no_table_complaint
+    note: upset about a booking that went wrong
+    message:
+      vi: Hôm qua mình đặt bàn mà tới nơi không có bàn, chờ 40 phút, quá tệ!
+      en: I booked a table yesterday and when we arrived there was no table, we waited 40 minutes. Terrible!
+    expect:
+      - handoff: true
+
+  - id: asks_for_staff
+    message:
+      vi: Cho mình gặp nhân viên được không?
+      en: Can I talk to a real person please?
+    expect:
+      - handoff: true
+
+  - id: mild_shipping_price
+    note: "#191 control: mild annoyance is answered, not handed over"
+    message:
+      vi: Phí ship 50k hơi cao nhỉ, có cách nào rẻ hơn không shop?
+      en: Hmm, 50k for shipping is a bit pricey. Any cheaper option?
+    expect:
+      - handoff: false
+
+  - id: calm_lost_jacket
+    note: "agent-reply-fixes: a calm problem is not a complaint"
+    message:
+      vi: Hôm qua mình để quên áo khoác ở quán, có ai thấy không ạ?
+      en: I think I left my jacket at your place yesterday, did anyone find it?
+    expect:
+      - no_tag: {vi: [Khiếu nại, Tức giận], en: [Complaint, Angry]}
+
+  - id: upset_after_filling
+    agent: dental
+    note: "agent-reply-fixes: hand over without asking for details or pitching the clinic"
+    message:
+      vi: Hôm qua trám răng xong giờ ê buốt không ăn được gì, làm ăn kiểu gì vậy?
+      en: I got a filling yesterday and now I cannot eat anything, it hurts so much. Is this how you treat patients?
+    expect:
+      - handoff: true
+      - reply_not_matches:
+          vi: "số điện thoại|sđt|hình ảnh|gửi ảnh|chụp|10 năm|Cone Beam|vô trùng"
+          en: "phone number|photo|picture|10 years|Cone Beam|sterile"
+
+  - id: calm_sensitivity
+    agent: dental
+    note: "agent-reply-fixes control: a calm question is not a complaint"
+    message:
+      vi: Trám răng xong hơi ê nhẹ khi uống nước lạnh, vậy có bình thường không ạ?
+      en: My new filling feels a little sensitive with cold drinks. Is that normal?
+    expect:
+      - no_tag: {vi: [Khiếu nại, Tức giận], en: [Complaint, Angry]}
+
+  - id: upset_after_facial
+    agent: spa
+    message:
+      vi: Tuần trước làm da mặt xong bị nổi mẩn đỏ hết, spa làm ăn kiểu gì vậy?
+      en: After my facial last week my skin broke out in red bumps. What kind of spa are you running?
+    expect:
+      - handoff: true
