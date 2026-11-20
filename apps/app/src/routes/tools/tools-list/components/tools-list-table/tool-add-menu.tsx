@@ -21,7 +21,7 @@ export const ToolAddMenu = () => {
         <Button size="small" variant="primary">
           <PlusMini />
           {t("tools.addMenu.button")}
-          <ChevronDownMini />
+          <ChevronDownMini className="size-3" />
         </Button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Content align="end" className="w-[280px]">
