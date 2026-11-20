@@ -15,6 +15,7 @@ export const featureFlagQueryKeys = queryKeysFactory("feature-flags");
 const FLAGS_OFF: FeatureFlagGetResponseDto = {
   orders: false,
   customerSources: false,
+  marketing: false,
 };
 
 /**
@@ -53,7 +54,7 @@ export const isFeatureOn = (slug: string | undefined, flag: FeatureFlagKey) =>
   !!queryClient.getQueryData(featureFlagsQueryOptions(slug).queryKey)?.[flag];
 
 /**
- * The workspace's feature flags (Đơn hàng, Nguồn khách). Every flag reads as
+ * The workspace's feature flags (Đơn hàng, Nguồn khách, Tiếp thị). Every flag reads as
  * off until the API answers, so a hidden feature never flashes into view.
  */
 export const useFeatureFlags = () => {

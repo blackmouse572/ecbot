@@ -161,10 +161,10 @@ export class MarketingOverviewRepository extends DatabaseRepository<CustomerEnti
         super(em, CustomerEntity);
     }
 
-    private run<T = Record<string, unknown>>(
+    private run(
         sql: string,
         params: unknown[]
-    ): Promise<T[]> {
+    ): Promise<Record<string, unknown>[]> {
         return this.em.getConnection().execute(sql, params);
     }
 
