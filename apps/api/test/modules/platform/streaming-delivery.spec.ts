@@ -812,6 +812,38 @@ describe('StreamingDelivery.deliver (incremental)', () => {
             guardrailReason: 'guardrail_output_heuristic',
         });
     });
+
+    // The real HTTP stream errors once we abort it. That abort is our reaction
+    // to the AI's error frame, not a newer message, so it must not read as a
+    // supersede (which drops the turn silently, with no fallback line).
+    it('reports an AI error frame as a failure, not a supersede, when the abort errors the stream', async () => {
+        const abort = new AbortController();
+        const stream = sse([
+            line({ type: 'error', errorText: 'Error code: 402' }),
+            DONE,
+        ]);
+        abort.signal.addEventListener('abort', () =>
+            stream.destroy(new Error('canceled'))
+        );
+        const res = await new StreamingDelivery().deliver({
+            adapter: makeAdapter(),
+            account: {} as any,
+            senderId: 'S',
+            conversationId: 'C',
+            chatbot: GUARD_OFF,
+            stream,
+            abort,
+            isCurrent: async () => true,
+            onSegmentPersist: async () => 'nonce',
+            onSent: async () => {},
+            onFailed: async () => {},
+        });
+        expect(res).toMatchObject({
+            anySent: false,
+            superseded: false,
+            generationFailed: true,
+        });
+    });
 });
 
 describe('StreamingDelivery — token usage', () => {
