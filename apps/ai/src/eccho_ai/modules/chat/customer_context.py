@@ -186,6 +186,19 @@ async def build_customer_context_block(customer_id: str | None) -> str:
         logger.warning("build_customer_context_block failed for customer=%s: %s", customer_id, exc)
         return ""
 
+    return render_customer_context(customer, applied_names, catalog_rows, marketing)
+
+
+def render_customer_context(
+    customer: Customers,
+    applied_names: list[str],
+    catalog_rows: list[tuple[Any, ...]],
+    marketing: CustomerMarketingStates | None,
+) -> str:
+    """The block itself, from rows already read. `catalog_rows` are
+    (name, emoji, description, triggers_handoff, notifies_team, created_at),
+    newest first. Kept apart from the reads so the prompt regression suite
+    (eval/regression) renders the exact block production sends."""
     truncated = len(catalog_rows) > MAX_CATALOG_TAGS
     capped_rows = catalog_rows[:MAX_CATALOG_TAGS]
 

@@ -1,0 +1,64 @@
+# Bookings and services the agent doesn't know about. The agent has no
+# calendar, so it must never say a time is free; and a service missing from
+# its facts may still exist, so it checks instead of saying "we don't offer".
+# Source: agent-reply-fixes (2026-11-17), agent-ux/wizard-eval.
+area: booking
+agent: spa
+x-no-free-slot: &no_free_slot
+  judge: >-
+    The business has no calendar access. Fail if the reply says or implies that
+    the requested date or time is free, available, open or already held for the
+    customer. Pass if it takes the request, asks for missing details, says staff
+    will confirm the time, or hands the conversation over.
+x-no-flat-no: &no_flat_no
+  judge: >-
+    The business facts do not mention this service, so the agent does not know
+    whether it is offered. Fail if the reply states as fact that the business
+    does not offer it, or makes up a price or details for it. Pass if it says it
+    will check or hands over to staff, or offers to help with listed services
+    while making clear it is not sure about this one.
+
+cases:
+  - id: spa_massage_tomorrow
+    message:
+      vi: Chị muốn đặt lịch massage chiều mai lúc 3h
+      en: I'd like to book a massage tomorrow at 3pm
+    expect:
+      - *no_free_slot
+
+  - id: spa_hair_wash_saturday
+    message:
+      vi: Cho chị đặt gội đầu dưỡng sinh 10h sáng thứ 7 nha
+      en: Can I book a herbal hair wash at 10am this Saturday?
+    expect:
+      - *no_free_slot
+
+  - id: restaurant_table_saturday
+    agent: restaurant
+    message:
+      vi: Mình muốn đặt bàn 6 người tối thứ 7 nha
+      en: I'd like to book a table for 6 on Saturday evening
+    expect:
+      - *no_free_slot
+
+  - id: spa_nails
+    message:
+      vi: Spa có làm nail không em?
+      en: Do you do nails?
+    expect:
+      - *no_flat_no
+
+  - id: spa_laser
+    message:
+      vi: Spa có triệt lông không em?
+      en: Do you do laser hair removal?
+    expect:
+      - *no_flat_no
+
+  - id: restaurant_vegetarian
+    agent: restaurant
+    message:
+      vi: Quán có món chay không?
+      en: Do you have vegetarian dishes?
+    expect:
+      - *no_flat_no
