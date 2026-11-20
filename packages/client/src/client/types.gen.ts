@@ -11971,6 +11971,19 @@ export type CustomerSystemControllerUpdateProfileV1Responses = {
     201: unknown;
 };
 
+export type CustomerConversationSystemControllerEnsureV1Data = {
+    body?: never;
+    path: {
+        conversationId: string;
+    };
+    query?: never;
+    url: '/api/v1/system/conversations/{conversationId}/customer';
+};
+
+export type CustomerConversationSystemControllerEnsureV1Responses = {
+    201: unknown;
+};
+
 export type CustomerTagSystemControllerApplyV1Data = {
     body: CustomerTagSystemApplyRequestDto;
     path: {
