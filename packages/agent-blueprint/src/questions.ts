@@ -170,14 +170,22 @@ export function buildQuestionGroups(profile: AgentProfile): QuestionGroup[] {
 export function newAgentQuestionGroups(profile: AgentProfile): QuestionGroup[] {
   const all = buildQuestionGroups(profile);
   const of = (id: GroupId) => all.find((g) => g.id === id)?.questions ?? [];
+  const titleOf = (id: GroupId) => all.find((g) => g.id === id)!.titleKey;
   const isChannels = (question: Question) => question.id === "channels";
+  // Structured hours are the source of truth (#289): the picker takes the
+  // place of the free-text hours fact, so the hours are asked once.
+  const facts = [...of("facts"), ...of("moreFacts")];
+  const picker = facts.find((x) => x.kind === "hours");
+  const factsAsked = picker && facts.some((x) => x.id === "facts.opening_hours")
+    ? facts.filter((x) => x !== picker).map((x) => (x.id === "facts.opening_hours" ? picker : x))
+    : facts;
   const groups: QuestionGroup[] = [
     {
       id: "identity",
-      titleKey: "agentBuilder.groups.identity",
+      titleKey: titleOf("identity"),
       questions: [...of("identity").filter((x) => !isChannels(x)), ...of("essence").filter((x) => x.id === "difference")],
     },
-    { id: "facts", titleKey: "agentBuilder.groups.facts", questions: [...of("facts"), ...of("moreFacts")] },
+    { id: "facts", titleKey: titleOf("facts"), questions: factsAsked },
     { id: "activate", titleKey: "agentBuilder.groups.activate", questions: of("identity").filter(isChannels) },
   ];
   return groups.filter((g) => g.questions.length > 0);

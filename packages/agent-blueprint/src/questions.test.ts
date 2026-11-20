@@ -206,6 +206,15 @@ describe("newAgentQuestionGroups", () => {
     ]);
   });
 
+  // Structured hours are the source of truth (#289), so a type whose facts
+  // ask for the hours in words gets the picker in that place, once.
+  it("asks the opening hours once, with the picker in place of the hours fact", () => {
+    const facts = newAgentQuestionGroups(createProfile("beauty", "vi")).find((g) => g.id === "facts")!;
+    expect(facts.questions.map((q) => q.id)).toEqual([
+      "facts.services_prices", "openingHours", "facts.address", "facts.deposit_policy", "facts.payment_methods",
+    ]);
+  });
+
   it("leaves out channels and opening hours for a personal assistant", () => {
     expect(asked(createProfile("personal_scheduling", "en"))).toEqual([
       ["identity", ["businessType", "businessName", "agentName", "goals", "difference"]],

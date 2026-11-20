@@ -49,7 +49,8 @@ export function BuilderThread(builder: AgentBuilderController) {
 
   const profile = state.profile;
   const open = currentStep(state);
-  // The activate group holds only the channels question.
+  // A new agent asks channels in its own group; the group check also keeps
+  // the step typed as an onboarding step, which has no "activate".
   const viewedStep = asksActivation(state)
     ? "activation"
     : open?.question.id === "channels" || open?.group.id === "activate"

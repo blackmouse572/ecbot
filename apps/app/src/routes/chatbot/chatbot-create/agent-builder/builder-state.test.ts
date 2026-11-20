@@ -164,7 +164,7 @@ describe("builderReducer", () => {
     });
     expect(asked).toEqual([
       "businessType", "businessName", "agentName", "goals", "difference",
-      "facts.services_prices", "facts.opening_hours", "openingHours", "facts.address", "facts.deposit_policy", "facts.payment_methods",
+      "facts.services_prices", "openingHours", "facts.address", "facts.deposit_policy", "facts.payment_methods",
       "channels",
     ]);
   });
@@ -265,7 +265,7 @@ describe("asksActivation", () => {
   it("waits for every question, not only the last one", () => {
     const s = builderReducer(initialBuilderState, {
       type: "start", profile: createProfile("restaurant", "vi"), suggestion: null, source: "describe",
-      answered: ["businessType", "businessName", "facts.opening_hours", "channels"],
+      answered: ["businessType", "businessName", "openingHours", "channels"],
     });
     const drafted = builderReducer(s, { type: "draftCreated", chatbotId: "bot-1" });
     expect(asksActivation(drafted)).toBe(false);
