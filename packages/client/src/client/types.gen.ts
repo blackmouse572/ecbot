@@ -7425,11 +7425,11 @@ export type MarketingOverviewTodoCountDto = {
 
 export type MarketingOverviewHealthDto = {
     /**
-     * Opt-outs in the last 30 days
+     * Opt-outs within the range
      */
     optOuts: number;
     /**
-     * Opt-outs in the 30 days before
+     * Opt-outs in the range before
      */
     optOutsPrevious: number;
     /**
@@ -7444,7 +7444,11 @@ export type MarketingOverviewResponseDto = {
      */
     total: number;
     /**
-     * Start of the 7-day window
+     * Length of the range, in days
+     */
+    days: number;
+    /**
+     * Start of the range
      */
     since: string;
     /**
@@ -35963,7 +35967,12 @@ export type MarketingOverviewWorkspaceControllerGetV1Data = {
          */
         workspace: string;
     };
-    query?: never;
+    query?: {
+        /**
+         * Range the stage comparison, moves and opt-outs cover; Việc nên làm stays weekly
+         */
+        range?: '7d' | '30d' | '90d';
+    };
     url: '/api/v1/workspace/{workspace}/marketing/overview';
 };
 

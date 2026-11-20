@@ -12,7 +12,7 @@ export function MarketingOverviewWorkspaceGetDoc(): MethodDecorator {
     return applyDecorators(
         Doc({
             summary:
-                'Tổng quan: customers per stage against last week, funnel per channel, moves, Việc nên làm counts and list health',
+                'Tổng quan: customers per stage against the start of the range (7, 30 or 90 days), funnel per channel, moves, Việc nên làm counts and list health',
         }),
         DocRequest({ params: [...WorkspaceDocParamsId] }),
         DocAuth({ xApiKey: true, jwtAccessToken: true }),

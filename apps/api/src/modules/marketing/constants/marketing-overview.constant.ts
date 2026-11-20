@@ -1,8 +1,5 @@
-/** Tổng quan compares this week with the one before ("so với tuần trước"). */
+/** "Việc nên làm" always looks at this week, whatever range is chosen. */
 export const MARKETING_OVERVIEW_WEEK_DAYS = 7;
-
-/** List health (opt-outs) covers this many days, against the period before. */
-export const MARKETING_OVERVIEW_HEALTH_DAYS = 30;
 
 /** At most this many stage moves are listed, the largest first. */
 export const MARKETING_OVERVIEW_MAX_MOVES = 5;

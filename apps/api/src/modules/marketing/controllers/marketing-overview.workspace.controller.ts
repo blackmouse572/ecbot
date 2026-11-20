@@ -1,3 +1,4 @@
+import { ANALYTICS_RANGE_DAYS } from '@app/modules/analytics/constants/analytics.constant';
 import { IResponse } from '@app/common/response/interfaces/response.interface';
 import { ApiKeyProtected } from '@app/modules/api-key/decorators/api-key.decorator';
 import { AuthJwtAccessProtected } from '@app/modules/auth/decorators/auth.jwt.decorator';
@@ -13,10 +14,11 @@ import {
     WorkspacePolicyAbilityProtected,
 } from '@app/modules/workspace/decorators/workspace.decorator';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'src/common/response/decorators/response.decorator';
 import { MarketingOverviewWorkspaceGetDoc } from '../docs/marketing-overview.workspace.doc';
+import { MarketingOverviewRequestDto } from '../dtos/request/marketing-overview.request.dto';
 import { MarketingOverviewResponseDto } from '../dtos/response/marketing-overview.response.dto';
 import { MarketingOverviewService } from '../services/marketing-overview.service';
 
@@ -37,8 +39,14 @@ export class MarketingOverviewWorkspaceController {
     @ApiKeyProtected()
     @Get('/')
     async get(
-        @WorkspacePayload() workspace: WorkspaceEntity
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Query() { range }: MarketingOverviewRequestDto
     ): Promise<IResponse<MarketingOverviewResponseDto>> {
-        return { data: await this.overviewService.get(workspace.id) };
+        return {
+            data: await this.overviewService.get(
+                workspace.id,
+                ANALYTICS_RANGE_DAYS[range]
+            ),
+        };
     }
 }

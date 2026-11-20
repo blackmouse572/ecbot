@@ -2,7 +2,6 @@ import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { CUSTOMER_JOURNEY_STAGE_ORDER } from '@app/modules/customer/constants/customer-marketing.constant';
 import { Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
-import { MARKETING_OVERVIEW_WEEK_DAYS } from '../constants/marketing-overview.constant';
 import {
     MarketingOverviewFunnelDto,
     MarketingOverviewResponseDto,
@@ -19,9 +18,10 @@ export class MarketingOverviewService {
 
     async get(
         workspaceId: string,
+        days: number,
         now: Date = new Date()
     ): Promise<MarketingOverviewResponseDto> {
-        const w = { workspaceId, now };
+        const w = { workspaceId, now, days };
         const [stageRows, moves, funnelRows, counts, optOuts] =
             await Promise.all([
                 this.repository.stageCounts(w),
@@ -42,9 +42,8 @@ export class MarketingOverviewService {
             MarketingOverviewResponseDto,
             {
                 total: counts.total,
-                since: new Date(
-                    now.getTime() - MARKETING_OVERVIEW_WEEK_DAYS * DAY_MS
-                ),
+                days,
+                since: new Date(now.getTime() - days * DAY_MS),
                 stages,
                 dormant: counts.dormant,
                 funnel: this.funnel(funnelRows),

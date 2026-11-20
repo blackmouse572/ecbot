@@ -92,11 +92,11 @@ export class MarketingOverviewTodoDto extends MarketingOverviewTodoCountDto {
 
 export class MarketingOverviewHealthDto {
     @Expose()
-    @ApiProperty({ example: 7, description: 'Opt-outs in the last 30 days' })
+    @ApiProperty({ example: 7, description: 'Opt-outs within the range' })
     optOuts: number;
 
     @Expose()
-    @ApiProperty({ example: 5, description: 'Opt-outs in the 30 days before' })
+    @ApiProperty({ example: 5, description: 'Opt-outs in the range before' })
     optOutsPrevious: number;
 
     @Expose()
@@ -110,7 +110,11 @@ export class MarketingOverviewResponseDto {
     total: number;
 
     @Expose()
-    @ApiProperty({ description: 'Start of the 7-day window' })
+    @ApiProperty({ example: 7, description: 'Length of the range, in days' })
+    days: number;
+
+    @Expose()
+    @ApiProperty({ description: 'Start of the range' })
     since: Date;
 
     @Expose()

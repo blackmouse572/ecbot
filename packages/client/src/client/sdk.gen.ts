@@ -5354,7 +5354,7 @@ export const analyticsWorkspaceControllerCustomersV1 = <ThrowOnError extends boo
 });
 
 /**
- * Tổng quan: customers per stage against last week, funnel per channel, moves, Việc nên làm counts and list health
+ * Tổng quan: customers per stage against the start of the range (7, 30 or 90 days), funnel per channel, moves, Việc nên làm counts and list health
  */
 export const marketingOverviewWorkspaceControllerGetV1 = <ThrowOnError extends boolean = false>(options: Options<MarketingOverviewWorkspaceControllerGetV1Data, ThrowOnError>): RequestResult<MarketingOverviewWorkspaceControllerGetV1Responses, MarketingOverviewWorkspaceControllerGetV1Errors, ThrowOnError> => (options.client ?? client).get<MarketingOverviewWorkspaceControllerGetV1Responses, MarketingOverviewWorkspaceControllerGetV1Errors, ThrowOnError>({
     responseType: 'json',

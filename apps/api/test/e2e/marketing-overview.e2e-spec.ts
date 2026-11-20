@@ -216,6 +216,21 @@ describe('E2E — marketing overview', () => {
         expect(overview.todoTotal).toEqual({ count: 3, excluded: 2 });
     });
 
+    it('compares against 30 days ago when asked', async () => {
+        const res = await http(ctx.app)
+            .get(`${url()}/marketing/overview?range=30d`)
+            .set(...auth(ownerToken));
+        expect(res.status).toBe(200);
+
+        expect(res.body.data.days).toBe(30);
+        // Lan and Minh both arrived within 30 days, so neither counts then.
+        expect(
+            res.body.data.stages.find((s: any) => s.stage === S.ASKED_PRICE)
+        ).toEqual({ stage: S.ASKED_PRICE, current: 1, previous: 0 });
+        // "Việc nên làm" stays weekly whatever the range.
+        expect(res.body.data.todos).toEqual(overview.todos);
+    });
+
     it('reports list health', () => {
         expect(overview.health).toEqual({
             optOuts: 1,

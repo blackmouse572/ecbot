@@ -6,6 +6,8 @@ import { ENUM_MARKETING_TODO } from '../enums/marketing-overview.enum';
 export interface IMarketingOverviewWindow {
     workspaceId: string;
     now: Date;
+    /** Length of the chosen range, in days. */
+    days: number;
 }
 
 export interface IMarketingOverviewStageRow {

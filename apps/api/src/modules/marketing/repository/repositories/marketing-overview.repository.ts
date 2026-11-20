@@ -9,7 +9,6 @@ import { CustomerEntity } from '@app/modules/customer/repository/entities/custom
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import {
-    MARKETING_OVERVIEW_HEALTH_DAYS,
     MARKETING_OVERVIEW_MAX_MOVES,
     MARKETING_OVERVIEW_WEEK_DAYS,
     MARKETING_TODO_CROSS_SELL_FROM_DAYS,
@@ -39,11 +38,14 @@ const ago = (days: number): string => `w.now - make_interval(days => ${days})`;
 const WEEK_START = ago(MARKETING_OVERVIEW_WEEK_DAYS);
 const BOUGHT = `('${S.BOUGHT_ONCE}', '${S.BOUGHT_REPEAT}')`;
 
-const WINDOW = `w AS (SELECT ?::uuid AS ws, ?::timestamptz AS now)`;
+const WINDOW = `w AS (SELECT ?::uuid AS ws, ?::timestamptz AS now, ?::int AS days)`;
 const windowParams = (w: IMarketingOverviewWindow): unknown[] => [
     w.workspaceId,
     w.now.toISOString(),
+    w.days,
 ];
+/** Start of the chosen range ("so với 7 / 30 / 90 ngày trước"). */
+const PERIOD_START = `w.now - make_interval(days => w.days)`;
 
 /** Live customers with their state; no state row reads as Mới biết. */
 const LIVE = `live AS (
@@ -60,9 +62,9 @@ const LIVE = `live AS (
 )`;
 
 /**
- * Each customer's stage a week ago: the stage before their first move this
- * week, or today's stage when they did not move. Customers who arrived this
- * week had none (NULL). A first event with no old value is a customer
+ * Each customer's stage at the start of the range: the stage before their
+ * first move since then, or today's stage when they did not move. Customers
+ * who arrived within the range had none (NULL). A first event with no old value is a customer
  * without a state row, which reads as Mới biết.
  */
 const WAS = `${LIVE},
@@ -73,13 +75,13 @@ first_move AS (
     WHERE e.workspace_id = w.ws
         AND e.kind = '${K.STAGE}'
         AND e.deleted_at IS NULL
-        AND e.created_at >= ${WEEK_START}
+        AND e.created_at >= ${PERIOD_START}
     ORDER BY e.customer_id, e.created_at, e.id
 ),
 was AS (
     SELECT l.id, l.stage AS now_stage,
            CASE
-               WHEN l.created_at >= ${WEEK_START} THEN NULL
+               WHEN l.created_at >= ${PERIOD_START} THEN NULL
                WHEN f.customer_id IS NOT NULL
                    THEN COALESCE(f.old_value, '${S.NEW}')
                ELSE l.stage
@@ -166,7 +168,7 @@ export class MarketingOverviewRepository extends DatabaseRepository<CustomerEnti
         return this.em.getConnection().execute(sql, params);
     }
 
-    /** Customers per stage now and a week ago. */
+    /** Customers per stage now and at the start of the range. */
     async stageCounts(
         w: IMarketingOverviewWindow
     ): Promise<IMarketingOverviewStageRow[]> {
@@ -188,7 +190,7 @@ export class MarketingOverviewRepository extends DatabaseRepository<CustomerEnti
         }));
     }
 
-    /** This week's moves, from the stage a week ago to the stage now. */
+    /** Moves within the range, from the stage then to the stage now. */
     async moves(
         w: IMarketingOverviewWindow
     ): Promise<IMarketingOverviewMoveRow[]> {
@@ -283,18 +285,17 @@ export class MarketingOverviewRepository extends DatabaseRepository<CustomerEnti
         };
     }
 
-    /** Customers who opted out in the last 30 days, and the 30 before. */
+    /** Customers who opted out within the range, and in the range before. */
     async optOuts(
         w: IMarketingOverviewWindow
     ): Promise<IMarketingOverviewOptOutRow> {
-        const days = MARKETING_OVERVIEW_HEALTH_DAYS;
         const [row] = await this.run(
             `WITH ${WINDOW}
             SELECT COUNT(DISTINCT e.customer_id) FILTER (
-                       WHERE e.created_at >= ${ago(days)}
+                       WHERE e.created_at >= ${PERIOD_START}
                    ) AS current,
                    COUNT(DISTINCT e.customer_id) FILTER (
-                       WHERE e.created_at < ${ago(days)}
+                       WHERE e.created_at < ${PERIOD_START}
                    ) AS previous
             FROM marketing_events e
             CROSS JOIN w
@@ -303,7 +304,7 @@ export class MarketingOverviewRepository extends DatabaseRepository<CustomerEnti
                 AND e.kind = '${K.PERMISSION}'
                 AND e.new_value = '${P.STOPPED}'
                 AND e.deleted_at IS NULL
-                AND e.created_at >= ${ago(days * 2)}
+                AND e.created_at >= w.now - make_interval(days => w.days * 2)
                 AND e.created_at <= w.now
                 AND c.deleted_at IS NULL`,
             windowParams(w)

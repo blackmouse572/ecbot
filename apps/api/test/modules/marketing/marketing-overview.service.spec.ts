@@ -61,15 +61,26 @@ describe('MarketingOverviewService', () => {
     });
 
     it('measures everything against the same workspace and instant', async () => {
-        await service.get('ws1', now);
+        await service.get('ws1', 7, now);
 
         for (const query of Object.values(repository)) {
-            expect(query).toHaveBeenCalledWith({ workspaceId: 'ws1', now });
+            expect(query).toHaveBeenCalledWith({
+                workspaceId: 'ws1',
+                now,
+                days: 7,
+            });
         }
     });
 
+    it('compares against the start of the chosen range', async () => {
+        const overview = await service.get('ws1', 30, now);
+
+        expect(overview.days).toBe(30);
+        expect(overview.since).toEqual(new Date('2026-10-21T00:00:00.000Z'));
+    });
+
     it('lists every stage in order, with zero for stages nobody is at', async () => {
-        const overview = await service.get('ws1', now);
+        const overview = await service.get('ws1', 7, now);
 
         expect(overview.stages).toEqual([
             { stage: S.NEW, current: 10, previous: 8 },
@@ -78,11 +89,12 @@ describe('MarketingOverviewService', () => {
             { stage: S.BOUGHT_ONCE, current: 0, previous: 0 },
             { stage: S.BOUGHT_REPEAT, current: 0, previous: 0 },
         ]);
+        expect(overview.days).toBe(7);
         expect(overview.since).toEqual(new Date('2026-11-13T00:00:00.000Z'));
     });
 
     it('counts each funnel step as the customers who reached it or a later one', async () => {
-        const overview = await service.get('ws1', now);
+        const overview = await service.get('ws1', 7, now);
 
         expect(overview.funnel).toEqual([
             {
@@ -109,7 +121,7 @@ describe('MarketingOverviewService', () => {
     });
 
     it('returns the Việc nên làm rows in stage order, with totals and health', async () => {
-        const overview = await service.get('ws1', now);
+        const overview = await service.get('ws1', 7, now);
 
         expect(overview.todos.map(row => row.key)).toEqual([
             T.NEW,
