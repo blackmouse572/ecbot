@@ -435,6 +435,23 @@ function getRouteMaps(): RouteObject[] {
               ],
             },
             {
+              path: ROUTES.Marketing,
+              handle: {
+                breadcrumb: featureBreadcrumb("marketing", () =>
+                  t("marketing.overview.navTitle"),
+                ),
+              },
+              loader: featureRouteLoader,
+              ErrorBoundary: ErrorBoundary,
+              element: <FeatureRoute flag="marketing" />,
+              children: [
+                {
+                  path: "",
+                  lazy: () => import("./marketing/marketing-overview"),
+                },
+              ],
+            },
+            {
               path: ROUTES.CustomerSources,
               handle: {
                 breadcrumb: featureBreadcrumb("customerSources", () =>

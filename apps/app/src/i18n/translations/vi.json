@@ -3836,5 +3836,69 @@
     "firstSource": {
       "direct": "Nhắn thẳng vào trang"
     }
+  },
+  "marketing": {
+    "overview": {
+      "navTitle": "Tổng quan",
+      "title": "Tổng quan tiếp thị",
+      "description": "Khách đang ở giai đoạn nào, và việc nên làm cho từng giai đoạn.",
+      "period": "{{days}} ngày qua, so với {{days}} ngày trước",
+      "range": "Khoảng ngày",
+      "customers_one": "{{value}} khách",
+      "customers_other": "{{value}} khách",
+      "todos": {
+        "title": "Việc nên làm tuần này",
+        "description": "Số khách nên nhắn ở từng giai đoạn. Ecbot đã bỏ ra khách đã dừng nhận tin, đang tạm ngưng hoặc đang khó chịu.",
+        "total": "khách nên nhắn, đã bỏ {{value}} khách",
+        "excluded": "Đã bỏ {{value}} khách không nên nhắn.",
+        "none": "Chưa có khách nào cần nhắn ở giai đoạn này.",
+        "NEW": {
+          "title": "{{value}} khách nhắn tin lần đầu tuần này",
+          "hint": "Khách vừa nhắn shop lần đầu. Trả lời sớm để khách hỏi tiếp."
+        },
+        "INTERESTED": {
+          "title": "{{value}} khách xem sản phẩm nhưng chưa hỏi giá",
+          "hint": "Gửi một ưu đãi cho lần mua đầu để khách hỏi tiếp."
+        },
+        "ASKED_PRICE": {
+          "title": "{{value}} khách hỏi giá 7 ngày qua nhưng chưa mua",
+          "hint": "Gửi lại ảnh sản phẩm khách đã hỏi, kèm một ưu đãi nhỏ."
+        },
+        "CROSS_SELL": {
+          "title": "{{value}} khách mua lần đầu được 15 đến 30 ngày",
+          "hint": "Gợi ý món dùng kèm với món khách đã mua."
+        },
+        "REPURCHASE": {
+          "title": "{{value}} khách sắp dùng hết hàng đã mua",
+          "hint": "Ecbot tính theo chu kỳ mua lại của từng nhóm hàng."
+        },
+        "WIN_BACK": {
+          "title": "{{value}} khách đã mua nhưng 31 đến 90 ngày chưa quay lại",
+          "hint": "Mời quay lại bằng một ưu đãi riêng cho khách cũ."
+        }
+      },
+      "funnel": {
+        "title": "Khách đang ở giai đoạn nào",
+        "description": "Bao nhiêu khách đã đi tới từng giai đoạn, trên tổng {{value}} khách, theo kênh khách nhắn đầu tiên. Bấm một giai đoạn bên dưới để xem danh sách khách.",
+        "empty": "Chưa có khách",
+        "dropped": "Dừng lại {{value}} ({{share}})"
+      },
+      "stages": {
+        "share": "{{share}} tổng số khách",
+        "dormantHint": "120 ngày không quay lại"
+      },
+      "moves": {
+        "title": "Khách chuyển giai đoạn trong {{days}} ngày qua",
+        "empty": "Chưa có khách nào chuyển giai đoạn trong {{days}} ngày qua.",
+        "view": "Xem khách"
+      },
+      "health": {
+        "title": "Danh sách có khoẻ không",
+        "description": "Khách dừng nhận tin là tín hiệu shop đang nhắn quá nhiều.",
+        "optOuts": "Dừng nhận tin",
+        "paused": "Đang tạm ngưng",
+        "pausedHint": "Tự nhận tin lại khi hết hạn"
+      }
+    }
   }
 }

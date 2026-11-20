@@ -1,6 +1,6 @@
 import { useFeatureFlags } from "@/hooks/api/feature-flags";
 import { useWorkspace } from "@/hooks/api/workspace";
-import { Link } from "@medusajs/icons";
+import { ChartBar, Link } from "@medusajs/icons";
 import type { INavItem } from "@repo/ui/layout";
 import { useTranslation } from "react-i18next";
 
@@ -12,11 +12,21 @@ export const useMarketingRoutes = (): Omit<INavItem, "pathname">[] => {
   const { workspace } = useWorkspace();
   const { flags } = useFeatureFlags();
   const baseUrl = `/${workspace?.slug}`;
+  const routes: Omit<INavItem, "pathname">[] = [];
 
-  if (!flags.customerSources) return [];
-
-  return [
-    {
+  if (flags.marketing) {
+    routes.push({
+      label: t("marketing.overview.navTitle"),
+      to: `${baseUrl}/${ROUTES.Marketing}`,
+      icon: <ChartBar />,
+      ability: {
+        action: "read",
+        subject: "CUSTOMER",
+      },
+    });
+  }
+  if (flags.customerSources) {
+    routes.push({
       label: t("customerSources.title"),
       to: `${baseUrl}/${ROUTES.CustomerSources}`,
       icon: <Link />,
@@ -24,6 +34,8 @@ export const useMarketingRoutes = (): Omit<INavItem, "pathname">[] => {
         action: "manage",
         subject: "CUSTOMER",
       },
-    },
-  ];
+    });
+  }
+
+  return routes;
 };

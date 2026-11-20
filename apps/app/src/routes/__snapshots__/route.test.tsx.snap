@@ -25,6 +25,7 @@ exports[`route map — public table > matches the path list captured from main b
   "/:workspaceSlug/knowledge-base",
   "/:workspaceSlug/knowledge-base/:knowledgeBaseId/item/:id/edit",
   "/:workspaceSlug/knowledge-base/:knowledgeBaseId/item/create",
+  "/:workspaceSlug/marketing",
   "/:workspaceSlug/orders/:orderId",
   "/:workspaceSlug/orders/:orderId/edit",
   "/:workspaceSlug/orders/create",
