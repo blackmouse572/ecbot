@@ -288,8 +288,12 @@ export class StreamingDelivery {
                 finish(superseded);
             });
             p.stream.on('error', (err: Error) => {
+                // Our own abort errors the stream. Every abort site sets its
+                // reason first (superseded, blocked or failed), so pass that
+                // on: calling a blocked or failed turn superseded drops it
+                // silently, with no fallback line.
                 if (p.abort.signal.aborted || superseded || blocked) {
-                    finish(true);
+                    finish(superseded);
                 } else {
                     this.logger.warn(`stream error: ${err.message}`);
                     failed = true;
