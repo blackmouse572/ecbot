@@ -2,6 +2,7 @@ import { EntityManager, RequestContext } from '@mikro-orm/postgresql';
 import request from 'supertest';
 import { ENUM_API_KEY_TYPE } from '@app/modules/api-key/enums/api-key.enum';
 import { ApiKeyService } from '@app/modules/api-key/services/api-key.service';
+import { CustomerMarketingStateEntity } from '@app/modules/customer/repository/entities/customer-marketing-state.entity';
 import { CustomerEntity } from '@app/modules/customer/repository/entities/customer.entity';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { http } from './utils/http';
@@ -258,6 +259,44 @@ describe('E2E — workspace orders and product groups', () => {
             .set(...auth(ownerToken));
         expect(cancelled.status).toBe(200);
         expect(cancelled.body.data.status).toBe('CANCELLED');
+    });
+
+    it('falls back to the last order still confirmed when one is cancelled', async () => {
+        const em = ctx.app.get(EntityManager).fork();
+        const buyer = em.create(CustomerEntity, {
+            workspace: em.getReference(WorkspaceEntity, workspaceId),
+            name: 'Chị Hoa',
+        });
+        await em.persistAndFlush(buyer);
+        const day = 86_400_000;
+        const place = (daysAgo: number) =>
+            http(ctx.app)
+                .post(ordersUrl())
+                .set(...auth(ownerToken))
+                .send({
+                    customerId: buyer.id,
+                    orderedAt: new Date(Date.now() - daysAgo * day),
+                    items: [{ name: 'Toner', quantity: 1 }],
+                });
+        const older = await place(30);
+        const latest = await place(5);
+        expect(latest.body.data.status).toBe('CONFIRMED');
+
+        const cancelled = await http(ctx.app)
+            .post(`${ordersUrl()}/${latest.body.data.id}/cancel`)
+            .set(...auth(ownerToken));
+        expect(cancelled.status).toBe(200);
+
+        const state = await em
+            .fork()
+            .findOneOrFail(CustomerMarketingStateEntity, {
+                customer: buyer.id,
+            });
+        expect(state.lastOrderAt?.toISOString()).toBe(
+            new Date(older.body.data.orderedAt).toISOString()
+        );
+        // Cancelling never moves the stage back.
+        expect(state.stage).toBe('BOUGHT_REPEAT');
     });
 
     it('validates the body and rejects a reused order code', async () => {

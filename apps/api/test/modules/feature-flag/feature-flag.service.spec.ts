@@ -21,12 +21,14 @@ describe('FeatureFlagService', () => {
                 config({
                     'featureFlag.orders': true,
                     'featureFlag.customer-sources': false,
+                    'featureFlag.marketing': true,
                 }) as any
             );
 
             await expect(service.forWorkspace('w1')).resolves.toEqual({
                 orders: true,
                 customerSources: false,
+                marketing: true,
             });
         });
 

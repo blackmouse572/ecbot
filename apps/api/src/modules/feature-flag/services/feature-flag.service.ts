@@ -57,10 +57,11 @@ export class FeatureFlagService {
     }
 
     async forWorkspace(workspaceId: string): Promise<IFeatureFlags> {
-        const [orders, customerSources] = await Promise.all([
+        const [orders, customerSources, marketing] = await Promise.all([
             this.isEnabled(ENUM_FEATURE_FLAG.ORDERS, workspaceId),
             this.isEnabled(ENUM_FEATURE_FLAG.CUSTOMER_SOURCES, workspaceId),
+            this.isEnabled(ENUM_FEATURE_FLAG.MARKETING, workspaceId),
         ]);
-        return { orders, customerSources };
+        return { orders, customerSources, marketing };
     }
 }

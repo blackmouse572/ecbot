@@ -7187,6 +7187,10 @@ export type FeatureFlagGetResponseDto = {
      * Nguồn khách: tracked links and first source
      */
     customerSources: boolean;
+    /**
+     * Tiếp thị v2: Tổng quan, sending by stage
+     */
+    marketing: boolean;
 };
 
 export type AnalyticsPeriodValueDto = {
@@ -7360,6 +7364,118 @@ export type AnalyticsCustomersResponseDto = {
     untagged: number;
     daily: Array<AnalyticsCustomerDayDto>;
     byChannel: Array<AnalyticsChannelCountDto>;
+};
+
+export type MarketingOverviewStageDto = {
+    stage: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'BOUGHT_ONCE' | 'BOUGHT_REPEAT';
+    /**
+     * Customers at the stage now
+     */
+    current: number;
+    /**
+     * Customers at the stage 7 days ago
+     */
+    previous: number;
+};
+
+export type MarketingOverviewStageCountDto = {
+    stage: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'BOUGHT_ONCE' | 'BOUGHT_REPEAT';
+    count: number;
+};
+
+export type MarketingOverviewFunnelDto = {
+    /**
+     * The channel the customers first wrote from
+     */
+    platform: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
+    /**
+     * Customers who reached each stage or a later one, in stage order
+     */
+    stages: Array<MarketingOverviewStageCountDto>;
+};
+
+export type MarketingOverviewMoveDto = {
+    from: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'BOUGHT_ONCE' | 'BOUGHT_REPEAT';
+    to: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'BOUGHT_ONCE' | 'BOUGHT_REPEAT';
+    count: number;
+};
+
+export type MarketingOverviewTodoDto = {
+    /**
+     * Customers worth a message
+     */
+    count: number;
+    /**
+     * Customers left out: opted out, paused or Khó chịu
+     */
+    excluded: number;
+    key: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'CROSS_SELL' | 'REPURCHASE' | 'WIN_BACK';
+};
+
+export type MarketingOverviewTodoCountDto = {
+    /**
+     * Customers worth a message
+     */
+    count: number;
+    /**
+     * Customers left out: opted out, paused or Khó chịu
+     */
+    excluded: number;
+};
+
+export type MarketingOverviewHealthDto = {
+    /**
+     * Opt-outs within the range
+     */
+    optOuts: number;
+    /**
+     * Opt-outs in the range before
+     */
+    optOutsPrevious: number;
+    /**
+     * Customers paused now
+     */
+    paused: number;
+};
+
+export type MarketingOverviewResponseDto = {
+    /**
+     * Live customers
+     */
+    total: number;
+    /**
+     * Length of the range, in days
+     */
+    days: number;
+    /**
+     * Start of the range
+     */
+    since: string;
+    /**
+     * In stage order
+     */
+    stages: Array<MarketingOverviewStageDto>;
+    /**
+     * Lâu không nhắn: no message and no order for 120 days
+     */
+    dormant: number;
+    /**
+     * Largest channel first
+     */
+    funnel: Array<MarketingOverviewFunnelDto>;
+    /**
+     * Largest first
+     */
+    moves: Array<MarketingOverviewMoveDto>;
+    /**
+     * Việc nên làm, in stage order
+     */
+    todos: Array<MarketingOverviewTodoDto>;
+    /**
+     * Customers in any row, each counted once
+     */
+    todoTotal: MarketingOverviewTodoCountDto;
+    health: MarketingOverviewHealthDto;
 };
 
 export type FollowupListResponseDto = {
@@ -35836,6 +35952,83 @@ export type AnalyticsWorkspaceControllerCustomersV1Responses = {
 };
 
 export type AnalyticsWorkspaceControllerCustomersV1Response = AnalyticsWorkspaceControllerCustomersV1Responses[keyof AnalyticsWorkspaceControllerCustomersV1Responses];
+
+export type MarketingOverviewWorkspaceControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        /**
+         * Range the stage comparison, moves and opt-outs cover; Việc nên làm stays weekly
+         */
+        range?: '7d' | '30d' | '90d';
+    };
+    url: '/api/v1/workspace/{workspace}/marketing/overview';
+};
+
+export type MarketingOverviewWorkspaceControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingOverviewWorkspaceControllerGetV1Error = MarketingOverviewWorkspaceControllerGetV1Errors[keyof MarketingOverviewWorkspaceControllerGetV1Errors];
+
+export type MarketingOverviewWorkspaceControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MarketingOverviewResponseDto;
+    };
+};
+
+export type MarketingOverviewWorkspaceControllerGetV1Response = MarketingOverviewWorkspaceControllerGetV1Responses[keyof MarketingOverviewWorkspaceControllerGetV1Responses];
 
 export type FollowupWorkspaceControllerListV1Data = {
     body?: never;

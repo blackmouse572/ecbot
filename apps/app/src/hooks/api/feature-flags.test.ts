@@ -53,6 +53,7 @@ describe("feature flags", () => {
     await expect(flags).resolves.toEqual({
       orders: false,
       customerSources: false,
+      marketing: false,
     });
     expect(api.get).toHaveBeenCalledTimes(3);
     expect(isFeatureOn("lumi", "orders")).toBe(false);

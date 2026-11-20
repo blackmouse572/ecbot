@@ -35,7 +35,10 @@ describe('OrderService', () => {
         findAll: jest.fn(),
         matchItemName: ProductGroupService.prototype.matchItemName,
     };
-    const customerMarketingService = { onOrderConfirmed: jest.fn() };
+    const customerMarketingService = {
+        onOrderConfirmed: jest.fn(),
+        onOrderCancelled: jest.fn(),
+    };
     const featureFlagService = {
         isEnabled: jest.fn(async (): Promise<boolean> => true),
     };
@@ -224,6 +227,20 @@ describe('OrderService', () => {
             expect(
                 productGroupService.refreshLearnedCycles
             ).toHaveBeenCalledWith(['g1']);
+            expect(
+                customerMarketingService.onOrderCancelled
+            ).toHaveBeenCalledWith(cancelled);
+        });
+
+        it('still cancels when the last order date cannot be updated', async () => {
+            orderRepository.findOne.mockResolvedValue(
+                order({ status: ENUM_ORDER_STATUS.CONFIRMED })
+            );
+            customerMarketingService.onOrderCancelled.mockRejectedValueOnce(
+                new Error('db down')
+            );
+            const cancelled = await service.cancel('o1', workspaceId);
+            expect(cancelled.status).toBe(ENUM_ORDER_STATUS.CANCELLED);
         });
 
         it('does not touch the cycle when a pending order is cancelled', async () => {
@@ -231,6 +248,9 @@ describe('OrderService', () => {
             await service.cancel('o1', workspaceId);
             expect(
                 productGroupService.refreshLearnedCycles
+            ).not.toHaveBeenCalled();
+            expect(
+                customerMarketingService.onOrderCancelled
             ).not.toHaveBeenCalled();
         });
     });

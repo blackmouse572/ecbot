@@ -50,6 +50,7 @@ export async function bootstrapE2E(): Promise<E2EContext> {
     // FEATURE_*_ENABLE=false turns that feature's routes into 404s.
     process.env.FEATURE_ORDERS_ENABLE ??= 'true';
     process.env.FEATURE_CUSTOMER_SOURCES_ENABLE ??= 'true';
+    process.env.FEATURE_MARKETING_ENABLE ??= 'true';
 
     const { Test } = await import('@nestjs/testing');
 

@@ -9,4 +9,8 @@ export class FeatureFlagGetResponseDto {
     @Expose()
     @ApiProperty({ description: 'Nguồn khách: tracked links and first source' })
     customerSources: boolean;
+
+    @Expose()
+    @ApiProperty({ description: 'Tiếp thị v2: Tổng quan, sending by stage' })
+    marketing: boolean;
 }
