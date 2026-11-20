@@ -17,11 +17,15 @@ export interface IResolveContactPoint {
     workspaceId: string;
     platform: ENUM_ACCOUNT_TYPE;
     externalSenderId: string;
+    /** Record a sender from an anonymous channel too (ANONYMOUS_CHANNELS):
+     *  set once they have shared something worth keeping. */
+    createAnonymous?: boolean;
 }
 
 /**
- * Both null when the workspace is at its customer limit: the sender is still
- * answered, but no Customer or ContactPoint is recorded for them.
+ * Both null when the workspace is at its customer limit, or for a new sender
+ * on an anonymous channel: the sender is still answered, but no Customer or
+ * ContactPoint is recorded for them.
  */
 export interface IResolveContactPointResult {
     contactPoint: ContactPointEntity | null;
@@ -44,6 +48,7 @@ export interface ICustomerService {
     resolveContactPoint(
         params: IResolveContactPoint
     ): Promise<IResolveContactPointResult>;
+    ensureForConversation(conversationId: string): Promise<string | null>;
     mapGet(customer: CustomerEntity): CustomerGetResponseDto;
 }
 

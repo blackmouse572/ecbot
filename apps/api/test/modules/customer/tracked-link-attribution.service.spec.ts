@@ -134,6 +134,17 @@ describe('TrackedLinkAttributionService', () => {
         expect(marketing.recordSource).not.toHaveBeenCalled();
     });
 
+    it('tells a live link from an unknown, foreign, stopped or flagged-off one', async () => {
+        expect(await service.isLive('w1', 'to-roi-tet-linh-dan')).toBe(true);
+        expect(await service.isLive('w1', 'khong-co')).toBe(false);
+        expect(await service.isLive('w2', 'to-roi-tet')).toBe(false);
+        source.status = ENUM_TRACKED_LINK_STATUS.STOPPED;
+        expect(await service.isLive('w1', 'to-roi-tet-linh-dan')).toBe(false);
+        source.status = ENUM_TRACKED_LINK_STATUS.ACTIVE;
+        featureFlagService.isEnabled.mockResolvedValueOnce(false);
+        expect(await service.isLive('w1', 'to-roi-tet')).toBe(false);
+    });
+
     it('does not greet or tag again for a visit already logged', async () => {
         marketing.recordSource.mockResolvedValueOnce(null);
 

@@ -1,3 +1,4 @@
+import { isMarketingOptOutMessage } from '@app/modules/customer/utils/customer-marketing-opt-out.util';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import {
     IMessageAttachment,
@@ -176,6 +177,11 @@ export class MessageProcessorService implements OnModuleInit {
                 workspaceId,
                 platform: account.type,
                 externalSenderId: event.senderId,
+                // An anonymous sender (API channel) who opts out is recorded,
+                // so offers stay stopped.
+                ...(isMarketingOptOutMessage(event.text)
+                    ? { createAnonymous: true }
+                    : {}),
             });
 
         const conversation = await this.conversationService.findOrCreate({

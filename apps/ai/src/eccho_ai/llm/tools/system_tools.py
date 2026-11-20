@@ -9,6 +9,7 @@ the Phase 10 Tool Registry).
   consume for match detection.
 """
 
+import asyncio
 import logging
 import time
 from typing import Annotated, Any
@@ -59,6 +60,74 @@ def _get_customer_id() -> str | None:
     if ctx is None:
         return None
     return getattr(ctx, "customer_id", None)
+
+
+_ENSURE_LOCKS: dict[str, asyncio.Lock] = {}
+
+
+async def _ensure_customer_id() -> str | None:
+    """The customer to write to, created now for an anonymous visitor.
+
+    Website widget and API channel visitors have no Customer until they share
+    something, so a tool that saves what they shared asks apps/api to create
+    one for this conversation first. None at the plan's customer limit or
+    outside a real conversation (test chat).
+    """
+    customer_id = _get_customer_id()
+    if customer_id:
+        return customer_id
+    conversation_id = _as_uuid(_get_session_id())
+    if not conversation_id:
+        return None
+    # Parallel tool calls in one turn share the customer they create.
+    lock = _ENSURE_LOCKS.setdefault(conversation_id, asyncio.Lock())
+    try:
+        async with lock:
+            customer_id = _get_customer_id()
+            if customer_id:
+                return customer_id
+            try:
+                result = await ApiClient.get_instance().post(
+                    f"/system/conversations/{conversation_id}/customer", {}
+                )
+            except ApiClientError as exc:
+                logger.warning("ensure customer failed for %s: %s", conversation_id, exc)
+                return None
+            customer_id = result.get("customerId") if isinstance(result, dict) else None
+            if customer_id:
+                _remember_customer_id(customer_id)
+            return customer_id
+    finally:
+        # A waiter still holds this lock; a later caller finds the customer
+        # already in context, so dropping the entry is safe.
+        if not lock.locked():
+            _ENSURE_LOCKS.pop(conversation_id, None)
+    conversation_id = _as_uuid(_get_session_id())
+    if not conversation_id:
+        return None
+    try:
+        result = await ApiClient.get_instance().post(
+            f"/system/conversations/{conversation_id}/customer", {}
+        )
+    except ApiClientError as exc:
+        logger.warning("ensure customer failed for %s: %s", conversation_id, exc)
+        return None
+    customer_id = result.get("customerId") if isinstance(result, dict) else None
+    if customer_id:
+        _remember_customer_id(customer_id)
+    return customer_id
+
+
+def _remember_customer_id(customer_id: str) -> None:
+    """Later tool calls in this turn write to the same new customer."""
+    from langgraph.runtime import get_runtime
+
+    try:
+        ctx = get_runtime(AgentRequestContext).context
+    except Exception:  # pragma: no cover — runtime missing outside agent
+        return
+    if ctx is not None:
+        ctx.customer_id = customer_id
 
 
 def _get_chatbot() -> Any:
@@ -228,7 +297,7 @@ async def set_customer_field(key: str, value: str) -> dict[str, Any]:
     they share it. Use update_customer_profile for name, phone, email and
     language."""
     started = time.perf_counter()
-    customer_id = _get_customer_id()
+    customer_id = await _ensure_customer_id()
     if not customer_id:
         _log_call("set_customer_field", _truncate(key), "no_context", 0)
         return {"error": "no customer context"}
@@ -264,7 +333,7 @@ async def update_customer_profile(
     """Save the customer's name, phone, email or language as soon as they
     share any of them. Pass only the fields they gave."""
     started = time.perf_counter()
-    customer_id = _get_customer_id()
+    customer_id = await _ensure_customer_id()
     if not customer_id:
         _log_call("update_customer_profile", "-", "no_context", 0)
         return {"error": "no customer context"}
@@ -306,7 +375,7 @@ async def update_customer_profile(
 async def apply_customer_tag(name: str) -> dict[str, Any]:
     """Apply a workspace tag (by name) to the customer. May fire a handoff."""
     started = time.perf_counter()
-    customer_id = _get_customer_id()
+    customer_id = await _ensure_customer_id()
     if not customer_id:
         _log_call("apply_customer_tag", _truncate(name), "no_context", 0)
         return {"error": "no customer context", "instruction": HANDOFF_UNAVAILABLE}
@@ -382,7 +451,7 @@ async def set_marketing_permission(
     not now (`pause_days`, default 30), STOPPED when they refuse for good.
     `reason`: a few words on what the customer said."""
     started = time.perf_counter()
-    customer_id = _get_customer_id()
+    customer_id = await _ensure_customer_id()
     if not customer_id:
         _log_call("set_marketing_permission", _truncate(action), "no_context", 0)
         return {"error": "no customer context"}
@@ -648,7 +717,7 @@ async def record_order(
     anything staff need (delivery time, gift wrap), never payment details.
     """
     started = time.perf_counter()
-    customer_id = _get_customer_id()
+    customer_id = await _ensure_customer_id()
     if not customer_id:
         _log_call("record_order", "-", "no_context", 0)
         return {"error": "no customer context", "instruction": ORDER_NOT_RECORDED}

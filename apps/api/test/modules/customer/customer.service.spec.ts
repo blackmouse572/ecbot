@@ -17,6 +17,7 @@ describe('CustomerService', () => {
         create: jest.fn(),
         updateEntity: jest.fn(),
         findByCustomer: jest.fn(),
+        createWithCustomer: jest.fn(),
     };
 
     beforeEach(() => {
@@ -173,6 +174,149 @@ describe('CustomerService', () => {
 
             expect(a.customerId).not.toBe(b.customerId);
             expect(mockCustomerRepository.create).toHaveBeenCalledTimes(2);
+        });
+
+        it.each([
+            ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
+            ENUM_ACCOUNT_TYPE.API_CHANNEL,
+        ])(
+            'records no customer for a new %s sender, who brings no name',
+            async platform => {
+                mockContactPointRepository.findByWorkspacePlatformSender.mockResolvedValue(
+                    null
+                );
+
+                const result = await service.resolveContactPoint({
+                    ...params,
+                    platform,
+                });
+
+                expect(mockCustomerRepository.create).not.toHaveBeenCalled();
+                expect(
+                    mockContactPointRepository.create
+                ).not.toHaveBeenCalled();
+                expect(result).toEqual({
+                    contactPoint: null,
+                    customerId: null,
+                    created: false,
+                });
+            }
+        );
+
+        it('creates the customer for an anonymous sender once asked to', async () => {
+            mockContactPointRepository.findByWorkspacePlatformSender.mockResolvedValue(
+                null
+            );
+            mockCustomerRepository.create.mockResolvedValue({ id: 'cust-w' });
+            mockContactPointRepository.create.mockResolvedValue({
+                id: 'cp-w',
+                customer: { id: 'cust-w' },
+            });
+
+            const result = await service.resolveContactPoint({
+                ...params,
+                platform: ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
+                createAnonymous: true,
+            });
+
+            expect(result.customerId).toBe('cust-w');
+            expect(result.created).toBe(true);
+        });
+    });
+
+    describe('ensureForConversation', () => {
+        const conversation = {
+            id: 'conv-1',
+            senderId: 'visitor-1',
+            contactPoint: null,
+            account: {
+                type: ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
+                workspace: { id: 'workspace-1' },
+            },
+        };
+        let conversationRepository: {
+            findOneById: jest.Mock;
+            updateEntity: jest.Mock;
+        };
+
+        beforeEach(() => {
+            conversationRepository = {
+                findOneById: jest.fn(),
+                updateEntity: jest.fn(),
+            };
+            service = new CustomerService(
+                mockCustomerRepository as any,
+                mockContactPointRepository as any,
+                {
+                    get: jest.fn().mockReturnValue(conversationRepository),
+                } as any
+            );
+        });
+
+        it('creates the customer and links the conversation to it', async () => {
+            conversationRepository.findOneById.mockResolvedValue(conversation);
+            mockContactPointRepository.findByWorkspacePlatformSender.mockResolvedValue(
+                null
+            );
+            mockContactPointRepository.createWithCustomer.mockResolvedValue({
+                id: 'cp-1',
+                customer: { id: 'cust-1' },
+            });
+
+            const customerId = await service.ensureForConversation('conv-1');
+
+            expect(customerId).toBe('cust-1');
+            expect(
+                mockContactPointRepository.createWithCustomer
+            ).toHaveBeenCalledWith(
+                'workspace-1',
+                ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
+                'visitor-1'
+            );
+            expect(conversationRepository.updateEntity).toHaveBeenCalledWith(
+                { id: 'conv-1' },
+                { contactPoint: { id: 'cp-1' } }
+            );
+        });
+
+        it('links to the customer a parallel call created first', async () => {
+            conversationRepository.findOneById.mockResolvedValue(conversation);
+            mockContactPointRepository.findByWorkspacePlatformSender
+                .mockResolvedValueOnce(null)
+                .mockResolvedValueOnce({
+                    id: 'cp-won',
+                    customer: { id: 'cust-won' },
+                });
+            mockContactPointRepository.createWithCustomer.mockResolvedValue(
+                null
+            );
+
+            const customerId = await service.ensureForConversation('conv-1');
+
+            expect(customerId).toBe('cust-won');
+            expect(conversationRepository.updateEntity).toHaveBeenCalledWith(
+                { id: 'conv-1' },
+                { contactPoint: { id: 'cp-won' } }
+            );
+        });
+
+        it('returns the customer already linked without creating one', async () => {
+            conversationRepository.findOneById.mockResolvedValue({
+                ...conversation,
+                contactPoint: { id: 'cp-1', customer: { id: 'cust-1' } },
+            });
+
+            const customerId = await service.ensureForConversation('conv-1');
+
+            expect(customerId).toBe('cust-1');
+            expect(mockCustomerRepository.create).not.toHaveBeenCalled();
+            expect(conversationRepository.updateEntity).not.toHaveBeenCalled();
+        });
+
+        it('returns null for an unknown conversation', async () => {
+            conversationRepository.findOneById.mockResolvedValue(null);
+
+            expect(await service.ensureForConversation('nope')).toBeNull();
         });
     });
 
