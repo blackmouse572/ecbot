@@ -353,6 +353,28 @@ export class CustomerMarketingService {
         await this.save(state);
     }
 
+    /**
+     * Runs after a confirmed order is cancelled: the last order falls back to
+     * the latest order still confirmed, or none. The stage stays where it is.
+     */
+    async onOrderCancelled(order: OrderEntity): Promise<void> {
+        const state = await this.stateRepository.findByCustomer(
+            order.customer.id
+        );
+        if (!state) return;
+        const latest = await this.em.findOne(
+            OrderEntity,
+            {
+                customer: order.customer.id,
+                status: ENUM_ORDER_STATUS.CONFIRMED,
+                deletedAt: null,
+            },
+            { orderBy: { orderedAt: 'desc' }, fields: ['orderedAt'] }
+        );
+        state.lastOrderAt = latest?.orderedAt ?? null;
+        await this.save(state);
+    }
+
     async setPermission(
         customerId: string,
         workspaceId: string,

@@ -17,7 +17,9 @@ function makeHarness(
     customers: Record<string, string> = {},
     // customer id -> number of confirmed orders
     confirmedOrders: Record<string, number> = {},
-    reactions: any[] = []
+    reactions: any[] = [],
+    // customer id -> order date of their latest confirmed order
+    latestConfirmed: Record<string, Date> = {}
 ) {
     // customer id -> workspace id
     const states = new Map<string, CustomerMarketingStateEntity>();
@@ -35,6 +37,11 @@ function makeHarness(
         nativeDelete: jest.fn().mockResolvedValue(1),
         nativeUpdate: jest.fn().mockResolvedValue(1),
         find: jest.fn(async () => reactions),
+        findOne: jest.fn(async (_entity: any, where: any) =>
+            latestConfirmed[where.customer]
+                ? { orderedAt: latestConfirmed[where.customer] }
+                : null
+        ),
         count: jest.fn(async (_entity: any, where: any) =>
             (where.customer.$in as string[]).reduce(
                 (sum, id) => sum + (confirmedOrders[id] ?? 0),
@@ -463,6 +470,57 @@ describe('CustomerMarketingService', () => {
             );
             expect(states.get('c1')?.stage).toBe(STAGE.BOUGHT_REPEAT);
             expect(states.get('c1')?.lastOrderAt).toEqual(recent);
+        });
+    });
+
+    describe('onOrderCancelled', () => {
+        const cancelled = { customer: { id: 'c1' } } as any;
+        const earlier = new Date('2026-10-01T00:00:00Z');
+
+        it('falls back to the latest order still confirmed, keeping the stage', async () => {
+            const { service, states, em } = makeHarness(
+                { c1: 'w1' },
+                { c1: 2 },
+                [],
+                { c1: earlier }
+            );
+            await service.onOrderConfirmed({
+                id: 'o2',
+                customer: { id: 'c1' },
+                workspace: { id: 'w1' },
+                orderedAt: new Date('2026-11-05T00:00:00Z'),
+            } as any);
+
+            await service.onOrderCancelled(cancelled);
+
+            expect(states.get('c1')?.lastOrderAt).toEqual(earlier);
+            expect(states.get('c1')?.stage).toBe(STAGE.BOUGHT_REPEAT);
+            expect(em.findOne).toHaveBeenCalledWith(
+                expect.anything(),
+                expect.objectContaining({ customer: 'c1' }),
+                expect.objectContaining({ orderBy: { orderedAt: 'desc' } })
+            );
+        });
+
+        it('clears the last order when no confirmed order is left', async () => {
+            const { service, states } = makeHarness({ c1: 'w1' }, { c1: 1 });
+            await service.onOrderConfirmed({
+                id: 'o1',
+                customer: { id: 'c1' },
+                workspace: { id: 'w1' },
+                orderedAt: earlier,
+            } as any);
+
+            await service.onOrderCancelled(cancelled);
+
+            expect(states.get('c1')?.lastOrderAt).toBeNull();
+            expect(states.get('c1')?.stage).toBe(STAGE.BOUGHT_ONCE);
+        });
+
+        it('does nothing for a customer with no marketing state', async () => {
+            const { service, states } = makeHarness({ c1: 'w1' });
+            await service.onOrderCancelled(cancelled);
+            expect(states.size).toBe(0);
         });
     });
 

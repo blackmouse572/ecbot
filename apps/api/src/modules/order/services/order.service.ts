@@ -282,8 +282,25 @@ export class OrderService {
             await this.productGroupService.refreshLearnedCycles(
                 this.groupIds(saved)
             );
+            await this.onCancelled(saved);
         }
         return saved;
+    }
+
+    /**
+     * Runs after a confirmed order is cancelled: the customer's last order
+     * falls back to the latest one still confirmed. A failure is logged and
+     * the cancel still succeeds.
+     */
+    private async onCancelled(order: OrderEntity): Promise<void> {
+        try {
+            await this.customerMarketingService.onOrderCancelled(order);
+        } catch (error: unknown) {
+            this.logger.error(
+                `Last order date not updated for order ${order.id}`,
+                error instanceof Error ? error.stack : String(error)
+            );
+        }
     }
 
     /**
