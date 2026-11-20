@@ -77,6 +77,7 @@ function setup(overrides: Record<string, any> = {}) {
     };
     const attribution = {
         recordArrival: jest.fn(async () => ({ greeting: null })),
+        isLive: jest.fn(async () => true),
     };
     const meter = {
         check: jest.fn().mockResolvedValue({ allowed: true }),
@@ -169,6 +170,31 @@ describe('WidgetChatService.handleTurn', () => {
             ...turn,
             referral: { code: 'trang-khuyen-mai', source: 'link' },
         });
+
+        expect(customerService.resolveContactPoint).toHaveBeenCalledWith(
+            expect.objectContaining({ createAnonymous: true })
+        );
+    });
+
+    it('does not record a visitor for a code that is not a live link', async () => {
+        const { service, customerService, attribution } = setup();
+        attribution.isLive.mockResolvedValueOnce(false);
+
+        await service.handleTurn(res, {
+            ...turn,
+            referral: { code: 'khong-co', source: 'link' },
+        });
+
+        expect(attribution.isLive).toHaveBeenCalledWith('ws-1', 'khong-co');
+        expect(customerService.resolveContactPoint).toHaveBeenCalledWith(
+            expect.objectContaining({ createAnonymous: false })
+        );
+    });
+
+    it('records the visitor who types the opt-out word, so it is kept', async () => {
+        const { service, customerService } = setup();
+
+        await service.handleTurn(res, { ...turn, text: 'Dừng' });
 
         expect(customerService.resolveContactPoint).toHaveBeenCalledWith(
             expect.objectContaining({ createAnonymous: true })

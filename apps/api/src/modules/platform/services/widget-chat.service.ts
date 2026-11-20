@@ -36,7 +36,10 @@ import { HandoffIntentService } from './handoff-intent.service';
 import { handoffReplyText } from '../utils/handoff-reply.util';
 import { CustomerMarketingService } from '@app/modules/customer/services/customer-marketing.service';
 import { TrackedLinkAttributionService } from '@app/modules/customer/services/tracked-link-attribution.service';
-import { optOutReplyText } from '@app/modules/customer/utils/customer-marketing-opt-out.util';
+import {
+    isMarketingOptOutMessage,
+    optOutReplyText,
+} from '@app/modules/customer/utils/customer-marketing-opt-out.util';
 import { fallbackReplyText } from '../utils/fallback-reply.util';
 import { shouldHandOff } from '../utils/handoff-decision.util';
 import type { ReplyMedia } from '../interfaces/message-model';
@@ -110,15 +113,23 @@ export class WidgetChatService {
             });
         }
 
+        // A visitor is recorded once there is something to keep: the opt-out
+        // word (so offers stay stopped) or a live tracked link (their
+        // source). Otherwise the agent's customer tools record them when
+        // they share a name, phone or order.
+        const createAnonymous =
+            isMarketingOptOutMessage(text) ||
+            (!!turn.referral?.code &&
+                (await this.attribution.isLive(
+                    account.workspace.id,
+                    turn.referral.code
+                )));
         const { contactPoint, customerId } =
             await this.customerService.resolveContactPoint({
                 workspaceId: account.workspace.id,
                 platform: ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
                 externalSenderId: visitorId,
-                // The tracked link is worth keeping, so it makes the visitor
-                // a customer. Otherwise they become one once they share
-                // something (the agent's customer tools).
-                createAnonymous: !!turn.referral?.code,
+                createAnonymous,
             });
 
         const conversation = await this.conversationService.findOrCreate({

@@ -162,6 +162,16 @@ describe('MessageProcessorService marketing opt-out', () => {
         expect(messageDebounceService.schedule).not.toHaveBeenCalled();
     });
 
+    it('asks to record a sender who types the opt-out word, even on an anonymous channel', async () => {
+        messageRepository.upsertByExternalId.mockResolvedValue({ id: 'm-1' });
+
+        await processor.process(baseEvent);
+
+        expect(customerService.resolveContactPoint).toHaveBeenCalledWith(
+            expect.objectContaining({ createAnonymous: true })
+        );
+    });
+
     it('lets the agent answer every other message', async () => {
         customerMarketing.recordInbound.mockResolvedValue({ optedOut: false });
 

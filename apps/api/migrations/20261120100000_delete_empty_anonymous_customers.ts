@@ -8,9 +8,10 @@ import { Migration } from '@mikro-orm/migrations';
  *
  * A customer is removed only when every contact point is on one of those
  * channels and nothing was ever kept about them: no name, phone, email,
- * notes, custom fields, labels, orders or merge history. Their conversations
- * stay in the inbox, unlinked (contact_point_id is ON DELETE SET NULL);
- * marketing state, events and product reactions go with them (CASCADE).
+ * notes, custom fields, labels, orders, merge history, marketing state (an
+ * opt-out or a tracked link source lives there) or product reactions. Their
+ * conversations stay in the inbox, unlinked (contact_point_id is ON DELETE
+ * SET NULL).
  *
  * Not reversible: down() is a no-op.
  */
@@ -36,6 +37,8 @@ export class Migration20261120100000_delete_empty_anonymous_customers extends Mi
                   and not exists (select 1 from "customers" m where m.merged_into_customer_id = c.id)
                   and not exists (select 1 from "orders" o where o.customer_id = c.id)
                   and not exists (select 1 from "customer_tag_assignments" t where t.customer_id = c.id)
+                  and not exists (select 1 from "customer_marketing_states" ms where ms.customer_id = c.id)
+                  and not exists (select 1 from "customer_product_reactions" r where r.customer_id = c.id)
                   and not exists (
                       select 1 from "customer_merge_suggestions" s
                       where s.customer_a_id = c.id or s.customer_b_id = c.id

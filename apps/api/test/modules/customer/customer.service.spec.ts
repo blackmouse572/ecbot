@@ -17,6 +17,7 @@ describe('CustomerService', () => {
         create: jest.fn(),
         updateEntity: jest.fn(),
         findByCustomer: jest.fn(),
+        createWithCustomer: jest.fn(),
     };
 
     beforeEach(() => {
@@ -257,8 +258,7 @@ describe('CustomerService', () => {
             mockContactPointRepository.findByWorkspacePlatformSender.mockResolvedValue(
                 null
             );
-            mockCustomerRepository.create.mockResolvedValue({ id: 'cust-1' });
-            mockContactPointRepository.create.mockResolvedValue({
+            mockContactPointRepository.createWithCustomer.mockResolvedValue({
                 id: 'cp-1',
                 customer: { id: 'cust-1' },
             });
@@ -266,15 +266,37 @@ describe('CustomerService', () => {
             const customerId = await service.ensureForConversation('conv-1');
 
             expect(customerId).toBe('cust-1');
-            expect(mockContactPointRepository.create).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    platform: ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
-                    externalSenderId: 'visitor-1',
-                })
+            expect(
+                mockContactPointRepository.createWithCustomer
+            ).toHaveBeenCalledWith(
+                'workspace-1',
+                ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
+                'visitor-1'
             );
             expect(conversationRepository.updateEntity).toHaveBeenCalledWith(
                 { id: 'conv-1' },
                 { contactPoint: { id: 'cp-1' } }
+            );
+        });
+
+        it('links to the customer a parallel call created first', async () => {
+            conversationRepository.findOneById.mockResolvedValue(conversation);
+            mockContactPointRepository.findByWorkspacePlatformSender
+                .mockResolvedValueOnce(null)
+                .mockResolvedValueOnce({
+                    id: 'cp-won',
+                    customer: { id: 'cust-won' },
+                });
+            mockContactPointRepository.createWithCustomer.mockResolvedValue(
+                null
+            );
+
+            const customerId = await service.ensureForConversation('conv-1');
+
+            expect(customerId).toBe('cust-won');
+            expect(conversationRepository.updateEntity).toHaveBeenCalledWith(
+                { id: 'conv-1' },
+                { contactPoint: { id: 'cp-won' } }
             );
         });
 

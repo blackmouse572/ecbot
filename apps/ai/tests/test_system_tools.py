@@ -631,3 +631,37 @@ async def test_set_customer_field_without_a_customer_after_asking_reports_no_con
 
     assert result == {"error": "no customer context"}
     assert len(calls) == 1
+
+
+async def test_parallel_saving_tools_create_the_customer_once(monkeypatch):
+    import asyncio
+
+    state: dict[str, str | None] = {"customer_id": None}
+    monkeypatch.setattr(system_tools_module, "_get_customer_id", lambda: state["customer_id"])
+    monkeypatch.setattr(system_tools_module, "_get_session_id", lambda: CONV_ID)
+    monkeypatch.setattr(
+        system_tools_module,
+        "_remember_customer_id",
+        lambda cid: state.__setitem__("customer_id", cid),
+    )
+    ensure_calls = 0
+
+    class _Stub:
+        async def post(self, path: str, json: dict):
+            nonlocal ensure_calls
+            if path.endswith("/customer"):
+                ensure_calls += 1
+                await asyncio.sleep(0)
+                return {"customerId": "cust-new"}
+            return {"ok": True}
+
+    monkeypatch.setattr(
+        system_tools_module.ApiClient, "get_instance", staticmethod(lambda: _Stub())
+    )
+
+    await asyncio.gather(
+        update_customer_profile.ainvoke({"phone": "0901234567"}),
+        set_customer_field.ainvoke({"key": "address", "value": "Q1"}),
+    )
+
+    assert ensure_calls == 1

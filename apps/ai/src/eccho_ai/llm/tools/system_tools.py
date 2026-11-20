@@ -9,6 +9,7 @@ the Phase 10 Tool Registry).
   consume for match detection.
 """
 
+import asyncio
 import logging
 import time
 from typing import Annotated, Any
@@ -61,6 +62,9 @@ def _get_customer_id() -> str | None:
     return getattr(ctx, "customer_id", None)
 
 
+_ENSURE_LOCKS: dict[str, asyncio.Lock] = {}
+
+
 async def _ensure_customer_id() -> str | None:
     """The customer to write to, created now for an anonymous visitor.
 
@@ -72,6 +76,32 @@ async def _ensure_customer_id() -> str | None:
     customer_id = _get_customer_id()
     if customer_id:
         return customer_id
+    conversation_id = _as_uuid(_get_session_id())
+    if not conversation_id:
+        return None
+    # Parallel tool calls in one turn share the customer they create.
+    lock = _ENSURE_LOCKS.setdefault(conversation_id, asyncio.Lock())
+    try:
+        async with lock:
+            customer_id = _get_customer_id()
+            if customer_id:
+                return customer_id
+            try:
+                result = await ApiClient.get_instance().post(
+                    f"/system/conversations/{conversation_id}/customer", {}
+                )
+            except ApiClientError as exc:
+                logger.warning("ensure customer failed for %s: %s", conversation_id, exc)
+                return None
+            customer_id = result.get("customerId") if isinstance(result, dict) else None
+            if customer_id:
+                _remember_customer_id(customer_id)
+            return customer_id
+    finally:
+        # A waiter still holds this lock; a later caller finds the customer
+        # already in context, so dropping the entry is safe.
+        if not lock.locked():
+            _ENSURE_LOCKS.pop(conversation_id, None)
     conversation_id = _as_uuid(_get_session_id())
     if not conversation_id:
         return None

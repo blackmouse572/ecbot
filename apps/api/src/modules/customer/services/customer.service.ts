@@ -234,18 +234,31 @@ export class CustomerService implements ICustomerService {
         const linked = conversation.contactPoint?.customer;
         if (linked) return linked.id;
 
-        const { contactPoint, customerId } = await this.resolveContactPoint({
-            workspaceId: conversation.account.workspace.id,
-            platform: conversation.account.type,
-            externalSenderId: conversation.senderId,
-            createAnonymous: true,
-        });
-        if (!contactPoint) return null;
+        const { workspace, type } = conversation.account;
+        const find = () =>
+            this.contactPointRepository.findByWorkspacePlatformSender(
+                workspace.id,
+                type,
+                conversation.senderId
+            );
+        let contactPoint = await find();
+        if (!contactPoint) {
+            if (await this.isAtCustomerLimit(workspace.id)) return null;
+            // A parallel tool call may record the same visitor first: then
+            // this one links the conversation to theirs.
+            contactPoint =
+                (await this.contactPointRepository.createWithCustomer(
+                    workspace.id,
+                    type,
+                    conversation.senderId
+                )) ?? (await find());
+            if (!contactPoint) return null;
+        }
 
         await conversationRepository.updateEntity({ id: conversation.id }, {
             contactPoint: { id: contactPoint.id },
         } as any);
-        return customerId;
+        return contactPoint.customer.id;
     }
 
     /** True once the workspace keeps as many customers as its plan allows. */
