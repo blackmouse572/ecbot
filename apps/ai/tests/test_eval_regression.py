@@ -161,3 +161,16 @@ async def test_a_sample_runs_through_the_production_agent(cases):
     # The fake API answered the tag like apps/api: a handoff tag hands over.
     tool_messages = [m for m in _ScriptedModel.seen[-1] if getattr(m, "type", "") == "tool"]
     assert '"triggeredHandoff": true' in tool_messages[0].content
+
+
+def test_a_selector_that_matches_nothing_fails_the_run():
+    from eval.regression.__main__ import main
+
+    with pytest.raises(SystemExit, match="no case matches"):
+        main(["--only", "booking/spa_slot", "--dry-run"])
+
+
+async def test_fake_api_answers_every_client_call_the_tools_make():
+    from eval.regression.harness import FakeApi
+
+    assert await FakeApi().delete("/system/followups/1", params={"reason": "x"}) == {"ok": True}

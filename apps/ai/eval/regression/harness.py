@@ -5,7 +5,8 @@ middleware (model, system prompt, clock, tool filtering), `get_agent_input`
 (history, reply-language note, customer context block) and the system tools
 with their real descriptions and argument schemas. Only the edges are
 stubbed: apps/api (the tools' HTTP calls answer like the API would) and the
-database reads (customer row, saved fields).
+database reads (customer row, saved fields). The fallback message stays
+empty, as the agent builder saves it (to-chatbot-payload.ts).
 """
 from __future__ import annotations
 
@@ -60,7 +61,7 @@ class FakeApi:
     async def get(self, path: str, params: dict[str, Any] | None = None) -> Any:
         return []
 
-    async def delete(self, path: str) -> Any:
+    async def delete(self, path: str, params: dict[str, Any] | None = None) -> Any:
         return {"ok": True}
 
 

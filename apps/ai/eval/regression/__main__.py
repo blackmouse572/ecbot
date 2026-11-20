@@ -2,7 +2,7 @@
 
     pnpm --filter ai eval                              # all cases, default models
     pnpm --filter ai eval -- --baseline main           # also run main, flag what got worse
-    pnpm --filter ai eval -- --only handover,booking/spa_slot --langs vi --samples 2
+    pnpm --filter ai eval -- --only handover,booking/spa_nails --langs vi --samples 2
     pnpm --filter ai eval -- --dry-run                 # list cases and the number of model turns
 
 Costs OpenRouter credit: it stops starting samples once `--budget` dollars
@@ -57,9 +57,11 @@ class Budget:
         return self.spent < self.cap
 
 
-async def _score(case: Case, turn: Turn, judge_scorer) -> tuple[bool, list[dict]]:
+async def _score(case: Case, turn: Turn, judge_model: str | None) -> tuple[bool, list[dict], float]:
+    """(passed, check results, judge spend for this sample)."""
     if turn.error:
-        return False, [{"check": "run", "ok": False, "detail": turn.error}]
+        return False, [{"check": "run", "ok": False, "detail": turn.error}], 0.0
+    spent = 0.0
     results = []
     for check in case.expect:
         for kind, value in check.items():
@@ -71,13 +73,17 @@ async def _score(case: Case, turn: Turn, judge_scorer) -> tuple[bool, list[dict]
     if all(r["ok"] for r in results):
         for check in case.expect:
             if JUDGE in check:
-                from eval.regression.judge import judge
+                from eval.regression.judge import OpenRouterJudge, judge
 
-                ok, detail = await judge(check[JUDGE], case, turn, judge_scorer)
+                # One scorer per verdict, so its spend is this sample's alone
+                # while other samples are judged concurrently.
+                scorer = OpenRouterJudge(judge_model)
+                ok, detail = await judge(check[JUDGE], case, turn, scorer)
+                spent += scorer.spent
                 results.append({"check": JUDGE, "ok": ok, "detail": f"judge: {detail}"})
                 if not ok:
                     break
-    return all(r["ok"] for r in results), results
+    return all(r["ok"] for r in results), results, spent
 
 
 async def _run(args: argparse.Namespace, cases: list[Case], models: list[str]) -> int:
@@ -90,11 +96,11 @@ async def _run(args: argparse.Namespace, cases: list[Case], models: list[str]) -
     harness.install_stubs()
 
     budget = Budget(args.budget)
-    judge_scorer = None
+    judge_model = None
     if any(JUDGE in check for c in cases for check in c.expect):
-        from eval.regression.judge import DEFAULT_JUDGE, OpenRouterJudge
+        from eval.regression.judge import DEFAULT_JUDGE
 
-        judge_scorer = OpenRouterJudge(args.judge_model or DEFAULT_JUDGE)
+        judge_model = args.judge_model or DEFAULT_JUDGE
 
     def job(case: Case, model: str, arm):
         async def go() -> Sample:
@@ -102,10 +108,8 @@ async def _run(args: argparse.Namespace, cases: list[Case], models: list[str]) -
                 return Sample(case.key, model, arm.name, False, True, {})
             turn = await harness.run_sample(case, compiled[arm.name][case.key], model, arm.template)
             budget.spent += turn.cost
-            judged_before = judge_scorer.spent if judge_scorer else 0.0
-            passed, checks = await _score(case, turn, judge_scorer)
-            if judge_scorer:
-                budget.spent += judge_scorer.spent - judged_before
+            passed, checks, judged = await _score(case, turn, judge_model)
+            budget.spent += judged
             data = {**asdict(turn), "summary": turn.summary()}
             return Sample(case.key, model, arm.name, passed, False, data, checks)
         return go
@@ -141,6 +145,8 @@ def main(argv: list[str] | None = None) -> int:
         validate(case)
     models = [m.strip() for m in args.models.split(",") if m.strip()]
     arms = 2 if args.baseline else 1
+    if not cases and (args.only or args.langs):
+        raise SystemExit(f"no case matches --only {args.only!r} --langs {args.langs!r}")
     if args.dry_run or not cases:
         for c in cases:
             print(f"{c.key}  {c.note}")
