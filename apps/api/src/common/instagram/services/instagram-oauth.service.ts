@@ -43,6 +43,11 @@ export class InstagramOAuthService implements IOAuthPlatformService {
         this.redirectUri = configService.get<string>(
             'oauth.instagram.redirectUri'
         );
+        if (!this.appId || !this.appSecret || !this.redirectUri) {
+            this.logger.warn(
+                'Instagram login is not configured: set INSTAGRAM_APP_ID, INSTAGRAM_APP_SECRET and INSTAGRAM_REDIRECT_URI'
+            );
+        }
     }
 
     async getTokenAndProfile(code: string): Promise<IOAuthTokenResult> {
@@ -114,6 +119,7 @@ export class InstagramOAuthService implements IOAuthPlatformService {
     private async exchangeCode(
         code: string
     ): Promise<{ accessToken: string; expiresIn: number }> {
+        let step = 'short-lived token';
         try {
             const tokenResponse = await this.httpService.axiosRef.post(
                 `${this.baseUrl}/oauth/access_token`,
@@ -130,6 +136,7 @@ export class InstagramOAuthService implements IOAuthPlatformService {
                     },
                 }
             );
+            step = 'long-lived token';
             const longLivedResponse = await this.httpService.axiosRef.get(
                 `${this.graphUrl}/access_token`,
                 {
@@ -147,7 +154,7 @@ export class InstagramOAuthService implements IOAuthPlatformService {
             };
         } catch (error) {
             this.logger.warn(
-                `Instagram code exchange failed: ${error?.message ?? error}`
+                `Instagram code exchange failed at ${step}: ${this.describeError(error)}`
             );
             throw new BadRequestException({
                 statusCode: 400,
@@ -182,12 +189,31 @@ export class InstagramOAuthService implements IOAuthPlatformService {
                     },
                 }
             );
-        } catch {
+        } catch (error) {
+            this.logger.warn(
+                `Instagram webhook subscribe failed: ${this.describeError(error)}`
+            );
             throw new BadRequestException({
                 statusCode: 400,
                 message: 'instagram.error.webhookSubscriptionFailed',
             });
         }
+    }
+
+    /**
+     * Instagram's own error (Instagram Login answers with `error_type` /
+     * `error_message`, the Graph API with `error.{type,message}`), so a 400
+     * says why. The request carries the code and secret, so only the body
+     * is logged.
+     */
+    private describeError(error: unknown): string {
+        const err = error as {
+            message?: string;
+            response?: { status?: number; data?: unknown };
+        };
+        const data = err?.response?.data;
+        if (data === undefined) return err?.message ?? String(error);
+        return `${err.response.status} ${JSON.stringify(data)}`;
     }
 
     private toResult(

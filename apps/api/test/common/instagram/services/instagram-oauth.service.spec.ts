@@ -97,3 +97,40 @@ describe('InstagramOAuthService.refreshCredentials', () => {
         });
     });
 });
+
+describe('InstagramOAuthService code exchange errors', () => {
+    it("logs Instagram's error body and the failed step, not the code or secret", async () => {
+        const post = jest.fn(() =>
+            Promise.reject(
+                Object.assign(
+                    new Error('Request failed with status code 400'),
+                    {
+                        response: {
+                            status: 400,
+                            data: {
+                                error_type: 'OAuthException',
+                                code: 400,
+                                error_message: 'Invalid platform app',
+                            },
+                        },
+                    }
+                )
+            )
+        );
+        const { service } = buildService(post);
+        const warn = jest
+            .spyOn((service as any).logger, 'warn')
+            .mockImplementation(() => undefined);
+
+        await expect(service.getTokenAndProfile('the-code')).rejects.toThrow(
+            BadRequestException
+        );
+
+        const logged = warn.mock.calls.map(([m]) => String(m)).join('\n');
+        expect(logged).toContain('short-lived token');
+        expect(logged).toContain('Invalid platform app');
+        expect(logged).toContain('OAuthException');
+        expect(logged).not.toContain('the-code');
+        expect(logged).not.toContain('SECRET');
+    });
+});
