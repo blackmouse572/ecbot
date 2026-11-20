@@ -29,7 +29,7 @@ def _case(cases, key: str):
 
 
 def test_every_scenario_loads_with_known_checks(cases):
-    assert {c.area for c in cases} >= {"handover", "repeat-handoff", "booking"}
+    assert {c.area for c in cases} >= {"handover", "repeat-handoff", "booking", "tricky"}
     for case in cases:
         validate(case)
         assert case.message and case.expect and case.tags
