@@ -39,17 +39,25 @@ const MESSAGE_LIMIT = 500;
 const EMOJI = /\p{Extended_Pictographic}/u;
 const INBOUND_FIELDS = new Set(['replies', 'mentions']);
 
-/** The customer's post, then the post it answered, then the thread's root. */
-function replyTargets(message: {
-    externalId?: string;
-    raw?: unknown;
-}): string[] {
-    const raw = message.raw as ThreadsWebhookChange['value'] | undefined;
-    const ids = [
-        message.externalId,
-        raw?.replied_to?.id,
-        raw?.root_post?.id,
-    ].filter((id): id is string => typeof id === 'string' && id.length > 0);
+/**
+ * The customer's post, then (for a reply under one of our posts) our root
+ * post. Never a post someone else owns: a vanished mention lives in the
+ * customer's thread, and a replied-to comment may be another customer's, so
+ * falling back there would answer in public under a stranger's post.
+ */
+function replyTargets(
+    message: { externalId?: string; raw?: unknown },
+    ownerId: string
+): string[] {
+    const raw = message.raw as
+        (ThreadsWebhookChange['value'] & { field?: string }) | undefined;
+    const ownRoot =
+        raw?.field === 'replies' && raw.root_post?.owner_id === ownerId
+            ? raw.root_post.id
+            : undefined;
+    const ids = [message.externalId, ownRoot].filter(
+        (id): id is string => typeof id === 'string' && id.length > 0
+    );
     return [...new Set(ids)];
 }
 
@@ -315,7 +323,7 @@ export class ThreadsPlatformAdapter extends PlatformAdapter {
         const container = await this.createReply(
             account,
             text,
-            replyTargets(target)
+            replyTargets(target, account.externalId)
         );
         const published = await this.post<{ id: string }>(
             account,
@@ -328,8 +336,8 @@ export class ThreadsPlatformAdapter extends PlatformAdapter {
 
     /**
      * Threads can delete or filter a post after its webhook fired (seen on a
-     * reply under an old post), and then answers "does not exist". Walk up the
-     * thread instead of failing: the post it replied to, then the root post.
+     * reply under an old post), and then answers "does not exist". Try the
+     * next target from {@link replyTargets} instead of failing.
      */
     private async createReply(
         account: AccountEntity,

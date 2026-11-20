@@ -310,16 +310,21 @@ describe('ThreadsPlatformAdapter.sendMessage', () => {
         });
     const vanished = () => graphError(100, 33);
 
+    // A reply under one of our posts: the root is ours, the replied-to post
+    // may be another customer's comment.
     const latest = {
         externalId: 'R9',
-        raw: { replied_to: { id: 'PARENT' }, root_post: { id: 'ROOT' } },
+        raw: {
+            field: 'replies',
+            replied_to: { id: 'PARENT' },
+            root_post: { id: 'ROOT', owner_id: ME },
+        },
     };
 
-    it('falls back to the replied-to post, then the root post, when the target is gone', async () => {
+    it("falls back to our own root post when a reply's target is gone", async () => {
         const post = jest
             .fn()
             .mockRejectedValueOnce(vanished()) // R9
-            .mockRejectedValueOnce(vanished()) // PARENT
             .mockResolvedValueOnce({ data: { id: 'C1' } }) // ROOT
             .mockResolvedValueOnce({ data: { id: 'PUB1' } });
         const adapter = makeAdapter(
@@ -334,9 +339,48 @@ describe('ThreadsPlatformAdapter.sendMessage', () => {
 
         expect(res).toEqual({ externalId: 'PUB1' });
         expect(
-            post.mock.calls.slice(0, 3).map(c => c[1].get('reply_to_id'))
-        ).toEqual(['R9', 'PARENT', 'ROOT']);
-        expect(post.mock.calls[3][1].get('creation_id')).toBe('C1');
+            post.mock.calls.slice(0, 2).map(c => c[1].get('reply_to_id'))
+        ).toEqual(['R9', 'ROOT']);
+        expect(post.mock.calls[2][1].get('creation_id')).toBe('C1');
+    });
+
+    // Never answer in public under someone else's post: a vanished mention
+    // lives in the customer's own thread.
+    it.each([
+        [
+            'a mention',
+            {
+                field: 'mentions',
+                replied_to: { id: 'THEIRS' },
+                root_post: { id: 'THEIR_ROOT', username: 'lan.nguyen' },
+            },
+        ],
+        [
+            "a reply under someone else's post",
+            {
+                field: 'replies',
+                replied_to: { id: 'THEIRS' },
+                root_post: { id: 'THEIR_ROOT', owner_id: 'someone-else' },
+            },
+        ],
+    ])('does not fall back for %s', async (_, raw) => {
+        const post = jest.fn().mockRejectedValue(vanished());
+        const adapter = makeAdapter(
+            { axiosRef: { post } },
+            {
+                findLatestInboundBySender: jest
+                    .fn()
+                    .mockResolvedValue({ externalId: 'R9', raw }),
+            }
+        );
+
+        await expect(
+            adapter.sendMessage(ACCOUNT, 'lan.nguyen', {
+                content: { kind: 'text', text: 'hi' },
+                fallbackText: 'hi',
+            })
+        ).rejects.toMatchObject({ status: 502 });
+        expect(post).toHaveBeenCalledTimes(1);
     });
 
     it('does not retry other Threads errors', async () => {
