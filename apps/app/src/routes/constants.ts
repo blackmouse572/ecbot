@@ -31,6 +31,7 @@ export const ROUTES = {
   Customers: "customers",
   CustomerSuggestions: "customers/suggestions",
   CustomerSources: "sources",
+  Marketing: "marketing",
   Orders: "orders",
   Workspace: "workspace",
   WorkspaceMember: "members",

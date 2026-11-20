@@ -3,7 +3,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { useCoreRoutes } from "./use-core-routes";
 import { useMarketingRoutes } from "./use-marketing-routes";
 
-const flags = vi.hoisted(() => ({ orders: true, customerSources: true }));
+const flags = vi.hoisted(() => ({
+  orders: true,
+  customerSources: true,
+  marketing: true,
+}));
 vi.mock("@/hooks/api/feature-flags", () => ({
   useFeatureFlags: () => ({ flags, isLoading: false, isError: false }),
 }));
@@ -17,13 +21,15 @@ describe("flagged nav items", () => {
   afterEach(() => {
     flags.orders = true;
     flags.customerSources = true;
+    flags.marketing = true;
   });
 
-  it("lists Đơn hàng and Nguồn khách while their flags are on", () => {
+  it("lists Đơn hàng, Tổng quan and Nguồn khách while their flags are on", () => {
     expect(paths(renderHook(useCoreRoutes).result.current)).toContain(
       "/lumi/orders",
     );
     expect(paths(renderHook(useMarketingRoutes).result.current)).toEqual([
+      "/lumi/marketing",
       "/lumi/sources",
     ]);
   });
@@ -31,6 +37,7 @@ describe("flagged nav items", () => {
   it("drops each one while its flag is off", () => {
     flags.orders = false;
     flags.customerSources = false;
+    flags.marketing = false;
 
     expect(paths(renderHook(useCoreRoutes).result.current)).not.toContain(
       "/lumi/orders",

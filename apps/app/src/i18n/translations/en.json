@@ -3806,5 +3806,69 @@
     "firstSource": {
       "direct": "Messaged the page directly"
     }
+  },
+  "marketing": {
+    "overview": {
+      "navTitle": "Overview",
+      "title": "Marketing overview",
+      "description": "Which stage your customers are at, and what to do for each stage.",
+      "period": "Last {{days}} days, against the {{days}} days before",
+      "range": "Date range",
+      "customers_one": "{{value}} customer",
+      "customers_other": "{{value}} customers",
+      "todos": {
+        "title": "To do this week",
+        "description": "How many customers are worth a message at each stage. Ecbot leaves out customers who opted out, are paused or are upset.",
+        "total": "customers to message, {{value}} left out",
+        "excluded": "{{value}} customers left out.",
+        "none": "No customers to message at this stage yet.",
+        "NEW": {
+          "title": "{{value}} customers wrote for the first time this week",
+          "hint": "They just wrote to the shop for the first time. A quick answer keeps them asking."
+        },
+        "INTERESTED": {
+          "title": "{{value}} customers looked at products but did not ask the price",
+          "hint": "Send a first-order offer so they ask more."
+        },
+        "ASKED_PRICE": {
+          "title": "{{value}} customers asked the price in the last 7 days and did not buy",
+          "hint": "Send the product they asked about again, with a small offer."
+        },
+        "CROSS_SELL": {
+          "title": "{{value}} customers bought for the first time 15 to 30 days ago",
+          "hint": "Suggest something that goes with what they bought."
+        },
+        "REPURCHASE": {
+          "title": "{{value}} customers are about to run out",
+          "hint": "Ecbot uses each product group's repurchase cycle."
+        },
+        "WIN_BACK": {
+          "title": "{{value}} customers bought but have not come back in 31 to 90 days",
+          "hint": "Invite them back with an offer for returning customers."
+        }
+      },
+      "funnel": {
+        "title": "Which stage customers are at",
+        "description": "How many customers reached each stage, out of {{value}}, by the channel they first wrote from. Click a stage below to see the customers.",
+        "empty": "No customers yet",
+        "dropped": "{{value}} stopped ({{share}})"
+      },
+      "stages": {
+        "share": "{{share}} of all customers",
+        "dormantHint": "No message or order in 120 days"
+      },
+      "moves": {
+        "title": "Stage moves in the last {{days}} days",
+        "empty": "No customer changed stage in the last {{days}} days.",
+        "view": "View customers"
+      },
+      "health": {
+        "title": "Is the list healthy",
+        "description": "Customers opting out is a sign the shop is messaging too much.",
+        "optOuts": "Opted out",
+        "paused": "Paused",
+        "pausedHint": "They receive offers again when the pause ends"
+      }
+    }
   }
 }
