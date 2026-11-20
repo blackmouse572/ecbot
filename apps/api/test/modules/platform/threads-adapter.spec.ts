@@ -292,6 +292,69 @@ describe('ThreadsPlatformAdapter.sendMessage', () => {
         expect(post.mock.calls[2][1].get('text')).toBe(vi);
     });
 
+    // What Threads answers when the reply target was deleted or filtered after
+    // its webhook fired (code 100, subcode 33).
+    const graphError = (code: number, subcode?: number) =>
+        Object.assign(new Error('Request failed with status code 400'), {
+            isAxiosError: true,
+            response: {
+                status: 400,
+                data: {
+                    error: {
+                        message: 'The requested resource does not exist',
+                        code,
+                        error_subcode: subcode,
+                    },
+                },
+            },
+        });
+    const vanished = () => graphError(100, 33);
+
+    const latest = {
+        externalId: 'R9',
+        raw: { replied_to: { id: 'PARENT' }, root_post: { id: 'ROOT' } },
+    };
+
+    it('falls back to the replied-to post, then the root post, when the target is gone', async () => {
+        const post = jest
+            .fn()
+            .mockRejectedValueOnce(vanished()) // R9
+            .mockRejectedValueOnce(vanished()) // PARENT
+            .mockResolvedValueOnce({ data: { id: 'C1' } }) // ROOT
+            .mockResolvedValueOnce({ data: { id: 'PUB1' } });
+        const adapter = makeAdapter(
+            { axiosRef: { post } },
+            { findLatestInboundBySender: jest.fn().mockResolvedValue(latest) }
+        );
+
+        const res = await adapter.sendMessage(ACCOUNT, 'lan.nguyen', {
+            content: { kind: 'text', text: 'Dạ còn ạ' },
+            fallbackText: 'Dạ còn ạ',
+        });
+
+        expect(res).toEqual({ externalId: 'PUB1' });
+        expect(
+            post.mock.calls.slice(0, 3).map(c => c[1].get('reply_to_id'))
+        ).toEqual(['R9', 'PARENT', 'ROOT']);
+        expect(post.mock.calls[3][1].get('creation_id')).toBe('C1');
+    });
+
+    it('does not retry other Threads errors', async () => {
+        const post = jest.fn().mockRejectedValue(graphError(190));
+        const adapter = makeAdapter(
+            { axiosRef: { post } },
+            { findLatestInboundBySender: jest.fn().mockResolvedValue(latest) }
+        );
+
+        await expect(
+            adapter.sendMessage(ACCOUNT, 'lan.nguyen', {
+                content: { kind: 'text', text: 'hi' },
+                fallbackText: 'hi',
+            })
+        ).rejects.toMatchObject({ status: 502 });
+        expect(post).toHaveBeenCalledTimes(1);
+    });
+
     it('fails without a post to reply to', async () => {
         const post = jest.fn();
         const adapter = makeAdapter(

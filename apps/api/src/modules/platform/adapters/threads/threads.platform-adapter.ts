@@ -4,6 +4,7 @@ import { AccountService } from '@app/modules/account/services/account.service';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
 import { HttpService } from '@nestjs/axios';
 import {
+    HttpException,
     Injectable,
     Logger,
     UnprocessableEntityException,
@@ -37,6 +38,30 @@ const THREADS_GRAPH_URL = 'https://graph.threads.net/v1.0';
 const MESSAGE_LIMIT = 500;
 const EMOJI = /\p{Extended_Pictographic}/u;
 const INBOUND_FIELDS = new Set(['replies', 'mentions']);
+
+/** The customer's post, then the post it answered, then the thread's root. */
+function replyTargets(message: {
+    externalId?: string;
+    raw?: unknown;
+}): string[] {
+    const raw = message.raw as ThreadsWebhookChange['value'] | undefined;
+    const ids = [
+        message.externalId,
+        raw?.replied_to?.id,
+        raw?.root_post?.id,
+    ].filter((id): id is string => typeof id === 'string' && id.length > 0);
+    return [...new Set(ids)];
+}
+
+/** Graph "object does not exist or cannot be loaded" (code 100, subcode 33). */
+function isMissingObject(error: unknown): boolean {
+    if (!(error instanceof HttpException)) return false;
+    const body = error.getResponse() as {
+        platformError?: { error?: { code?: number; error_subcode?: number } };
+    };
+    const graph = body?.platformError?.error;
+    return graph?.code === 100 && graph?.error_subcode === 33;
+}
 
 /**
  * Threads (Meta). The account is one Threads profile: `account.externalId` is
@@ -287,15 +312,10 @@ export class ThreadsPlatformAdapter extends PlatformAdapter {
             });
         }
 
-        const container = await this.post<{ id: string }>(
+        const container = await this.createReply(
             account,
-            'threads',
-            {
-                media_type: 'TEXT',
-                text,
-                reply_to_id: target.externalId,
-            },
-            'Threads createReply'
+            text,
+            replyTargets(target)
         );
         const published = await this.post<{ id: string }>(
             account,
@@ -304,6 +324,34 @@ export class ThreadsPlatformAdapter extends PlatformAdapter {
             'Threads publishReply'
         );
         return { externalId: published.id };
+    }
+
+    /**
+     * Threads can delete or filter a post after its webhook fired (seen on a
+     * reply under an old post), and then answers "does not exist". Walk up the
+     * thread instead of failing: the post it replied to, then the root post.
+     */
+    private async createReply(
+        account: AccountEntity,
+        text: string,
+        targets: string[]
+    ): Promise<{ id: string }> {
+        for (const [i, replyToId] of targets.entries()) {
+            try {
+                return await this.post<{ id: string }>(
+                    account,
+                    'threads',
+                    { media_type: 'TEXT', text, reply_to_id: replyToId },
+                    'Threads createReply'
+                );
+            } catch (error) {
+                if (i === targets.length - 1 || !isMissingObject(error))
+                    throw error;
+                this.logger.warn(
+                    `Threads reply target ${replyToId} is gone, trying ${targets[i + 1]}`
+                );
+            }
+        }
     }
 
     /** Cuts on grapheme boundaries so the text fits Threads' 500 limit, where
