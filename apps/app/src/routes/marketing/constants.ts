@@ -1,5 +1,14 @@
 import type { MarketingOverviewTodoDto } from "@/hooks/api/marketing-overview";
-import type { StageKey } from "./types";
+import type { JourneyStage, StageKey } from "./types";
+
+/** The journey stages, in order. */
+export const JOURNEY_STAGES: JourneyStage[] = [
+  "NEW",
+  "INTERESTED",
+  "ASKED_PRICE",
+  "BOUGHT_ONCE",
+  "BOUGHT_REPEAT",
+];
 
 export type StageTone = "blue" | "purple" | "orange" | "green" | "grey";
 
@@ -22,7 +31,10 @@ export const STAGE_ICON_CLASS: Record<StageTone, string> = {
   grey: "text-ui-tag-neutral-icon",
 };
 
-/** The stage each "Việc nên làm" row sits under. */
+/**
+ * The stage each "Việc nên làm" row sits under. Lâu không nhắn is not who
+ * the win-back row picks, so that row shows the label without a count.
+ */
 export const TODO_STAGE: Record<MarketingOverviewTodoDto["key"], StageKey> = {
   NEW: "NEW",
   INTERESTED: "INTERESTED",

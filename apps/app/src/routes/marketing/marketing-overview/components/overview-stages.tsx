@@ -6,6 +6,7 @@ import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useStageLabel } from "../../components/stage-label";
+import { JOURNEY_STAGES } from "../../constants";
 import type { StageKey } from "../../types";
 import { customersAtStage } from "../../utils";
 
@@ -30,14 +31,18 @@ export const OverviewStages: FC<OverviewStagesProps> = ({
     previous?: number;
     hint: string;
   }[] = [
-    ...(overview?.stages ?? []).map((s) => ({
-      stage: s.stage,
-      current: s.current,
-      previous: s.previous,
-      hint: t("marketing.overview.stages.share", {
-        share: f.share(s.current, total),
-      }),
-    })),
+    // Every card renders while loading, so the grid keeps its size.
+    ...JOURNEY_STAGES.map((stage) => {
+      const s = overview?.stages.find((row) => row.stage === stage);
+      return {
+        stage,
+        current: s?.current,
+        previous: s?.previous,
+        hint: t("marketing.overview.stages.share", {
+          share: f.share(s?.current ?? 0, total),
+        }),
+      };
+    }),
     {
       stage: "DORMANT",
       current: overview?.dormant,

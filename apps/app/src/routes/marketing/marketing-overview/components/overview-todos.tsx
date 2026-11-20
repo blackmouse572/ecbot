@@ -22,9 +22,7 @@ export const OverviewTodos: FC<OverviewTodosProps> = ({
   const f = useAnalyticsFormat();
   const label = useStageLabel();
   const atStage = (stage: StageKey) =>
-    stage === "DORMANT"
-      ? (overview?.dormant ?? 0)
-      : (overview?.stages.find((s) => s.stage === stage)?.current ?? 0);
+    overview?.stages.find((s) => s.stage === stage)?.current ?? 0;
 
   return (
     <Container className="divide-y p-0">
@@ -68,15 +66,17 @@ export const OverviewTodos: FC<OverviewTodosProps> = ({
                     <Text size="small" weight="plus" leading="compact">
                       {label(stage)}
                     </Text>
-                    <Text
-                      size="xsmall"
-                      className="text-ui-fg-subtle tabular-nums"
-                    >
-                      {t("marketing.overview.customers", {
-                        count: atStage(stage),
-                        value: f.number(atStage(stage)),
-                      })}
-                    </Text>
+                    {stage !== "DORMANT" && (
+                      <Text
+                        size="xsmall"
+                        className="text-ui-fg-subtle tabular-nums"
+                      >
+                        {t("marketing.overview.customers", {
+                          count: atStage(stage),
+                          value: f.number(atStage(stage)),
+                        })}
+                      </Text>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-col gap-y-1">

@@ -88,10 +88,11 @@ describe("MarketingOverview", () => {
         "Chưa có khách nào cần nhắn ở giai đoạn này.",
       ),
     ).toBeTruthy();
-    // The Lâu không nhắn row counts the dormant customers.
+    // Lâu không nhắn (120 days) is not who this row picks (bought, quiet
+    // 31 to 90 days), so the row shows no stage count.
     expect(
-      within(screen.getByTestId("todo-WIN_BACK")).getByText("3 khách"),
-    ).toBeTruthy();
+      within(screen.getByTestId("todo-WIN_BACK")).queryByText("3 khách"),
+    ).toBeNull();
   });
 
   it("opens the customer list filtered by the stage a card or move is about", () => {
@@ -124,5 +125,26 @@ describe("MarketingOverview", () => {
     expect(
       screen.getByText("Khách chuyển giai đoạn trong 30 ngày qua"),
     ).toBeTruthy();
+  });
+
+  it("keeps all six stage cards in place while loading", () => {
+    useMarketingOverview.mockReturnValueOnce({
+      overview: undefined,
+      isLoading: true,
+      isError: false,
+      error: null,
+    });
+    renderPage();
+
+    for (const name of [
+      "Mới biết",
+      "Quan tâm",
+      "Hỏi giá",
+      "Đã mua 1 lần",
+      "Mua lại",
+      "Lâu không nhắn",
+    ]) {
+      expect(screen.getAllByText(name).length).toBeGreaterThan(0);
+    }
   });
 });
