@@ -3124,7 +3124,7 @@
       "installErrorToast": "Cài đặt thất bại.",
       "searchPlaceholder": "Tìm ứng dụng…",
       "categoryAll": "Tất cả danh mục",
-      "noResults": "Không tìm thấy toolkit nào.",
+      "noResults": "Không tìm thấy ứng dụng nào.",
       "pagination": "Trang {{page}} / {{totalPage}}",
       "filters": {
         "provider": "Nhà cung cấp",
@@ -3137,7 +3137,7 @@
       },
       "access": {
         "actionsTitle": "Công cụ này làm được gì ({{count}})",
-        "actionsEmpty": "Composio chưa liệt kê thao tác nào cho toolkit này.",
+        "actionsEmpty": "Ứng dụng này chưa có thao tác nào.",
         "actionsEmptyEccho": "Công cụ Ecbot này sẽ liệt kê các thao tác sau khi bạn cài đặt.",
         "actionsCapped": "Đang hiển thị {{count}} thao tác đầu tiên.",
         "destructiveHint": "Các thao tác có thể xóa dữ liệu sẽ tắt cho đến khi bạn bật cho từng agent.",
@@ -3146,7 +3146,7 @@
         "scopesTitle": "Quyền truy cập được yêu cầu",
         "scopesIntro": "Khi cài đặt, {{name}} sẽ đề nghị bạn cho phép truy cập tài khoản như dưới đây. Quyền này có thể rộng hơn những gì các thao tác bên dưới cần.",
         "redirectNote": "Khi bấm Cài đặt, trang đăng nhập {{name}} sẽ mở ngay trong tab này, xong sẽ quay lại đây.",
-        "loadError": "Không tải được danh sách thao tác của toolkit này."
+        "loadError": "Không tải được danh sách thao tác của ứng dụng này."
       },
       "callback": {
         "installing": "Đang hoàn tất cài đặt…",
