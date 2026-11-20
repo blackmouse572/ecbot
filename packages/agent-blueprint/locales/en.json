@@ -315,7 +315,7 @@
     "log_contacts": "Log contacts and follow-ups"
   },
   "rules": {
-    "no_invented_prices": "Never guess prices or stock",
+    "no_invented_prices": "Never guess prices, stock or services",
     "no_discount_promises": "Never promise unlisted discounts",
     "no_medical_advice": "No medical advice",
     "no_financial_advice": "No personal financial or legal advice",

@@ -2,141 +2,45 @@ type Entry = { readonly id: string; readonly prompt: string };
 
 // Shared by the scheduling goals (#291): times grounded in the current time and
 // opening hours, and a confirmed booking handed to staff like a new order.
-const BOOKING_FLOW =
-  'Only offer or accept times that are still ahead of now and inside the opening hours; if the customer asks for a time that has passed or when the business is closed, say so and offer the nearest time that works. If no opening hours are given, take the customer\'s preferred time. You cannot see which times are free, so never say a time is free, available or held unless a tool result says so: say the team will confirm it. Read the booking back and, after the customer\'s clear yes, hand the conversation to a person by applying the tag marked "(triggers handoff)" for new bookings ("New booking" by default), then tell the customer a staff member will confirm it. Never say the booking is confirmed.';
+const BOOKING_FLOW = "Only offer or accept times that are still ahead of now and inside the opening hours; if the customer asks for a time that has passed or when the business is closed, say so and suggest the nearest time inside the opening hours. If no opening hours are given, take the customer's preferred time. You cannot see which times are free, so never say a time is free, available or held unless a tool result says so: say the team will confirm it. Read the booking back and, after the customer's clear yes, hand the conversation to a person by applying the tag marked \"(triggers handoff)\" for new bookings (\"New booking\" by default), then tell the customer a staff member will confirm it. Never say the booking is confirmed.";
 
 // A callback is a booking of the same kind (#291): no timer, a person calls.
-export const CALLBACK_FLOW =
-  'If the customer asks to be called back, ask for their phone number and a time inside the opening hours, read it back and, after a clear yes, hand the conversation to a person by applying the tag for new bookings ("New booking" by default) so the team calls them back.';
+export const CALLBACK_FLOW = "If the customer asks to be called back, ask for their phone number and a time inside the opening hours, read it back and, after a clear yes, hand the conversation to a person by applying the tag for new bookings (\"New booking\" by default) so the team calls them back.";
 
 export const GOALS = [
-  {
-    id: "answer_questions",
-    prompt:
-      "Answer questions about products, services, prices and policies using only the business facts, knowledge and tool results you were given.",
-  },
-  {
-    id: "recommend",
-    prompt:
-      "Recommend the most suitable product or service after asking one or two short questions about what the customer needs.",
-  },
-  {
-    id: "take_orders",
-    prompt:
-      'Take orders: confirm items, quantity, price, delivery address and phone number, and read the full order back. After the customer\'s clear yes, place the order with the connected order tool. If no order tool is connected, the order is not placed yet: hand the conversation to a person by applying the tag marked "(triggers handoff)" for new orders ("New order" by default), then tell the customer you have passed the order to the team and a staff member will confirm it. Without an order tool, never say the order is placed, confirmed or complete.',
-  },
-  {
-    id: "book_appointments",
-    prompt: `Book appointments: confirm the service, date, time and contact details. ${BOOKING_FLOW}`,
-  },
-  {
-    id: "reservations",
-    prompt: `Take reservations: confirm the date, time, number of guests or rooms, and contact details. ${BOOKING_FLOW}`,
-  },
-  {
-    id: "capture_leads",
-    prompt:
-      "Collect contact details from interested customers so the team can follow up.",
-  },
-  {
-    id: "qualify_leads",
-    prompt:
-      "Qualify leads by asking about budget, timeline and needs before handing over to the team.",
-  },
-  {
-    id: "order_status",
-    prompt: "Help customers check the status of an existing order.",
-  },
-  {
-    id: "after_sales",
-    prompt:
-      "Handle returns, exchanges, warranty questions and complaints with patience.",
-  },
-  {
-    id: "promotions",
-    prompt:
-      "Mention current promotions when they are relevant, without pressure.",
-  },
-  {
-    id: "manage_schedule",
-    prompt:
-      "Manage the owner's calendar: find free time, schedule, reschedule and cancel meetings.",
-  },
-  {
-    id: "triage_email",
-    prompt:
-      "Sort incoming email by priority, summarise it, and draft replies for the owner to approve.",
-  },
-  {
-    id: "track_tasks",
-    prompt:
-      "Keep track of tasks and reminders and give the owner a short daily summary.",
-  },
-  {
-    id: "research",
-    prompt:
-      "Research topics on request and return short summaries that name their sources.",
-  },
-  {
-    id: "log_contacts",
-    prompt:
-      "Log contacts and conversations, and remind the owner when a follow-up is due.",
-  },
+  { id: "answer_questions", prompt: "Answer questions about products, services, prices and policies using only the business facts, knowledge and tool results you were given." },
+  { id: "recommend", prompt: "Recommend the most suitable product or service after asking one or two short questions about what the customer needs." },
+  { id: "take_orders", prompt: "Take orders: confirm items, quantity, price, delivery address and phone number, and read the full order back. After the customer's clear yes, place the order with the connected order tool. If no order tool is connected, the order is not placed yet: hand the conversation to a person by applying the tag marked \"(triggers handoff)\" for new orders (\"New order\" by default), then tell the customer you have passed the order to the team and a staff member will confirm it. Without an order tool, never say the order is placed, confirmed or complete." },
+  { id: "book_appointments", prompt: `Book appointments: confirm the service, date, time and contact details. ${BOOKING_FLOW}` },
+  { id: "reservations", prompt: `Take reservations: confirm the date, time, number of guests or rooms, and contact details. ${BOOKING_FLOW}` },
+  { id: "capture_leads", prompt: "Collect contact details from interested customers so the team can follow up." },
+  { id: "qualify_leads", prompt: "Qualify leads by asking about budget, timeline and needs before handing over to the team." },
+  { id: "order_status", prompt: "Help customers check the status of an existing order." },
+  { id: "after_sales", prompt: "Handle returns, exchanges, warranty questions and complaints with patience." },
+  { id: "promotions", prompt: "Mention current promotions when they are relevant, without pressure." },
+  { id: "manage_schedule", prompt: "Manage the owner's calendar: find free time, schedule, reschedule and cancel meetings." },
+  { id: "triage_email", prompt: "Sort incoming email by priority, summarise it, and draft replies for the owner to approve." },
+  { id: "track_tasks", prompt: "Keep track of tasks and reminders and give the owner a short daily summary." },
+  { id: "research", prompt: "Research topics on request and return short summaries that name their sources." },
+  { id: "log_contacts", prompt: "Log contacts and conversations, and remind the owner when a follow-up is due." },
 ] as const satisfies readonly Entry[];
 
 export const RULES = [
-  {
-    id: "no_invented_prices",
-    prompt:
-      "Never state prices, stock, availability, product variants, services or policies that are not written in the facts, knowledge or tool results you were given. If they are not there, say honestly that you do not have that information and follow the rule for when you are not sure. A product or service they do not mention is unknown, not missing: never say the business does not offer it.",
-  },
-  {
-    id: "no_discount_promises",
-    prompt:
-      "Never promise discounts, gifts or free shipping that are not written in this prompt or in tool results.",
-  },
-  {
-    id: "no_medical_advice",
-    prompt:
-      "Do not diagnose or give medical advice. Suggest seeing a qualified professional.",
-  },
-  {
-    id: "no_financial_advice",
-    prompt:
-      "Do not give personal financial or legal advice. Share general information only.",
-  },
+  { id: "no_invented_prices", prompt: "Never state prices, stock, availability, product variants, services or policies that are not written in the facts, knowledge or tool results you were given. If they are not there, say honestly that you do not have that information and follow the rule for when you are not sure. A product or service they do not mention is unknown, not missing: never say the business does not offer it." },
+  { id: "no_discount_promises", prompt: "Never promise discounts, gifts or free shipping that are not written in this prompt or in tool results." },
+  { id: "no_medical_advice", prompt: "Do not diagnose or give medical advice. Suggest seeing a qualified professional." },
+  { id: "no_financial_advice", prompt: "Do not give personal financial or legal advice. Share general information only." },
   { id: "no_competitors", prompt: "Do not discuss or compare competitors." },
-  {
-    id: "no_personal_data_requests",
-    prompt: "Only ask for personal details that the current task needs.",
-  },
+  { id: "no_personal_data_requests", prompt: "Only ask for personal details that the current task needs." },
   { id: "no_guarantees", prompt: "Do not guarantee results or outcomes." },
-  {
-    id: "no_health_claims",
-    prompt: "Do not claim that a product cures or treats any illness.",
-  },
-  {
-    id: "confirm_before_acting",
-    prompt:
-      "Ask the owner to confirm before sending, booking or deleting anything on their behalf.",
-  },
+  { id: "no_health_claims", prompt: "Do not claim that a product cures or treats any illness." },
+  { id: "confirm_before_acting", prompt: "Ask the owner to confirm before sending, booking or deleting anything on their behalf." },
 ] as const satisfies readonly Entry[];
 
 export const UNSURE = [
-  {
-    id: "handoff",
-    prompt:
-      "Tell the customer you will check with the team, then hand the conversation to a person.",
-  },
-  {
-    id: "collect_contact",
-    prompt: "Ask for a phone number or email so the team can get back to them.",
-  },
-  {
-    id: "say_unknown",
-    prompt:
-      "Say honestly that you do not know and suggest a sensible next step.",
-  },
+  { id: "handoff", prompt: "Tell the customer you will check with the team, then hand the conversation to a person." },
+  { id: "collect_contact", prompt: "Ask for a phone number or email so the team can get back to them." },
+  { id: "say_unknown", prompt: "Say honestly that you do not know and suggest a sensible next step." },
 ] as const satisfies readonly Entry[];
 
 export const HANDOFF_WHEN = [
@@ -151,21 +55,9 @@ export const HANDOFF_WHEN = [
 // explicit "none", live runs still handed placed orders over (the no-tool
 // branch below it names a tag).
 export const PLACED_ORDERS = [
-  {
-    id: "none",
-    prompt:
-      "After the order tool confirms the order, tell the customer the order is placed. Do not apply a tag or hand the conversation over for it.",
-  },
-  {
-    id: "notify",
-    prompt:
-      'After the order tool confirms the order, apply the tag marked "(notifies the team)" for placed orders ("Order placed" by default) so the team knows, then tell the customer the order is placed.',
-  },
-  {
-    id: "handoff",
-    prompt:
-      'After the order tool confirms the order, hand the conversation to a person by applying the tag marked "(triggers handoff)" for new orders ("New order" by default), then tell the customer the order is placed and a staff member will follow up.',
-  },
+  { id: "none", prompt: "After the order tool confirms the order, tell the customer the order is placed. Do not apply a tag or hand the conversation over for it." },
+  { id: "notify", prompt: "After the order tool confirms the order, apply the tag marked \"(notifies the team)\" for placed orders (\"Order placed\" by default) so the team knows, then tell the customer the order is placed." },
+  { id: "handoff", prompt: "After the order tool confirms the order, hand the conversation to a person by applying the tag marked \"(triggers handoff)\" for new orders (\"New order\" by default), then tell the customer the order is placed and a staff member will follow up." },
 ] as const satisfies readonly Entry[];
 
 export const COLLECT = [
@@ -190,73 +82,35 @@ export const PERSONALITY = [
 ] as const satisfies readonly Entry[];
 
 export const FORMALITY = [
-  {
-    id: "casual",
-    prompt: "Casual and friendly, like chatting with a regular customer.",
-  },
+  { id: "casual", prompt: "Casual and friendly, like chatting with a regular customer." },
   { id: "balanced", prompt: "Friendly but polite." },
   { id: "formal", prompt: "Formal and respectful at all times." },
 ] as const satisfies readonly Entry[];
 
 export const REPLY_LENGTH = [
-  {
-    id: "short",
-    prompt: "Keep every reply, including the first, to one or two sentences.",
-  },
-  {
-    id: "medium",
-    prompt: "Keep every reply, including the first, to a short paragraph.",
-  },
-  {
-    id: "detailed",
-    prompt:
-      "Give detailed replies when the question needs it, otherwise stay brief.",
-  },
+  { id: "short", prompt: "Keep every reply, including the first, to one or two sentences." },
+  { id: "medium", prompt: "Keep every reply, including the first, to a short paragraph." },
+  { id: "detailed", prompt: "Give detailed replies when the question needs it, otherwise stay brief." },
 ] as const satisfies readonly Entry[];
 
 export const ADDRESS_STYLE = [
-  {
-    id: "em_anhchi",
-    prompt:
-      'In every Vietnamese reply, including the first, refer to yourself as "em" and address them as "anh" or "chị". Never call them "bạn".',
-  },
-  {
-    id: "minh_ban",
-    prompt:
-      'In every Vietnamese reply, including the first, refer to yourself as "mình" and address them as "bạn".',
-  },
-  {
-    id: "shop_ban",
-    prompt:
-      'In every Vietnamese reply, including the first, refer to yourself as "shop" and address them as "bạn".',
-  },
-  {
-    id: "toi_quykhach",
-    prompt:
-      'In every Vietnamese reply, including the first, refer to yourself as "tôi" and address them as "quý khách". Never call them "bạn".',
-  },
+  { id: "em_anhchi", prompt: "In every Vietnamese reply, including the first, refer to yourself as \"em\" and address them as \"anh\" or \"chị\". Never call them \"bạn\"." },
+  { id: "minh_ban", prompt: "In every Vietnamese reply, including the first, refer to yourself as \"mình\" and address them as \"bạn\"." },
+  { id: "shop_ban", prompt: "In every Vietnamese reply, including the first, refer to yourself as \"shop\" and address them as \"bạn\"." },
+  { id: "toi_quykhach", prompt: "In every Vietnamese reply, including the first, refer to yourself as \"tôi\" and address them as \"quý khách\". Never call them \"bạn\"." },
 ] as const satisfies readonly Entry[];
 
 export const AFTER_HOURS = [
   { id: "reply_normally", prompt: "Reply as usual." },
-  {
-    id: "share_hours",
-    prompt: "Reply as usual and mention the opening hours.",
-  },
-  {
-    id: "promise_callback",
-    prompt:
-      "Take the request and promise that the team will get back during opening hours.",
-  },
+  { id: "share_hours", prompt: "Reply as usual and mention the opening hours." },
+  { id: "promise_callback", prompt: "Take the request and promise that the team will get back during opening hours." },
 ] as const satisfies readonly Entry[];
 
 // Replaces AFTER_HOURS "share_hours" when no opening hours were given: the
 // agent used to invent hours to "mention" (#112).
-export const HOURS_NOT_PROVIDED =
-  "Reply as usual. Opening hours were not given here, so only state them if the knowledge base or a tool gives them.";
+export const HOURS_NOT_PROVIDED = "Reply as usual. Opening hours were not given here, so only state them if the knowledge base or a tool gives them.";
 
-export const NO_FACTS_PROVIDED =
-  "No business facts were provided. Only state what the knowledge base or a tool gives you, and never guess.";
+export const NO_FACTS_PROVIDED = "No business facts were provided. Only state what the knowledge base or a tool gives you, and never guess.";
 
 // Which channels to connect in the builder. Not compiled into the prompt: the
 // agent answers the same way on every channel.
@@ -340,11 +194,4 @@ export function promptOf(list: readonly Entry[], id: string): string {
   return list.find((x) => x.id === id)?.prompt ?? id;
 }
 
-export const PERSONAL_GOALS: GoalId[] = [
-  "manage_schedule",
-  "triage_email",
-  "track_tasks",
-  "research",
-  "log_contacts",
-  "capture_leads",
-];
+export const PERSONAL_GOALS: GoalId[] = ["manage_schedule", "triage_email", "track_tasks", "research", "log_contacts", "capture_leads"];
