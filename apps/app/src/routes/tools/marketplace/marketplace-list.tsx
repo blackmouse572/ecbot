@@ -6,6 +6,7 @@ import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { MarketplaceBody } from "./components/marketplace-body";
+import { MarketplaceCustomCallout } from "./components/marketplace-custom-callout";
 import { MarketplaceFooter } from "./components/marketplace-footer";
 import { MarketplaceHeader } from "./components/marketplace-header";
 import { MarketplaceToolbar } from "./components/marketplace-toolbar";
@@ -72,6 +73,7 @@ export const MarketplaceList = () => {
           onNext={() => updateParams({ page: String(page + 1) })}
           onPrev={() => updateParams({ page: String(page - 1) })}
         />
+        <MarketplaceCustomCallout />
       </Container>
     </div>
   );

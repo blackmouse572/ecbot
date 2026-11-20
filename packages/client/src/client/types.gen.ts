@@ -6070,6 +6070,10 @@ export type ToolListResponseDto = {
         [key: string]: unknown;
     };
     discoveryAt?: string;
+    /**
+     * How many agents have this tool turned on. Only the workspace list fills it.
+     */
+    chatbotCount?: number;
 };
 
 export type ToolTestResponseDto = {

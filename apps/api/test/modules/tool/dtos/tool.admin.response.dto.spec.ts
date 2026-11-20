@@ -71,10 +71,16 @@ describe('ToolAdminListResponseDto', () => {
                 httpUrl: 'https://api.shop.vn/v1/orders?token=url-secret',
                 mcpServerUrl:
                     'https://mcp.composio.dev/server/abc?user_id=u-42',
+                chatbotCount: 3,
             },
         ],
         { excludeExtraneousValues: true }
     );
+
+    // The admin list reads no agent counts, so it does not offer the field.
+    it('has no agent count', () => {
+        expect(dto).not.toHaveProperty('chatbotCount');
+    });
 
     it('keeps header values away from admins', () => {
         expect(dto).not.toHaveProperty('httpHeaders');

@@ -2905,7 +2905,7 @@
         "kind": "Loại",
         "name": "Tên",
         "status": "Trạng thái",
-        "createdAt": "Ngày tạo"
+        "inUse": "Đang dùng"
       },
       "filters": {
         "kind": "Loại",
@@ -2927,7 +2927,14 @@
           "ECCHO": "Ecbot"
         }
       },
-      "noRecordsTitle": "Chưa có công cụ nào"
+      "noRecordsTitle": "Chưa có công cụ nào",
+      "description": "Việc agent làm được trong ứng dụng khác. Dùng chung cho mọi agent trong workspace.",
+      "usedBy_other": "Dùng ở {{count}} agent",
+      "notUsed": "Chưa dùng",
+      "source": {
+        "ready": "Kết nối sẵn",
+        "custom": "Tự cấu hình"
+      }
     },
     "empty": {
       "title": "Chưa có công cụ nào",
@@ -3110,12 +3117,12 @@
     },
     "marketplace": {
       "title": "Kho công cụ",
-      "browse": "Khám phá các toolkit được lưu trữ và cài đặt dưới dạng công cụ MCP.",
+      "browse": "Chọn ứng dụng shop đang dùng. Đăng nhập một lần, mọi agent trong workspace đều dùng được.",
       "installButton": "Cài đặt",
       "installingToast": "Đang chuyển hướng đến nhà cung cấp…",
       "installSuccessToast": "Đã cài đặt công cụ.",
       "installErrorToast": "Cài đặt thất bại.",
-      "searchPlaceholder": "Tìm toolkit…",
+      "searchPlaceholder": "Tìm ứng dụng…",
       "categoryAll": "Tất cả danh mục",
       "noResults": "Không tìm thấy toolkit nào.",
       "pagination": "Trang {{page}} / {{totalPage}}",
@@ -3147,6 +3154,10 @@
         "error": "Cài đặt thất bại.",
         "backLink": "Quay lại kho công cụ",
         "noPendingInstall": "Không tìm thấy lượt cài đặt nào đang chờ trong phiên trình duyệt này."
+      },
+      "custom": {
+        "message": "Không thấy ứng dụng cần dùng? Lập trình viên có thể tự cấu hình bằng HTTP API hoặc máy chủ MCP.",
+        "action": "Tự cấu hình"
       }
     },
     "mcp": {
@@ -3201,6 +3212,17 @@
       "actionsTitle": "Action",
       "enableSuccess": "Đã thêm công cụ.",
       "enableError": "Không thể thêm công cụ."
+    },
+    "addMenu": {
+      "button": "Thêm",
+      "store": "Chọn từ kho ứng dụng",
+      "customLabel": "Tự cấu hình (dành cho lập trình viên)",
+      "http": "Gọi HTTP API",
+      "mcp": "Kết nối máy chủ MCP"
+    },
+    "popular": {
+      "title": "Phổ biến với shop",
+      "seeAll": "Xem tất cả"
     }
   },
   "channels": {

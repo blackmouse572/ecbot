@@ -521,4 +521,37 @@ describe('ToolService', () => {
             jest.useRealTimers();
         });
     });
+
+    // Agent v2 tools page: each tool shows how many agents use it.
+    describe('agent counts', () => {
+        it('reads the counts for a page of tools in one query', async () => {
+            const counts = new Map([['t-1', 2]]);
+            mockChatbotTool.countChatbotsByTools = jest
+                .fn()
+                .mockResolvedValue(counts);
+
+            expect(await svc.countChatbotsByTools(['t-1', 't-2'])).toBe(counts);
+            expect(mockChatbotTool.countChatbotsByTools).toHaveBeenCalledWith([
+                't-1',
+                't-2',
+            ]);
+        });
+
+        it('puts each count on its tool, zero when no agent uses it', () => {
+            const tools = [
+                Object.assign(new ToolEntity(), { id: 't-1', name: 'A' }),
+                Object.assign(new ToolEntity(), { id: 't-2', name: 'B' }),
+            ];
+
+            const list = svc.mapList(tools, new Map([['t-1', 2]]));
+
+            expect(list.map(tool => tool.chatbotCount)).toEqual([2, 0]);
+        });
+
+        it('leaves the count out when none was read', () => {
+            const tools = [Object.assign(new ToolEntity(), { id: 't-1' })];
+
+            expect(svc.mapList(tools)[0].chatbotCount).toBeUndefined();
+        });
+    });
 });

@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { ToolsListTable } from "./components/tools-list-table";
+import { ToolsPopularSection } from "./components/tools-popular-section";
 
 export const ToolsList = () => {
   const { t } = useTranslation();
@@ -11,6 +12,7 @@ export const ToolsList = () => {
         <title>{t("tools.title")} - Ecbot</title>
       </Helmet>
       <ToolsListTable />
+      <ToolsPopularSection />
     </div>
   );
 };

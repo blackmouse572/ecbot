@@ -54,6 +54,14 @@ export const ToolTypePicker = ({
           showMarketplace ? "sm:grid-cols-3" : "sm:grid-cols-2",
         )}
       >
+        {showMarketplace && (
+          <PickerCard
+            icon={<Globe />}
+            title={t("tools.new.picker.marketplace.title")}
+            description={t("tools.new.picker.marketplace.description")}
+            onClick={() => onSelect("marketplace")}
+          />
+        )}
         <PickerCard
           icon={<SquareBlueSolid />}
           title={t("tools.new.picker.http.title")}
@@ -66,14 +74,6 @@ export const ToolTypePicker = ({
           description={t("tools.new.picker.mcp.description")}
           onClick={() => onSelect("mcp")}
         />
-        {showMarketplace && (
-          <PickerCard
-            icon={<Globe />}
-            title={t("tools.new.picker.marketplace.title")}
-            description={t("tools.new.picker.marketplace.description")}
-            onClick={() => onSelect("marketplace")}
-          />
-        )}
       </div>
     </div>
   );

@@ -187,10 +187,26 @@ export class ToolService {
         });
     }
 
-    mapList(tools: ToolEntity[]): ToolListResponseDto[] {
-        return plainToInstance(ToolListResponseDto, tools, {
+    /** How many live agents have each tool turned on. */
+    countChatbotsByTools(toolIds: string[]): Promise<Map<string, number>> {
+        return this.chatbotToolRepo.countChatbotsByTools(toolIds);
+    }
+
+    mapList(
+        tools: ToolEntity[],
+        chatbotCounts?: Map<string, number>
+    ): ToolListResponseDto[] {
+        const list = plainToInstance(ToolListResponseDto, tools, {
             excludeExtraneousValues: true,
         });
+
+        if (chatbotCounts) {
+            for (const tool of list) {
+                tool.chatbotCount = chatbotCounts.get(tool.id) ?? 0;
+            }
+        }
+
+        return list;
     }
 
     mapOne(tool: ToolEntity): ToolResponseDto {

@@ -57,6 +57,32 @@ export class ChatbotToolRepository extends EntityRepository<ChatbotToolEntity> {
         return rows.map(row => row.chatbot.id);
     }
 
+    /** Live agents with the tool turned on, keyed by tool id. */
+    async countChatbotsByTools(
+        toolIds: string[]
+    ): Promise<Map<string, number>> {
+        if (toolIds.length === 0) return new Map();
+
+        const rows: { id: string; chatbot_count: string }[] = await this.em
+            .getConnection()
+            .execute(
+                `
+                SELECT link.tool_id AS id,
+                       COUNT(DISTINCT link.chatbot_id) AS chatbot_count
+                FROM chatbot_tools link
+                JOIN chatbots ON chatbots.id = link.chatbot_id
+                WHERE link.tool_id IN (?)
+                  AND link.enabled
+                  AND NOT link.deleted
+                  AND chatbots.deleted_at IS NULL
+                GROUP BY link.tool_id
+                `,
+                [toolIds]
+            );
+
+        return new Map(rows.map(row => [row.id, Number(row.chatbot_count)]));
+    }
+
     async findOneByChatbotAndTool(
         chatbotId: string,
         toolId: string
