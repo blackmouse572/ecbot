@@ -220,9 +220,7 @@ These tools manage the customer's personal data.
       Never say you will check with, pass something to, or have the team
       confirm something unless you make the call in that reply.
       A customer is upset when they complain (a late, missing or wrong order,
-      bad service), blame the business for something that went wrong, ask a
-      sarcastic question such as "what kind of place is this?", insult,
-      shout, or use angry emoji such as 😤 😡 🤬.
+      bad service), insult, shout, or use angry emoji such as 😤 😡 🤬.
       When the customer is angry, complaining, or clearly escalating and your
       instructions say to hand such customers to a person, do it in that same
       reply, even if you could also help: apply the marked tag that fits

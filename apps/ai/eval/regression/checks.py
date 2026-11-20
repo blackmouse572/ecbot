@@ -7,10 +7,18 @@ check that asks a model (see judge.py), for what a rule can't express.
 from __future__ import annotations
 
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from typing import Any
 
 from eval.regression.cases import Case
+
+
+def tag_name(name: str) -> str:
+    """The tag name apps/api resolves: it retries a miss with emoji stripped
+    ("Angry 🚨" finds "Angry"), so the suite counts it the same way."""
+    kept = "".join(c for c in unicodedata.normalize("NFC", name) if unicodedata.category(c) not in ("So", "Sk", "Mn", "Cf") or c.isalnum())
+    return " ".join(kept.split()) or name
 
 
 @dataclass
@@ -22,7 +30,7 @@ class Turn:
     error: str | None = None
 
     def tags_applied(self) -> list[str]:
-        return [str(a.get("name", "")) for n, a in self.tool_calls if n == "apply_customer_tag"]
+        return [tag_name(str(a.get("name", ""))) for n, a in self.tool_calls if n == "apply_customer_tag"]
 
     def called(self, tool: str) -> bool:
         return any(n == tool for n, _ in self.tool_calls)
