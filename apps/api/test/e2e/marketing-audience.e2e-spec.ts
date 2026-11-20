@@ -309,6 +309,66 @@ describe('E2E — marketing audiences', () => {
         expect(big.body.data.count).toBe(1); // Tuan
     });
 
+    it('matches the opposite of a condition', async () => {
+        const count = async (condition: object) =>
+            (await preview(all(condition))).body.data;
+
+        // Minh on Zalo, Vy on Instagram; Khanh is on Facebook too.
+        expect(
+            await count({
+                field: 'CHANNEL',
+                operator: 'NOT_IN',
+                values: [A.FACEBOOK_PAGE],
+            })
+        ).toMatchObject({ count: 2, excluded: { total: 0 } });
+        // Everyone but Lan: Minh, Khanh, Tuan, Vy; Hoa, Mai, Hung left out.
+        expect(
+            await count({
+                field: 'LABEL',
+                operator: 'NOT_IN',
+                values: [vipTagId],
+            })
+        ).toMatchObject({ count: 4, excluded: { total: 3 } });
+        // Lan and Minh; Hung is upset.
+        const notBought = await preview(
+            all({
+                field: 'STAGE',
+                operator: 'NOT_IN',
+                values: [S.BOUGHT_ONCE, S.BOUGHT_REPEAT],
+            })
+        );
+        expect(notBought.body.data.count).toBe(2);
+        expect(reasons(notBought)).toEqual({ HOSTILE: 1 });
+        // No orders: Lan and Minh; Hung is upset.
+        const noOrders = await preview(
+            all({ field: 'ORDER_COUNT', operator: 'AT_MOST', number: 0 })
+        );
+        expect(noOrders.body.data.count).toBe(2);
+        expect(reasons(noOrders)).toEqual({ HOSTILE: 1 });
+        // Minh never wrote after arriving 60 days ago; Mai is paused.
+        const quiet = await preview(
+            all({
+                field: 'LAST_MESSAGE',
+                operator: 'OLDER_THAN_DAYS',
+                number: 30,
+            })
+        );
+        expect(quiet.body.data.count).toBe(1);
+        expect(reasons(quiet)).toEqual({ PAUSED: 1 });
+    });
+
+    it('finds who asked about a product group', async () => {
+        const res = await preview(
+            all({
+                field: 'PRODUCT_GROUP_ASKED',
+                operator: 'IN',
+                values: [serumId],
+            })
+        );
+        expect(res.body.data.count).toBe(2); // Lan, Tuan
+        expect(res.body.data.excluded.total).toBe(0);
+    });
+
     it('lists the customers it would reach, page by page', async () => {
         const res = await http(ctx.app)
             .post(`${url()}/marketing/audiences/customers?perPage=1`)

@@ -14,7 +14,7 @@ const GROUP = '0193a5d2-7c1e-7b3a-9f1e-2b8c4d6e8f10';
 
 describe('MarketingAudienceService', () => {
     const now = new Date('2026-11-20T00:00:00.000Z');
-    const repository = { preview: jest.fn(), reachedIds: jest.fn() };
+    const repository = { preview: jest.fn(), reached: jest.fn() };
     const service = new MarketingAudienceService(repository as any);
 
     beforeEach(() => {
@@ -29,7 +29,7 @@ describe('MarketingAudienceService', () => {
                 { platform: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE, count: 40 },
             ],
         });
-        repository.reachedIds.mockResolvedValue(['c1', 'c2']);
+        repository.reached.mockResolvedValue({ ids: ['c1', 'c2'], total: 48 });
     });
 
     it('counts who it reaches and every exclusion reason, in order', async () => {
@@ -72,7 +72,7 @@ describe('MarketingAudienceService', () => {
         await expect(
             service.reached('ws1', { preset: T.NEW }, 20, 40, now)
         ).resolves.toEqual({ ids: ['c1', 'c2'], total: 48 });
-        expect(repository.reachedIds).toHaveBeenCalledWith(
+        expect(repository.reached).toHaveBeenCalledWith(
             'ws1',
             { preset: T.NEW },
             now,

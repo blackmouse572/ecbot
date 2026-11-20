@@ -188,7 +188,7 @@ const picked = (audience: IMarketingAudience): IMarketingSql => {
     const { match, deferred } = audienceSql(audience);
     const sql = `${LIVE},
     picked AS (
-        SELECT l.id, l.last_inbound_at,
+        SELECT l.id, ${LAST_MESSAGE} AS last_message,
                CASE
                    WHEN l.permission = '${P.STOPPED}' THEN '${X.STOPPED}'
                    WHEN l.hostile THEN '${X.HOSTILE}'
@@ -254,23 +254,34 @@ export class MarketingAudienceRepository extends DatabaseRepository<CustomerEnti
         };
     }
 
-    /** One page of reached customers, latest message first. */
-    async reachedIds(
+    /** One page of reached customers, latest message first, and their total. */
+    async reached(
         workspaceId: string,
         audience: IMarketingAudience,
         now: Date,
         limit: number,
         offset: number
-    ): Promise<string[]> {
+    ): Promise<{ ids: string[]; total: number }> {
+        const window = [workspaceId, now.toISOString()];
         const p = picked(audience);
-        const rows = await this.run(
-            `WITH ${WINDOW}, ${p.sql}
-            SELECT id FROM picked
-            WHERE reason IS NULL
-            ORDER BY last_inbound_at DESC NULLS LAST, id
-            LIMIT ? OFFSET ?`,
-            [workspaceId, now.toISOString(), ...p.params, limit, offset]
-        );
-        return rows.map(row => row.id as string);
+        const [rows, [count]] = await Promise.all([
+            this.run(
+                `WITH ${WINDOW}, ${p.sql}
+                SELECT id FROM picked
+                WHERE reason IS NULL
+                ORDER BY last_message DESC, id
+                LIMIT ? OFFSET ?`,
+                [...window, ...p.params, limit, offset]
+            ),
+            this.run(
+                `WITH ${WINDOW}, ${p.sql}
+                SELECT COUNT(*) AS n FROM picked WHERE reason IS NULL`,
+                [...window, ...p.params]
+            ),
+        ]);
+        return {
+            ids: rows.map(row => row.id as string),
+            total: num(count?.n),
+        };
     }
 }

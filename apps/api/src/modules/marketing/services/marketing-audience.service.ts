@@ -80,19 +80,13 @@ export class MarketingAudienceService {
         offset: number,
         now: Date = new Date()
     ): Promise<{ ids: string[]; total: number }> {
-        const audience = this.toAudience(dto);
-        const [ids, { reasons }] = await Promise.all([
-            this.repository.reachedIds(
-                workspaceId,
-                audience,
-                now,
-                limit,
-                offset
-            ),
-            this.repository.preview(workspaceId, audience, now),
-        ]);
-        const total = reasons.find(r => r.reason === null)?.count ?? 0;
-        return { ids, total };
+        return this.repository.reached(
+            workspaceId,
+            this.toAudience(dto),
+            now,
+            limit,
+            offset
+        );
     }
 
     /** A preset, or conditions that each fit their field; anything else is a 400. */
