@@ -9,6 +9,10 @@ from unittest.mock import patch
 import pytest
 from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
 from langchain_core.messages import AIMessage
+from pydantic import SecretStr
+
+from eccho_ai.core.variables import AppVars
+from eccho_ai.llm.agents.agent import get_shared_agent
 
 from eval.regression.cases import STAFF_HANDLED_NOTE, load_cases, select
 from eval.regression.checks import Turn, run_rule, validate
@@ -132,11 +136,18 @@ async def test_a_sample_runs_through_the_production_agent(cases):
     _ScriptedModel.seen = []
     model = _ScriptedModel(messages=script)
     harness.install_stubs()
+    # The shared graph's placeholder client needs a key to build (CI has none);
+    # it is never called, the middleware swaps in the scripted model.
+    get_shared_agent.cache_clear()
     try:
-        with patch("eccho_ai.llm.agents.middleware.build_chat_model", return_value=model):
+        with (
+            patch.object(AppVars, "OPENROUTER_API_KEY", SecretStr("test-key")),
+            patch("eccho_ai.llm.agents.middleware.build_chat_model", return_value=model),
+        ):
             turn = await harness.run_sample(case, Compiled("KNOWLEDGE-MARKER", ""), "deepseek/x", "<agent>{general_knowledge}</agent>")
     finally:
         patch.stopall()
+        get_shared_agent.cache_clear()
     assert turn.error is None
     assert turn.tool_calls == [("apply_customer_tag", {"name": "Angry"})]
     assert turn.reply == "So sorry, I've passed this to our team."
