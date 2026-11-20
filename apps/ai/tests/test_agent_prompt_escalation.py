@@ -50,6 +50,16 @@ def test_upset_customer_is_described_by_its_signs():
     assert "in that same reply, even if you could also help" in block
 
 
+def test_blame_and_sarcasm_count_as_upset_and_the_handover_reply_asks_nothing():
+    # #558: a dental agent pitched the clinic to "What kind of clinic is
+    # this?" and did not hand over; others handed over, then asked for a phone
+    # or order number in the same reply.
+    block = " ".join(_escalation_block().split())
+    assert "blame the business for something that went wrong" in block
+    assert 'sarcastic question such as "what kind of place is this?"' in block
+    assert "do not promote the business or ask for order numbers, phone numbers or photos" in block
+
+
 def test_what_staff_handled_is_not_handed_over_again():
     # Staff confirmed a handed-over order and switched the bot back on; when
     # the customer answered the staff's question the bot handed the same

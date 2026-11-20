@@ -56,11 +56,8 @@ describe("compilePrompt", () => {
 
   // #191: agents apologised and asked for the order number instead of
   // handing an upset customer over.
-  // Reply eval 2026-11-17: agents handed over, then asked for a phone or order
-  // number in the same reply, and pitched the clinic to a sarcastic "what kind
-  // of clinic is this?". The upset cue stays general, not tied to one business type.
-  it("hands an upset customer over without asking for details or promoting the business", () => {
-    const first = 'A customer who blames the business for something that went wrong, or asks a sarcastic question such as "what kind of place is this?", is upset. For an upset customer, hand over in your first reply: apologise, say a staff member will take it from here, and do not promote the business or ask for order numbers, phone numbers or other details in that reply.';
+  it("hands an upset customer over before asking for details", () => {
+    const first = "For an upset customer, hand over in your first reply, before asking for order details.";
     expect(compilePrompt({ ...sample("beauty", "en"), handoffWhen: ["upset"] })).toContain(
       `Hand the conversation to a person when the customer is upset or complains. ${first}`,
     );

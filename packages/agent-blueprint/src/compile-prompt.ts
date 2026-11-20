@@ -131,7 +131,7 @@ export function compilePrompt(stored: AgentProfile, options: CompileOptions = {}
     CALLBACK_FLOW,
     profile.handoffWhen.length ? `Hand the conversation to a person when ${list(handoffWhen.map((h) => promptOf(HANDOFF_WHEN, h)), "or")}.${
       // #191: without this, agents apologised and asked for the order number first.
-      profile.handoffWhen.some((h) => h === "upset" || h === "complaint") ? " A customer who blames the business for something that went wrong, or asks a sarcastic question such as \"what kind of place is this?\", is upset. For an upset customer, hand over in your first reply: apologise, say a staff member will take it from here, and do not promote the business or ask for order numbers, phone numbers or other details in that reply." : ""
+      profile.handoffWhen.some((h) => h === "upset" || h === "complaint") ? " For an upset customer, hand over in your first reply, before asking for order details." : ""
     }` : "",
     type.mode === "detailed" ? "Explain step by step and check that the customer understood before moving on." : "",
   ]));
