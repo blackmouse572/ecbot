@@ -6,12 +6,10 @@ tsc into eval/.cache and run with node (compile_profile.cjs).
 """
 from __future__ import annotations
 
-import io
 import json
 import os
 import shutil
 import subprocess
-import tarfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -73,9 +71,9 @@ def ref_arm(ref: str) -> Arm:
     dest = CACHE / "blueprint" / sha
     shutil.rmtree(dest, ignore_errors=True)
     dest.mkdir(parents=True)
+    # The archive is our own repo's history: tar unpacks it as git wrote it.
     archive = _git("archive", sha, "packages/agent-blueprint/src", "packages/agent-blueprint/locales")
-    with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
-        tar.extractall(dest, filter="data")
+    subprocess.run(["tar", "-x", "-C", str(dest)], input=archive, check=True)
     pkg = dest / "packages" / "agent-blueprint"
     template = _git("show", f"{sha}:{AGENT_MD}").decode("utf-8")
     return Arm(f"{ref} ({sha})", template, _build(pkg))
