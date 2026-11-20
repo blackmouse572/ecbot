@@ -1,26 +1,51 @@
 import { migrateProfile } from "./migrate-profile";
 import { getBusinessType } from "./business-types";
 import {
-  ADDRESS_STYLE, AFTER_HOURS, CALLBACK_FLOW, COLLECT, FACTS, FORMALITY, GOALS, HANDOFF_WHEN, HOURS_NOT_PROVIDED,
-  NO_FACTS_PROVIDED, PERSONALITY, PLACED_ORDERS, REPLY_LENGTH, RULES, UNSURE, promptOf, type FactId,
+  ADDRESS_STYLE,
+  AFTER_HOURS,
+  CALLBACK_FLOW,
+  COLLECT,
+  FACTS,
+  FORMALITY,
+  GOALS,
+  HANDOFF_WHEN,
+  HOURS_NOT_PROVIDED,
+  NO_FACTS_PROVIDED,
+  PERSONALITY,
+  PLACED_ORDERS,
+  REPLY_LENGTH,
+  RULES,
+  UNSURE,
+  promptOf,
+  type FactId,
 } from "./libraries";
 import { describeOpeningHours, hasOpeningHours } from "./opening-hours";
 import { PRESETS } from "./presets";
 import type { AgentProfile } from "./profile";
 
-export type ToolGuide = { name: string; answers: { question: string; answer: string }[] };
-export type CompileOptions = { toolGuides?: ToolGuide[]; extraInstructions?: string };
+export type ToolGuide = {
+  name: string;
+  answers: { question: string; answer: string }[];
+};
+export type CompileOptions = {
+  toolGuides?: ToolGuide[];
+  extraInstructions?: string;
+};
 
 // User text is data, never structure: flatten newlines and strip heading markers.
 function plain(text: string): string {
-  return text.replace(/^\s*#+\s*/gm, "").replace(/\s*\n+\s*/g, " ").trim();
+  return text
+    .replace(/^\s*#+\s*/gm, "")
+    .replace(/\s*\n+\s*/g, " ")
+    .trim();
 }
 
 // Empty for a Vietnamese agent with no style, or "custom" without words
 // (the schema rejects that, but stored profiles are not re-validated here).
 function addressStyle(profile: AgentProfile): string {
   if (profile.primaryLanguage !== "vi" || !profile.addressStyle) return "";
-  if (profile.addressStyle !== "custom") return promptOf(ADDRESS_STYLE, profile.addressStyle);
+  if (profile.addressStyle !== "custom")
+    return promptOf(ADDRESS_STYLE, profile.addressStyle);
   const words = profile.customAddressStyle;
   if (!words) return "";
   return `In every Vietnamese reply, including the first, refer to yourself as "${plain(words.self)}" and address them as "${plain(words.customer)}".`;
@@ -38,7 +63,8 @@ function list(items: string[], conjunction = "and"): string {
 // An item like "date and time" would blur where items split, so such lists
 // use semicolons.
 function unambiguousList(items: string[]): string {
-  if (items.length <= 1 || !items.some((item) => item.includes(" and "))) return list(items);
+  if (items.length <= 1 || !items.some((item) => item.includes(" and ")))
+    return list(items);
   return `${items.slice(0, -1).join("; ")}; and ${items[items.length - 1]}`;
 }
 
@@ -56,17 +82,30 @@ function section(title: string, body: string[]): string {
 // places the order, ahead of the no-tool branch.
 const PLACE_WITH_TOOL = "place the order with the connected order tool.";
 
-function goalPrompt(goal: AgentProfile["goals"][number], profile: AgentProfile): string {
+function goalPrompt(
+  goal: AgentProfile["goals"][number],
+  profile: AgentProfile,
+): string {
   const prompt = promptOf(GOALS, goal);
-  const after = goal === "take_orders" && profile.placedOrders ? promptOf(PLACED_ORDERS, profile.placedOrders) : "";
-  return after ? prompt.replace(PLACE_WITH_TOOL, `${PLACE_WITH_TOOL} ${after}`) : prompt;
+  const after =
+    goal === "take_orders" && profile.placedOrders
+      ? promptOf(PLACED_ORDERS, profile.placedOrders)
+      : "";
+  return after
+    ? prompt.replace(PLACE_WITH_TOOL, `${PLACE_WITH_TOOL} ${after}`)
+    : prompt;
 }
 
-export function compilePrompt(stored: AgentProfile, options: CompileOptions = {}): string {
+export function compilePrompt(
+  stored: AgentProfile,
+  options: CompileOptions = {},
+): string {
   const profile = migrateProfile(stored);
   const type = getBusinessType(profile.businessType);
   const agent = plain(profile.agentName) || "the assistant";
-  const business = plain(profile.businessName) || (type.personal ? "the owner" : "the business");
+  const business =
+    plain(profile.businessName) ||
+    (type.personal ? "the owner" : "the business");
   const audience = type.personal ? "the owner" : "customers";
 
   const header = `# ${agent} · ${business}\n━━━━━━━━━━━━━━━━`;
@@ -98,53 +137,88 @@ export function compilePrompt(stored: AgentProfile, options: CompileOptions = {}
   const personality = profile.personality.map((p) => promptOf(PERSONALITY, p));
   const essence = section("Essence", [
     `You are ${agent}, the ${list(personality) || "helpful"} voice of ${business}. You speak to ${audience} as a real member of the team would: specific, honest and kind.`,
-    profile.difference.trim() ? `What makes ${business} different: ${plain(profile.difference)}` : "",
+    profile.difference.trim()
+      ? `What makes ${business} different: ${plain(profile.difference)}`
+      : "",
     `Tone: ${promptOf(FORMALITY, profile.formality)}`,
   ]);
 
   // Structured hours are the source of truth (#289); the free-text answer
   // then only adds notes such as "kitchen closes 30 minutes earlier".
-  const weeklyHours = !type.personal && hasOpeningHours(profile.openingHours) ? profile.openingHours : undefined;
+  const weeklyHours =
+    !type.personal && hasOpeningHours(profile.openingHours)
+      ? profile.openingHours
+      : undefined;
   const allowedFacts = PRESETS[profile.businessType].facts;
   const facts = [
     weeklyHours ? `Opening hours: ${describeOpeningHours(weeklyHours)}` : "",
     ...allowedFacts
       .map((id: FactId) => [id, profile.facts[id]?.trim()] as const)
       .filter(([, v]) => !!v)
-      .map(([id, v]) => `${id === "opening_hours" && weeklyHours ? "Opening hours notes" : promptOf(FACTS, id)}: ${plain(v as string)}`),
+      .map(
+        ([id, v]) =>
+          `${id === "opening_hours" && weeklyHours ? "Opening hours notes" : promptOf(FACTS, id)}: ${plain(v as string)}`,
+      ),
   ].filter(Boolean);
-  const knowledge = section("Knowledge", facts.length
-    ? facts.map((f, i) => (type.mode === "detailed" ? `${i + 1}. ${f}` : `- ${f}`))
-    : [NO_FACTS_PROVIDED]);
+  const knowledge = section(
+    "Knowledge",
+    facts.length
+      ? facts.map((f, i) =>
+          type.mode === "detailed" ? `${i + 1}. ${f}` : `- ${f}`,
+        )
+      : [NO_FACTS_PROVIDED],
+  );
 
   const collect = [
     ...profile.collect.map((c) => promptOf(COLLECT, c)),
     ...(profile.customCollect ?? []).map(plain).filter(Boolean),
   ];
-  const process = type.personal ? "" : section("Process", numbered([
-    "Understand what the customer needs. Ask at most one question at a time.",
-    collect.length ? `Before confirming anything, collect: ${unambiguousList(collect)}.` : "",
-    // Scoped to write actions: an open "wait for a yes before you confirm"
-    // made agents ask for a yes before every product search.
-    "If you have a tool that looks up products, prices, stock or orders, call it before you answer or recommend, without asking first, and share the product link when the result includes one.",
-    "Before you create, change or cancel an order, booking or payment, read the key details back and wait for a clear yes.",
-    CALLBACK_FLOW,
-    profile.handoffWhen.length ? `Hand the conversation to a person when ${list(handoffWhen.map((h) => promptOf(HANDOFF_WHEN, h)), "or")}.${
-      // #191: without this, agents apologised and asked for the order number first.
-      profile.handoffWhen.some((h) => h === "upset" || h === "complaint") ? " For an upset customer, hand over in your first reply, before asking for order details." : ""
-    }` : "",
-    type.mode === "detailed" ? "Explain step by step and check that the customer understood before moving on." : "",
-  ]));
+  const process = type.personal
+    ? ""
+    : section(
+        "Process",
+        numbered([
+          "Understand what the customer needs. Ask at most one question at a time.",
+          collect.length
+            ? `Before confirming anything, collect: ${unambiguousList(collect)}.`
+            : "",
+          // Scoped to write actions: an open "wait for a yes before you confirm"
+          // made agents ask for a yes before every product search.
+          "If you have a tool that looks up products, prices, stock or orders, call it before you answer or recommend, without asking first, and share the product link when the result includes one.",
+          "Before you create, change or cancel an order, booking or payment, read the key details back and wait for a clear yes.",
+          CALLBACK_FLOW,
+          profile.handoffWhen.length
+            ? `Hand the conversation to a person when ${list(
+                handoffWhen.map((h) => promptOf(HANDOFF_WHEN, h)),
+                "or",
+              )}.${
+                // #191: without this, agents apologised and asked for the order number first.
+                profile.handoffWhen.some(
+                  (h) => h === "upset" || h === "complaint",
+                )
+                  ? ' A customer who blames the business for something that went wrong, or asks a sarcastic question such as "what kind of place is this?", is upset. For an upset customer, hand over in your first reply: apologise, say a staff member will take it from here, and do not promote the business or ask for order numbers, phone numbers or other details in that reply.'
+                  : ""
+              }`
+            : "",
+          type.mode === "detailed"
+            ? "Explain step by step and check that the customer understood before moving on."
+            : "",
+        ]),
+      );
 
   const rules = section("Rules", [
     ...profile.rules.map((r, i) => `${i + 1}. ${promptOf(RULES, r)}`),
     `${profile.rules.length + 1}. When you are not sure: ${promptOf(UNSURE, profile.unsure)}`,
   ]);
 
-  const hoursKnown = !!weeklyHours || (allowedFacts.includes("opening_hours") && !!profile.facts.opening_hours?.trim());
-  const afterHours = profile.afterHours === "share_hours" && !hoursKnown
-    ? HOURS_NOT_PROVIDED
-    : promptOf(AFTER_HOURS, profile.afterHours);
+  const hoursKnown =
+    !!weeklyHours ||
+    (allowedFacts.includes("opening_hours") &&
+      !!profile.facts.opening_hours?.trim());
+  const afterHours =
+    profile.afterHours === "share_hours" && !hoursKnown
+      ? HOURS_NOT_PROVIDED
+      : promptOf(AFTER_HOURS, profile.afterHours);
   const interaction = section("Interaction protocol", [
     `- ${promptOf(REPLY_LENGTH, profile.replyLength)}`,
     `- ${profile.emoji ? "Use an emoji now and then when it fits the mood." : "Do not use emoji."}`,
@@ -153,16 +227,32 @@ export function compilePrompt(stored: AgentProfile, options: CompileOptions = {}
     type.personal ? "" : `- Outside opening hours: ${afterHours}`,
   ]);
 
-  const tools = section("Tools", (options.toolGuides ?? []).flatMap((t) => [
-    `### ${plain(t.name)}`,
-    ...t.answers.filter((a) => a.answer.trim()).map((a) => `- ${a.question} ${plain(a.answer)}`),
-  ]));
+  const tools = section(
+    "Tools",
+    (options.toolGuides ?? []).flatMap((t) => [
+      `### ${plain(t.name)}`,
+      ...t.answers
+        .filter((a) => a.answer.trim())
+        .map((a) => `- ${a.question} ${plain(a.answer)}`),
+    ]),
+  );
 
   const extra = options.extraInstructions?.trim()
     ? `## Extra instructions\n${options.extraInstructions.trim()}`
     : "";
 
-  return [header, requirements, initialization, essence, knowledge, process, rules, interaction, tools, extra]
+  return [
+    header,
+    requirements,
+    initialization,
+    essence,
+    knowledge,
+    process,
+    rules,
+    interaction,
+    tools,
+    extra,
+  ]
     .filter(Boolean)
     .join("\n\n");
 }
