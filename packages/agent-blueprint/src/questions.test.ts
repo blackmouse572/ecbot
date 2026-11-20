@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BUSINESS_TYPES } from "./business-types";
 import { createProfile } from "./profile";
-import { BASIC_GROUPS, allTranslationKeys, buildQuestionGroups, readAnswer, writeAnswer } from "./questions";
+import { allTranslationKeys, buildQuestionGroups, newAgentQuestionGroups, readAnswer, writeAnswer } from "./questions";
 
 const ids = (p: ReturnType<typeof createProfile>) =>
   buildQuestionGroups(p).flatMap((g) => g.questions.map((q) => q.id));
@@ -53,7 +53,6 @@ describe("buildQuestionGroups", () => {
   it("asks the basics first, then the groups that refine them", () => {
     expect(buildQuestionGroups(createProfile("beauty", "vi")).map((g) => g.id))
       .toEqual(["identity", "facts", "essence", "moreFacts", "process", "rules", "interaction"]);
-    expect(BASIC_GROUPS).toEqual(["identity", "facts"]);
   });
 
   it("keeps identity to the type, the names, the channels and the goals", () => {
@@ -186,5 +185,38 @@ describe("allTranslationKeys", () => {
       }
     }
     expect([...missing]).toEqual([]);
+  });
+});
+
+// Agent v2: a new agent is asked only what the owner alone knows. The
+// full-vs-short reply test (2026-11-17) found replies as good as the full
+// builder's once every fact is answered; behaviour keeps the preset.
+describe("newAgentQuestionGroups", () => {
+  const asked = (p: ReturnType<typeof createProfile>) =>
+    newAgentQuestionGroups(p).map((g) => [g.id, g.questions.map((q) => q.id)]);
+
+  it("asks about the business, every fact, then where it replies", () => {
+    expect(asked(createProfile("cosmetics", "vi"))).toEqual([
+      ["identity", ["businessType", "businessName", "agentName", "goals", "difference"]],
+      ["facts", [
+        "facts.skin_types", "facts.authenticity", "openingHours",
+        "facts.shipping_fee", "facts.return_policy", "facts.payment_methods",
+      ]],
+      ["activate", ["channels"]],
+    ]);
+  });
+
+  it("leaves out channels and opening hours for a personal assistant", () => {
+    expect(asked(createProfile("personal_scheduling", "en"))).toEqual([
+      ["identity", ["businessType", "businessName", "agentName", "goals", "difference"]],
+      ["facts", ["facts.working_hours", "facts.priorities"]],
+    ]);
+  });
+
+  it("asks nothing about behaviour", () => {
+    const ids = newAgentQuestionGroups(createProfile("beauty", "vi")).flatMap((g) => g.questions.map((q) => q.id));
+    for (const id of ["greeting", "personality", "formality", "collect", "handoffWhen", "rules", "unsure", "replyLength", "addressStyle", "afterHours"]) {
+      expect(ids).not.toContain(id);
+    }
   });
 });

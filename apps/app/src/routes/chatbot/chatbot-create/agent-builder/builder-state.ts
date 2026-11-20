@@ -1,5 +1,5 @@
 import {
-  BASIC_GROUPS, buildQuestionGroups, createProfile, prefillFromText, readAnswer, writeAnswer,
+  buildQuestionGroups, createProfile, newAgentQuestionGroups, prefillFromText, readAnswer, writeAnswer,
   type AgentProfile, type AgentSuggestion, type Question, type QuestionGroup,
 } from "@repo/agent-blueprint";
 import type { AccountGetDetailResponseDto } from "@repo/client";
@@ -60,8 +60,15 @@ export const initialBuilderState: BuilderState = {
   linkedAccounts: [],
 };
 
-export function steps(profile: AgentProfile): Step[] {
-  return buildQuestionGroups(profile).flatMap((group) => group.questions.map((question) => ({ group, question })));
+/** A new agent is asked the short set (agent v2); reopening one shows every question. */
+export function questionGroups(profile: AgentProfile, everyQuestion = false): QuestionGroup[] {
+  return everyQuestion ? buildQuestionGroups(profile) : newAgentQuestionGroups(profile);
+}
+
+export const showsEveryQuestion = (state: BuilderState) => state.source === "hydrate";
+
+export function steps(profile: AgentProfile, everyQuestion = false): Step[] {
+  return questionGroups(profile, everyQuestion).flatMap((group) => group.questions.map((question) => ({ group, question })));
 }
 
 // #151: most answers are a tap or a short phrase, and several can be skipped.
@@ -74,7 +81,7 @@ export function minutesLeft({ current, total }: { current: number; total: number
 
 export function currentStep(state: BuilderState): Step | null {
   if (!state.profile) return null;
-  const all = steps(state.profile);
+  const all = steps(state.profile, showsEveryQuestion(state));
   if (state.editing) return all.find((s) => s.question.id === state.editing) ?? null;
   return all.find((s) => !state.answered.includes(s.question.id)) ?? null;
 }
@@ -87,19 +94,20 @@ export function isDraftReady(state: BuilderState): boolean {
 }
 
 /** The question after which the builder asks whether to activate: the last
- * basic one (#256). Every question after it has a preset default. */
+ * one a new agent is asked. */
 export function activationAnchor(profile: AgentProfile): string {
-  return steps(profile).filter((s) => BASIC_GROUPS.includes(s.group.id)).at(-1)!.question.id;
+  return steps(profile).at(-1)!.question.id;
 }
 
 /** Whether the ask to activate shows in the thread. Not for a reopened
  * agent, which already went through the builder once. */
 export function asksActivation(state: BuilderState): boolean {
   if (!state.profile || !state.chatbotId || state.source === "hydrate") return false;
-  const anchor = activationAnchor(state.profile);
-  // Every basic answered, since a description can answer the last one first (#256).
-  const basics = steps(state.profile).filter((s) => BASIC_GROUPS.includes(s.group.id));
-  return basics.every((s) => state.answered.includes(s.question.id)) && state.editing !== anchor;
+  // Every question answered, since a description can answer the last one first (#256).
+  return (
+    steps(state.profile).every((s) => state.answered.includes(s.question.id)) &&
+    state.editing !== activationAnchor(state.profile)
+  );
 }
 
 /** The ask is shown and not answered yet: the next question waits. */
@@ -154,7 +162,7 @@ export function builderReducer(state: BuilderState, action: BuilderAction): Buil
         source: "hydrate",
         chatbotId: action.chatbotId,
         finished: action.finished,
-        answered: steps(action.profile).map((s) => s.question.id),
+        answered: steps(action.profile, true).map((s) => s.question.id),
         linkedAccounts: action.accounts ?? [],
       };
     case "answer": {

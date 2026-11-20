@@ -25,11 +25,9 @@ export type Question = {
   multiline?: boolean;
   choices?: { value: string; labelKey: string }[];
 };
-export type GroupId = "identity" | "essence" | "facts" | "moreFacts" | "process" | "rules" | "interaction";
+export type GroupId = "identity" | "essence" | "facts" | "moreFacts" | "process" | "rules" | "interaction" | "activate";
 export type QuestionGroup = { id: GroupId; titleKey: string; questions: Question[] };
 
-/** The groups a working agent needs (#256). Every later question has a preset default. */
-export const BASIC_GROUPS: readonly GroupId[] = ["identity", "facts"];
 // The first preset facts are the ones customers ask about most.
 const KEY_FACT_COUNT = 2;
 
@@ -164,6 +162,27 @@ export function buildQuestionGroups(profile: AgentProfile): QuestionGroup[] {
   return groups.filter((g) => g.questions.length > 0);
 }
 
+/**
+ * What the builder asks a new agent (agent v2): the business, every fact
+ * customers ask about, then where it replies. Everything else keeps its
+ * preset default; reopening the agent shows every question.
+ */
+export function newAgentQuestionGroups(profile: AgentProfile): QuestionGroup[] {
+  const all = buildQuestionGroups(profile);
+  const of = (id: GroupId) => all.find((g) => g.id === id)?.questions ?? [];
+  const isChannels = (question: Question) => question.id === "channels";
+  const groups: QuestionGroup[] = [
+    {
+      id: "identity",
+      titleKey: "agentBuilder.groups.identity",
+      questions: [...of("identity").filter((x) => !isChannels(x)), ...of("essence").filter((x) => x.id === "difference")],
+    },
+    { id: "facts", titleKey: "agentBuilder.groups.facts", questions: [...of("facts"), ...of("moreFacts")] },
+    { id: "activate", titleKey: "agentBuilder.groups.activate", questions: of("identity").filter(isChannels) },
+  ];
+  return groups.filter((g) => g.questions.length > 0);
+}
+
 const COLLECT_IDS = new Set<string>(COLLECT.map((c) => c.id));
 
 /** The collect answer is one list: fixed ids first, then the owner's own labels. */
@@ -222,6 +241,6 @@ export function allTranslationKeys(): string[] {
     if (!t.personal) keys.push(`agentBuilder.examples.${t.id}.businessName`);
   }
   for (const f of FACTS) keys.push(`agentBuilder.facts.${f.id}.title`, `agentBuilder.facts.${f.id}.placeholder`);
-  for (const g of ["identity", "essence", "facts", "moreFacts", "process", "rules", "interaction"]) keys.push(`agentBuilder.groups.${g}`);
+  for (const g of ["identity", "essence", "facts", "moreFacts", "process", "rules", "interaction", "activate"]) keys.push(`agentBuilder.groups.${g}`);
   return keys;
 }

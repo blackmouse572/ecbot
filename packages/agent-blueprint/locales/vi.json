@@ -15,7 +15,7 @@
     "saveFailed": "Chưa lưu được agent. Câu trả lời vẫn được giữ và sẽ thử lại ở câu tiếp theo.",
     "done": "Đã xong. Hãy kích hoạt agent khi bạn thấy hài lòng.",
     "finish": "Kích hoạt agent",
-    "finished": "Agent đã được kích hoạt và sẽ trả lời khách trên mọi kênh được gắn với agent. Bạn có thể trả lời tiếp hoặc sửa bất kỳ câu nào.",
+    "finished": "Agent đã được kích hoạt và sẽ trả lời khách trên mọi kênh được gắn với agent. Bạn có thể sửa bất kỳ câu trả lời nào ở trên.",
     "tryAgent": "Trò chuyện với {{name}}",
     "yourAgent": "agent của bạn",
     "promptTab": "Prompt",
@@ -68,7 +68,14 @@
     "customAddressMissing": "Bạn điền đủ cả hai cách xưng hô nhé.",
     "activateNow": "Kích hoạt ngay",
     "activateLater": "Để sau",
-    "activateAsk": "Agent đã đủ thông tin cơ bản để trả lời khách. Kích hoạt ngay nhé? Các câu còn lại không bắt buộc và đã có sẵn mặc định theo ngành, bạn tinh chỉnh lúc nào cũng được."
+    "activateAsk": "Thử hỏi agent ở bên phải. Khi thấy ổn, kích hoạt để agent bắt đầu trả lời khách nhé?",
+    "defaultsIntro": "Agent đã đủ thông tin để trả lời khách. Cách trò chuyện mình để mặc định theo ngành, bạn đổi lúc nào cũng được ở tab Cách trả lời của agent:",
+    "defaults": {
+      "addressStyle": "Xưng hô",
+      "replyLength": "Độ dài",
+      "handoffWhen": "Chuyển cho bạn khi",
+      "afterHours": "Ngoài giờ"
+    }
   },
   "groups": {
     "identity": "Về doanh nghiệp",
@@ -77,7 +84,8 @@
     "moreFacts": "Thêm thông tin",
     "process": "Quy trình",
     "rules": "Quy tắc",
-    "interaction": "Cách trò chuyện"
+    "interaction": "Cách trò chuyện",
+    "activate": "Kích hoạt"
   },
   "questions": {
     "businessType": {

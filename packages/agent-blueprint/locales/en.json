@@ -15,7 +15,7 @@
     "saveFailed": "Could not save your agent. Your answers are kept, and we will retry on the next answer.",
     "done": "All set. Activate your agent when you are happy with it.",
     "finish": "Activate agent",
-    "finished": "Your agent is active and replies to customers on every channel linked to it. Keep answering, or change any answer at any time.",
+    "finished": "Your agent is active and replies to customers on every channel linked to it. You can change any answer above.",
     "tryAgent": "Talk with {{name}}",
     "yourAgent": "your agent",
     "promptTab": "Prompt",
@@ -68,7 +68,14 @@
     "customAddressMissing": "Fill in both words.",
     "activateNow": "Activate now",
     "activateLater": "Later",
-    "activateAsk": "Your agent has the basics it needs to reply to customers. Activate it now? The remaining questions are optional and already have defaults for your business type, so you can fine-tune them any time."
+    "activateAsk": "Try your agent on the right. Activate it now so it starts replying to customers?",
+    "defaultsIntro": "Your agent has what it needs to reply to customers. How it talks uses the defaults for your business type, and you can change it any time in the agent's How it replies tab:",
+    "defaults": {
+      "addressStyle": "Address",
+      "replyLength": "Reply length",
+      "handoffWhen": "Passes the chat to you when",
+      "afterHours": "Outside opening hours"
+    }
   },
   "groups": {
     "identity": "About your business",
@@ -77,7 +84,8 @@
     "moreFacts": "More details",
     "process": "How it works",
     "rules": "Rules",
-    "interaction": "Conversation style"
+    "interaction": "Conversation style",
+    "activate": "Activate"
   },
   "questions": {
     "businessType": {
