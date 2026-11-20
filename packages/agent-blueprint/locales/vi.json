@@ -323,7 +323,7 @@
     "log_contacts": "Ghi lại liên hệ và lịch theo dõi"
   },
   "rules": {
-    "no_invented_prices": "Không tự đoán giá hoặc tồn kho",
+    "no_invented_prices": "Không tự đoán giá, tồn kho hoặc dịch vụ",
     "no_discount_promises": "Không hứa giảm giá ngoài chính sách",
     "no_medical_advice": "Không tư vấn y khoa",
     "no_financial_advice": "Không tư vấn tài chính, pháp lý cá nhân",

@@ -209,6 +209,67 @@ describe('CustomerTagService', () => {
         });
     });
 
+    // #558: Gemini copied the catalog emoji into the name ("Angry 🚨"), the
+    // exact lookup missed and the handover never fired.
+    describe('findOneByWorkspaceAndName', () => {
+        it('looks the tag up by the exact name first', async () => {
+            mockEm.findOne.mockResolvedValue({ id: 't1', name: 'Angry' });
+
+            const tag = await service.findOneByWorkspaceAndName(
+                'ws-1',
+                'Angry'
+            );
+
+            expect(tag).toEqual({ id: 't1', name: 'Angry' });
+            expect(mockEm.findOne).toHaveBeenCalledTimes(1);
+            expect(mockEm.findOne.mock.calls[0][1]).toMatchObject({
+                workspace: 'ws-1',
+                name: 'Angry',
+            });
+        });
+
+        it('falls back to the name without emoji when the exact name is not found', async () => {
+            mockEm.findOne
+                .mockResolvedValueOnce(null)
+                .mockResolvedValueOnce({ id: 't1', name: 'Angry' });
+
+            const tag = await service.findOneByWorkspaceAndName(
+                'ws-1',
+                'Angry 🚨'
+            );
+
+            expect(tag).toEqual({ id: 't1', name: 'Angry' });
+            expect(mockEm.findOne.mock.calls[1][1]).toMatchObject({
+                workspace: 'ws-1',
+                name: 'Angry',
+            });
+        });
+
+        it('strips a leading emoji with a variation selector', async () => {
+            mockEm.findOne
+                .mockResolvedValueOnce(null)
+                .mockResolvedValueOnce({ id: 't2', name: 'Lịch hẹn mới' });
+
+            await service.findOneByWorkspaceAndName('ws-1', '🗓️ Lịch hẹn mới');
+
+            expect(mockEm.findOne.mock.calls[1][1]).toMatchObject({
+                name: 'Lịch hẹn mới',
+            });
+        });
+
+        it('does not query again when the name has no emoji', async () => {
+            mockEm.findOne.mockResolvedValue(null);
+
+            const tag = await service.findOneByWorkspaceAndName(
+                'ws-1',
+                'Unknown'
+            );
+
+            expect(tag).toBeNull();
+            expect(mockEm.findOne).toHaveBeenCalledTimes(1);
+        });
+    });
+
     describe('findAllByWorkspace', () => {
         it('returns active (non-deleted) tags scoped to the workspace', async () => {
             const tags = [

@@ -226,7 +226,9 @@ These tools manage the customer's personal data.
       reply, even if you could also help: apply the marked tag that fits
       (such as a complaint or angry tag), then tell them, in their language, that you are passing them to a
       manager or staff member. Do not only apologize, and do not ask whether
-      they want to talk to someone first. If no tag is marked that
+      they want to talk to someone first. In that reply, do not promote the
+      business or ask for order numbers, phone numbers or photos: staff will
+      ask for what they need. If no tag is marked that
       way, or the call fails, do not promise a handover or say when staff will
       reply: tell the customer their message stays in the shop's inbox for the
       team to see, and keep helping.

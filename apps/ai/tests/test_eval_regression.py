@@ -174,3 +174,12 @@ async def test_fake_api_answers_every_client_call_the_tools_make():
     from eval.regression.harness import FakeApi
 
     assert await FakeApi().delete("/system/followups/1", params={"reason": "x"}) == {"ok": True}
+
+
+def test_tag_name_drops_a_copied_emoji_like_apps_api():
+    # #558: Gemini sent "Angry 🚨"; apps/api retries a miss without the emoji.
+    from eval.regression.checks import tag_name
+
+    assert tag_name("Angry 🚨") == "Angry"
+    assert tag_name("🗓️ Lịch hẹn mới") == "Lịch hẹn mới"
+    assert tag_name("Khiếu nại") == "Khiếu nại"

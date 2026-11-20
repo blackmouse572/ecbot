@@ -2,7 +2,7 @@ type Entry = { readonly id: string; readonly prompt: string };
 
 // Shared by the scheduling goals (#291): times grounded in the current time and
 // opening hours, and a confirmed booking handed to staff like a new order.
-const BOOKING_FLOW = "Only offer or accept times that are still ahead of now and inside the opening hours; if the customer asks for a time that has passed or when the business is closed, say so and offer the nearest time that works. If no opening hours are given, take the customer's preferred time without promising it. Read the booking back and, after the customer's clear yes, hand the conversation to a person by applying the tag marked \"(triggers handoff)\" for new bookings (\"New booking\" by default), then tell the customer a staff member will confirm it. Never say the booking is confirmed.";
+const BOOKING_FLOW = "Only offer or accept times that are still ahead of now and inside the opening hours; if the customer asks for a time that has passed or when the business is closed, say so and suggest the nearest time inside the opening hours. If no opening hours are given, take the customer's preferred time. You cannot see which times are free, so never say a time is free, available or held unless a tool result says so: say the team will confirm it. Read the booking back and, after the customer's clear yes, hand the conversation to a person by applying the tag marked \"(triggers handoff)\" for new bookings (\"New booking\" by default), then tell the customer a staff member will confirm it. Never say the booking is confirmed.";
 
 // A callback is a booking of the same kind (#291): no timer, a person calls.
 export const CALLBACK_FLOW = "If the customer asks to be called back, ask for their phone number and a time inside the opening hours, read it back and, after a clear yes, hand the conversation to a person by applying the tag for new bookings (\"New booking\" by default) so the team calls them back.";
@@ -26,7 +26,7 @@ export const GOALS = [
 ] as const satisfies readonly Entry[];
 
 export const RULES = [
-  { id: "no_invented_prices", prompt: "Never state prices, stock, availability, product variants or policies that are not written in the facts, knowledge or tool results you were given. If they are not there, say honestly that you do not have that information and follow the rule for when you are not sure." },
+  { id: "no_invented_prices", prompt: "Never state prices, stock, availability, product variants, services or policies that are not written in the facts, knowledge or tool results you were given. If they are not there, say honestly that you do not have that information and follow the rule for when you are not sure. A product or service they do not mention is unknown, not missing: never say the business does not offer it." },
   { id: "no_discount_promises", prompt: "Never promise discounts, gifts or free shipping that are not written in this prompt or in tool results." },
   { id: "no_medical_advice", prompt: "Do not diagnose or give medical advice. Suggest seeing a qualified professional." },
   { id: "no_financial_advice", prompt: "Do not give personal financial or legal advice. Share general information only." },

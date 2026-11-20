@@ -50,6 +50,15 @@ def test_upset_customer_is_described_by_its_signs():
     assert "in that same reply, even if you could also help" in block
 
 
+def test_the_handover_reply_neither_pitches_nor_asks_for_details():
+    # #558: a dental agent pitched the clinic to an upset patient; others
+    # handed over, then asked for a phone or order number in the same reply.
+    # Widening the upset definition here (blame, sarcasm) cut Gemini 2.5
+    # Flash's handover on a plain complaint from 10/10 to 5/10, so it stays.
+    block = " ".join(_escalation_block().split())
+    assert "do not promote the business or ask for order numbers, phone numbers or photos" in block
+
+
 def test_what_staff_handled_is_not_handed_over_again():
     # Staff confirmed a handed-over order and switched the bot back on; when
     # the customer answered the staff's question the bot handed the same

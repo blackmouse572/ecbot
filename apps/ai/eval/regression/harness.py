@@ -33,7 +33,7 @@ from eccho_ai.modules.chat.constants import DEFAULT_MAX_TOOL_ITERATIONS
 
 from eval.regression.blueprint import Compiled
 from eval.regression.cases import Case
-from eval.regression.checks import Turn
+from eval.regression.checks import Turn, tag_name
 
 TIMEZONE = "Asia/Ho_Chi_Minh"
 # Tuesday afternoon, inside every seeded agent's opening hours.
@@ -50,9 +50,11 @@ class FakeApi:
     async def post(self, path: str, json: dict[str, Any]) -> dict[str, Any]:
         case = _case.get()
         if path.endswith("/tags/apply"):
-            if json["tagName"] not in {t.name for t in case.tags}:
+            names = {t.name for t in case.tags}
+            name = json["tagName"] if json["tagName"] in names else tag_name(json["tagName"])
+            if name not in names:
                 raise ApiClientError(f"POST {path} failed: 404 customerTag.error.notFound", status_code=404)
-            return {"ok": True, "triggeredHandoff": json["tagName"] in case.handoff_tags}
+            return {"ok": True, "triggeredHandoff": name in case.handoff_tags}
         for suffix, result in case.tool_results.items():
             if path.endswith(suffix):
                 return result

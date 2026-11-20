@@ -186,7 +186,10 @@ describe("compilePrompt", () => {
     for (const type of ["beauty", "restaurant"] as const) {
       const out = compilePrompt(sample(type, "en"));
       expect(out).toContain("Only offer or accept times that are still ahead of now and inside the opening hours");
-      expect(out).toContain("If no opening hours are given, take the customer's preferred time without promising it.");
+      expect(out).toContain("say so and suggest the nearest time inside the opening hours.");
+      expect(out).toContain("If no opening hours are given, take the customer's preferred time.");
+      // Reply eval 2026-11-17: the spa said a slot was free without checking.
+      expect(out).toContain("You cannot see which times are free, so never say a time is free, available or held unless a tool result says so: say the team will confirm it.");
       expect(out).toContain('applying the tag marked "(triggers handoff)" for new bookings ("New booking" by default)');
       expect(out).toContain("Never say the booking is confirmed.");
     }
@@ -201,8 +204,14 @@ describe("compilePrompt", () => {
   // #119: no guessing stock or variants, and no "I will check" promise.
   it("forbids stating stock, variants or prices that are not in the facts", () => {
     const out = compilePrompt(sample("ecommerce", "en"));
-    expect(out).toContain("Never state prices, stock, availability, product variants or policies");
+    expect(out).toContain("Never state prices, stock, availability, product variants, services or policies");
     expect(out).not.toContain("say you will check");
+  });
+
+  // Reply eval 2026-11-17: "we don't do nails" when the facts never said so.
+  it("treats a product or service missing from the facts as unknown, not unavailable", () => {
+    const out = compilePrompt(sample("beauty", "en"));
+    expect(out).toContain("A product or service they do not mention is unknown, not missing: never say the business does not offer it.");
   });
 
   // #182: confirmation comes before the tool call that places the order.
