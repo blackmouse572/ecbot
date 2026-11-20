@@ -11,6 +11,7 @@ import { ApiKeyModule } from 'src/modules/api-key/api-key.module';
 import { CountrySystemController } from 'src/modules/country/controllers/country.system.controller';
 import { CountryModule } from 'src/modules/country/country.module';
 import { CustomerSystemController } from 'src/modules/customer/controllers/customer.system.controller';
+import { CustomerConversationSystemController } from 'src/modules/customer/controllers/customer-conversation.system.controller';
 import { CustomerTagSystemController } from 'src/modules/customer/controllers/customer-tag.system.controller';
 import { HealthSystemController } from 'src/modules/health/controllers/health.system.controller';
 import { HealthModule } from 'src/modules/health/health.module';
@@ -37,6 +38,7 @@ import { CustomerMarketingSystemController } from 'src/modules/customer/controll
         ToolSystemController,
         FacebookActivityController,
         CustomerSystemController,
+        CustomerConversationSystemController,
         CustomerTagSystemController,
         CustomerMarketingSystemController,
         OrderSystemController,

@@ -115,6 +115,10 @@ export class WidgetChatService {
                 workspaceId: account.workspace.id,
                 platform: ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
                 externalSenderId: visitorId,
+                // The tracked link is worth keeping, so it makes the visitor
+                // a customer. Otherwise they become one once they share
+                // something (the agent's customer tools).
+                createAnonymous: !!turn.referral?.code,
             });
 
         const conversation = await this.conversationService.findOrCreate({

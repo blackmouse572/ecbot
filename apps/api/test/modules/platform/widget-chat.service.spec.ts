@@ -158,7 +158,21 @@ describe('WidgetChatService.handleTurn', () => {
             workspaceId: 'ws-1',
             platform: ENUM_ACCOUNT_TYPE.WEBSITE_WIDGET,
             externalSenderId: 'visitor-7',
+            createAnonymous: false,
         });
+    });
+
+    it('records the visitor as a customer when they arrive through a tracked link', async () => {
+        const { service, customerService } = setup();
+
+        await service.handleTurn(res, {
+            ...turn,
+            referral: { code: 'trang-khuyen-mai', source: 'link' },
+        });
+
+        expect(customerService.resolveContactPoint).toHaveBeenCalledWith(
+            expect.objectContaining({ createAnonymous: true })
+        );
     });
 
     it('persists the conversation keyed on chatbot, account and visitor', async () => {

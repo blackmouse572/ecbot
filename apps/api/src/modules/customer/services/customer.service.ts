@@ -31,6 +31,8 @@ import { CustomerRepository } from '../repository/repositories/customer.reposito
 import { ConversationRepository } from '@app/modules/conversation/repository/repositories/conversation.repository';
 import { CustomerMergeSuggestionService } from './customer-merge-suggestion.service';
 
+import { ANONYMOUS_CHANNELS } from '../constants/customer.constant';
+
 const CUSTOMER_LIMIT_FULL_TTL_MS = 60_000;
 
 @Injectable()
@@ -160,7 +162,8 @@ export class CustomerService implements ICustomerService {
     async resolveContactPoint(
         params: IResolveContactPoint
     ): Promise<IResolveContactPointResult> {
-        const { workspaceId, platform, externalSenderId } = params;
+        const { workspaceId, platform, externalSenderId, createAnonymous } =
+            params;
 
         const existing =
             await this.contactPointRepository.findByWorkspacePlatformSender(
@@ -175,6 +178,10 @@ export class CustomerService implements ICustomerService {
                 customerId: (existing.customer as any).id,
                 created: false,
             };
+        }
+
+        if (ANONYMOUS_CHANNELS.has(platform) && !createAnonymous) {
+            return { contactPoint: null, customerId: null, created: false };
         }
 
         if (await this.isAtCustomerLimit(workspaceId)) {
@@ -203,6 +210,42 @@ export class CustomerService implements ICustomerService {
         );
 
         return { contactPoint, customerId: customer.id, created: true };
+    }
+
+    /**
+     * The conversation's Customer, created now if its sender has none yet (an
+     * anonymous channel visitor who just shared something). Null when the
+     * conversation is unknown or the workspace is at its customer limit.
+     */
+    async ensureForConversation(
+        conversationId: string
+    ): Promise<string | null> {
+        // Resolved lazily: the conversation module already depends on this one.
+        const conversationRepository = this.moduleRef.get(
+            ConversationRepository,
+            { strict: false }
+        );
+        const conversation = await conversationRepository.findOneById(
+            conversationId,
+            { populate: ['account', 'contactPoint'] }
+        );
+        if (!conversation) return null;
+
+        const linked = conversation.contactPoint?.customer;
+        if (linked) return linked.id;
+
+        const { contactPoint, customerId } = await this.resolveContactPoint({
+            workspaceId: conversation.account.workspace.id,
+            platform: conversation.account.type,
+            externalSenderId: conversation.senderId,
+            createAnonymous: true,
+        });
+        if (!contactPoint) return null;
+
+        await conversationRepository.updateEntity({ id: conversation.id }, {
+            contactPoint: { id: contactPoint.id },
+        } as any);
+        return customerId;
     }
 
     /** True once the workspace keeps as many customers as its plan allows. */

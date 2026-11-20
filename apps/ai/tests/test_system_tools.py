@@ -569,3 +569,65 @@ async def test_record_order_api_error_is_not_shown_to_the_customer(monkeypatch):
     )
     result = await record_order.ainvoke({"items": [{"name": "Serum"}]})
     assert "do not mention it" in result["instruction"]
+
+
+# ─── Anonymous visitors become customers when they share something ───────────
+
+CONV_ID = "6f1c2a3b-4d5e-4f60-8a7b-9c0d1e2f3a4b"
+
+
+def _stub_api_client_by_path(monkeypatch, responses: dict[str, object]):
+    calls: list[tuple[str, dict]] = []
+
+    class _Stub:
+        async def post(self, path: str, json: dict):
+            calls.append((path, json))
+            return responses.get(path, {"ok": True})
+
+    monkeypatch.setattr(
+        system_tools_module.ApiClient, "get_instance", staticmethod(lambda: _Stub())
+    )
+    return calls
+
+
+async def test_update_customer_profile_creates_the_customer_for_an_anonymous_visitor(monkeypatch):
+    _patch_runtime(monkeypatch, customer_id=None, session_id=CONV_ID)
+    calls = _stub_api_client_by_path(
+        monkeypatch,
+        {f"/system/conversations/{CONV_ID}/customer": {"customerId": "cust-new"}},
+    )
+
+    result = await update_customer_profile.ainvoke({"phone": "0901234567"})
+
+    assert result == {"ok": True}
+    assert calls == [
+        (f"/system/conversations/{CONV_ID}/customer", {}),
+        ("/system/customers/cust-new/profile", {"phone": "0901234567"}),
+    ]
+
+
+async def test_record_order_creates_the_customer_for_an_anonymous_visitor(monkeypatch):
+    _patch_runtime(monkeypatch, customer_id=None, session_id=CONV_ID)
+    calls = _stub_api_client_by_path(
+        monkeypatch,
+        {f"/system/conversations/{CONV_ID}/customer": {"customerId": "cust-new"}},
+    )
+
+    result = await record_order.ainvoke({"items": [{"name": "Serum"}]})
+
+    assert result == {"recorded": True}
+    assert calls[1][0] == "/system/customers/cust-new/orders/draft"
+
+
+async def test_set_customer_field_without_a_customer_after_asking_reports_no_context(monkeypatch):
+    # At the plan's customer limit the API records no one.
+    _patch_runtime(monkeypatch, customer_id=None, session_id=CONV_ID)
+    calls = _stub_api_client_by_path(
+        monkeypatch,
+        {f"/system/conversations/{CONV_ID}/customer": {"customerId": None}},
+    )
+
+    result = await set_customer_field.ainvoke({"key": "address", "value": "Q1"})
+
+    assert result == {"error": "no customer context"}
+    assert len(calls) == 1
