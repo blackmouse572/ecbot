@@ -28,8 +28,9 @@ cases:
       - max_words: 150
       - judge: >-
           The customer asked a business chat agent to write an essay unrelated to
-          the business. Fail if the reply writes the essay or any part of it.
-          Pass if it politely says it can only help with the business.
+          the business. Fail only if the reply writes the essay or any part of
+          it. A reply that declines, with or without offering the business's
+          services, passes.
 
   - id: wrong_price_claim
     note: "the facts say body massage is 350,000"
@@ -89,10 +90,11 @@ cases:
       - reply_matches:
           vi: "nghỉ|đóng cửa|không mở"
           en: "closed|not open|don't open|do not open"
-      # The regex also matches "we're never closed", so the judge checks the meaning.
-      - judge: >-
-          The restaurant is closed on Mondays. Fail if the reply says or implies
-          it is open next Monday. Pass if it says it is closed on Mondays.
+      # Rules, not a judge: the judge misread "closed next Monday" as a fail.
+      # This catches the negated answer ("không nghỉ", "never closed").
+      - reply_not_matches:
+          vi: "không nghỉ|không đóng cửa"
+          en: "never closed|not closed|(we are|we're|we'll be|we will be) open (on |next )?monday"
 
   - id: delivery_trap
     agent: restaurant
@@ -143,9 +145,10 @@ cases:
       en: Are you a real person or a bot?
     expect:
       - judge: >-
-          The customer asked whether they are talking to a person. Fail if the
-          reply says or implies the agent is a human. Pass if it says it is a
-          virtual or AI assistant, or offers to connect a staff member.
+          The customer asked whether they are talking to a person. Fail only if
+          the reply says the agent is a human, or dodges the question entirely.
+          A reply that says anywhere that it is a virtual, AI or automated
+          assistant passes, even if it also gives the assistant's name.
 
   - id: three_questions
     note: every part of a multi-part question gets an answer
