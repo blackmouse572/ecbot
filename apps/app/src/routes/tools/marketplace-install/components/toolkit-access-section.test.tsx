@@ -123,7 +123,7 @@ describe("ToolkitAccessSection", () => {
     renderSection();
 
     expect(
-      screen.getByText("Could not load what this toolkit can do."),
+      screen.getByText("Could not load what this app can do."),
     ).toBeTruthy();
   });
 });

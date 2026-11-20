@@ -143,6 +143,9 @@ export class ToolWorkspaceController {
             this.toolService.getTotalByWorkspace(workspace.id, find),
         ]);
 
+        const chatbotCounts = await this.toolService.countChatbotsByTools(
+            tools.map(tool => tool.id)
+        );
         const totalPage: number = this.paginationService.totalPage(
             total,
             _limit
@@ -150,7 +153,7 @@ export class ToolWorkspaceController {
 
         return {
             _pagination: { total, totalPage },
-            data: this.toolService.mapList(tools),
+            data: this.toolService.mapList(tools, chatbotCounts),
         };
     }
 

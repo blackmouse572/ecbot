@@ -9,8 +9,7 @@ import {
 import { useBatchResultToast } from "@/hooks/use-batch-result-toast";
 import { useDataTable } from "@/hooks/use-data-table";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
-import { PlusMini } from "@medusajs/icons";
-import { Button, Container, Heading, usePrompt } from "@medusajs/ui";
+import { Container, Heading, Text, usePrompt } from "@medusajs/ui";
 import {
   createColumnHelper,
   type RowSelectionState,
@@ -21,6 +20,7 @@ import { FeatureArt } from "@/components/guide";
 import { Outlet, useNavigate } from "react-router-dom";
 import { TOOL_CONSTANTS } from "../../../constants";
 import { ToolActions } from "./tool-actions";
+import { ToolAddMenu } from "./tool-add-menu";
 import {
   useToolTableColumns,
   useToolTableFilters,
@@ -63,25 +63,19 @@ export const ToolsListTable = () => {
     throw error;
   }
 
-  const handleNewTool = () => navigate(`/${workspaceSlug}/tools/new`);
   const handleMarketplace = () =>
     navigate(`/${workspaceSlug}/tools/marketplace`);
 
   return (
     <Container className="divide-y p-0">
-      <div className="flex items-center justify-between px-6 py-4">
+      <div className="flex items-center justify-between gap-x-4 px-6 py-4">
         <div>
           <Heading level="h2">{t("tools.title")}</Heading>
+          <Text size="small" className="text-ui-fg-subtle">
+            {t("tools.list.description")}
+          </Text>
         </div>
-        <div className="flex items-center gap-x-2">
-          <Button size="small" variant="secondary" onClick={handleMarketplace}>
-            {t("tools.actions.browseMarketplace")}
-          </Button>
-          <Button size="small" variant="primary" onClick={handleNewTool}>
-            <PlusMini />
-            {t("actions.create")}
-          </Button>
-        </div>
+        <ToolAddMenu />
       </div>
       <_DataTable
         table={table}

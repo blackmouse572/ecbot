@@ -1,10 +1,10 @@
-import { CreatedAtCell } from "@/components/table/table-cells/common/created-at-cell";
 import { StatusBadge } from "@medusajs/ui";
 import type { ToolListResponseDto } from "@repo/client";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { TOOL_STATUS_COLOR } from "../../../../constants";
+import { ToolInUseCell } from "../tool-in-use-cell";
 import { ToolNameCell } from "../tool-name-cell";
 
 const columnHelper = createColumnHelper<ToolListResponseDto>();
@@ -22,22 +22,26 @@ export const useToolTableColumns = () => {
       columnHelper.display({
         id: "status",
         header: () => t("tools.list.columns.status"),
+        // A working tool needs no badge; only one that needs the owner does.
         cell: ({ row }) => {
-          const color = TOOL_STATUS_COLOR[row.original.status] ?? "grey";
-          const key = row.original.status.toLowerCase().replace(/_/g, "");
+          const { status } = row.original;
+
+          if (status === "ACTIVE") return null;
+
+          const key = status.toLowerCase().replace(/_/g, "");
           return (
-            <StatusBadge color={color}>
+            <StatusBadge color={TOOL_STATUS_COLOR[status] ?? "grey"}>
               {t(`tools.list.filters.statusOptions.${key}`, {
-                defaultValue: row.original.status,
+                defaultValue: status,
               })}
             </StatusBadge>
           );
         },
       }),
       columnHelper.display({
-        id: "createdAt",
-        header: () => t("tools.list.columns.createdAt"),
-        cell: ({ row }) => <CreatedAtCell date={row.original.createdAt} />,
+        id: "inUse",
+        header: () => t("tools.list.columns.inUse"),
+        cell: ({ row }) => <ToolInUseCell count={row.original.chatbotCount} />,
       }),
     ],
     [t],

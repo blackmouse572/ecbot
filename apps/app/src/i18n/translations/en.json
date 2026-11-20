@@ -2872,7 +2872,7 @@
         "kind": "Kind",
         "name": "Name",
         "status": "Status",
-        "createdAt": "Created"
+        "inUse": "In use"
       },
       "filters": {
         "kind": "Kind",
@@ -2894,7 +2894,15 @@
           "ECCHO": "Ecbot"
         }
       },
-      "noRecordsTitle": "No tools yet"
+      "noRecordsTitle": "No tools yet",
+      "description": "What your agents can do in other apps. Every agent in the workspace can use them.",
+      "usedBy_one": "Used by {{count}} agent",
+      "usedBy_other": "Used by {{count}} agents",
+      "notUsed": "Not used yet",
+      "source": {
+        "ready": "Ready-made",
+        "custom": "Set up yourself"
+      }
     },
     "empty": {
       "title": "No tools yet",
@@ -3077,14 +3085,14 @@
     },
     "marketplace": {
       "title": "Marketplace",
-      "browse": "Browse hosted toolkits and install them as MCP tools.",
+      "browse": "Pick the apps your shop uses. Sign in once and every agent in the workspace can use them.",
       "installButton": "Install",
       "installingToast": "Redirecting to provider…",
       "installSuccessToast": "Tool installed.",
       "installErrorToast": "Install failed.",
-      "searchPlaceholder": "Search toolkits…",
+      "searchPlaceholder": "Search apps…",
       "categoryAll": "All categories",
-      "noResults": "No toolkits found.",
+      "noResults": "No apps found.",
       "pagination": "Page {{page}} of {{totalPage}}",
       "filters": {
         "provider": "Provider",
@@ -3097,7 +3105,7 @@
       },
       "access": {
         "actionsTitle": "What it can do ({{count}})",
-        "actionsEmpty": "Composio lists no actions for this toolkit.",
+        "actionsEmpty": "This app has no actions yet.",
         "actionsEmptyEccho": "This Ecbot tool lists its actions after you install it.",
         "actionsCapped": "Showing the first {{count}} actions.",
         "destructiveHint": "Actions that can delete data stay off until you turn them on for an agent.",
@@ -3106,7 +3114,7 @@
         "scopesTitle": "Access it asks for",
         "scopesIntro": "When you install, {{name}} asks you to allow this access to your account. It can be broader than the actions below need.",
         "redirectNote": "Install opens the {{name}} sign-in in this tab, then brings you back here.",
-        "loadError": "Could not load what this toolkit can do."
+        "loadError": "Could not load what this app can do."
       },
       "callback": {
         "installing": "Finishing install…",
@@ -3114,6 +3122,10 @@
         "error": "Install failed.",
         "backLink": "Back to marketplace",
         "noPendingInstall": "No pending install found in this browser session."
+      },
+      "custom": {
+        "message": "Can't find the app you use? A developer can set it up with an HTTP API or an MCP server.",
+        "action": "Set up yourself"
       }
     },
     "mcp": {
@@ -3168,6 +3180,17 @@
       "actionsTitle": "Actions",
       "enableSuccess": "Tool added.",
       "enableError": "Failed to add tool."
+    },
+    "addMenu": {
+      "button": "Add",
+      "store": "Choose from the app store",
+      "customLabel": "Set up yourself (for developers)",
+      "http": "Call an HTTP API",
+      "mcp": "Connect an MCP server"
+    },
+    "popular": {
+      "title": "Popular with shops",
+      "seeAll": "See all"
     }
   },
   "channels": {

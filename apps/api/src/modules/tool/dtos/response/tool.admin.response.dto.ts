@@ -50,6 +50,7 @@ const StripUrlSecrets = (): PropertyDecorator =>
 // Header values can hold a customer's secret, so admins do not get them.
 export class ToolAdminListResponseDto extends OmitType(ToolListResponseDto, [
     'httpHeaders',
+    'chatbotCount',
 ] as const) {
     @StripUrlSecrets()
     httpUrl?: string;
