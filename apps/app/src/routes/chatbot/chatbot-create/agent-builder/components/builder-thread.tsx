@@ -1,5 +1,5 @@
 import { useTrackOnce } from "@/analytics/use-track-once";
-import { buildQuestionGroups, type Question } from "@repo/agent-blueprint";
+import type { Question } from "@repo/agent-blueprint";
 import { Button, clx, usePrompt } from "@medusajs/ui";
 import {
   Marker,
@@ -22,6 +22,8 @@ import {
   awaitsActivation,
   currentStep,
   isComplete,
+  questionGroups,
+  showsEveryQuestion,
   steps,
 } from "../builder-state";
 import type { AgentBuilderController } from "../use-agent-builder";
@@ -47,9 +49,11 @@ export function BuilderThread(builder: AgentBuilderController) {
 
   const profile = state.profile;
   const open = currentStep(state);
+  // A new agent asks channels in its own group; the group check also keeps
+  // the step typed as an onboarding step, which has no "activate".
   const viewedStep = asksActivation(state)
     ? "activation"
-    : open?.question.id === "channels"
+    : open?.question.id === "channels" || open?.group.id === "activate"
       ? "channels"
       : open?.group.id;
   useTrackOnce(
@@ -89,7 +93,8 @@ export function BuilderThread(builder: AgentBuilderController) {
     dispatch({ type: "answer", question, value });
   };
 
-  const all = steps(profile);
+  const everyQuestion = showsEveryQuestion(state);
+  const all = steps(profile, everyQuestion);
   const current = currentStep(state);
   const complete = isComplete(state);
   const asking = asksActivation(state);
@@ -183,7 +188,7 @@ export function BuilderThread(builder: AgentBuilderController) {
             </Message>
           )}
 
-          {buildQuestionGroups(profile).map((group) => {
+          {questionGroups(profile, everyQuestion).map((group) => {
             const visible = group.questions.filter(
               (q) =>
                 (state.answered.includes(q.id) && !answeredAhead(q.id)) ||

@@ -10,6 +10,10 @@ import {
 const started = (): BuilderState =>
   builderReducer(initialBuilderState, { type: "start", profile: createProfile("beauty", "vi"), suggestion: null, source: "describe" });
 
+// Reopening an agent shows every question, so the questions a new agent is
+// not asked are reached through a reopened (hydrate) thread.
+const reopened = (): BuilderState => ({ ...started(), source: "hydrate" });
+
 const startedFromTemplate = (): BuilderState =>
   builderReducer(initialBuilderState, { type: "start", profile: createProfile("beauty", "vi"), suggestion: null, source: "template" });
 
@@ -59,7 +63,7 @@ describe("builderReducer", () => {
   // Skipping must not drop the preset's safety rules, contact fields or
   // handoff triggers; it only drops what auto-fill added on top of them.
   it.each(["rules", "collect", "handoffWhen"] as const)("resets %s to the preset when skipped", (id) => {
-    const s0 = answerAllUntil(started(), (x) => currentStep(x)?.question.id === id);
+    const s0 = answerAllUntil(reopened(), (x) => currentStep(x)?.question.id === id);
     const preset = createProfile("beauty", "vi")[id];
     expect(preset.length).toBeGreaterThan(0);
     const filled = { ...s0, profile: { ...s0.profile!, [id]: [] } };
@@ -69,7 +73,7 @@ describe("builderReducer", () => {
   });
 
   it("drops rules auto-fill added when the rules question is skipped", () => {
-    const s0 = answerAllUntil(started(), (x) => currentStep(x)?.question.id === "rules");
+    const s0 = answerAllUntil(reopened(), (x) => currentStep(x)?.question.id === "rules");
     const filled = { ...s0, profile: { ...s0.profile!, rules: [...s0.profile!.rules, "no_competitors" as const] } };
     const s1 = builderReducer(filled, { type: "skip", question: currentStep(filled)!.question });
     expect(s1.profile!.rules).toEqual(createProfile("beauty", "vi").rules);
@@ -77,7 +81,7 @@ describe("builderReducer", () => {
   });
 
   it("clears other optional choices when skipped", () => {
-    const s0 = answerAllUntil(started(), (x) => currentStep(x)?.question.id === "personality");
+    const s0 = answerAllUntil(reopened(), (x) => currentStep(x)?.question.id === "personality");
     const s1 = builderReducer(s0, { type: "skip", question: currentStep(s0)!.question });
     expect(s1.profile!.personality).toEqual([]);
   });
@@ -106,7 +110,7 @@ describe("builderReducer", () => {
   });
 
   it("resets later answers when the business type changes", () => {
-    const s = answerAllUntil(started(), (x) => x.answered.includes("greeting"));
+    const s = answerAllUntil(started(), (x) => x.answered.includes("difference"));
     const edited = builderReducer(builderReducer(s, { type: "edit", questionId: "businessType" }), {
       type: "answer", question: steps(s.profile!)[0].question, value: "restaurant",
     });
@@ -145,6 +149,24 @@ describe("builderReducer", () => {
     const s = builderReducer(initialBuilderState, { type: "hydrate", profile: createProfile("hotel", "en"), chatbotId: "c1", finished: true });
     expect(isComplete(s)).toBe(true);
     expect(s.chatbotId).toBe("c1");
+    // Every question, including the ones a new agent is not asked.
+    expect(s.answered).toEqual(expect.arrayContaining(["greeting", "rules", "replyLength"]));
+  });
+
+  // Agent v2: a new agent is asked the business, every fact and its
+  // channels; behaviour keeps the preset until the owner reopens the agent.
+  it("asks a new agent only the short set, ending with its channels", () => {
+    const asked: string[] = [];
+    answerAllUntil(started(), (x) => {
+      const step = currentStep(x);
+      if (step) asked.push(step.question.id);
+      return isComplete(x);
+    });
+    expect(asked).toEqual([
+      "businessType", "businessName", "agentName", "goals", "difference",
+      "facts.services_prices", "openingHours", "facts.address", "facts.deposit_policy", "facts.payment_methods",
+      "channels",
+    ]);
   });
 
   it("restart keeps chatbotId and clears everything else", () => {
@@ -227,28 +249,32 @@ describe("prefill from free text", () => {
   });
 });
 
-// #256: the agent can go live once the basics are answered.
+// The agent goes live after the last question a new agent is asked.
 describe("activationAnchor", () => {
-  it("is the last basic question: the type's second key fact", () => {
-    expect(activationAnchor(createProfile("restaurant", "vi"))).toBe("facts.address");
+  it("is the channels question", () => {
+    expect(activationAnchor(createProfile("restaurant", "vi"))).toBe("channels");
   });
 
-  it("is the last basic question for a personal assistant too", () => {
+  it("is the last fact for a personal assistant, which has no channels question", () => {
     expect(activationAnchor(createProfile("personal_scheduling", "en"))).toBe("facts.priorities");
   });
 });
 
 describe("asksActivation", () => {
-  // The description can answer the key facts before the owner reaches them.
-  it("waits for every basic question, not only the last one", () => {
+  // The description can answer the last questions before the owner reaches them.
+  it("waits for every question, not only the last one", () => {
     const s = builderReducer(initialBuilderState, {
       type: "start", profile: createProfile("restaurant", "vi"), suggestion: null, source: "describe",
-      answered: ["businessType", "businessName", "facts.opening_hours", "facts.address"],
+      answered: ["businessType", "businessName", "openingHours", "channels"],
     });
     const drafted = builderReducer(s, { type: "draftCreated", chatbotId: "bot-1" });
     expect(asksActivation(drafted)).toBe(false);
-    const basics = steps(drafted.profile!).filter((x) => ["agentName", "channels", "goals"].includes(x.question.id));
-    const done = basics.reduce((acc, x) => builderReducer(acc, { type: "skip", question: x.question }), drafted);
+    const done = answerAllUntil(drafted, isComplete);
     expect(asksActivation(done)).toBe(true);
+  });
+
+  it("is never asked when reopening an agent", () => {
+    const s = builderReducer(initialBuilderState, { type: "hydrate", profile: createProfile("hotel", "en"), chatbotId: "c1", finished: false });
+    expect(asksActivation(s)).toBe(false);
   });
 });

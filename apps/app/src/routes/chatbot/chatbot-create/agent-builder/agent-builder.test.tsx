@@ -139,6 +139,14 @@ async function answerCurrent() {
 
 const pickBeautyTemplate = () => userEvent.click(screen.getByRole("button", { name: "agentBuilder.types.beauty" }));
 
+// Agent v2: the channels question comes last, after every fact.
+async function answerUntilChannels() {
+  for (let i = 0; i < 20 && !screen.queryByRole("button", { name: "agentBuilder.ui.connectLater" }); i++) {
+    await answerCurrent();
+  }
+  await screen.findByRole("button", { name: "agentBuilder.ui.connectLater" });
+}
+
 // The draft is created once agentName (step 3) is answered: businessName,
 // then agentName, both text questions that answerCurrent fills with "Lotus".
 async function answerToAgentName() {
@@ -215,20 +223,18 @@ describe("AgentBuilder", () => {
     });
   });
 
-  describe("turning the agent on early", () => {
-    // #256: the basics are identity plus the type's two key facts.
-    it("asks whether to activate once the basics are answered", async () => {
+  describe("turning the agent on", () => {
+    // Agent v2: the last step names the defaults, then asks to activate.
+    it("asks whether to activate once the channels are answered", async () => {
       renderBuilder();
       await pickBeautyTemplate();
-      await answerToAgentName();
-      await userEvent.click(await screen.findByRole("button", { name: "agentBuilder.ui.connectLater" }));
-      await answerCurrent(); // goals
-      await answerCurrent(); // facts.services_prices
+      await answerUntilChannels();
       expect(screen.queryByRole("button", { name: "agentBuilder.ui.activateNow" })).not.toBeInTheDocument();
-      await answerCurrent(); // facts.opening_hours
+      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.connectLater" }));
 
       expect(await screen.findByText("agentBuilder.ui.activateAsk")).toBeInTheDocument();
-      // The next question waits for the answer.
+      expect(screen.getByText("agentBuilder.ui.defaultsIntro")).toBeInTheDocument();
+      // Nothing else is asked.
       expect(screen.queryByRole("button", { name: "actions.next" })).not.toBeInTheDocument();
 
       await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.activateNow" }));
@@ -238,22 +244,29 @@ describe("AgentBuilder", () => {
       // No channel was connected, so the live agent offers one.
       expect(screen.getByRole("link", { name: "actions.connectChannel" })).toHaveAttribute("href", "/ws/accounts/create");
       expect(screen.queryByRole("button", { name: "agentBuilder.ui.activateNow" })).not.toBeInTheDocument();
-      // The rest of the questions stay open: answers keep saving to the live agent.
-      expect(screen.getByRole("button", { name: "actions.next" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "actions.next" })).not.toBeInTheDocument();
     });
 
-    it("keeps the agent off and moves on when the owner picks later", async () => {
+    it("never asks how the agent talks", async () => {
       renderBuilder();
       await pickBeautyTemplate();
-      await answerToAgentName();
-      await userEvent.click(await screen.findByRole("button", { name: "agentBuilder.ui.connectLater" }));
-      for (let i = 0; i < 3; i++) await answerCurrent(); // goals and the two key facts
+      await answerUntilChannels();
+      for (const id of ["greeting", "personality", "rules", "replyLength", "addressStyle"]) {
+        expect(screen.queryByText(`agentBuilder.questions.${id}.ask`)).not.toBeInTheDocument();
+      }
+    });
+
+    it("keeps the agent off and offers to activate later", async () => {
+      renderBuilder();
+      await pickBeautyTemplate();
+      await answerUntilChannels();
+      await userEvent.click(screen.getByRole("button", { name: "agentBuilder.ui.connectLater" }));
 
       await userEvent.click(await screen.findByRole("button", { name: "agentBuilder.ui.activateLater" }));
 
       expect(activate).not.toHaveBeenCalled();
       expect(screen.getByText("agentBuilder.ui.activateLater")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "actions.next" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "agentBuilder.ui.finish" })).toBeInTheDocument();
     });
   });
 
@@ -319,8 +332,7 @@ describe("AgentBuilder", () => {
   it("shows a platform logo on each channel card (the channels turn connects real channels)", async () => {
     renderBuilder();
     await pickBeautyTemplate();
-    await answerCurrent(); // businessName
-    await answerCurrent(); // agentName
+    await answerUntilChannels();
     await screen.findByText("agentBuilder.channels.messenger");
     for (const channel of ["messenger", "zalo", "telegram", "website", "instagram", "tiktok", "shopee"]) {
       const card = screen.getByText(`agentBuilder.channels.${channel}`).closest("button");
@@ -713,6 +725,7 @@ describe("AgentBuilder", () => {
       await answerCurrent(); // businessName (keeps the prefilled value)
       await answerCurrent(); // agentName, creates the draft
       await waitFor(() => expect(linkChatbotAccount).toHaveBeenCalledWith({ accounts: ["acc-1"] }));
+      await answerUntilChannels();
       await screen.findByText("agentBuilder.ui.connected");
       expect(screen.getByRole("button", { name: "agentBuilder.ui.unlinkChannel" })).toBeInTheDocument();
     });
