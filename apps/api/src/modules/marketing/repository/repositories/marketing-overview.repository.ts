@@ -1,24 +1,9 @@
 import { DatabaseRepository } from '@app/common/database/bases/database.repository';
-import { CUSTOMER_MARKETING_DORMANT_DAYS } from '@app/modules/customer/constants/customer-marketing.constant';
-import {
-    ENUM_CUSTOMER_JOURNEY_STAGE,
-    ENUM_CUSTOMER_MARKETING_PERMISSION,
-    ENUM_MARKETING_EVENT_KIND,
-} from '@app/modules/customer/enums/customer-marketing.enum';
+import { ENUM_CUSTOMER_JOURNEY_STAGE } from '@app/modules/customer/enums/customer-marketing.enum';
 import { CustomerEntity } from '@app/modules/customer/repository/entities/customer.entity';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
-import {
-    MARKETING_OVERVIEW_MAX_MOVES,
-    MARKETING_OVERVIEW_WEEK_DAYS,
-    MARKETING_TODO_CROSS_SELL_FROM_DAYS,
-    MARKETING_TODO_CROSS_SELL_TO_DAYS,
-    MARKETING_TODO_INTERESTED_ACTIVE_DAYS,
-    MARKETING_TODO_REPURCHASE_DUE_SHARE,
-    MARKETING_TODO_REPURCHASE_LATE_DAYS,
-    MARKETING_TODO_WIN_BACK_FROM_DAYS,
-    MARKETING_TODO_WIN_BACK_TO_DAYS,
-} from '../../constants/marketing-overview.constant';
+import { MARKETING_OVERVIEW_MAX_MOVES } from '../../constants/marketing-overview.constant';
 import { ENUM_MARKETING_TODO } from '../../enums/marketing-overview.enum';
 import {
     IMarketingOverviewFunnelRow,
@@ -28,15 +13,19 @@ import {
     IMarketingOverviewStageRow,
     IMarketingOverviewWindow,
 } from '../../interfaces/marketing-overview.interface';
-
-// Every value inlined below is an enum value or a numeric constant, never
-// user input; the workspace and the clock are bound through `w`.
-const S = ENUM_CUSTOMER_JOURNEY_STAGE;
-const P = ENUM_CUSTOMER_MARKETING_PERMISSION;
-const K = ENUM_MARKETING_EVENT_KIND;
-const ago = (days: number): string => `w.now - make_interval(days => ${days})`;
-const WEEK_START = ago(MARKETING_OVERVIEW_WEEK_DAYS);
-const BOUGHT = `('${S.BOUGHT_ONCE}', '${S.BOUGHT_REPEAT}')`;
+import {
+    BLOCKED,
+    DORMANT,
+    K,
+    LIVE,
+    P,
+    PAUSED,
+    S,
+    TODO_CONDITIONS,
+    TODO_DEFERRED,
+    TODO_KEYS,
+    num,
+} from '../marketing.sql';
 
 const WINDOW = `w AS (SELECT ?::uuid AS ws, ?::timestamptz AS now, ?::int AS days)`;
 const windowParams = (w: IMarketingOverviewWindow): unknown[] => [
@@ -46,20 +35,6 @@ const windowParams = (w: IMarketingOverviewWindow): unknown[] => [
 ];
 /** Start of the chosen range ("so với 7 / 30 / 90 ngày trước"). */
 const PERIOD_START = `w.now - make_interval(days => w.days)`;
-
-/** Live customers with their state; no state row reads as Mới biết. */
-const LIVE = `live AS (
-    SELECT c.id, c.created_at, COALESCE(s.stage, '${S.NEW}') AS stage,
-           s.permission, s.permission_until, s.hostile,
-           s.last_inbound_at, s.last_order_at
-    FROM customers c
-    CROSS JOIN w
-    LEFT JOIN customer_marketing_states s
-        ON s.customer_id = c.id AND s.deleted_at IS NULL
-    WHERE c.workspace_id = w.ws
-        AND c.deleted_at IS NULL
-        AND c.merged_into_customer_id IS NULL
-)`;
 
 /**
  * Each customer's stage at the start of the range: the stage before their
@@ -91,65 +66,7 @@ was AS (
     LEFT JOIN first_move f ON f.customer_id = l.id
 )`;
 
-const DORMANT = `(l.last_inbound_at IS NOT NULL OR l.last_order_at IS NOT NULL)
-    AND COALESCE(l.last_inbound_at, '-infinity') < ${ago(CUSTOMER_MARKETING_DORMANT_DAYS)}
-    AND COALESCE(l.last_order_at, '-infinity') < ${ago(CUSTOMER_MARKETING_DORMANT_DAYS)}`;
-
-const PAUSED = `l.permission = '${P.PAUSED}'
-    AND (l.permission_until IS NULL OR l.permission_until > w.now)`;
-
-/**
- * Customers who must not get offers: opted out, paused, or Khó chịu. A
- * customer with no state row has NULL here, so it is coalesced to false.
- */
-const BLOCKED = `COALESCE(l.permission = '${P.STOPPED}' OR (${PAUSED}) OR l.hostile, false)`;
-
-/** Days since a timestamp, as a fraction. */
-const ageDays = (column: string): string =>
-    `EXTRACT(EPOCH FROM (w.now - ${column})) / 86400`;
-
-/** One boolean column per "Việc nên làm" row. */
-const TODO_CONDITIONS: Record<ENUM_MARKETING_TODO, string> = {
-    [ENUM_MARKETING_TODO.NEW]: `l.created_at >= ${WEEK_START}`,
-    [ENUM_MARKETING_TODO.INTERESTED]: `l.stage = '${S.INTERESTED}'
-        AND l.last_inbound_at >= ${ago(MARKETING_TODO_INTERESTED_ACTIVE_DAYS)}`,
-    [ENUM_MARKETING_TODO.ASKED_PRICE]: `l.stage = '${S.ASKED_PRICE}'
-        AND EXISTS (
-            SELECT 1 FROM marketing_events e
-            WHERE e.customer_id = l.id
-                AND e.kind = '${K.INTENT}'
-                AND e.new_value = '${S.ASKED_PRICE}'
-                AND e.deleted_at IS NULL
-                AND e.created_at >= ${WEEK_START}
-        )`,
-    [ENUM_MARKETING_TODO.CROSS_SELL]: `l.stage = '${S.BOUGHT_ONCE}'
-        AND l.last_order_at <= ${ago(MARKETING_TODO_CROSS_SELL_FROM_DAYS)}
-        AND l.last_order_at > ${ago(MARKETING_TODO_CROSS_SELL_TO_DAYS)}`,
-    [ENUM_MARKETING_TODO.REPURCHASE]: `l.stage IN ${BOUGHT}
-        AND EXISTS (
-            SELECT 1
-            FROM orders o
-            JOIN order_items oi ON oi.order_id = o.id AND oi.deleted_at IS NULL
-            JOIN product_groups g ON g.id = oi.product_group_id AND g.deleted_at IS NULL
-            WHERE o.customer_id = l.id
-                AND o.status = 'CONFIRMED'
-                AND o.deleted_at IS NULL
-                AND o.ordered_at = l.last_order_at
-                AND COALESCE(g.learned_repurchase_days, g.default_repurchase_days) > 0
-                AND ${ageDays('o.ordered_at')}
-                    >= ${MARKETING_TODO_REPURCHASE_DUE_SHARE} * COALESCE(g.learned_repurchase_days, g.default_repurchase_days)
-                AND ${ageDays('o.ordered_at')}
-                    < COALESCE(g.learned_repurchase_days, g.default_repurchase_days) + ${MARKETING_TODO_REPURCHASE_LATE_DAYS}
-        )`,
-    [ENUM_MARKETING_TODO.WIN_BACK]: `l.stage IN ${BOUGHT}
-        AND l.last_order_at <= ${ago(MARKETING_TODO_WIN_BACK_FROM_DAYS)}
-        AND l.last_order_at > ${ago(MARKETING_TODO_WIN_BACK_TO_DAYS)}
-        AND COALESCE(l.last_inbound_at, '-infinity') < ${ago(MARKETING_TODO_WIN_BACK_FROM_DAYS)}`,
-};
-const TODO_KEYS = Object.values(ENUM_MARKETING_TODO);
 const col = (key: ENUM_MARKETING_TODO): string => `t_${key.toLowerCase()}`;
-
-const num = (value: unknown): number => Number(value ?? 0);
 
 /**
  * Tổng quan numbers: group-bys over customers, their marketing state, stage
@@ -240,14 +157,24 @@ export class MarketingOverviewRepository extends DatabaseRepository<CustomerEnti
 
     /** Totals, Lâu không nhắn, paused, and the "Việc nên làm" rows. */
     async now(w: IMarketingOverviewWindow): Promise<IMarketingOverviewNowRow> {
-        const flags = TODO_KEYS.map(
-            key => `COALESCE(${TODO_CONDITIONS[key]}, false) AS ${col(key)}`
-        ).join(',\n');
+        const flags = TODO_KEYS.flatMap(key => [
+            `COALESCE(${TODO_CONDITIONS[key]}, false) AS ${col(key)}`,
+            ...(TODO_DEFERRED[key]
+                ? [`COALESCE(${TODO_DEFERRED[key]}, false) AS ${col(key)}_d`]
+                : []),
+        ]).join(',\n');
+        // A row leaves out who must not get offers, and who deferred the
+        // product group it is about.
+        const blockedFor = (key: ENUM_MARKETING_TODO): string =>
+            TODO_DEFERRED[key] ? `(blocked OR ${col(key)}_d)` : 'blocked';
+        const reached = (key: ENUM_MARKETING_TODO): string =>
+            `(${col(key)} AND NOT ${blockedFor(key)})`;
         const counts = TODO_KEYS.map(
-            key => `COUNT(*) FILTER (WHERE ${col(key)} AND NOT blocked) AS ${col(key)}_n,
-                COUNT(*) FILTER (WHERE ${col(key)} AND blocked) AS ${col(key)}_x`
+            key => `COUNT(*) FILTER (WHERE ${reached(key)}) AS ${col(key)}_n,
+                COUNT(*) FILTER (WHERE ${col(key)} AND ${blockedFor(key)}) AS ${col(key)}_x`
         ).join(',\n');
         const any = TODO_KEYS.map(col).join(' OR ');
+        const anyReached = TODO_KEYS.map(reached).join(' OR ');
         const [row] = await this.run(
             `WITH ${WINDOW}, ${LIVE},
             flagged AS (
@@ -262,8 +189,10 @@ export class MarketingOverviewRepository extends DatabaseRepository<CustomerEnti
                    COUNT(*) FILTER (WHERE dormant) AS dormant,
                    COUNT(*) FILTER (WHERE paused) AS paused,
                    ${counts},
-                   COUNT(*) FILTER (WHERE (${any}) AND NOT blocked) AS any_n,
-                   COUNT(*) FILTER (WHERE (${any}) AND blocked) AS any_x
+                   COUNT(*) FILTER (WHERE ${anyReached}) AS any_n,
+                   COUNT(*) FILTER (
+                       WHERE (${any}) AND NOT (${anyReached})
+                   ) AS any_x
             FROM flagged`,
             windowParams(w)
         );

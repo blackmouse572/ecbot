@@ -1,0 +1,10 @@
+{
+    "workspace": {
+        "preview": "Đã đếm tệp khách.",
+        "customers": "Đã tải danh sách khách trong tệp."
+    },
+    "error": {
+        "invalidCondition": "Có điều kiện chưa hợp lệ. Kiểm tra lại phép so sánh và giá trị.",
+        "presetOrConditions": "Hãy chọn một tệp có sẵn hoặc thêm ít nhất một điều kiện."
+    }
+}
