@@ -41,7 +41,8 @@ describe('KnowledgeItemWorkspaceController.create', () => {
                 awsS3Service as any,
                 knowledgeStorageQuotaService as any,
                 {} as any
-            )
+            ),
+            {} as any
         );
     });
 
@@ -155,7 +156,8 @@ describe('KnowledgeItemWorkspaceController.create (MEDIA)', () => {
                 awsS3Service as any,
                 { assertCanStore: jest.fn() } as any,
                 {} as any
-            )
+            ),
+            {} as any
         );
     });
 
@@ -285,6 +287,7 @@ describe('KnowledgeItemWorkspaceController.batchTag', () => {
             {} as any,
             {} as any,
             {} as any,
+            {} as any,
             {} as any
         );
 
@@ -318,6 +321,7 @@ describe('KnowledgeItemWorkspaceController.list', () => {
             {} as any,
             {} as any,
             {} as any,
+            {} as any,
             {} as any
         );
 
@@ -336,5 +340,47 @@ describe('KnowledgeItemWorkspaceController.list', () => {
             workspace: 'workspace-1',
             deletedAt: null,
         });
+    });
+
+    it('adds how many agents use each listed item', async () => {
+        const items = [{ id: 'item-a' }, { id: 'item-b' }];
+        const counts = new Map([['item-a', 2]]);
+        const knowledgeItemService = {
+            find: jest.fn().mockResolvedValue(items),
+            getTotal: jest.fn().mockResolvedValue(2),
+            mapList: jest.fn().mockReturnValue([]),
+        };
+        const chatbotKnowledgeItemService = {
+            countChatbotsByItems: jest.fn().mockResolvedValue(counts),
+        };
+        const controller = new KnowledgeItemWorkspaceController(
+            {} as any,
+            knowledgeItemService as any,
+            { findOne: jest.fn().mockResolvedValue({ id: 'kb-1' }) } as any,
+            { totalPage: jest.fn().mockReturnValue(1) } as any,
+            {} as any,
+            {} as any,
+            {} as any,
+            {} as any,
+            {} as any,
+            chatbotKnowledgeItemService as any
+        );
+
+        await controller.list(
+            { id: 'workspace-1' } as any,
+            'kb-1',
+            { _limit: 20, _offset: 0 } as any,
+            {},
+            {},
+            {}
+        );
+
+        expect(
+            chatbotKnowledgeItemService.countChatbotsByItems
+        ).toHaveBeenCalledWith(['item-a', 'item-b']);
+        expect(knowledgeItemService.mapList).toHaveBeenCalledWith(
+            items,
+            counts
+        );
     });
 });

@@ -87,6 +87,7 @@ import { KnowledgeItemEntity } from '../repository/entities/knowledge-item.entit
 import { KnowledgeBaseService } from '../services/knowledge-base.service';
 import { KnowledgeIngestService } from '../services/knowledge-ingest.service';
 import { KnowledgeItemService } from '../services/knowledge-item.service';
+import { ChatbotKnowledgeItemService } from '../services/chatbot-knowledge-item.service';
 import { KnowledgeItemFolderService } from '../services/knowledge-item-folder.service';
 import { KnowledgeItemUploadService } from '../services/knowledge-item-upload.service';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '../../../common/pagination/enums/pagination.enum';
@@ -114,7 +115,8 @@ export class KnowledgeItemWorkspaceController {
         private readonly knowledgeItemFolderService: KnowledgeItemFolderService,
         private readonly awsS3Service: AwsS3Service,
         private readonly knowledgeIngestService: KnowledgeIngestService,
-        private readonly knowledgeItemUploadService: KnowledgeItemUploadService
+        private readonly knowledgeItemUploadService: KnowledgeItemUploadService,
+        private readonly chatbotKnowledgeItemService: ChatbotKnowledgeItemService
     ) {}
 
     private readonly logger = new Logger(KnowledgeItemWorkspaceController.name);
@@ -198,13 +200,17 @@ export class KnowledgeItemWorkspaceController {
             }),
         ]);
 
+        const chatbotCounts =
+            await this.chatbotKnowledgeItemService.countChatbotsByItems(
+                data.map(item => item.id)
+            );
         const totalPage: number = this.paginationService.totalPage(
             total,
             _limit
         );
 
         return {
-            data: this.knowledgeItemService.mapList(data),
+            data: this.knowledgeItemService.mapList(data, chatbotCounts),
             _pagination: {
                 total,
                 totalPage,

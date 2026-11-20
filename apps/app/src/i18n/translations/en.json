@@ -1156,7 +1156,9 @@
       "capabilities": {
         "title": "Capabilities",
         "description": "What the agent can look up and do besides chatting.",
-        "knowledgeDescription": "Documents and pages the agent reads to answer."
+        "knowledgeDescription": "Documents and pages the agent reads to answer.",
+        "sharedWith_one": "Shared with {{count}} other agent",
+        "sharedWith_other": "Shared with {{count}} other agents"
       },
       "tabs": {
         "overview": "Overview",
@@ -2085,9 +2087,13 @@
         "status": "Status",
         "tags": "Tags",
         "created": "Created",
-        "actions": "Actions"
+        "actions": "Actions",
+        "inUse": "In use"
       },
-      "emptyTitle": "No knowledge items yet"
+      "emptyTitle": "No knowledge items yet",
+      "usedBy_one": "{{count}} agent",
+      "usedBy_other": "{{count}} agents",
+      "notUsed": "Not used yet"
     },
     "create": {
       "title": "Create Knowledge Item",

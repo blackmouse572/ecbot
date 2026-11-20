@@ -76,3 +76,27 @@ describe('ChatbotKnowledgeItemService link sync', () => {
         );
     });
 });
+
+describe('ChatbotKnowledgeItemService.mapList', () => {
+    it('adds how many agents use each linked item', () => {
+        const service = new ChatbotKnowledgeItemService(
+            {} as any,
+            {} as any,
+            {} as any,
+            {} as any
+        );
+        const links = [
+            {
+                id: 'link-1',
+                chatbot: { id: 'cb-1' },
+                knowledgeItem: { id: 'item-a', title: 'A' },
+                priority: 0,
+                isActive: true,
+            },
+        ];
+
+        const [link] = service.mapList(links as any, new Map([['item-a', 3]]));
+
+        expect(link.knowledgeItem.chatbotCount).toBe(3);
+    });
+});

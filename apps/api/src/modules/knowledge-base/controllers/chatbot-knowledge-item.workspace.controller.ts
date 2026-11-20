@@ -127,13 +127,17 @@ export class ChatbotKnowledgeItemWorkspaceController {
             this.chatbotKnowledgeItemService.getTotalByChatbot(chatbotId),
         ]);
 
+        const chatbotCounts =
+            await this.chatbotKnowledgeItemService.countChatbotsByItems(
+                data.map(link => link.knowledgeItem.id)
+            );
         const totalPage: number = this.paginationService.totalPage(
             total,
             _limit
         );
 
         return {
-            data: this.chatbotKnowledgeItemService.mapList(data),
+            data: this.chatbotKnowledgeItemService.mapList(data, chatbotCounts),
             _pagination: {
                 total,
                 totalPage,

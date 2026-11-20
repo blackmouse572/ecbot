@@ -1690,6 +1690,16 @@
         },
         {
           "columnNames": [
+            "knowledge_item_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "chatbot_knowledge_items_knowledge_item_id_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
             "id"
           ],
           "composite": false,

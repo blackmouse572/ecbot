@@ -5452,6 +5452,10 @@ export type KnowledgeItemResponseDto = {
      */
     attachment?: AwsS3ResponseDto;
     /**
+     * How many agents use this item. Only the workspace list responses fill it.
+     */
+    chatbotCount?: number;
+    /**
      * Type-specific metadata
      */
     metadata?: {
@@ -7684,6 +7688,10 @@ export type KnowledgeItemShortResponseDto = {
      * Tags
      */
     tags?: Array<string>;
+    /**
+     * How many agents use this item. Only the workspace list responses fill it.
+     */
+    chatbotCount?: number;
 };
 
 export type KnowledgeItemClientCreateRequestDto = {

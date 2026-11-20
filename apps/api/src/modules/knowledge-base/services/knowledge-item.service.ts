@@ -409,12 +409,16 @@ export class KnowledgeItemService {
         );
     }
 
-    mapGet(data: KnowledgeItemEntity): KnowledgeItemResponseDto {
+    mapGet(
+        data: KnowledgeItemEntity,
+        chatbotCount?: number
+    ): KnowledgeItemResponseDto {
         return plainToInstance(
             KnowledgeItemResponseDto,
             {
                 ...data,
                 tags: data.tagArray,
+                chatbotCount,
             },
             {
                 excludeExtraneousValues: true,
@@ -435,7 +439,16 @@ export class KnowledgeItemService {
         );
     }
 
-    mapList(data: KnowledgeItemEntity[]): KnowledgeItemResponseDto[] {
-        return data.map(item => this.mapGet(item));
+    /** `chatbotCounts` (from `countChatbotsByItems`) adds each item's agent count. */
+    mapList(
+        data: KnowledgeItemEntity[],
+        chatbotCounts?: Map<string, number>
+    ): KnowledgeItemResponseDto[] {
+        return data.map(item =>
+            this.mapGet(
+                item,
+                chatbotCounts ? (chatbotCounts.get(item.id) ?? 0) : undefined
+            )
+        );
     }
 }

@@ -1376,7 +1376,8 @@
       "capabilities": {
         "title": "Năng lực",
         "description": "Những gì agent tra cứu và làm được ngoài trò chuyện.",
-        "knowledgeDescription": "Tài liệu và trang agent đọc để trả lời."
+        "knowledgeDescription": "Tài liệu và trang agent đọc để trả lời.",
+        "sharedWith_other": "Dùng chung với {{count}} agent khác"
       },
       "tabs": {
         "overview": "Tổng quan",
@@ -2126,9 +2127,12 @@
         "status": "Trạng thái",
         "created": "Ngày tạo",
         "actions": "Hành động",
-        "tags": "Thẻ"
+        "tags": "Thẻ",
+        "inUse": "Đang dùng"
       },
-      "emptyTitle": "Chưa có mục kiến thức nào"
+      "emptyTitle": "Chưa có mục kiến thức nào",
+      "usedBy_other": "{{count}} agent",
+      "notUsed": "Chưa dùng"
     },
     "create": {
       "title": "Tạo mục kiến thức",

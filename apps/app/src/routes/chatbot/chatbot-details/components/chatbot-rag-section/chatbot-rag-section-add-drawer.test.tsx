@@ -18,7 +18,13 @@ Element.prototype.scroll = Element.prototype.scroll ?? (() => {});
 
 const kb = vi.hoisted(() => ({
   bases: [] as { id: string }[],
-  items: [] as { id: string; title: string; type: string; tags: string[] }[],
+  items: [] as {
+    id: string;
+    title: string;
+    type: string;
+    tags: string[];
+    chatbotCount?: number;
+  }[],
   link: vi.fn(),
 }));
 
@@ -202,5 +208,22 @@ describe("ChatbotRAGSectionAddDrawer multi-select", () => {
     );
 
     expect(kb.link).toHaveBeenCalledWith(["a"]);
+  });
+});
+
+describe("ChatbotRAGSectionAddDrawer in-use column", () => {
+  it("shows how many agents already use each item", () => {
+    kb.bases = [{ id: "kb-1" }];
+    kb.items = [
+      { id: "a", title: "Menu", type: "TEXT", tags: [], chatbotCount: 2 },
+      { id: "b", title: "FAQ", type: "TEXT", tags: [], chatbotCount: 0 },
+    ];
+    renderDrawer();
+
+    expect(
+      screen.getByText("knowledgeBase.list.columns.inUse"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("knowledgeBase.list.usedBy")).toBeInTheDocument();
+    expect(screen.getByText("knowledgeBase.list.notUsed")).toBeInTheDocument();
   });
 });

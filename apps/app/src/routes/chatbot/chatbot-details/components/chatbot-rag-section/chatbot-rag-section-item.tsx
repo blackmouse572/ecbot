@@ -26,6 +26,8 @@ export function ChatbotRAGSectionItem({
   const { knowledgeItem } = item;
   const name = knowledgeItem?.title || t("knowledgeItem.untitled", "Untitled");
   const typeConfig = KB_TYPE_CONFIG[knowledgeItem?.type] ?? KB_TYPE_CONFIG.TEXT;
+  // chatbotCount includes this agent.
+  const otherAgents = (knowledgeItem?.chatbotCount ?? 0) - 1;
 
   return (
     <Container
@@ -46,6 +48,13 @@ export function ChatbotRAGSectionItem({
             {name}
           </Text>
           <Text className="text-ui-fg-muted text-xs">{typeConfig.label}</Text>
+          {otherAgents > 0 && (
+            <Text className="text-ui-fg-subtle mt-1 text-xs">
+              {t("chatbot.details.capabilities.sharedWith", {
+                count: otherAgents,
+              })}
+            </Text>
+          )}
         </div>
       </div>
 
