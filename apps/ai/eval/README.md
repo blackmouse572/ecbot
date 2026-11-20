@@ -53,7 +53,9 @@ so it is not your change. Replies and check details for every sample are in
 $0.003 on Gemini 2.5 Flash). `--budget` (default $0.50, judge calls included)
 stops starting samples once it is spent, and the report says how many were
 skipped. Use `--dry-run` to count turns first, and `--only` / `--langs` /
-`--samples` to stay small while iterating.
+`--samples` to stay small while iterating. A full run at the defaults
+(every area, both models, 3 samples) is about 400 samples: either raise
+`--budget` to about 1.00, or pick areas with `--only`.
 
 ### Adding a scenario
 
