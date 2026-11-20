@@ -38,7 +38,9 @@ from eval.regression.checks import Turn, tag_name
 TIMEZONE = "Asia/Ho_Chi_Minh"
 # Tuesday afternoon, inside every seeded agent's opening hours.
 NOW = datetime.fromisoformat("2026-11-17T14:30:00+07:00")
-MAX_TOKENS = 2000
+# The agent builder saves no max_tokens (chatbot.max_tokens None). A cap here
+# cut DeepSeek V4.1 off mid-reasoning: an empty reply with finish_reason "length".
+MAX_TOKENS = None
 
 _case: contextvars.ContextVar[Case] = contextvars.ContextVar("eval_case")
 _template: contextvars.ContextVar[str] = contextvars.ContextVar("eval_template")
@@ -133,6 +135,8 @@ def _turn_from(messages: list[Any]) -> Turn:
             cost += float(usage.get("cost") or 0.0)
     last = messages[-1] if messages else None
     reply = ""
+    if isinstance(last, AIMessage) and (last.response_metadata or {}).get("finish_reason") == "length":
+        return Turn(reply="", tool_calls=calls, cost=cost, error="reply cut off at max_tokens (finish_reason length)")
     # Ending on a ToolMessage is end_without_reply (return_direct): no reply.
     if isinstance(last, AIMessage):
         content = last.content

@@ -183,3 +183,11 @@ def test_tag_name_drops_a_copied_emoji_like_apps_api():
     assert tag_name("Angry 🚨") == "Angry"
     assert tag_name("🗓️ Lịch hẹn mới") == "Lịch hẹn mới"
     assert tag_name("Khiếu nại") == "Khiếu nại"
+
+
+def test_a_reply_cut_off_at_max_tokens_is_reported_not_scored_as_empty():
+    from eval.regression.harness import _turn_from
+
+    cut = AIMessage(content="", response_metadata={"finish_reason": "length"})
+    turn = _turn_from([cut])
+    assert turn.error and "max_tokens" in turn.error
