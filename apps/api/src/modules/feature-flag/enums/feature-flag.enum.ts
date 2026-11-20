@@ -4,4 +4,6 @@ export enum ENUM_FEATURE_FLAG {
     ORDERS = 'orders',
     /** Nguồn khách: tracked links, their stats and first-source attribution. */
     CUSTOMER_SOURCES = 'customer-sources',
+    /** Tiếp thị v2: Tổng quan, sending by stage, Đã gửi. */
+    MARKETING = 'marketing',
 }

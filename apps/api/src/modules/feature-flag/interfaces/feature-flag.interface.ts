@@ -15,4 +15,5 @@ export interface IFeatureFlagProvider {
 export interface IFeatureFlags {
     orders: boolean;
     customerSources: boolean;
+    marketing: boolean;
 }

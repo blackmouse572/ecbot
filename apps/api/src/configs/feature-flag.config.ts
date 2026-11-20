@@ -15,5 +15,8 @@ export default registerAs(
         [ENUM_FEATURE_FLAG.CUSTOMER_SOURCES]: isFlagOn(
             process.env.FEATURE_CUSTOMER_SOURCES_ENABLE
         ),
+        [ENUM_FEATURE_FLAG.MARKETING]: isFlagOn(
+            process.env.FEATURE_MARKETING_ENABLE
+        ),
     })
 );

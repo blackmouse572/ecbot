@@ -554,6 +554,11 @@ export class AppEnvDto {
     @Type(() => Boolean)
     FEATURE_CUSTOMER_SOURCES_ENABLE?: boolean;
 
+    @IsOptional()
+    @IsBoolean()
+    @Type(() => Boolean)
+    FEATURE_MARKETING_ENABLE?: boolean;
+
     // Composio Tool Registry marketplace
     @IsOptional()
     @IsString()
