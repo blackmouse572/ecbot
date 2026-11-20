@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
+import { CUSTOMER_TAG_NAME_EMOJI } from '../constants/customer-tag.constant';
 import { ENUM_CUSTOMER_TAG_SYSTEM_KEY } from '../enums/customer-tag.enum';
 import { CustomerTagGetResponseDto } from '../dtos/response/customer-tag.get.response.dto';
 import { CustomerTagEntity } from '../repository/entities/customer-tag.entity';
@@ -81,15 +82,24 @@ export class CustomerTagService {
         );
     }
 
+    // The agent reads tags as `"Angry" 🚨` and some models send the emoji
+    // with the name, so a miss retries with the emoji stripped.
     async findOneByWorkspaceAndName(
         workspaceId: string,
         name: string
     ): Promise<CustomerTagEntity | null> {
-        return this.em.findOne(CustomerTagEntity, {
-            workspace: workspaceId,
-            name,
-            deletedAt: null,
-        } as any);
+        const find = (tagName: string) =>
+            this.em.findOne(CustomerTagEntity, {
+                workspace: workspaceId,
+                name: tagName,
+                deletedAt: null,
+            } as any);
+        const tag = await find(name);
+        if (tag) return tag;
+        const withoutEmoji = name.replace(CUSTOMER_TAG_NAME_EMOJI, '').trim();
+        return withoutEmoji && withoutEmoji !== name
+            ? find(withoutEmoji)
+            : null;
     }
 
     async create(
