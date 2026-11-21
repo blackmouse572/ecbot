@@ -129,6 +129,7 @@ describe('AuthPublicController.signUp', () => {
         expect(enqueue).toHaveBeenCalledWith(
             'email',
             ENUM_SEND_EMAIL_PROCESS.WELCOME,
+            // No language: no data, since the task DTO rejects an empty object.
             { send: { email: 'new@user.com', name: 'New User' } },
             { taskName: 'WELCOME-user-1-verification-1' }
         );
@@ -175,6 +176,25 @@ describe('AuthPublicController.signUp', () => {
             expect.objectContaining({
                 data: expect.objectContaining({ language: 'vi' }),
             }),
+            expect.anything()
+        );
+    });
+
+    it('passes the request language on to the welcome email', async () => {
+        await controller.signUp(
+            {
+                email: 'new@user.com',
+                name: 'New User',
+                password: 'Passw0rd!',
+                country: 'country-1',
+            } as any,
+            'vi'
+        );
+
+        expect(enqueue).toHaveBeenCalledWith(
+            'email',
+            ENUM_SEND_EMAIL_PROCESS.WELCOME,
+            expect.objectContaining({ data: { language: 'vi' } }),
             expect.anything()
         );
     });

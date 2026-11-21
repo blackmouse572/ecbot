@@ -15,7 +15,7 @@ export class EmailTasksSystemController {
     async handle(@Body() dto: EmailTaskDto): Promise<void> {
         switch (dto.jobName) {
             case ENUM_SEND_EMAIL_PROCESS.WELCOME:
-                await this.emailService.sendWelcome(dto.send);
+                await this.emailService.sendWelcome(dto.send, dto.data as any);
                 break;
             case ENUM_SEND_EMAIL_PROCESS.CHANGE_PASSWORD:
                 await this.emailService.sendChangePassword(dto.send);

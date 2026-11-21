@@ -410,3 +410,55 @@ describe('ResendProvider admin password emails', () => {
         );
     });
 });
+
+// The welcome email is written in the sign-up's language and leads to the app.
+describe('ResendProvider.sendWelcome', () => {
+    const sendEmail = jest.fn();
+    const render = renderTemplate as jest.Mock;
+    const values: Record<string, any> = {
+        'email.fromEmail': 'Ecbot <noreply@ecbot.dev>',
+        'email.supportEmail': 'support@ecbot.dev',
+        'home.name': 'Ecbot',
+        'home.url': 'https://app.ecbot.dev',
+        'app.timezone': 'Asia/Ho_Chi_Minh',
+    };
+    const config = { get: (key: string) => values[key] } as any;
+    const provider = new ResendProvider(
+        { sendEmail } as any,
+        config,
+        new HelperDateService(config)
+    );
+
+    beforeEach(() => {
+        render.mockClear();
+        sendEmail.mockReset();
+        sendEmail.mockResolvedValue({ error: null });
+    });
+
+    it('sends the Vietnamese subject and passes the language to the template', async () => {
+        await provider.sendWelcome(
+            { name: 'Linh', email: 'linh@b.com' },
+            { language: 'vi' }
+        );
+
+        expect(render).toHaveBeenCalledWith(
+            EmailSubject.Welcome,
+            expect.objectContaining({
+                language: 'vi',
+                name: 'Linh',
+                homeUrl: 'https://app.ecbot.dev',
+            })
+        );
+        expect(sendEmail.mock.calls[0][0].subject).toBe(
+            'Linh ơi, còn 1 bước là bot trả lời khách được rồi'
+        );
+    });
+
+    it('writes English when the job carries no language', async () => {
+        await provider.sendWelcome({ name: 'Linh', email: 'linh@b.com' });
+
+        expect(sendEmail.mock.calls[0][0].subject).toBe(
+            'Linh, one step left before your bot can reply'
+        );
+    });
+});

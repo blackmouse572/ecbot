@@ -5,6 +5,7 @@ import { EmailCreateDto } from 'src/modules/email/dtos/email.create.dto';
 import { EmailMobileNumberVerifiedDto } from 'src/modules/email/dtos/email.mobile-number-verified.dto';
 import { EmailResetPasswordDto } from 'src/modules/email/dtos/email.reset-password.dto';
 import { EmailSendDto } from 'src/modules/email/dtos/email.send.dto';
+import { EmailWelcomeDto } from 'src/modules/email/dtos/email.welcome.dto';
 import { EmailTempPasswordDto } from 'src/modules/email/dtos/email.temp-password.dto';
 import { EmailVerificationDto } from 'src/modules/email/dtos/email.verification.dto';
 import { EmailVerifiedDto } from 'src/modules/email/dtos/email.verified.dto';
@@ -17,6 +18,7 @@ import {
 } from '../email-template-components/admin-password-email.copy';
 import { resetPasswordEmailCopy } from '../email-template-components/reset-password-email.copy';
 import { verificationEmailCopy } from '../email-template-components/verification-email.copy';
+import { welcomeEmailCopy } from '../email-template-components/welcome-email.copy';
 import { accountBlockedEmailCopy } from '../email-template-components/account-blocked-email.copy';
 import { handoffEmailCopy } from '../email-template-components/handoff-email.copy';
 import { memberJoinedEmailCopy } from '../email-template-components/member-joined-email.copy';
@@ -126,14 +128,23 @@ export class ResendProvider implements IEmailService {
         });
     }
 
-    async sendWelcome({ name, email }: EmailSendDto): Promise<boolean> {
-        return this.sendEmailTemplate(email, EmailSubject.Welcome, {
+    async sendWelcome(
+        { name, email }: EmailSendDto,
+        { language }: EmailWelcomeDto = {}
+    ): Promise<boolean> {
+        const copy = welcomeEmailCopy(language, this.homeName);
+        return this.sendEmailTemplate(
             email,
-            homeName: this.homeName,
-            homeUrl: this.homeUrl,
-            name,
-            supportEmail: this.supportEmail,
-        });
+            EmailSubject.Welcome,
+            {
+                homeName: this.homeName,
+                homeUrl: this.homeUrl,
+                name,
+                supportEmail: this.supportEmail,
+                language,
+            },
+            copy.subject(name)
+        );
     }
 
     async sendCreate(
