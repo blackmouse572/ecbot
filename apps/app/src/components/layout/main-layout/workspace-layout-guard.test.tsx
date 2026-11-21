@@ -1,5 +1,5 @@
 import "@/i18n";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -97,5 +97,35 @@ describe.each([
 
     expect(screen.queryByText("page content")).toBeNull();
     expect(screen.queryByText("Workspace not found")).toBeNull();
+  });
+});
+
+describe.each([
+  ["MainLayout", MainLayout, "/x/dashboard"],
+  [
+    "WorkspaceSettingsLayout",
+    WorkspaceSettingsLayout,
+    "/x/settings/client-credentials",
+  ],
+])("%s when the workspace failed to load", (_, Layout, path) => {
+  it("offers a retry instead of a spinner and never renders the page", () => {
+    const retry = vi.fn();
+    ensured = {
+      isLoading: false,
+      hasWorkspaces: true,
+      isNotFound: false,
+      isSuspended: false,
+      loadFailed: true,
+      retry,
+      workspace: undefined,
+    };
+    renderLayout(Layout, path);
+
+    expect(
+      screen.getByText("Couldn't load this. Try again later."),
+    ).toBeTruthy();
+    expect(screen.queryByText("page content")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Try Again" }));
+    expect(retry).toHaveBeenCalledTimes(1);
   });
 });

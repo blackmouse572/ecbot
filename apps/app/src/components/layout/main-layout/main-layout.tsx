@@ -38,6 +38,7 @@ import { useEnsureWorkspace, useWorkspaceList } from "@/hooks/api/workspace";
 import { useScrollEdges } from "@/hooks/use-scroll-edges";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes";
+import { WorkspaceLoadFailed } from "./workspace-load-failed";
 import { WorkspaceNotFound } from "./workspace-not-found";
 import { WorkspaceSuspended } from "./workspace-suspended";
 import { WorkspaceSwitcher } from "../workspace-switcher";
@@ -52,8 +53,15 @@ export type WorkspaceNavItem = NonNullable<INavItem["items"]>[number];
 export const MainLayout = () => {
   const { t } = useTranslation();
   // Ensure we have a valid workspace
-  const { workspace, isLoading, hasWorkspaces, isSuspended, isNotFound } =
-    useEnsureWorkspace();
+  const {
+    loadFailed,
+    retry,
+    workspace,
+    isLoading,
+    hasWorkspaces,
+    isSuspended,
+    isNotFound,
+  } = useEnsureWorkspace();
   const { workspaces } = useWorkspaceList();
   const { workspaceSlug } = useWorkspaceParams();
   useAnalyticsGroup(workspace?.id);
@@ -77,9 +85,12 @@ export const MainLayout = () => {
     return <WorkspaceNotFound workspaces={workspaces} />;
   }
 
-  // Not loading, yet no workspace: the details call failed some other way
-  // (a stale session mid-redirect to /login, a server error). Stay on the
-  // loading state; the pages under the shell all assume a workspace.
+  // Still no workspace (a stale session mid-redirect to /login): stay on the
+  // loading state, since the pages under the shell all assume a workspace.
+  if (loadFailed) {
+    return <WorkspaceLoadFailed onRetry={() => void retry()} />;
+  }
+
   if (!workspace) {
     return <LogoBoxSpinner />;
   }

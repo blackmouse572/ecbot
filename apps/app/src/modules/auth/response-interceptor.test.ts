@@ -175,8 +175,25 @@ describe("handleAuthError", () => {
     "/api/v1/shared/auth/refresh",
     "/api/v1/shared/auth/impersonate/end",
     "/api/v1/shared/auth/impersonate/refresh",
+    // Public endpoints whose callers render their 401 (review on #572).
+    "/api/v1/public/auth/login/mfa",
+    "/api/v1/public/auth/impersonate/exchange",
+    "/api/v1/public/chatbots/preview/share-token",
   ])("does not refresh on a 401 from %s", async (url) => {
     const error = unauthorized(url);
+
+    await expect(handleAuthError(error)).rejects.toBe(error);
+
+    expect(refreshFn).not.toHaveBeenCalled();
+    expect(onSessionExpired).not.toHaveBeenCalled();
+  });
+
+  it("does not refresh a 401 on a request sent without a token", async () => {
+    store.set(tokenAtom, null);
+    const error = {
+      ...unauthorized(),
+      config: { url: "/api/v1/user/me", headers: {} },
+    };
 
     await expect(handleAuthError(error)).rejects.toBe(error);
 

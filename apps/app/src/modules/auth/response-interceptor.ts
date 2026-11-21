@@ -11,7 +11,11 @@ import { logoutGuard, tokenAtom } from "./state";
 // 401s on these calls are handled by their callers: the refresh call itself
 // (refreshing to fix a failed refresh would loop), and the impersonation
 // calls (useImpersonationRefresh / useEndImpersonation own those).
+// Public endpoints never take a session, so their 401s (an expired MFA
+// challenge, a spent impersonation code, a dead share link) are answers their
+// callers render, not a stale token.
 const SKIP_URL_FRAGMENTS = [
+  "/public/",
   "/shared/auth/refresh",
   "/impersonate/end",
   "/impersonate/refresh",
@@ -113,8 +117,11 @@ function retry(error: A, token: string) {
 
 export async function handleAuthError(error: A): Promise<A> {
   const url: string = error?.request?.responseURL ?? error?.config?.url ?? "";
+  const sent = error?.config?.headers?.Authorization;
   if (
     error?.response?.status !== 401 ||
+    // Sent without a token: there is no session to renew.
+    !sent ||
     SKIP_URL_FRAGMENTS.some((fragment) => url.includes(fragment)) ||
     // While a logout is in flight, client.clear() refetches mounted queries
     // without a token: this must not resurrect the session.
@@ -139,7 +146,6 @@ export async function handleAuthError(error: A): Promise<A> {
   // the new token instead of refreshing again.
   // getOnInit storage is synchronous, never a Promise.
   const current = store.get(tokenAtom) as string | null;
-  const sent = error.config?.headers?.Authorization;
   if (current && sent && sent !== `Bearer ${current}`) {
     return retry(error, current);
   }
