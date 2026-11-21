@@ -20,11 +20,15 @@
             "list": "Product groups retrieved successfully.",
             "create": "Product group created.",
             "update": "Product group updated.",
-            "delete": "Product group deleted."
+            "delete": "Product group deleted.",
+            "uploadImage": "Upload ready.",
+            "updateImage": "Product group photo saved.",
+            "deleteImage": "Product group photo removed."
         },
         "error": {
             "notFound": "Product group not found.",
-            "duplicate": "A product group with this name already exists."
+            "duplicate": "A product group with this name already exists.",
+            "imageKeyInvalid": "This photo was not uploaded for this product group."
         }
     },
     "system": {

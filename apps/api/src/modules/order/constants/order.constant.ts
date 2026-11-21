@@ -52,3 +52,6 @@ export const ORDER_IMPORT_INVALID_REASONS = [
     'customerLimit',
     'failed',
 ] as const;
+
+/** Product group photos, like profile photos. */
+export const PRODUCT_GROUP_IMAGE_MAX_BYTES = 5 * 1024 * 1024;

@@ -5,6 +5,12 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
+import { randomUUID } from 'crypto';
+import {
+    ENUM_FILE_MIME_IMAGE,
+    EXTENSION_BY_MIME_IMAGE,
+} from 'src/common/file/enums/file.enum';
+import { AwsS3Dto } from 'src/modules/aws/dtos/aws.s3.dto';
 import { ProductGroupGetResponseDto } from '../dtos/response/product-group.get.response.dto';
 import {
     IProductGroupInput,
@@ -69,6 +75,7 @@ export class ProductGroupService {
             workspace: workspaceId as any,
             name: input.name,
             defaultRepurchaseDays: input.defaultRepurchaseDays ?? undefined,
+            link: input.link ?? null,
         });
     }
 
@@ -78,7 +85,8 @@ export class ProductGroupService {
         input: IProductGroupInput
     ): Promise<ProductGroupEntity> {
         const group = await this.findOneInWorkspaceOrFail(id, workspaceId);
-        if (input.name !== undefined && input.name !== group.name) {
+        // `null` passes the optional check; the name cannot be cleared.
+        if (typeof input.name === 'string' && input.name !== group.name) {
             await this.assertNameFree(workspaceId, input.name, id);
             group.name = input.name;
         }
@@ -86,6 +94,27 @@ export class ProductGroupService {
             group.defaultRepurchaseDays =
                 input.defaultRepurchaseDays ?? undefined;
         }
+        if (input.link !== undefined) {
+            group.link = input.link;
+        }
+        return this.productGroupRepository.save(group);
+    }
+
+    /** Where the group's photos go; a key outside it is not this group's. */
+    imageKeyPrefix(group: ProductGroupEntity): string {
+        return `workspace/${group.workspace.id}/product-group/${group.id}/`;
+    }
+
+    newImageKey(group: ProductGroupEntity, mime: ENUM_FILE_MIME_IMAGE): string {
+        const extension = EXTENSION_BY_MIME_IMAGE[mime] ?? 'jpg';
+        return `${this.imageKeyPrefix(group)}${randomUUID()}.${extension}`;
+    }
+
+    setImage(
+        group: ProductGroupEntity,
+        image: AwsS3Dto | null
+    ): Promise<ProductGroupEntity> {
+        group.image = image;
         return this.productGroupRepository.save(group);
     }
 
@@ -133,6 +162,10 @@ export class ProductGroupService {
             {
                 ...group,
                 ...stats,
+                imageUrl: group.image
+                    ? (group.image.cdnUrl ?? group.image.completedUrl)
+                    : null,
+                link: group.link ?? null,
                 repurchaseDays:
                     group.learnedRepurchaseDays ??
                     group.defaultRepurchaseDays ??

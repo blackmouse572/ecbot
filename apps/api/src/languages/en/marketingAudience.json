@@ -1,0 +1,18 @@
+{
+    "workspace": {
+        "preview": "Audience counted.",
+        "customers": "Audience customers loaded."
+    },
+    "error": {
+        "invalidCondition": "A condition does not fit its field. Check the operator and its values.",
+        "presetOrConditions": "Send either a preset or at least one condition.",
+        "notFound": "Audience not found.",
+        "duplicate": "An audience with this name already exists."
+    },
+    "saved": {
+        "list": "Saved audiences loaded.",
+        "create": "Audience saved.",
+        "update": "Audience updated.",
+        "delete": "Audience deleted."
+    }
+}

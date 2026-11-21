@@ -17,6 +17,8 @@ import { CustomerClientController } from '@app/modules/customer/controllers/cust
 import { CustomerMarketingClientController } from '@app/modules/customer/controllers/customer-marketing.client.controller';
 import { CustomerTagAssignmentClientController } from '@app/modules/customer/controllers/customer-tag-assignment.client.controller';
 import { CustomerTagClientController } from '@app/modules/customer/controllers/customer-tag.client.controller';
+import { MarketingSavedAudienceClientController } from '@app/modules/marketing/controllers/marketing-saved-audience.client.controller';
+import { MarketingModule } from '@app/modules/marketing/marketing.module';
 import { CustomerModule } from '@app/modules/customer/customer.module';
 import { KnowledgeBaseClientController } from '@app/modules/knowledge-base/controllers/knowledge-base.client.controller';
 import { KnowledgeItemClientController } from '@app/modules/knowledge-base/controllers/knowledge-item.client.controller';
@@ -48,6 +50,7 @@ import { Module } from '@nestjs/common';
         CustomerMarketingClientController,
         CustomerTagClientController,
         CustomerTagAssignmentClientController,
+        MarketingSavedAudienceClientController,
         ToolClientController,
         ChatbotToolClientController,
         SkillClientController,
@@ -70,6 +73,7 @@ import { Module } from '@nestjs/common';
         ToolModule,
         SkillModule,
         AnalyticsModule,
+        MarketingModule,
         // ClientCredentialPolicyGuard checks the credential creator's roles.
         WorkSpaceModule,
         RoleModule,

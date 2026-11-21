@@ -20,6 +20,19 @@ export class ProductGroupGetResponseDto {
 
     @Expose()
     @ApiProperty({
+        type: String,
+        required: false,
+        nullable: true,
+        description: 'Public URL of the group photo',
+    })
+    imageUrl?: string | null;
+
+    @Expose()
+    @ApiProperty({ type: String, required: false, nullable: true })
+    link?: string | null;
+
+    @Expose()
+    @ApiProperty({
         type: Number,
         required: false,
         nullable: true,
