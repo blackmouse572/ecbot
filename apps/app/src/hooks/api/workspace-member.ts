@@ -57,7 +57,7 @@ export function workspaceMemberListQueryOptions(
   workspace: string,
   query?: Record<string, A>,
 ) {
-  const listKey = workspaceMemberKeys.list(query);
+  const listKey = workspaceMemberKeys.list({ workspace, ...query });
 
   return queryOptions({
     queryKey: listKey,
@@ -281,9 +281,14 @@ export function useGetWorkspaceByInvitationCodeMutation() {
   };
 }
 
+// Keyed by workspace too: the same user is a member of several workspaces,
+// with a different role in each.
+export const workspaceMemberDetailKey = (id: string, workspace: string) =>
+  workspaceMemberKeys.detail(id, { workspace });
+
 export function workspaceMemberQueryOptions(id: string, workspace: string) {
   return queryOptions({
-    queryKey: workspaceMemberKeys.detail(id),
+    queryKey: workspaceMemberDetailKey(id, workspace),
     queryFn: () =>
       workspaceMemberControllerMemberDetailsV1({
         path: { user: id, workspace },
@@ -307,7 +312,7 @@ export function useAssignRoleWorkspaceMember(id: string) {
   const { workspaceSlug } = useWorkspaceParams(),
     queryClient = useQueryClient();
 
-  const detailKey = workspaceMemberKeys.detail(id);
+  const detailKey = workspaceMemberDetailKey(id, workspaceSlug);
 
   return useMutation({
     mutationFn: (role: string) =>

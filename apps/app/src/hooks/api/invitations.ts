@@ -24,7 +24,7 @@ export const invitationListQueryOptions = (
   query?: Record<string, A>,
 ) =>
   queryOptions({
-    queryKey: invitationQueryKey.list(query),
+    queryKey: invitationQueryKey.list({ workspace, ...query }),
     queryFn: async () => {
       const response = await invitationWorkspaceControllerGetInvitationsV1({
         query,
