@@ -14,6 +14,9 @@ import {
 } from '../constants/order.doc.constant';
 import { ProductGroupCreateRequestDto } from '../dtos/request/product-group.create.request.dto';
 import { ProductGroupUpdateRequestDto } from '../dtos/request/product-group.update.request.dto';
+import { ProductGroupUploadImageRequestDto } from '../dtos/request/product-group.upload-image.request.dto';
+import { AwsS3PresignRequestDto } from 'src/modules/aws/dtos/request/aws.s3-presign.request.dto';
+import { AwsS3PresignResponseDto } from 'src/modules/aws/dtos/response/aws.s3-presign.response.dto';
 import { ProductGroupGetResponseDto } from '../dtos/response/product-group.get.response.dto';
 
 const auth = () => DocAuth({ xApiKey: true, jwtAccessToken: true });
@@ -73,5 +76,54 @@ export function ProductGroupWorkspaceDeleteDoc(): MethodDecorator {
         }),
         auth(),
         DocResponse('order.productGroup.workspace.delete')
+    );
+}
+
+export function ProductGroupWorkspaceUploadImageDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary:
+                'Get a URL to upload a product group photo to, then save it with PUT image',
+        }),
+        DocRequest({
+            params: [...WorkspaceDocParamsId, ...ProductGroupDocParamsId],
+            dto: ProductGroupUploadImageRequestDto,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        }),
+        auth(),
+        DocResponse<AwsS3PresignResponseDto>(
+            'order.productGroup.workspace.uploadImage',
+            { dto: AwsS3PresignResponseDto }
+        )
+    );
+}
+
+export function ProductGroupWorkspaceUpdateImageDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({ summary: 'Save the uploaded photo as the product group photo' }),
+        DocRequest({
+            params: [...WorkspaceDocParamsId, ...ProductGroupDocParamsId],
+            dto: AwsS3PresignRequestDto,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        }),
+        auth(),
+        DocResponse<ProductGroupGetResponseDto>(
+            'order.productGroup.workspace.updateImage',
+            { dto: ProductGroupGetResponseDto }
+        )
+    );
+}
+
+export function ProductGroupWorkspaceDeleteImageDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({ summary: 'Remove the product group photo' }),
+        DocRequest({
+            params: [...WorkspaceDocParamsId, ...ProductGroupDocParamsId],
+        }),
+        auth(),
+        DocResponse<ProductGroupGetResponseDto>(
+            'order.productGroup.workspace.deleteImage',
+            { dto: ProductGroupGetResponseDto }
+        )
     );
 }

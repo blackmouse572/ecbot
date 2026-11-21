@@ -28,3 +28,7 @@ export const MARKETING_AUDIENCE_NUMBER_OPERATORS: O[] = [
     O.AT_LEAST,
     O.AT_MOST,
 ];
+
+/** Saved audience list: search by name, newest first. */
+export const MARKETING_AUDIENCE_AVAILABLE_SEARCH = ['name'];
+export const MARKETING_AUDIENCE_AVAILABLE_ORDER_BY = ['name', 'createdAt'];

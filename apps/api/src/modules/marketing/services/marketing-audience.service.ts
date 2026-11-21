@@ -90,7 +90,7 @@ export class MarketingAudienceService {
     }
 
     /** A preset, or conditions that each fit their field; anything else is a 400. */
-    private toAudience(dto: MarketingAudienceRequestDto): IMarketingAudience {
+    toAudience(dto: MarketingAudienceRequestDto): IMarketingAudience {
         const hasConditions = dto.conditions !== undefined;
         if (dto.preset && hasConditions) {
             throw new BadRequestException({

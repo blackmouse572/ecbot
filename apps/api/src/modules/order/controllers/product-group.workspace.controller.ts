@@ -25,6 +25,7 @@ import {
     Controller,
     DefaultValuePipe,
     Delete,
+    ForbiddenException,
     Get,
     HttpCode,
     HttpStatus,
@@ -32,9 +33,13 @@ import {
     ParseBoolPipe,
     Patch,
     Post,
+    Put,
     Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { AwsS3PresignRequestDto } from 'src/modules/aws/dtos/request/aws.s3-presign.request.dto';
+import { AwsS3PresignResponseDto } from 'src/modules/aws/dtos/response/aws.s3-presign.response.dto';
+import { AwsS3Service } from 'src/modules/aws/services/aws.s3.service';
 import { PaginationQuery } from 'src/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from 'src/common/pagination/dtos/pagination.list.dto';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from 'src/common/pagination/enums/pagination.enum';
@@ -57,11 +62,15 @@ import {
 import {
     ProductGroupWorkspaceCreateDoc,
     ProductGroupWorkspaceDeleteDoc,
+    ProductGroupWorkspaceDeleteImageDoc,
     ProductGroupWorkspaceListDoc,
     ProductGroupWorkspaceUpdateDoc,
+    ProductGroupWorkspaceUpdateImageDoc,
+    ProductGroupWorkspaceUploadImageDoc,
 } from '../docs/product-group.workspace.doc';
 import { ProductGroupCreateRequestDto } from '../dtos/request/product-group.create.request.dto';
 import { ProductGroupUpdateRequestDto } from '../dtos/request/product-group.update.request.dto';
+import { ProductGroupUploadImageRequestDto } from '../dtos/request/product-group.upload-image.request.dto';
 import { ProductGroupGetResponseDto } from '../dtos/response/product-group.get.response.dto';
 import { ProductGroupEntity } from '../repository/entities/product-group.entity';
 import { ProductGroupService } from '../services/product-group.service';
@@ -76,7 +85,8 @@ export class ProductGroupWorkspaceController {
     constructor(
         private readonly productGroupService: ProductGroupService,
         private readonly paginationService: PaginationService,
-        private readonly activityService: ActivityService
+        private readonly activityService: ActivityService,
+        private readonly awsS3Service: AwsS3Service
     ) {}
 
     @ProductGroupWorkspaceListDoc()
@@ -175,6 +185,83 @@ export class ProductGroupWorkspaceController {
     ): Promise<void> {
         const group = await this.productGroupService.delete(id, workspace.id);
         await this.log(user, workspace, ENUM_ACTIVITY_ACTION.DELETE, group);
+    }
+
+    @ProductGroupWorkspaceUploadImageDoc()
+    @Response('order.productGroup.workspace.uploadImage')
+    @WorkspaceScopedProtected(ORDER_ABILITY_UPDATE)
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @HttpCode(HttpStatus.OK)
+    @Post(`/:${PRODUCT_GROUP_PARAM}/image/upload`)
+    async uploadImage(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Param(PRODUCT_GROUP_PARAM) id: string,
+        @Body() { mime, size }: ProductGroupUploadImageRequestDto
+    ): Promise<IResponse<AwsS3PresignResponseDto>> {
+        const group = await this.productGroupService.findOneInWorkspaceOrFail(
+            id,
+            workspace.id
+        );
+        const key = this.productGroupService.newImageKey(group, mime);
+        return { data: await this.awsS3Service.presignPutItem(key, size) };
+    }
+
+    @ProductGroupWorkspaceUpdateImageDoc()
+    @Response('order.productGroup.workspace.updateImage')
+    @WorkspaceScopedProtected(ORDER_ABILITY_UPDATE)
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Put(`/:${PRODUCT_GROUP_PARAM}/image`)
+    async updateImage(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Param(PRODUCT_GROUP_PARAM) id: string,
+        @Body() body: AwsS3PresignRequestDto,
+        @AuthJwtPayload('user', UserParsePipe) user: UserEntity
+    ): Promise<IResponse<ProductGroupGetResponseDto>> {
+        const group = await this.productGroupService.findOneInWorkspaceOrFail(
+            id,
+            workspace.id
+        );
+        // Only a key the upload step issued for this group: any other key
+        // would attach someone else's file.
+        if (
+            !body.key.startsWith(this.productGroupService.imageKeyPrefix(group))
+        ) {
+            throw new ForbiddenException({
+                statusCode: 403,
+                message: 'order.productGroup.error.imageKeyInvalid',
+            });
+        }
+        const saved = await this.productGroupService.setImage(
+            group,
+            this.awsS3Service.mapPresign(body)
+        );
+        await this.log(user, workspace, ENUM_ACTIVITY_ACTION.UPDATE, saved);
+        return { data: this.productGroupService.mapGet(saved) };
+    }
+
+    @ProductGroupWorkspaceDeleteImageDoc()
+    @Response('order.productGroup.workspace.deleteImage')
+    @WorkspaceScopedProtected(ORDER_ABILITY_UPDATE)
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @Delete(`/:${PRODUCT_GROUP_PARAM}/image`)
+    async deleteImage(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Param(PRODUCT_GROUP_PARAM) id: string,
+        @AuthJwtPayload('user', UserParsePipe) user: UserEntity
+    ): Promise<IResponse<ProductGroupGetResponseDto>> {
+        const group = await this.productGroupService.findOneInWorkspaceOrFail(
+            id,
+            workspace.id
+        );
+        const saved = await this.productGroupService.setImage(group, null);
+        await this.log(user, workspace, ENUM_ACTIVITY_ACTION.UPDATE, saved);
+        return { data: this.productGroupService.mapGet(saved) };
     }
 
     private log(

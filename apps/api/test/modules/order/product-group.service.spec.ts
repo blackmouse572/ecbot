@@ -68,4 +68,43 @@ describe('ProductGroupService', () => {
             productGroupRepository.refreshLearnedRepurchaseDays
         ).toHaveBeenCalledWith(['g1', 'g2']);
     });
+
+    it('shows the photo by its CDN URL, else its stored URL, and the link', () => {
+        const base = { id: 'g1', name: 'Serum', createdAt: new Date() };
+        const [cdn, stored, none] = service.mapList([
+            {
+                ...base,
+                image: {
+                    cdnUrl: 'https://cdn/a.jpg',
+                    completedUrl: 'https://s3/a.jpg',
+                },
+                link: 'https://shop.vn/serum',
+            },
+            { ...base, image: { completedUrl: 'https://s3/b.jpg' } },
+            base,
+        ] as any);
+        expect(cdn).toMatchObject({
+            imageUrl: 'https://cdn/a.jpg',
+            link: 'https://shop.vn/serum',
+        });
+        expect(stored.imageUrl).toBe('https://s3/b.jpg');
+        expect(none).toMatchObject({ imageUrl: null, link: null });
+    });
+
+    it('issues photo keys under the group, so a key from elsewhere is refused', () => {
+        const group = { id: 'g1', workspace: { id: 'ws1' } } as any;
+        const key = service.newImageKey(group, 'image/png' as any);
+        expect(key).toMatch(/^workspace\/ws1\/product-group\/g1\/[\w-]+\.png$/);
+        expect(key.startsWith(service.imageKeyPrefix(group))).toBe(true);
+    });
+
+    it('clears the link with null and keeps it when left out', async () => {
+        const group = { id: 'g1', name: 'Serum', link: 'https://a.vn' };
+        productGroupRepository.findOne.mockResolvedValue(group);
+        productGroupRepository.save.mockImplementation(async g => g);
+        await service.update('g1', 'ws1', { defaultRepurchaseDays: 30 });
+        expect(group.link).toBe('https://a.vn');
+        await service.update('g1', 'ws1', { link: null });
+        expect(group.link).toBeNull();
+    });
 });

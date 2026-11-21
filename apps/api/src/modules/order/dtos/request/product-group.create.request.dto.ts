@@ -4,9 +4,11 @@ import {
     IsNotEmpty,
     IsOptional,
     IsString,
+    IsUrl,
     Max,
     MaxLength,
     Min,
+    ValidateIf,
 } from 'class-validator';
 
 export class ProductGroupCreateRequestDto {
@@ -28,4 +30,17 @@ export class ProductGroupCreateRequestDto {
         example: 45,
     })
     defaultRepurchaseDays?: number | null;
+
+    // null clears it.
+    @ValidateIf((_, value) => value !== null && value !== undefined)
+    @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
+    @MaxLength(2048)
+    @ApiProperty({
+        type: String,
+        required: false,
+        nullable: true,
+        description: 'Where a customer buys it, sent with offers about it',
+        example: 'https://shop.example.vn/serum-b5',
+    })
+    link?: string | null;
 }
