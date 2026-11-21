@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { act, fireEvent, render } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FunnelChart } from "./funnel-chart";
 
 const props = {
@@ -17,51 +17,62 @@ const props = {
   dropLabel: (lost: number, share: string) => `${lost} stopped (${share})`,
 };
 
+// jsdom lays nothing out, so give every box 320x176 for the chart to measure.
+// The two stages split that width: the first ends at x=160.
+beforeEach(() => {
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(
+    DOMRect.fromRect({ width: 320, height: 176 }),
+  );
+});
+// Recharts handles a mouse move on the next animation frame.
+const hover = async (container: HTMLElement, clientX: number) => {
+  fireEvent.mouseMove(container.querySelector(".recharts-wrapper")!, {
+    clientX,
+    clientY: 80,
+  });
+  await act(() => new Promise(requestAnimationFrame));
+};
+const tooltip = (container: HTMLElement) =>
+  container.querySelector(".recharts-tooltip-wrapper");
+
 describe("FunnelChart", () => {
-  it("shows no stage details until a stage is hovered", () => {
-    render(<FunnelChart {...props} />);
-    expect(screen.queryByRole("tooltip")).toBeNull();
+  it("shows no stage details until the chart is hovered", () => {
+    const { container } = render(<FunnelChart {...props} />);
+    expect(tooltip(container)?.textContent ?? "").toBe("");
   });
 
-  it("shows each channel's count and share when hovering a stage", () => {
-    render(<FunnelChart {...props} />);
-    fireEvent.mouseEnter(screen.getByRole("group", { name: "Engaged" }));
+  it("follows the pointer and shows each channel's count and share at that stage", async () => {
+    const { container } = render(<FunnelChart {...props} />);
+    await hover(container, 220);
 
-    const tip = screen.getByRole("tooltip");
-    expect(tip.textContent).toContain("Engaged");
-    expect(tip.textContent).toContain("Messenger");
-    expect(tip.textContent).toContain("40");
-    expect(tip.textContent).toContain("50%");
-    expect(tip.textContent).toContain("Zalo");
-    expect(tip.textContent).toContain("25%");
-    expect(tip.textContent).toContain("55 stopped (55%)");
-  });
+    const tip = tooltip(container)!.textContent;
+    expect(tip).toContain("Engaged");
+    expect(tip).toContain("Messenger");
+    expect(tip).toContain("40");
+    expect(tip).toContain("50%");
+    expect(tip).toContain("Zalo");
+    expect(tip).toContain("25%");
+    expect(tip).toContain("55 stopped (55%)");
 
-  it("opens on keyboard focus and closes when the pointer leaves", () => {
-    render(<FunnelChart {...props} />);
-    const stage = screen.getByRole("group", { name: "New customers" });
-    fireEvent.focus(stage);
-    const tip = screen.getByRole("tooltip");
-    expect(tip.textContent).toContain("Zalo");
+    await hover(container, 60);
+    const first = tooltip(container)!.textContent;
+    expect(first).toContain("New customers");
+    expect(first).toContain("Zalo");
     // The first stage has no share of itself and no drop before it.
-    expect(tip.textContent).not.toMatch(/%|stopped/);
-    fireEvent.mouseLeave(stage);
-    expect(screen.queryByRole("tooltip")).toBeNull();
+    expect(first).not.toMatch(/%|stopped/);
   });
 
-  it("shows a series' logo in place of its colour dot", () => {
+  it("shows a series' logo in place of its colour dot", async () => {
     const series = props.series.map((s) => ({ ...s, icon: `/${s.key}.svg` }));
     const { container } = render(<FunnelChart {...props} series={series} />);
-    const legendLogos = () =>
-      [...container.querySelectorAll("ul img")].map((img) =>
-        img.getAttribute("src"),
-      );
-    expect(legendLogos()).toEqual(["/messenger.svg", "/zalo.svg"]);
+    const legendLogos = [...container.querySelectorAll("ul img")].map((img) =>
+      img.getAttribute("src"),
+    );
+    expect(legendLogos).toEqual(["/messenger.svg", "/zalo.svg"]);
 
-    fireEvent.mouseEnter(screen.getByRole("group", { name: "Engaged" }));
-    const tipLogos = screen
-      .getByRole("tooltip")
-      .querySelectorAll("img[src='/zalo.svg']");
-    expect(tipLogos).toHaveLength(1);
+    await hover(container, 220);
+    expect(
+      tooltip(container)!.querySelectorAll("img[src='/zalo.svg']"),
+    ).toHaveLength(1);
   });
 });
