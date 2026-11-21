@@ -77,6 +77,13 @@ export const MainLayout = () => {
     return <WorkspaceNotFound workspaces={workspaces} />;
   }
 
+  // Not loading, yet no workspace: the details call failed some other way
+  // (a stale session mid-redirect to /login, a server error). Stay on the
+  // loading state; the pages under the shell all assume a workspace.
+  if (!workspace) {
+    return <LogoBoxSpinner />;
+  }
+
   return (
     <>
       <Shell
@@ -86,13 +93,11 @@ export const MainLayout = () => {
         }}
         topbarActions={<NotificationMenu />}
       >
-        {workspace && (
-          <MainSidebar workspaces={workspaces} currentWorkspace={workspace} />
-        )}
+        <MainSidebar workspaces={workspaces} currentWorkspace={workspace} />
       </Shell>
       {/* Outside the shell, whose children render in both sidebars. */}
-      {workspace && <GuideMoments />}
-      {workspace && <CommandPalette />}
+      <GuideMoments />
+      <CommandPalette />
     </>
   );
 };

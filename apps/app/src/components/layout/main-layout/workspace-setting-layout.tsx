@@ -22,7 +22,7 @@ import { WorkspaceSuspended } from "./workspace-suspended";
 
 export const WorkspaceSettingsLayout = () => {
   const { t } = useTranslation();
-  const { isLoading, hasWorkspaces, isNotFound, isSuspended } =
+  const { workspace, isLoading, hasWorkspaces, isNotFound, isSuspended } =
     useEnsureWorkspace();
   const { workspaces } = useWorkspaceList();
   const { workspaceSlug } = useWorkspaceParams();
@@ -45,6 +45,13 @@ export const WorkspaceSettingsLayout = () => {
 
   if (isNotFound) {
     return <WorkspaceNotFound workspaces={workspaces} />;
+  }
+
+  // Not loading, yet no workspace: the details call failed some other way
+  // (a stale session mid-redirect to /login, a server error). Stay on the
+  // loading state; the pages under the shell all assume a workspace.
+  if (!workspace) {
+    return <LogoBoxSpinner />;
   }
 
   return (

@@ -1,5 +1,8 @@
 import { analytics } from "@/analytics/analytics";
-import { registerAuthRequestInterceptor } from "@/modules/auth";
+import {
+  registerAuthRequestInterceptor,
+  registerAuthResponseInterceptor,
+} from "@/modules/auth";
 import { client } from "@repo/client";
 import { Agentation } from "agentation";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
@@ -15,8 +18,11 @@ client.setConfig({
 // Registered before the router: createBrowserRouter starts resolving the
 // initial route's loaders immediately at construction time, so the
 // interceptor must exist first for those requests to carry the right
-// Authorization header (or none) instead of racing it.
+// Authorization header (or none) instead of racing it. The 401 handler is
+// registered here for the same reason: a stale stored token must be renewed
+// for those first requests too, not only once ProtectedRoute has mounted.
 registerAuthRequestInterceptor();
+registerAuthResponseInterceptor();
 // No-op in the open edition; refuses the widget, previews and impersonation.
 analytics.boot();
 const router = createBrowserRouter(getRouteMaps());
