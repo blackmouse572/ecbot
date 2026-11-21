@@ -64,7 +64,7 @@ export const ConversationListFilters = ({
 
   return (
     // Search and the filter button share one row; picked filters wrap below.
-    <div className="border-ui-border-base flex flex-wrap items-center gap-2 border-b px-4 pb-3 pt-2 [&>div:last-child]:max-w-full">
+    <div className="border-ui-border-base flex flex-wrap items-center gap-2 border-b px-4 pb-3 pt-2">
       <div className="min-w-[160px] flex-1">
         <Input
           type="search"
@@ -78,6 +78,7 @@ export const ConversationListFilters = ({
         filters={filters}
         prefix={CONVERSATION_FILTER_PREFIX}
         iconTrigger
+        className="max-w-full"
       />
     </div>
   );

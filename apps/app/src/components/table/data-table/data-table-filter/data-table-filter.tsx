@@ -43,6 +43,7 @@ type DataTableFilterProps = {
   prefix?: string;
   /** Render the trigger as a compact icon button instead of a text button. */
   iconTrigger?: boolean;
+  className?: string;
 };
 
 /** The URLSearchParams key a filter reads/writes, namespaced by `prefix`. */
@@ -78,6 +79,7 @@ export const DataTableFilter = ({
   readonly,
   prefix,
   iconTrigger,
+  className,
 }: DataTableFilterProps) => {
   const { t } = useTranslation(),
     [searchParams] = useSearchParams();
@@ -133,7 +135,12 @@ export const DataTableFilter = ({
 
   return (
     <DataTableFilterContext.Provider value={filterContextValue}>
-      <div className="max-w-2/3 flex flex-wrap items-center gap-2">
+      <div
+        className={clx(
+          "max-w-2/3 flex flex-wrap items-center gap-2",
+          className,
+        )}
+      >
         {activeFilters.map((active) => {
           // The live definition, so options fetched after the filter was
           // added (a server search) still reach the picker.

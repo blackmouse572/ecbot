@@ -127,6 +127,8 @@ const customerFixture = {
 };
 
 beforeEach(() => {
+  // Folded sections remember what was opened; start every test folded.
+  localStorage.clear();
   mutateAsync.mockReset();
   mutateAsync.mockResolvedValue(customerFixture);
   useUpdateCustomerMock.mockReturnValue({

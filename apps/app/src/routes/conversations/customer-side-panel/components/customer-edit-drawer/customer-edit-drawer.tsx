@@ -60,9 +60,10 @@ export const CustomerEditDrawer: FC<Props> = ({
     defaultValues: toFormValues(customer),
   });
 
-  // Start from the saved details each time the drawer opens.
+  // Start from the saved details each time the drawer opens. Skip while the
+  // user is mid-edit so a background refetch doesn't clobber their changes.
   useEffect(() => {
-    if (open) form.reset(toFormValues(customer));
+    if (open && !form.formState.isDirty) form.reset(toFormValues(customer));
   }, [open, customer, form]);
 
   const handleSubmit = form.handleSubmit(async (data) => {
@@ -147,6 +148,7 @@ export const CustomerEditDrawer: FC<Props> = ({
                 variant="primary"
                 size="small"
                 isLoading={isPending}
+                disabled={isPending || !form.formState.isDirty}
               >
                 {t("actions.save")}
               </Button>

@@ -2472,7 +2472,6 @@
           "more": "More actions"
         },
         "toast": {
-          "saving": "Saving customer…",
           "updated": "Customer updated.",
           "updateFailed": "Failed to update customer."
         },
