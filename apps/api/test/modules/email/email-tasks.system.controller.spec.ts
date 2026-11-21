@@ -23,15 +23,16 @@ describe('EmailTasksSystemController.handle', () => {
         controller = module.get(EmailTasksSystemController);
     });
 
-    it('dispatches WELCOME to EmailService.sendWelcome with the send payload', async () => {
+    it('dispatches WELCOME to EmailService.sendWelcome with send + data', async () => {
         await controller.handle({
             jobName: ENUM_SEND_EMAIL_PROCESS.WELCOME,
             send: { email: 'a@b.com', name: 'A' },
+            data: { language: 'vi' },
         });
-        expect(sendWelcome).toHaveBeenCalledWith({
-            email: 'a@b.com',
-            name: 'A',
-        });
+        expect(sendWelcome).toHaveBeenCalledWith(
+            { email: 'a@b.com', name: 'A' },
+            { language: 'vi' }
+        );
     });
 
     it('dispatches VERIFICATION to EmailService.sendVerification with send + data', async () => {

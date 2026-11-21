@@ -2,6 +2,7 @@ import { GetTemplateCommandOutput } from '@aws-sdk/client-ses';
 import { EmailMobileNumberVerifiedDto } from 'src/modules/email/dtos/email.mobile-number-verified.dto';
 import { EmailResetPasswordDto } from 'src/modules/email/dtos/email.reset-password.dto';
 import { EmailSendDto } from 'src/modules/email/dtos/email.send.dto';
+import { EmailWelcomeDto } from 'src/modules/email/dtos/email.welcome.dto';
 import { EmailTempPasswordDto } from 'src/modules/email/dtos/email.temp-password.dto';
 import { EmailVerificationDto } from 'src/modules/email/dtos/email.verification.dto';
 import { EmailVerifiedDto } from 'src/modules/email/dtos/email.verified.dto';
@@ -22,7 +23,10 @@ export interface IEmailService {
     importWelcome(): Promise<boolean>;
     getWelcome(): Promise<GetTemplateCommandOutput>;
     deleteWelcome(): Promise<boolean>;
-    sendWelcome({ name, email }: EmailSendDto): Promise<boolean>;
+    sendWelcome(
+        { name, email }: EmailSendDto,
+        welcomeDto?: EmailWelcomeDto
+    ): Promise<boolean>;
     importCreate(): Promise<boolean>;
     getCreate(): Promise<GetTemplateCommandOutput>;
     deleteCreate(): Promise<boolean>;

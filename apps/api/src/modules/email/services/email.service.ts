@@ -3,6 +3,7 @@ import { EmailCreateDto } from 'src/modules/email/dtos/email.create.dto';
 import { EmailMobileNumberVerifiedDto } from 'src/modules/email/dtos/email.mobile-number-verified.dto';
 import { EmailResetPasswordDto } from 'src/modules/email/dtos/email.reset-password.dto';
 import { EmailSendDto } from 'src/modules/email/dtos/email.send.dto';
+import { EmailWelcomeDto } from 'src/modules/email/dtos/email.welcome.dto';
 import { EmailTempPasswordDto } from 'src/modules/email/dtos/email.temp-password.dto';
 import { EmailVerificationDto } from 'src/modules/email/dtos/email.verification.dto';
 import { EmailVerifiedDto } from 'src/modules/email/dtos/email.verified.dto';
@@ -45,7 +46,8 @@ export class EmailService implements IEmailService {
 
     deleteWelcome = () => this.delegate('deleteWelcome');
 
-    sendWelcome = (dto: EmailSendDto) => this.delegate('sendWelcome', dto);
+    sendWelcome = (dto: EmailSendDto, welcomeDto?: EmailWelcomeDto) =>
+        this.delegate('sendWelcome', dto, welcomeDto);
 
     importCreate = () => this.delegate('importCreate');
 

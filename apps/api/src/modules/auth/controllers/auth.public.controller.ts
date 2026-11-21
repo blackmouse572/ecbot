@@ -644,7 +644,11 @@ export class AuthPublicController {
                     this.cloudTasksClient.enqueue(
                         'email',
                         ENUM_SEND_EMAIL_PROCESS.WELCOME,
-                        { send: { email, name } },
+                        {
+                            send: { email, name },
+                            // Only with a language: the task DTO rejects an empty data object.
+                            ...(language && { data: { language } }),
+                        },
                         {
                             taskName: `${ENUM_SEND_EMAIL_PROCESS.WELCOME}-${user.id}-${verification.id}`,
                         }
