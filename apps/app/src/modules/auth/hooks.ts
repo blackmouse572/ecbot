@@ -1,7 +1,6 @@
 import {
   useLogout,
   useMe,
-  useRefreshToken,
   USER_BLOCKED_FORBIDDEN_STATUS_CODE,
 } from "@/hooks/api";
 import {
@@ -10,26 +9,19 @@ import {
   type AppAbility,
   type PolicyAbility,
 } from "@repo/auth";
-import { client, type AuthRefreshResponseDto } from "@repo/client";
 import {
   impersonationAtom,
   useEndImpersonation,
-  useImpersonation,
 } from "@/modules/impersonation";
 import { usePrompt } from "@medusajs/ui";
 import { useAtom, useAtomValue } from "jotai/react";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useParams } from "react-router-dom";
 import { loginRedirectPath } from "./login-redirect";
 import { pickAuthToken } from "./pick-auth-token";
-import { logoutGuard, tokenAtom } from "./state";
-
-// Module-level singletons: ensure only one refresh request is in-flight at a
-// time (concurrent 401s wait on this promise instead of each firing their own
-// refresh), and let the caller see *why* the last refresh failed.
-let pendingRefresh: Promise<AuthRefreshResponseDto | null> | null = null;
-let lastRefreshErrorStatusCode: number | null = null;
+import { setAuthSessionHandlers } from "./response-interceptor";
+import { tokenAtom } from "./state";
 
 export const useAuthToken = () => {
   const impersonation = useAtomValue(impersonationAtom);
@@ -40,119 +32,43 @@ export const useAuth = () => {
   return useAtom(tokenAtom);
 };
 
+// Gives the boot-time 401 interceptor (response-interceptor.ts) the React
+// side of an expired session: the banned prompt, a full logout, and ending
+// an impersonation. Until this mounts, the interceptor falls back to clearing
+// the token and a hard redirect to /login.
 export const useRefreshTokenEffect = () => {
-  const [_, setToken] = useAuth();
   const logout = useLogout();
-  const { mutateAsync: refreshToken } = useRefreshToken();
   const location = useLocation();
-  // The interceptor is registered once, so it reads the location through a
-  // ref to redirect back to the current page, not the first one.
-  const locationRef = useRef(location);
-  locationRef.current = location;
   const prompt = usePrompt();
   const { t } = useTranslation();
-  // The interceptor is registered once, so it reads these through refs.
-  const impersonation = useImpersonation();
   const endImpersonation = useEndImpersonation();
-  const impersonationRef = useRef(impersonation);
-  const endImpersonationRef = useRef(endImpersonation);
-  impersonationRef.current = impersonation;
-  endImpersonationRef.current = endImpersonation;
-  const getRefreshToken: () => Promise<AuthRefreshResponseDto | null> =
-    async () => {
-      try {
-        return await refreshToken().then((data) => {
-          const res = data.data as unknown as {
-            data: AuthRefreshResponseDto;
-          } | null;
-          if (res) {
-            lastRefreshErrorStatusCode = null;
-            return res.data;
-          }
-          // throwOnError is false, so a 403 (e.g. banned user) lands here as
-          // `data.error`, not as a thrown error — capture it for the caller.
-          lastRefreshErrorStatusCode = (data.error as A)?.statusCode ?? null;
-          return null;
-        });
-      } catch (error) {
-        console.error("Failed to refresh token:", error);
-        lastRefreshErrorStatusCode =
-          (error as A)?.response?.data?.statusCode ?? null;
-        return null;
-      }
-    };
-
-  const interceptResponse = useCallback(async (error: A) => {
-    if (!pendingRefresh) {
-      pendingRefresh = getRefreshToken().finally(() => {
-        pendingRefresh = null;
-      });
-    }
-
-    const token = await pendingRefresh;
-    if (token !== null) {
-      setToken(token.accessToken);
-      return client.instance.request({
-        ...error.config,
-        headers: {
-          ...error.config.headers,
-          Authorization: `Bearer ${token.accessToken}`,
-        },
-      });
-    } else {
-      console.error("Token refresh failed, logging out");
-      if (lastRefreshErrorStatusCode === USER_BLOCKED_FORBIDDEN_STATUS_CODE) {
-        await prompt({
-          title: t("app.auth.login.errors.banned.title"),
-          description: t("app.auth.login.errors.banned.description"),
-          confirmText: t("app.auth.login.actions.ok"),
-          cancelText: t("actions.cancel"),
-        });
-      }
-      // logout() navigates to "/login" itself once its server round-trip
-      // resolves — a separate go(...) fired right after it would win the
-      // race and then get clobbered by that trailing navigation. Route the
-      // redirect through logout's own `{ to }` instead of a second call.
-      await logout({ to: loginRedirectPath(locationRef.current) });
-      return Promise.reject(error);
-    }
-  }, []);
+  // The handlers are installed once, so they read these through refs: the
+  // redirect goes back to the current page, not the first one.
+  const latest = useRef({ logout, location, prompt, t, endImpersonation });
+  latest.current = { logout, location, prompt, t, endImpersonation };
 
   useEffect(() => {
-    const intercept = client.instance.interceptors.response.use(
-      (response) => response,
-      async (error) => {
-        // logoutGuard: while a logout is in flight, client.clear() causes
-        // mounted queries to refetch without an Authorization header — this
-        // must not resurrect the session via a silent refresh.
-        if (
-          error.response?.status === 401 &&
-          !error.request?.responseURL?.includes("/shared/auth/refresh") &&
-          !error.request?.responseURL?.includes("/impersonate/end") &&
-          !error.request?.responseURL?.includes("/impersonate/refresh") &&
-          !logoutGuard.current
-        ) {
-          // While impersonating there is no refresh cookie and renewal is
-          // unwanted: a 401 ends the impersonation session instead. The
-          // impersonate/end and impersonate/refresh calls are excluded above:
-          // useImpersonationRefresh handles a 401 on its own refresh, and
-          // ending twice would call end twice.
-          if (impersonationRef.current) {
-            void endImpersonationRef.current();
-            return Promise.reject(error);
-          }
-          // Deduplicate concurrent refresh calls: if a refresh is already
-          // in-flight, reuse its promise instead of firing another request.
-          return interceptResponse(error);
-        }
-        return Promise.reject(error);
+    setAuthSessionHandlers({
+      onImpersonationExpired: () => {
+        void latest.current.endImpersonation();
       },
-    );
-
-    return () => {
-      client.instance.interceptors.response.eject(intercept);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      onSessionExpired: async (refreshErrorStatusCode) => {
+        const { logout, location, prompt, t } = latest.current;
+        if (refreshErrorStatusCode === USER_BLOCKED_FORBIDDEN_STATUS_CODE) {
+          await prompt({
+            title: t("app.auth.login.errors.banned.title"),
+            description: t("app.auth.login.errors.banned.description"),
+            confirmText: t("app.auth.login.actions.ok"),
+            cancelText: t("actions.cancel"),
+          });
+        }
+        // logout() clears the token and queries, then navigates to its own
+        // `{ to }` once the server round-trip resolves; a separate navigate
+        // fired right after would be clobbered by that trailing one.
+        await logout({ to: loginRedirectPath(location) });
+      },
+    });
+    return () => setAuthSessionHandlers(null);
   }, []);
 };
 

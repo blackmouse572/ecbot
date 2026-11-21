@@ -17,13 +17,21 @@ import { type INavItem, NavItem, Shell } from "@repo/ui/layout";
 import { UserMenu } from "../user-menu";
 import { NotificationMenu } from "../notification-menu/notification-menu";
 import { WorkspaceSwitcher } from "../workspace-switcher";
+import { WorkspaceLoadFailed } from "./workspace-load-failed";
 import { WorkspaceNotFound } from "./workspace-not-found";
 import { WorkspaceSuspended } from "./workspace-suspended";
 
 export const WorkspaceSettingsLayout = () => {
   const { t } = useTranslation();
-  const { isLoading, hasWorkspaces, isNotFound, isSuspended } =
-    useEnsureWorkspace();
+  const {
+    loadFailed,
+    retry,
+    workspace,
+    isLoading,
+    hasWorkspaces,
+    isNotFound,
+    isSuspended,
+  } = useEnsureWorkspace();
   const { workspaces } = useWorkspaceList();
   const { workspaceSlug } = useWorkspaceParams();
 
@@ -45,6 +53,16 @@ export const WorkspaceSettingsLayout = () => {
 
   if (isNotFound) {
     return <WorkspaceNotFound workspaces={workspaces} />;
+  }
+
+  // Still no workspace (a stale session mid-redirect to /login): stay on the
+  // loading state, since the pages under the shell all assume a workspace.
+  if (loadFailed) {
+    return <WorkspaceLoadFailed onRetry={() => void retry()} />;
+  }
+
+  if (!workspace) {
+    return <LogoBoxSpinner />;
   }
 
   return (

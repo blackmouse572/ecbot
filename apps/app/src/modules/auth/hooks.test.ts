@@ -4,41 +4,17 @@ import { MemoryRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { PolicyAbilityFactory } from "@repo/auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const {
-  promptFn,
-  logoutFn,
-  refreshMutateAsync,
-  requestFn,
-  mockUseMe,
-  endImpersonation,
-  impersonationMock,
-} = vi.hoisted(() => ({
-  promptFn: vi.fn(),
-  logoutFn: vi.fn(),
-  refreshMutateAsync: vi.fn(),
-  requestFn: vi.fn(),
-  mockUseMe: vi.fn(),
-  endImpersonation: vi.fn(),
-  impersonationMock: { current: null as unknown },
-}));
+const { promptFn, logoutFn, mockUseMe, endImpersonation, setHandlers } =
+  vi.hoisted(() => ({
+    promptFn: vi.fn(),
+    logoutFn: vi.fn(),
+    mockUseMe: vi.fn(),
+    endImpersonation: vi.fn(),
+    setHandlers: vi.fn(),
+  }));
 
-let capturedErrorHandler: ((error: A) => A) | null = null;
-
-vi.mock("@repo/client", () => ({
-  client: {
-    instance: {
-      interceptors: {
-        response: {
-          use: vi.fn((_success: A, errorHandler: A) => {
-            capturedErrorHandler = errorHandler;
-            return 1;
-          }),
-          eject: vi.fn(),
-        },
-      },
-      request: requestFn,
-    },
-  },
+vi.mock("./response-interceptor", () => ({
+  setAuthSessionHandlers: setHandlers,
 }));
 
 vi.mock("@medusajs/ui", () => ({
@@ -57,51 +33,49 @@ vi.mock("@repo/auth", () => ({
 vi.mock("@/hooks/api", () => ({
   useLogout: () => logoutFn,
   useMe: () => mockUseMe(),
-  useRefreshToken: () => ({ mutateAsync: refreshMutateAsync }),
   USER_BLOCKED_FORBIDDEN_STATUS_CODE: 5159,
 }));
 
 vi.mock("@/modules/impersonation", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/modules/impersonation/state")>()),
-  useImpersonation: () => impersonationMock.current,
   useEndImpersonation: () => endImpersonation,
 }));
 
+import type { AuthSessionHandlers } from "./response-interceptor";
 import { useRefreshTokenEffect, useUserAbility } from "./hooks";
-import { logoutGuard } from "./state";
 
 const wrapper = ({ children }: PropsWithChildren) =>
   createElement(MemoryRouter, null, children);
 
-const fakeAxiosError = {
-  response: { status: 401 },
-  request: { responseURL: "/api/v1/user/notification/list" },
-  config: { headers: {} },
-};
+const installedHandlers = () =>
+  setHandlers.mock.calls.at(-1)![0] as AuthSessionHandlers;
 
 describe("useRefreshTokenEffect", () => {
   beforeEach(() => {
     promptFn.mockReset();
     logoutFn.mockReset();
-    refreshMutateAsync.mockReset();
-    requestFn.mockReset();
     endImpersonation.mockReset();
-    impersonationMock.current = null;
-    capturedErrorHandler = null;
-    logoutGuard.current = false;
+    setHandlers.mockReset();
+  });
+
+  it("installs the session handlers on mount and restores the defaults on unmount", () => {
+    const { unmount } = renderHook(() => useRefreshTokenEffect(), { wrapper });
+    expect(installedHandlers()).toEqual(
+      expect.objectContaining({
+        onSessionExpired: expect.any(Function),
+        onImpersonationExpired: expect.any(Function),
+      }),
+    );
+
+    unmount();
+    expect(setHandlers).toHaveBeenLastCalledWith(null);
   });
 
   it("awaits the banned alert modal before logging out when refresh fails with BLOCKED_FORBIDDEN", async () => {
-    refreshMutateAsync.mockResolvedValue({
-      data: null,
-      error: { statusCode: 5159, message: "user.error.blocked" },
-    });
     promptFn.mockResolvedValue(true);
-
     renderHook(() => useRefreshTokenEffect(), { wrapper });
-    expect(capturedErrorHandler).toBeTruthy();
 
-    await capturedErrorHandler!(fakeAxiosError).catch(() => {});
+    await installedHandlers().onSessionExpired(5159);
 
     expect(promptFn).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -117,32 +91,18 @@ describe("useRefreshTokenEffect", () => {
     );
   });
 
-  it("logs out without the modal for a non-banned refresh failure", async () => {
-    refreshMutateAsync.mockResolvedValue({
-      data: null,
-      error: { statusCode: 401, message: "session expired" },
-    });
-
+  it("logs out to /login with a return path, without the modal, for a non-banned refresh failure", async () => {
     renderHook(() => useRefreshTokenEffect(), { wrapper });
-    expect(capturedErrorHandler).toBeTruthy();
 
-    await capturedErrorHandler!(fakeAxiosError).catch(() => {});
+    await installedHandlers().onSessionExpired(401);
 
-    expect(logoutFn).toHaveBeenCalledTimes(1);
     expect(promptFn).not.toHaveBeenCalled();
-    // logout() is async and navigates to "/login" itself once the server
-    // round-trip resolves — a separate synchronous go(...) call right after
-    // firing logout() would win the race and then get clobbered by that
-    // trailing bare "/login". The redirect must be routed through logout's
-    // own `{ to }` param instead of a second, independent navigation.
+    // The redirect goes through logout's own `{ to }`: a separate navigate
+    // fired right after would be clobbered by logout's trailing one.
     expect(logoutFn).toHaveBeenCalledWith({ to: "/login?redirect=%2F" });
   });
 
   it("sends the user back to the page they are on now, not the first one", async () => {
-    refreshMutateAsync.mockResolvedValue({
-      data: null,
-      error: { statusCode: 401, message: "session expired" },
-    });
     let go: (to: string) => void = () => {};
     const routerWrapper = ({ children }: PropsWithChildren) =>
       createElement(
@@ -164,139 +124,20 @@ describe("useRefreshTokenEffect", () => {
     );
     act(() => go("/kunmart/inbox?c=1"));
 
-    await capturedErrorHandler!(fakeAxiosError).catch(() => {});
+    await installedHandlers().onSessionExpired(null);
 
     expect(logoutFn).toHaveBeenCalledWith({
       to: "/login?redirect=%2Fkunmart%2Finbox%3Fc%3D1",
     });
   });
 
-  it("does not crash when the error has no request object (defensive optional chaining)", async () => {
-    requestFn.mockResolvedValue({ data: {} });
-    refreshMutateAsync.mockResolvedValue({
-      data: {
-        data: {
-          tokenType: "Bearer",
-          roleType: "USER",
-          expiresIn: 15,
-          accessToken: "new-token",
-        },
-      },
-    });
-
+  it("ends the impersonation when an impersonated session expires", () => {
     renderHook(() => useRefreshTokenEffect(), { wrapper });
-    expect(capturedErrorHandler).toBeTruthy();
 
-    const errorWithoutRequest = {
-      response: { status: 401 },
-      config: { headers: {} },
-    };
-    await capturedErrorHandler!(errorWithoutRequest);
-
-    expect(refreshMutateAsync).toHaveBeenCalledTimes(1);
-  });
-
-  it("never logs the access token to the console on a successful refresh", async () => {
-    requestFn.mockResolvedValue({ data: {} });
-    refreshMutateAsync.mockResolvedValue({
-      data: {
-        data: {
-          tokenType: "Bearer",
-          roleType: "USER",
-          expiresIn: 15,
-          accessToken: "super-secret-access-token",
-          refreshToken: "super-secret-refresh-token",
-        },
-      },
-    });
-    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-    const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
-
-    renderHook(() => useRefreshTokenEffect(), { wrapper });
-    expect(capturedErrorHandler).toBeTruthy();
-
-    await capturedErrorHandler!(fakeAxiosError).catch(() => {});
-
-    for (const spy of [logSpy, infoSpy]) {
-      for (const call of spy.mock.calls) {
-        for (const arg of call) {
-          expect(JSON.stringify(arg)).not.toContain(
-            "super-secret-access-token",
-          );
-        }
-      }
-    }
-    logSpy.mockRestore();
-    infoSpy.mockRestore();
-  });
-
-  it("skips refreshing and rejects immediately when a logout is in flight", async () => {
-    logoutGuard.current = true;
-
-    renderHook(() => useRefreshTokenEffect(), { wrapper });
-    expect(capturedErrorHandler).toBeTruthy();
-
-    await expect(capturedErrorHandler!(fakeAxiosError)).rejects.toBe(
-      fakeAxiosError,
-    );
-
-    expect(refreshMutateAsync).not.toHaveBeenCalled();
-    expect(logoutFn).not.toHaveBeenCalled();
-  });
-
-  it("ends impersonation instead of refreshing on a 401 while impersonating", async () => {
-    impersonationMock.current = {
-      accessToken: "imp",
-      expiresAt: Date.now() + 1000,
-      impersonatedBy: "a",
-      user: { id: "u1", name: "A", email: "a@x.com" },
-    };
-
-    renderHook(() => useRefreshTokenEffect(), { wrapper });
-    expect(capturedErrorHandler).toBeTruthy();
-
-    await capturedErrorHandler!(fakeAxiosError).catch(() => {});
+    installedHandlers().onImpersonationExpired();
 
     expect(endImpersonation).toHaveBeenCalledWith();
-    expect(refreshMutateAsync).not.toHaveBeenCalled();
-  });
-
-  it("does not loop on a 401 from the impersonate/end call itself", async () => {
-    impersonationMock.current = {
-      accessToken: "imp",
-      expiresAt: Date.now() + 1000,
-      impersonatedBy: "a",
-      user: { id: "u1", name: "A", email: "a@x.com" },
-    };
-
-    renderHook(() => useRefreshTokenEffect(), { wrapper });
-
-    await capturedErrorHandler!({
-      ...fakeAxiosError,
-      request: { responseURL: "/api/v1/shared/auth/impersonate/end" },
-    }).catch(() => {});
-
-    expect(endImpersonation).not.toHaveBeenCalled();
-    expect(refreshMutateAsync).not.toHaveBeenCalled();
-  });
-
-  it("leaves a 401 on the impersonate/refresh call to useImpersonationRefresh", async () => {
-    impersonationMock.current = {
-      accessToken: "imp",
-      expiresAt: Date.now() + 1000,
-      impersonatedBy: "a",
-      user: { id: "u1", name: "A", email: "a@x.com" },
-    };
-
-    renderHook(() => useRefreshTokenEffect(), { wrapper });
-
-    await capturedErrorHandler!({
-      ...fakeAxiosError,
-      request: { responseURL: "/api/v1/shared/auth/impersonate/refresh" },
-    }).catch(() => {});
-
-    expect(endImpersonation).not.toHaveBeenCalled();
-    expect(refreshMutateAsync).not.toHaveBeenCalled();
+    expect(logoutFn).not.toHaveBeenCalled();
   });
 });
 

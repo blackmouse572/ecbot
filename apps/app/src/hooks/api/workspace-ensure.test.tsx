@@ -131,6 +131,8 @@ describe("useEnsureWorkspace with a workspace missing from a stale list", () => 
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.isNotFound).toBe(false);
+    // Not a crash and not a dead spinner: the layout offers a retry.
+    expect(result.current.loadFailed).toBe(true);
   });
 
   it("does not report a just-created workspace as not found", async () => {
