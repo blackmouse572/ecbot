@@ -255,7 +255,7 @@ One exception: an edit opened from a side panel that sits beside live work, such
 
 ### Conversations
 
-- An inbox row shows the channel logo, the customer name (`txt-compact-small-plus`), a one-line preview (`txt-compact-small`, `fg-subtle`, truncated) and a status pill that stays on one line ("Chờ bạn", "Bot trả lời").
+- An inbox row shows the channel logo, the customer name (`txt-compact-small-plus`) and time, then the account (plus the chatbot name only when the workspace has 2+ chatbots). The bot answering is the normal state, so "Bot trả lời" gets no pill; only rows that need a person ("Chờ bạn", "Bạn đang xử lý", "Đã xử lý") add a third line with a status pill that stays on one line.
 - Chat bubbles are a **deliberate exception** to the token-only rule: `apps/app/src/styles/chat-bubble.css` (`chat-bubble` plus `--customer`, `--bot` or `--operator`) draws them as gradients with their own shadows and 14px / 1.625 text, and re-points the `fg`/`bg`/`border` tokens inside coloured bubbles so markdown stays readable. Customer is a soft neutral, the bot is blue, staff is dark neutral so a staff reply never reads as the bot. Change bubbles only in that file.
 
 ### Channels

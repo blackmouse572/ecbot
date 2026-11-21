@@ -17,7 +17,7 @@ const COLOR_BY_STATE: Record<DisplayState, Color> = {
   resolved: "grey",
 };
 
-const resolveState = (
+export const resolveState = (
   conversation: ConversationGetResponseDto,
 ): DisplayState => {
   if (conversation.status === "RESOLVED") return "resolved";

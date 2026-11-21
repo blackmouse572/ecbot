@@ -2462,6 +2462,11 @@
     "customer": {
       "panel": {
         "title": "Khách hàng",
+        "details": "Thông tin",
+        "edit": {
+          "title": "Sửa thông tin khách hàng",
+          "description": "Tên, số điện thoại, email, ngôn ngữ và ghi chú."
+        },
         "fields": {
           "name": "Tên",
           "phone": "Số điện thoại",
@@ -2504,7 +2509,6 @@
           "more": "Hành động khác"
         },
         "toast": {
-          "saving": "Đang lưu khách hàng…",
           "updated": "Đã cập nhật khách hàng.",
           "updateFailed": "Không thể cập nhật khách hàng."
         },

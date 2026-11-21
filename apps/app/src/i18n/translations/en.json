@@ -2425,6 +2425,11 @@
     "customer": {
       "panel": {
         "title": "Customer",
+        "details": "Details",
+        "edit": {
+          "title": "Edit customer",
+          "description": "Name, phone, email, language and notes."
+        },
         "fields": {
           "name": "Name",
           "phone": "Phone",
@@ -2467,7 +2472,6 @@
           "more": "More actions"
         },
         "toast": {
-          "saving": "Saving customer…",
           "updated": "Customer updated.",
           "updateFailed": "Failed to update customer."
         },
