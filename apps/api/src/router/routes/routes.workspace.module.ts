@@ -5,6 +5,7 @@ import { AgentBuilderModule } from '@app/modules/agent-builder/agent-builder.mod
 import { AgentBuilderWorkspaceController } from '@app/modules/agent-builder/controllers/agent-builder.workspace.controller';
 import { AnalyticsModule } from '@app/modules/analytics/analytics.module';
 import { AnalyticsWorkspaceController } from '@app/modules/analytics/controllers/analytics.workspace.controller';
+import { MarketingAudienceWorkspaceController } from '@app/modules/marketing/controllers/marketing-audience.workspace.controller';
 import { MarketingOverviewWorkspaceController } from '@app/modules/marketing/controllers/marketing-overview.workspace.controller';
 import { MarketingModule } from '@app/modules/marketing/marketing.module';
 import { ChatbotModule } from '@app/modules/chatbot/chatbot.module';
@@ -102,6 +103,7 @@ import { CustomerProductReactionWorkspaceController } from '@app/modules/custome
         NavCountWorkspaceController,
         FeatureFlagWorkspaceController,
         AnalyticsWorkspaceController,
+        MarketingAudienceWorkspaceController,
         MarketingOverviewWorkspaceController,
         FollowupWorkspaceController,
         ClientCredentialWorkspaceController,

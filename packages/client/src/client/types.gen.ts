@@ -7366,6 +7366,67 @@ export type AnalyticsCustomersResponseDto = {
     byChannel: Array<AnalyticsChannelCountDto>;
 };
 
+export type MarketingAudienceExclusionDto = {
+    reason: 'STOPPED' | 'HOSTILE' | 'PAUSED' | 'DEFERRED';
+    count: number;
+};
+
+export type MarketingAudienceExcludedDto = {
+    /**
+     * Matching customers left out
+     */
+    total: number;
+    /**
+     * Every reason, in order; a customer counts under the first that applies
+     */
+    reasons: Array<MarketingAudienceExclusionDto>;
+};
+
+export type MarketingAudienceChannelDto = {
+    platform: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
+    count: number;
+};
+
+export type MarketingAudiencePreviewResponseDto = {
+    /**
+     * Customers the audience reaches
+     */
+    count: number;
+    excluded: MarketingAudienceExcludedDto;
+    /**
+     * Reached customers per channel they have a contact point on; one customer can count on several
+     */
+    channels: Array<MarketingAudienceChannelDto>;
+};
+
+export type MarketingAudienceConditionRequestDto = {
+    field: 'STAGE' | 'PRODUCT_GROUP_ASKED' | 'PRODUCT_GROUP_BOUGHT' | 'LAST_MESSAGE' | 'ORDERED_AFTER_PRICE' | 'ORDER_COUNT' | 'TOTAL_SPEND' | 'LABEL' | 'CHANNEL';
+    /**
+     * STAGE, LABEL, CHANNEL: IN / NOT_IN. PRODUCT_GROUP_ASKED, PRODUCT_GROUP_BOUGHT: IN. LAST_MESSAGE: WITHIN_DAYS / OLDER_THAN_DAYS. ORDERED_AFTER_PRICE: YES / NO. ORDER_COUNT, TOTAL_SPEND: AT_LEAST / AT_MOST.
+     */
+    operator: 'IN' | 'NOT_IN' | 'WITHIN_DAYS' | 'OLDER_THAN_DAYS' | 'YES' | 'NO' | 'AT_LEAST' | 'AT_MOST';
+    /**
+     * For IN / NOT_IN: stages, product group ids, label ids or channel types
+     */
+    values?: Array<string>;
+    /**
+     * Days for LAST_MESSAGE, a count for ORDER_COUNT, an amount in minor units for TOTAL_SPEND
+     */
+    number?: number;
+};
+
+export type MarketingAudienceRequestDto = {
+    /**
+     * A Tổng quan "Việc nên làm" row; leave out conditions
+     */
+    preset?: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'CROSS_SELL' | 'REPURCHASE' | 'WIN_BACK';
+    /**
+     * Khách khớp Tất cả (ALL) or Bất kỳ (ANY) điều kiện
+     */
+    match?: 'ALL' | 'ANY';
+    conditions?: Array<MarketingAudienceConditionRequestDto>;
+};
+
 export type MarketingOverviewStageDto = {
     stage: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'BOUGHT_ONCE' | 'BOUGHT_REPEAT';
     /**
@@ -35965,6 +36026,185 @@ export type AnalyticsWorkspaceControllerCustomersV1Responses = {
 };
 
 export type AnalyticsWorkspaceControllerCustomersV1Response = AnalyticsWorkspaceControllerCustomersV1Responses[keyof AnalyticsWorkspaceControllerCustomersV1Responses];
+
+export type MarketingAudienceWorkspaceControllerPreviewV1Data = {
+    body: MarketingAudienceRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/marketing/audiences/preview';
+};
+
+export type MarketingAudienceWorkspaceControllerPreviewV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingAudienceWorkspaceControllerPreviewV1Error = MarketingAudienceWorkspaceControllerPreviewV1Errors[keyof MarketingAudienceWorkspaceControllerPreviewV1Errors];
+
+export type MarketingAudienceWorkspaceControllerPreviewV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MarketingAudiencePreviewResponseDto;
+    };
+};
+
+export type MarketingAudienceWorkspaceControllerPreviewV1Response = MarketingAudienceWorkspaceControllerPreviewV1Responses[keyof MarketingAudienceWorkspaceControllerPreviewV1Responses];
+
+export type MarketingAudienceWorkspaceControllerCustomersV1Data = {
+    body: MarketingAudienceRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/workspace/{workspace}/marketing/audiences/customers';
+};
+
+export type MarketingAudienceWorkspaceControllerCustomersV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingAudienceWorkspaceControllerCustomersV1Error = MarketingAudienceWorkspaceControllerCustomersV1Errors[keyof MarketingAudienceWorkspaceControllerCustomersV1Errors];
+
+export type MarketingAudienceWorkspaceControllerCustomersV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<CustomerGetResponseDto>;
+    };
+};
+
+export type MarketingAudienceWorkspaceControllerCustomersV1Response = MarketingAudienceWorkspaceControllerCustomersV1Responses[keyof MarketingAudienceWorkspaceControllerCustomersV1Responses];
 
 export type MarketingOverviewWorkspaceControllerGetV1Data = {
     body?: never;
