@@ -201,6 +201,17 @@ describe("handleAuthError", () => {
     expect(onSessionExpired).not.toHaveBeenCalled();
   });
 
+  it("does not refresh when there is no stored token, even if the request carried one", async () => {
+    store.set(tokenAtom, null);
+    const error = unauthorized("/api/v1/user/me", "stale");
+
+    await expect(handleAuthError(error)).rejects.toBe(error);
+
+    expect(refreshFn).not.toHaveBeenCalled();
+    expect(requestFn).not.toHaveBeenCalled();
+    expect(onSessionExpired).not.toHaveBeenCalled();
+  });
+
   it("skips refreshing while a logout is in flight", async () => {
     logoutGuard.current = true;
     const error = unauthorized();

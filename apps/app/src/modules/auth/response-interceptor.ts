@@ -131,8 +131,16 @@ export async function handleAuthError(error: A): Promise<A> {
   }
 
   const store = getDefaultStore();
+  // getOnInit storage is synchronous, never a Promise.
+  const current = store.get(tokenAtom) as string | null;
   if (store.get(impersonationAtom)) {
     handlers.onImpersonationExpired();
+    return Promise.reject(error);
+  }
+
+  // No stored token: nothing to renew, so the caller handles the 401 exactly
+  // as it would without this interceptor.
+  if (!current) {
     return Promise.reject(error);
   }
 
@@ -144,9 +152,7 @@ export async function handleAuthError(error: A): Promise<A> {
 
   // Another request already refreshed after this one was sent: retry with
   // the new token instead of refreshing again.
-  // getOnInit storage is synchronous, never a Promise.
-  const current = store.get(tokenAtom) as string | null;
-  if (current && sent && sent !== `Bearer ${current}`) {
+  if (sent !== `Bearer ${current}`) {
     return retry(error, current);
   }
 
