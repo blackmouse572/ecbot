@@ -1,5 +1,12 @@
-import { Entity, ManyToOne, Property, Unique } from '@mikro-orm/postgresql';
+import {
+    Embedded,
+    Entity,
+    ManyToOne,
+    Property,
+    Unique,
+} from '@mikro-orm/postgresql';
 import { DatabaseEntityBase } from 'src/common/database/bases/database.entity';
+import { AwsS3Entity } from 'src/modules/aws/repository/entities/aws.s3.entity';
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
 
 export const ProductGroupTableName = 'product_groups';
@@ -29,4 +36,12 @@ export class ProductGroupEntity extends DatabaseEntityBase {
     // order containing the group is confirmed or cancelled.
     @Property({ type: 'integer', nullable: true })
     learnedRepurchaseDays?: number;
+
+    // A photo of the group, sent with offers about it (#504).
+    @Embedded(() => AwsS3Entity, { nullable: true })
+    image?: AwsS3Entity | null;
+
+    // Where a customer buys it: the shop's product page.
+    @Property({ type: 'varchar', length: 2048, nullable: true })
+    link?: string | null;
 }

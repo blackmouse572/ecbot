@@ -7128,6 +7128,11 @@ export type ProductGroupGetResponseDto = {
     defaultRepurchaseDays?: number | null;
     learnedRepurchaseDays?: number | null;
     /**
+     * Public URL of the group photo
+     */
+    imageUrl?: string | null;
+    link?: string | null;
+    /**
      * The cycle in use: the learned one when there is enough data, else the default
      */
     repurchaseDays?: number | null;
@@ -7153,6 +7158,10 @@ export type ProductGroupCreateRequestDto = {
      * Days the owner expects between two purchases
      */
     defaultRepurchaseDays?: number | null;
+    /**
+     * Where a customer buys it, sent with offers about it
+     */
+    link?: string | null;
 };
 
 export type ProductGroupUpdateRequestDto = {
@@ -7161,6 +7170,29 @@ export type ProductGroupUpdateRequestDto = {
      * Days the owner expects between two purchases
      */
     defaultRepurchaseDays?: number | null;
+    /**
+     * Where a customer buys it, sent with offers about it
+     */
+    link?: string | null;
+};
+
+export type ProductGroupUploadImageRequestDto = {
+    mime: 'image/jpg' | 'image/jpeg' | 'image/png' | 'image/webp';
+    /**
+     * Unit in bytes, max 5MB
+     */
+    size: number;
+};
+
+export type ProductGroupUpdateImageRequestDto = {
+    /**
+     * The key the upload step returned
+     */
+    key: string;
+    /**
+     * Unit in bytes, max 5MB
+     */
+    size: number;
 };
 
 export type NavCountGetResponseDto = {
@@ -7366,6 +7398,65 @@ export type AnalyticsCustomersResponseDto = {
     byChannel: Array<AnalyticsChannelCountDto>;
 };
 
+export type MarketingAudienceConditionResponseDto = {
+    field: 'STAGE' | 'PRODUCT_GROUP_ASKED' | 'PRODUCT_GROUP_BOUGHT' | 'LAST_MESSAGE' | 'ORDERED_AFTER_PRICE' | 'ORDER_COUNT' | 'TOTAL_SPEND' | 'LABEL' | 'CHANNEL';
+    operator: 'IN' | 'NOT_IN' | 'WITHIN_DAYS' | 'OLDER_THAN_DAYS' | 'YES' | 'NO' | 'AT_LEAST' | 'AT_MOST';
+    values?: Array<string>;
+    number?: number;
+};
+
+export type MarketingSavedAudienceGetResponseDto = {
+    id: string;
+    name: string;
+    preset?: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'CROSS_SELL' | 'REPURCHASE' | 'WIN_BACK';
+    match?: 'ALL' | 'ANY';
+    conditions?: Array<MarketingAudienceConditionResponseDto>;
+    createdAt: string;
+    updatedAt?: string;
+};
+
+export type MarketingAudienceConditionRequestDto = {
+    field: 'STAGE' | 'PRODUCT_GROUP_ASKED' | 'PRODUCT_GROUP_BOUGHT' | 'LAST_MESSAGE' | 'ORDERED_AFTER_PRICE' | 'ORDER_COUNT' | 'TOTAL_SPEND' | 'LABEL' | 'CHANNEL';
+    /**
+     * STAGE, LABEL, CHANNEL: IN / NOT_IN. PRODUCT_GROUP_ASKED, PRODUCT_GROUP_BOUGHT: IN. LAST_MESSAGE: WITHIN_DAYS / OLDER_THAN_DAYS. ORDERED_AFTER_PRICE: YES / NO. ORDER_COUNT, TOTAL_SPEND: AT_LEAST / AT_MOST.
+     */
+    operator: 'IN' | 'NOT_IN' | 'WITHIN_DAYS' | 'OLDER_THAN_DAYS' | 'YES' | 'NO' | 'AT_LEAST' | 'AT_MOST';
+    /**
+     * For IN / NOT_IN: stages, product group ids, label ids or channel types
+     */
+    values?: Array<string>;
+    /**
+     * Days for LAST_MESSAGE, a count for ORDER_COUNT, an amount in minor units for TOTAL_SPEND
+     */
+    number?: number;
+};
+
+export type MarketingSavedAudienceCreateRequestDto = {
+    /**
+     * A Tổng quan "Việc nên làm" row; leave out conditions
+     */
+    preset?: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'CROSS_SELL' | 'REPURCHASE' | 'WIN_BACK';
+    /**
+     * Khách khớp Tất cả (ALL) or Bất kỳ (ANY) điều kiện
+     */
+    match?: 'ALL' | 'ANY';
+    conditions?: Array<MarketingAudienceConditionRequestDto>;
+    name: string;
+};
+
+export type MarketingSavedAudienceUpdateRequestDto = {
+    /**
+     * A Tổng quan "Việc nên làm" row; leave out conditions
+     */
+    preset?: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'CROSS_SELL' | 'REPURCHASE' | 'WIN_BACK';
+    /**
+     * Khách khớp Tất cả (ALL) or Bất kỳ (ANY) điều kiện
+     */
+    match?: 'ALL' | 'ANY';
+    conditions?: Array<MarketingAudienceConditionRequestDto>;
+    name?: string;
+};
+
 export type MarketingAudienceExclusionDto = {
     reason: 'STOPPED' | 'HOSTILE' | 'PAUSED' | 'DEFERRED';
     count: number;
@@ -7397,22 +7488,6 @@ export type MarketingAudiencePreviewResponseDto = {
      * Reached customers per channel they have a contact point on; one customer can count on several
      */
     channels: Array<MarketingAudienceChannelDto>;
-};
-
-export type MarketingAudienceConditionRequestDto = {
-    field: 'STAGE' | 'PRODUCT_GROUP_ASKED' | 'PRODUCT_GROUP_BOUGHT' | 'LAST_MESSAGE' | 'ORDERED_AFTER_PRICE' | 'ORDER_COUNT' | 'TOTAL_SPEND' | 'LABEL' | 'CHANNEL';
-    /**
-     * STAGE, LABEL, CHANNEL: IN / NOT_IN. PRODUCT_GROUP_ASKED, PRODUCT_GROUP_BOUGHT: IN. LAST_MESSAGE: WITHIN_DAYS / OLDER_THAN_DAYS. ORDERED_AFTER_PRICE: YES / NO. ORDER_COUNT, TOTAL_SPEND: AT_LEAST / AT_MOST.
-     */
-    operator: 'IN' | 'NOT_IN' | 'WITHIN_DAYS' | 'OLDER_THAN_DAYS' | 'YES' | 'NO' | 'AT_LEAST' | 'AT_MOST';
-    /**
-     * For IN / NOT_IN: stages, product group ids, label ids or channel types
-     */
-    values?: Array<string>;
-    /**
-     * Days for LAST_MESSAGE, a count for ORDER_COUNT, an amount in minor units for TOTAL_SPEND
-     */
-    number?: number;
 };
 
 export type MarketingAudienceRequestDto = {
@@ -35571,6 +35646,248 @@ export type ProductGroupWorkspaceControllerUpdateV1Responses = {
 
 export type ProductGroupWorkspaceControllerUpdateV1Response = ProductGroupWorkspaceControllerUpdateV1Responses[keyof ProductGroupWorkspaceControllerUpdateV1Responses];
 
+export type ProductGroupWorkspaceControllerUploadImageV1Data = {
+    body: ProductGroupUploadImageRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the product group
+         */
+        productGroup: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/product-groups/{productGroup}/image/upload';
+};
+
+export type ProductGroupWorkspaceControllerUploadImageV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ProductGroupWorkspaceControllerUploadImageV1Error = ProductGroupWorkspaceControllerUploadImageV1Errors[keyof ProductGroupWorkspaceControllerUploadImageV1Errors];
+
+export type ProductGroupWorkspaceControllerUploadImageV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: AwsS3PresignResponseDto;
+    };
+};
+
+export type ProductGroupWorkspaceControllerUploadImageV1Response = ProductGroupWorkspaceControllerUploadImageV1Responses[keyof ProductGroupWorkspaceControllerUploadImageV1Responses];
+
+export type ProductGroupWorkspaceControllerDeleteImageV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the product group
+         */
+        productGroup: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/product-groups/{productGroup}/image';
+};
+
+export type ProductGroupWorkspaceControllerDeleteImageV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ProductGroupWorkspaceControllerDeleteImageV1Error = ProductGroupWorkspaceControllerDeleteImageV1Errors[keyof ProductGroupWorkspaceControllerDeleteImageV1Errors];
+
+export type ProductGroupWorkspaceControllerDeleteImageV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ProductGroupGetResponseDto;
+    };
+};
+
+export type ProductGroupWorkspaceControllerDeleteImageV1Response = ProductGroupWorkspaceControllerDeleteImageV1Responses[keyof ProductGroupWorkspaceControllerDeleteImageV1Responses];
+
+export type ProductGroupWorkspaceControllerUpdateImageV1Data = {
+    body: ProductGroupUpdateImageRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the product group
+         */
+        productGroup: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/product-groups/{productGroup}/image';
+};
+
+export type ProductGroupWorkspaceControllerUpdateImageV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ProductGroupWorkspaceControllerUpdateImageV1Error = ProductGroupWorkspaceControllerUpdateImageV1Errors[keyof ProductGroupWorkspaceControllerUpdateImageV1Errors];
+
+export type ProductGroupWorkspaceControllerUpdateImageV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: ProductGroupGetResponseDto;
+    };
+};
+
+export type ProductGroupWorkspaceControllerUpdateImageV1Response = ProductGroupWorkspaceControllerUpdateImageV1Responses[keyof ProductGroupWorkspaceControllerUpdateImageV1Responses];
+
 export type NavCountWorkspaceControllerGetV1Data = {
     body?: never;
     headers?: {
@@ -36026,6 +36343,336 @@ export type AnalyticsWorkspaceControllerCustomersV1Responses = {
 };
 
 export type AnalyticsWorkspaceControllerCustomersV1Response = AnalyticsWorkspaceControllerCustomersV1Responses[keyof AnalyticsWorkspaceControllerCustomersV1Responses];
+
+export type MarketingAudienceWorkspaceControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/workspace/{workspace}/marketing/audiences';
+};
+
+export type MarketingAudienceWorkspaceControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingAudienceWorkspaceControllerListV1Error = MarketingAudienceWorkspaceControllerListV1Errors[keyof MarketingAudienceWorkspaceControllerListV1Errors];
+
+export type MarketingAudienceWorkspaceControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<MarketingSavedAudienceGetResponseDto>;
+    };
+};
+
+export type MarketingAudienceWorkspaceControllerListV1Response = MarketingAudienceWorkspaceControllerListV1Responses[keyof MarketingAudienceWorkspaceControllerListV1Responses];
+
+export type MarketingAudienceWorkspaceControllerCreateV1Data = {
+    body: MarketingSavedAudienceCreateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/marketing/audiences';
+};
+
+export type MarketingAudienceWorkspaceControllerCreateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingAudienceWorkspaceControllerCreateV1Error = MarketingAudienceWorkspaceControllerCreateV1Errors[keyof MarketingAudienceWorkspaceControllerCreateV1Errors];
+
+export type MarketingAudienceWorkspaceControllerCreateV1Responses = {
+    /**
+     * 201
+     */
+    201: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MarketingSavedAudienceGetResponseDto;
+    };
+};
+
+export type MarketingAudienceWorkspaceControllerCreateV1Response = MarketingAudienceWorkspaceControllerCreateV1Responses[keyof MarketingAudienceWorkspaceControllerCreateV1Responses];
+
+export type MarketingAudienceWorkspaceControllerDeleteV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the saved audience
+         */
+        audience: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/marketing/audiences/{audience}';
+};
+
+export type MarketingAudienceWorkspaceControllerDeleteV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingAudienceWorkspaceControllerDeleteV1Error = MarketingAudienceWorkspaceControllerDeleteV1Errors[keyof MarketingAudienceWorkspaceControllerDeleteV1Errors];
+
+export type MarketingAudienceWorkspaceControllerDeleteV1Responses = {
+    /**
+     * 204
+     */
+    204: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingAudienceWorkspaceControllerDeleteV1Response = MarketingAudienceWorkspaceControllerDeleteV1Responses[keyof MarketingAudienceWorkspaceControllerDeleteV1Responses];
+
+export type MarketingAudienceWorkspaceControllerUpdateV1Data = {
+    body: MarketingSavedAudienceUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the saved audience
+         */
+        audience: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/marketing/audiences/{audience}';
+};
+
+export type MarketingAudienceWorkspaceControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingAudienceWorkspaceControllerUpdateV1Error = MarketingAudienceWorkspaceControllerUpdateV1Errors[keyof MarketingAudienceWorkspaceControllerUpdateV1Errors];
+
+export type MarketingAudienceWorkspaceControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MarketingSavedAudienceGetResponseDto;
+    };
+};
+
+export type MarketingAudienceWorkspaceControllerUpdateV1Response = MarketingAudienceWorkspaceControllerUpdateV1Responses[keyof MarketingAudienceWorkspaceControllerUpdateV1Responses];
 
 export type MarketingAudienceWorkspaceControllerPreviewV1Data = {
     body: MarketingAudienceRequestDto;
@@ -40048,6 +40695,306 @@ export type CustomerTagAssignmentClientControllerApplyV1Responses = {
 };
 
 export type CustomerTagAssignmentClientControllerApplyV1Response = CustomerTagAssignmentClientControllerApplyV1Responses[keyof CustomerTagAssignmentClientControllerApplyV1Responses];
+
+export type MarketingSavedAudienceClientControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/client/marketing/audiences';
+};
+
+export type MarketingSavedAudienceClientControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSavedAudienceClientControllerListV1Error = MarketingSavedAudienceClientControllerListV1Errors[keyof MarketingSavedAudienceClientControllerListV1Errors];
+
+export type MarketingSavedAudienceClientControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<MarketingSavedAudienceGetResponseDto>;
+    };
+};
+
+export type MarketingSavedAudienceClientControllerListV1Response = MarketingSavedAudienceClientControllerListV1Responses[keyof MarketingSavedAudienceClientControllerListV1Responses];
+
+export type MarketingSavedAudienceClientControllerCreateV1Data = {
+    body: MarketingSavedAudienceCreateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/client/marketing/audiences';
+};
+
+export type MarketingSavedAudienceClientControllerCreateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSavedAudienceClientControllerCreateV1Error = MarketingSavedAudienceClientControllerCreateV1Errors[keyof MarketingSavedAudienceClientControllerCreateV1Errors];
+
+export type MarketingSavedAudienceClientControllerCreateV1Responses = {
+    /**
+     * 201
+     */
+    201: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MarketingSavedAudienceGetResponseDto;
+    };
+};
+
+export type MarketingSavedAudienceClientControllerCreateV1Response = MarketingSavedAudienceClientControllerCreateV1Responses[keyof MarketingSavedAudienceClientControllerCreateV1Responses];
+
+export type MarketingSavedAudienceClientControllerDeleteV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the saved audience
+         */
+        audience: string;
+    };
+    query?: never;
+    url: '/api/v1/client/marketing/audiences/{audience}';
+};
+
+export type MarketingSavedAudienceClientControllerDeleteV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSavedAudienceClientControllerDeleteV1Error = MarketingSavedAudienceClientControllerDeleteV1Errors[keyof MarketingSavedAudienceClientControllerDeleteV1Errors];
+
+export type MarketingSavedAudienceClientControllerDeleteV1Responses = {
+    /**
+     * 204
+     */
+    204: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSavedAudienceClientControllerDeleteV1Response = MarketingSavedAudienceClientControllerDeleteV1Responses[keyof MarketingSavedAudienceClientControllerDeleteV1Responses];
+
+export type MarketingSavedAudienceClientControllerUpdateV1Data = {
+    body: MarketingSavedAudienceUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the saved audience
+         */
+        audience: string;
+    };
+    query?: never;
+    url: '/api/v1/client/marketing/audiences/{audience}';
+};
+
+export type MarketingSavedAudienceClientControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSavedAudienceClientControllerUpdateV1Error = MarketingSavedAudienceClientControllerUpdateV1Errors[keyof MarketingSavedAudienceClientControllerUpdateV1Errors];
+
+export type MarketingSavedAudienceClientControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MarketingSavedAudienceGetResponseDto;
+    };
+};
+
+export type MarketingSavedAudienceClientControllerUpdateV1Response = MarketingSavedAudienceClientControllerUpdateV1Responses[keyof MarketingSavedAudienceClientControllerUpdateV1Responses];
 
 export type ToolClientControllerListV1Data = {
     body?: never;

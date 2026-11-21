@@ -32,6 +32,7 @@ export interface IOrderUpdate {
 export interface IProductGroupInput {
     name?: string;
     defaultRepurchaseDays?: number | null;
+    link?: string | null;
 }
 
 /** What a customer's confirmed orders add up to. */
