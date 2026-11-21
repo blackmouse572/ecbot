@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsInt, IsNotEmpty, Max, Min } from 'class-validator';
 import { ENUM_FILE_MIME_IMAGE } from 'src/common/file/enums/file.enum';
+import { PRODUCT_GROUP_IMAGE_MAX_BYTES } from '../../constants/order.constant';
 
 export class ProductGroupUploadImageRequestDto {
     @ApiProperty({
@@ -11,10 +12,9 @@ export class ProductGroupUploadImageRequestDto {
     @IsNotEmpty()
     mime: ENUM_FILE_MIME_IMAGE;
 
-    // 5MB, like profile photos.
     @ApiProperty({ example: 1024, description: 'Unit in bytes, max 5MB' })
     @Min(1)
-    @Max(5 * 1024 * 1024)
+    @Max(PRODUCT_GROUP_IMAGE_MAX_BYTES)
     @IsInt()
     size: number;
 }

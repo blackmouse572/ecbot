@@ -1,5 +1,7 @@
 import { IDatabaseFindAllOptions } from '@app/common/database/interfaces/database.interface';
+import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import {
+    BadRequestException,
     ConflictException,
     Injectable,
     NotFoundException,
@@ -59,11 +61,13 @@ export class MarketingSavedAudienceService {
     ): Promise<MarketingSavedAudienceEntity> {
         const definition = this.audienceService.toAudience(dto);
         await this.assertNameFree(workspaceId, dto.name);
-        return this.repository.create({
-            workspace: workspaceId as any,
-            name: dto.name,
-            ...this.columns(definition),
-        });
+        return this.onDuplicate(
+            this.repository.create({
+                workspace: workspaceId as any,
+                name: dto.name,
+                ...this.columns(definition),
+            })
+        );
     }
 
     async update(
@@ -77,14 +81,22 @@ export class MarketingSavedAudienceService {
                 audience,
                 this.columns(this.audienceService.toAudience(dto))
             );
-        } else if (dto.match !== undefined && audience.conditions) {
+        } else if (dto.match !== undefined) {
+            // A preset has no conditions to match.
+            if (!audience.conditions) {
+                throw new BadRequestException({
+                    statusCode: 400,
+                    message: 'marketingAudience.error.presetOrConditions',
+                });
+            }
             audience.match = dto.match;
         }
-        if (dto.name !== undefined && dto.name !== audience.name) {
+        // `null` passes the optional check; the name cannot be cleared.
+        if (typeof dto.name === 'string' && dto.name !== audience.name) {
             await this.assertNameFree(workspaceId, dto.name, id);
             audience.name = dto.name;
         }
-        return this.repository.save(audience);
+        return this.onDuplicate(this.repository.save(audience));
     }
 
     // Hard delete, like product groups: the name is free again at once.
@@ -135,6 +147,24 @@ export class MarketingSavedAudienceService {
                 })
             ),
         };
+    }
+
+    /**
+     * Two saves of one name can both pass assertNameFree; the unique index
+     * stops the second, which gets the same 409.
+     */
+    private async onDuplicate<T>(write: Promise<T>): Promise<T> {
+        try {
+            return await write;
+        } catch (error: unknown) {
+            if (error instanceof UniqueConstraintViolationException) {
+                throw new ConflictException({
+                    statusCode: 409,
+                    message: 'marketingAudience.error.duplicate',
+                });
+            }
+            throw error;
+        }
     }
 
     private async assertNameFree(

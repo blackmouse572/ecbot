@@ -7184,6 +7184,17 @@ export type ProductGroupUploadImageRequestDto = {
     size: number;
 };
 
+export type ProductGroupUpdateImageRequestDto = {
+    /**
+     * The key the upload step returned
+     */
+    key: string;
+    /**
+     * Unit in bytes, max 5MB
+     */
+    size: number;
+};
+
 export type NavCountGetResponseDto = {
     /**
      * Pending customer merge suggestions
@@ -35795,7 +35806,7 @@ export type ProductGroupWorkspaceControllerDeleteImageV1Responses = {
 export type ProductGroupWorkspaceControllerDeleteImageV1Response = ProductGroupWorkspaceControllerDeleteImageV1Responses[keyof ProductGroupWorkspaceControllerDeleteImageV1Responses];
 
 export type ProductGroupWorkspaceControllerUpdateImageV1Data = {
-    body: AwsS3PresignRequestDto;
+    body: ProductGroupUpdateImageRequestDto;
     headers?: {
         /**
          * Custom language header

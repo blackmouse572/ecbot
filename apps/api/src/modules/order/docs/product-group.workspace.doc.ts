@@ -14,8 +14,8 @@ import {
 } from '../constants/order.doc.constant';
 import { ProductGroupCreateRequestDto } from '../dtos/request/product-group.create.request.dto';
 import { ProductGroupUpdateRequestDto } from '../dtos/request/product-group.update.request.dto';
+import { ProductGroupUpdateImageRequestDto } from '../dtos/request/product-group.update-image.request.dto';
 import { ProductGroupUploadImageRequestDto } from '../dtos/request/product-group.upload-image.request.dto';
-import { AwsS3PresignRequestDto } from 'src/modules/aws/dtos/request/aws.s3-presign.request.dto';
 import { AwsS3PresignResponseDto } from 'src/modules/aws/dtos/response/aws.s3-presign.response.dto';
 import { ProductGroupGetResponseDto } from '../dtos/response/product-group.get.response.dto';
 
@@ -103,7 +103,7 @@ export function ProductGroupWorkspaceUpdateImageDoc(): MethodDecorator {
         Doc({ summary: 'Save the uploaded photo as the product group photo' }),
         DocRequest({
             params: [...WorkspaceDocParamsId, ...ProductGroupDocParamsId],
-            dto: AwsS3PresignRequestDto,
+            dto: ProductGroupUpdateImageRequestDto,
             bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
         }),
         auth(),

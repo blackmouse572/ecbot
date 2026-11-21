@@ -85,7 +85,8 @@ export class ProductGroupService {
         input: IProductGroupInput
     ): Promise<ProductGroupEntity> {
         const group = await this.findOneInWorkspaceOrFail(id, workspaceId);
-        if (input.name !== undefined && input.name !== group.name) {
+        // `null` passes the optional check; the name cannot be cleared.
+        if (typeof input.name === 'string' && input.name !== group.name) {
             await this.assertNameFree(workspaceId, input.name, id);
             group.name = input.name;
         }

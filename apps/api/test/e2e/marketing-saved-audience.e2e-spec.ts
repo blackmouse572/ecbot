@@ -182,6 +182,13 @@ describe('E2E — saved audiences and product group photos', () => {
         expect(elsewhere.status).toBe(403);
 
         await pause();
+        const tooBig = await http(ctx.app)
+            .put(url(`/product-groups/${id}/image`))
+            .set(...auth(ownerToken))
+            .send({ key, size: 2_000_000_000 });
+        expect(tooBig.status).toBe(422);
+
+        await pause();
         const saved = await http(ctx.app)
             .put(url(`/product-groups/${id}/image`))
             .set(...auth(ownerToken))

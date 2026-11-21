@@ -1,3 +1,4 @@
+import { UniqueConstraintViolationException } from '@mikro-orm/core';
 import {
     BadRequestException,
     ConflictException,
@@ -129,5 +130,25 @@ describe('MarketingSavedAudienceService', () => {
             { populate: [] }
         );
         expect(repository.delete).not.toHaveBeenCalled();
+    });
+
+    it('keeps the name when sent null, and refuses match on a preset', async () => {
+        const preset = { id: 'a1', name: 'x', preset: T.NEW, conditions: null };
+        repository.findOne.mockResolvedValue(preset);
+        await expect(
+            service.update('a1', 'ws1', { name: null } as any)
+        ).resolves.toMatchObject({ name: 'x' });
+        await expect(
+            service.update('a1', 'ws1', { match: M.ANY })
+        ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('turns a duplicate that slipped past the check into a 409', async () => {
+        repository.create.mockRejectedValue(
+            new UniqueConstraintViolationException(new Error('23505'))
+        );
+        await expect(
+            service.create('ws1', { name: 'Hỏi giá', preset: T.ASKED_PRICE })
+        ).rejects.toBeInstanceOf(ConflictException);
     });
 });

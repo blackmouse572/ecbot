@@ -37,7 +37,6 @@ import {
     Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { AwsS3PresignRequestDto } from 'src/modules/aws/dtos/request/aws.s3-presign.request.dto';
 import { AwsS3PresignResponseDto } from 'src/modules/aws/dtos/response/aws.s3-presign.response.dto';
 import { AwsS3Service } from 'src/modules/aws/services/aws.s3.service';
 import { PaginationQuery } from 'src/common/pagination/decorators/pagination.decorator';
@@ -70,6 +69,7 @@ import {
 } from '../docs/product-group.workspace.doc';
 import { ProductGroupCreateRequestDto } from '../dtos/request/product-group.create.request.dto';
 import { ProductGroupUpdateRequestDto } from '../dtos/request/product-group.update.request.dto';
+import { ProductGroupUpdateImageRequestDto } from '../dtos/request/product-group.update-image.request.dto';
 import { ProductGroupUploadImageRequestDto } from '../dtos/request/product-group.upload-image.request.dto';
 import { ProductGroupGetResponseDto } from '../dtos/response/product-group.get.response.dto';
 import { ProductGroupEntity } from '../repository/entities/product-group.entity';
@@ -218,7 +218,7 @@ export class ProductGroupWorkspaceController {
     async updateImage(
         @WorkspacePayload() workspace: WorkspaceEntity,
         @Param(PRODUCT_GROUP_PARAM) id: string,
-        @Body() body: AwsS3PresignRequestDto,
+        @Body() body: ProductGroupUpdateImageRequestDto,
         @AuthJwtPayload('user', UserParsePipe) user: UserEntity
     ): Promise<IResponse<ProductGroupGetResponseDto>> {
         const group = await this.productGroupService.findOneInWorkspaceOrFail(

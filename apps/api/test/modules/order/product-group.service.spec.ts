@@ -106,5 +106,7 @@ describe('ProductGroupService', () => {
         expect(group.link).toBe('https://a.vn');
         await service.update('g1', 'ws1', { link: null });
         expect(group.link).toBeNull();
+        await service.update('g1', 'ws1', { name: null } as any);
+        expect(group.name).toBe('Serum');
     });
 });
