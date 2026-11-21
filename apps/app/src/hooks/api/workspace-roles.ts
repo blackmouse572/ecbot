@@ -47,7 +47,7 @@ export const workspaceRoleDetailQueryOptions = (
   roleId: string,
 ) =>
   queryOptions({
-    queryKey: workspaceRoleQueryKey.detail(roleId),
+    queryKey: workspaceRoleQueryKey.detail(roleId, { workspace }),
     queryFn: async () => {
       const response = await roleWorkspaceControllerGetV1({
         path: { workspace: workspace, role: roleId },
@@ -127,7 +127,9 @@ export function useUpdateWorkspaceRole(roleId: string) {
         queryKey: workspaceRoleQueryKey.lists(),
       });
       queryClient.invalidateQueries({
-        queryKey: workspaceRoleQueryKey.detail(roleId),
+        queryKey: workspaceRoleQueryKey.detail(roleId, {
+          workspace: workspaceSlug,
+        }),
       });
     },
   });
