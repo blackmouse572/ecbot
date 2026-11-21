@@ -6,7 +6,7 @@ import type { ConversationGetResponseDto } from "@/hooks/api/conversations";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import { senderLabel } from "../sender-label";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
-import { StatusPill } from "../components/status-pill";
+import { StatusPill, resolveState } from "../components/status-pill";
 import { HANDOFF_REASON_CODES } from "../constants";
 
 interface Props {
@@ -31,7 +31,12 @@ const formatTimestamp = (locale: string, iso?: string | null) => {
         hour: "2-digit",
         minute: "2-digit",
       })
-    : date.toLocaleDateString(locale);
+    : date.toLocaleDateString(locale, {
+        day: "numeric",
+        month: "short",
+        // The year only when it isn't this one.
+        ...(date.getFullYear() !== now.getFullYear() && { year: "numeric" }),
+      });
 };
 
 const fallbackInitials = (id: string) =>
@@ -63,6 +68,10 @@ export const ConversationListItem = ({
       : handoffReason;
   const chatbot = (conversation as A).chatbot as
     { id?: string; name?: string } | undefined;
+  const unreadCount = ((conversation as A).unreadCount as number) ?? 0;
+  // "Bot active" is the normal state, so only the rows that need a person
+  // carry a status line and stand out from the rest.
+  const showStatus = resolveState(conversation) !== "botActive";
 
   return (
     <div
@@ -74,7 +83,7 @@ export const ConversationListItem = ({
           navigate(`${basePath}/${conversation.id}`);
       }}
       className={clx(
-        "border-ui-border-base flex items-start gap-x-3 border-b px-4 py-3 transition-colors",
+        "border-ui-border-base flex items-start gap-x-3 border-b px-4 py-3.5 transition-colors",
         // The open row is already selected, so no hover or pointer cursor.
         isActive
           ? "bg-ui-bg-base shadow-elevation-card-rest border-l-ui-fg-interactive"
@@ -139,37 +148,42 @@ export const ConversationListItem = ({
               <Link
                 to={`/${workspaceSlug}/chatbot/${chatbot.id}`}
                 onClick={(e) => e.stopPropagation()}
-                className="txt-compact-xsmall text-ui-fg-subtle hover:text-ui-fg-base truncate transition-colors"
+                className="txt-compact-xsmall text-ui-fg-muted hover:text-ui-fg-base truncate transition-colors"
               >
                 {chatbot.name}
               </Link>
             ) : (
-              <Text size="xsmall" className="text-ui-fg-subtle truncate">
+              <Text size="xsmall" className="text-ui-fg-muted truncate">
                 {chatbot.name}
               </Text>
             ))}
-        </div>
-        <div className="flex min-w-0 items-center gap-x-2">
-          <StatusPill conversation={conversation} />
-          {handoffReasonLabel && (
-            <Tooltip content={handoffReasonLabel} maxWidth={260}>
-              <Text
-                size="xsmall"
-                className="text-ui-fg-muted min-w-0 flex-1 truncate"
-              >
-                {handoffReasonLabel}
-              </Text>
-            </Tooltip>
-          )}
-          {(conversation as A).unreadCount > 0 && (
-            <span className="bg-ui-tag-blue-bg text-ui-tag-blue-text ml-auto flex shrink-0 h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold leading-none">
-              {(conversation as A).unreadCount > 99
-                ? "99+"
-                : (conversation as A).unreadCount}
-            </span>
+          {unreadCount > 0 && !showStatus && (
+            <UnreadCount count={unreadCount} />
           )}
         </div>
+        {showStatus && (
+          <div className="flex min-w-0 items-center gap-x-2 pt-0.5">
+            <StatusPill conversation={conversation} />
+            {handoffReasonLabel && (
+              <Tooltip content={handoffReasonLabel} maxWidth={260}>
+                <Text
+                  size="xsmall"
+                  className="text-ui-fg-muted min-w-0 flex-1 truncate"
+                >
+                  {handoffReasonLabel}
+                </Text>
+              </Tooltip>
+            )}
+            {unreadCount > 0 && <UnreadCount count={unreadCount} />}
+          </div>
+        )}
       </div>
     </div>
   );
 };
+
+const UnreadCount = ({ count }: { count: number }) => (
+  <span className="bg-ui-tag-blue-bg text-ui-tag-blue-text ml-auto flex shrink-0 h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-semibold leading-none">
+    {count > 99 ? "99+" : count}
+  </span>
+);

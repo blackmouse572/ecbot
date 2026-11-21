@@ -10,6 +10,7 @@ const renderRow = (
   handoffReason: string | null,
   chatbot?: { id?: string; name?: string },
   unreadCount = 0,
+  overrides: Record<string, unknown> = {},
 ) =>
   render(
     <TooltipProvider>
@@ -35,6 +36,7 @@ const renderRow = (
                     handoffReason,
                     chatbot,
                     unreadCount,
+                    ...overrides,
                   } as never
                 }
                 basePath="/acme/conversations"
@@ -54,6 +56,18 @@ describe("ConversationListItem", () => {
     renderRow("keyword_trigger");
     expect(screen.getByText("Customer asked for staff")).toBeInTheDocument();
     expect(screen.queryByText("keyword_trigger")).not.toBeInTheDocument();
+  });
+
+  it("hides the status while the bot is replying, so rows that need you stand out", () => {
+    renderRow(null, undefined, 0, { botEnabled: true });
+    expect(screen.queryByText("Bot active")).not.toBeInTheDocument();
+  });
+
+  it("shows the status when the chat needs the team", () => {
+    renderRow("keyword_trigger", undefined, 0, {
+      handoffAt: "2026-06-15T00:00:00Z",
+    });
+    expect(screen.getByText("Needs you")).toBeInTheDocument();
   });
 
   it("shows a free-text reason as written", () => {

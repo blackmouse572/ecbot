@@ -63,15 +63,17 @@ export const ConversationListFilters = ({
   );
 
   return (
-    <div className="border-ui-border-base space-y-2 border-b p-3">
-      <Input
-        type="search"
-        size="small"
-        className="flex-1"
-        placeholder={t("conversations.list.search.placeholder")}
-        value={search}
-        onChange={(e) => onSearchChange(e.target.value)}
-      />
+    // Search and the filter button share one row; picked filters wrap below.
+    <div className="border-ui-border-base flex flex-wrap items-center gap-2 border-b px-4 pb-3 pt-2 [&>div:last-child]:max-w-full">
+      <div className="min-w-[160px] flex-1">
+        <Input
+          type="search"
+          size="small"
+          placeholder={t("conversations.list.search.placeholder")}
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
+      </div>
       <DataTableFilter
         filters={filters}
         prefix={CONVERSATION_FILTER_PREFIX}

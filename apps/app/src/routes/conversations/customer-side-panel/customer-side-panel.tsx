@@ -16,15 +16,16 @@ import {
   useCustomer,
   useEraseCustomer,
   useExportCustomer,
-  useUpdateCustomer,
-  type CustomerUpdateRequestDto,
 } from "@/hooks/api/customers";
 import { downloadJson } from "@/utils";
 import { useUnmergeCustomer } from "@/hooks/api/customer-merge-suggestions";
 import { useFeatureFlags } from "@/hooks/api/feature-flags";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import { ConversationsSection } from "./components/conversations-section";
+import { CustomerEditDrawer } from "./components/customer-edit-drawer";
 import { CustomerTagPicker } from "./components/customer-tag-picker";
+import { DetailRow } from "./components/detail-row";
+import { FoldedSection } from "./components/folded-section";
 import { FollowupsSection } from "./components/followups-section";
 import { MarketingSection } from "./components/marketing-section";
 import { OrdersSection } from "./components/orders-section";
@@ -32,6 +33,7 @@ import { SavedFieldsSection } from "./components/saved-fields-section";
 import { TimezoneSection } from "./components/timezone-section";
 import { CUSTOMER_DATA_SUBJECT } from "../constants";
 import { Can } from "@repo/auth";
+import { Accordion } from "@repo/ui/components";
 import { NoRecords } from "@repo/ui/common-components";
 import { IconAddressBook, IconTag } from "@tabler/icons-react";
 import {
@@ -39,41 +41,34 @@ import {
   ChevronDoubleLeft,
   ChevronDoubleRight,
   EllipsisHorizontal,
+  PencilSquare,
   XMarkMini,
 } from "@medusajs/icons";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Badge,
-  Button,
   DropdownMenu,
   Heading,
   IconButton,
-  Input,
   Text,
-  Textarea,
   toast,
   usePrompt,
 } from "@medusajs/ui";
-import { Form, Skeleton } from "@repo/ui/common-components";
-import { useEffect, useMemo } from "react";
-import { useForm } from "react-hook-form";
+import { Skeleton } from "@repo/ui/common-components";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import zod from "zod";
 
-const CustomerFormSchema = zod.object({
-  name: zod.string().max(255).optional().nullable(),
-  phone: zod.string().max(50).optional().nullable(),
-  email: zod
-    .string()
-    .max(255)
-    .optional()
-    .nullable()
-    .refine((v) => !v || /^\S+@\S+\.\S+$/.test(v), "invalid email"),
-  language: zod.string().max(10).optional().nullable(),
-  notes: zod.string().max(5000).optional().nullable(),
-});
+// Which folded sections the operator keeps open, remembered per browser.
+const OPEN_SECTIONS_KEY = "conversations.customerPanel.openSections";
 
-type CustomerFormData = zod.infer<typeof CustomerFormSchema>;
+const readOpenSections = (): string[] => {
+  try {
+    const raw = JSON.parse(localStorage.getItem(OPEN_SECTIONS_KEY) ?? "[]");
+
+    return Array.isArray(raw) ? raw : [];
+  } catch {
+    return [];
+  }
+};
 
 interface Props {
   customerId: string | undefined | null;
@@ -102,56 +97,17 @@ export function CustomerSidePanel({
   const { flags } = useFeatureFlags();
   const { customer, isLoading } = useCustomer(customerId);
   const { contactPoints } = useContactPointsByCustomer(customerId);
-  const { mutateAsync, isPending } = useUpdateCustomer(customerId);
+  const [editing, setEditing] = useState(false);
+  const [openSections, setOpenSections] = useState(readOpenSections);
 
-  const form = useForm<CustomerFormData>({
-    resolver: zodResolver(CustomerFormSchema),
-    defaultValues: {
-      name: "",
-      phone: "",
-      email: "",
-      language: "",
-      notes: "",
-    },
-  });
-
-  // Clear the form the instant the selected customer changes, so the previous
-  // customer's values — and any unsaved edits — never linger in the fields or
-  // get saved onto the newly-selected customer while it loads.
-  useEffect(() => {
-    form.reset({ name: "", phone: "", email: "", language: "", notes: "" });
-  }, [customerId, form]);
-
-  // Populate once the customer arrives. Skip while the user is mid-edit so a
-  // background refetch of the same customer doesn't clobber their changes.
-  useEffect(() => {
-    if (!customer || form.formState.isDirty) return;
-    form.reset({
-      name: customer.name ?? "",
-      phone: customer.phone ?? "",
-      email: customer.email ?? "",
-      language: customer.language ?? "",
-      notes: customer.notes ?? "",
-    });
-  }, [customer, form]);
-
-  const handleSubmit = form.handleSubmit(async (data) => {
-    if (!customerId) return;
-
-    const patch: CustomerUpdateRequestDto = {
-      name: data.name?.trim() || null,
-      phone: data.phone?.trim() || null,
-      email: data.email?.trim() || null,
-      language: data.language?.trim() || null,
-      notes: data.notes?.trim() || null,
-    };
-
-    toast.promise(mutateAsync(patch), {
-      loading: t("conversations.customer.panel.toast.saving"),
-      success: t("conversations.customer.panel.toast.updated"),
-      error: t("conversations.customer.panel.toast.updateFailed"),
-    });
-  });
+  const handleOpenSections = (value: string[]) => {
+    setOpenSections(value);
+    try {
+      localStorage.setItem(OPEN_SECTIONS_KEY, JSON.stringify(value));
+    } catch {
+      /* ignore persistence failures */
+    }
+  };
 
   if (!customerId) return null;
 
@@ -217,115 +173,48 @@ export function CustomerSidePanel({
         </div>
       ) : (
         <>
-          <Form {...form}>
-            <form
-              onSubmit={handleSubmit}
-              className="flex flex-col gap-y-4 px-4 py-4"
-            >
-              <Form.Field
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <Form.Item>
-                    <Form.Label>
-                      {t("conversations.customer.panel.fields.name")}
-                    </Form.Label>
-                    <Form.Control>
-                      <Input {...field} value={field.value ?? ""} />
-                    </Form.Control>
-                    <Form.ErrorMessage />
-                  </Form.Item>
-                )}
-              />
-              <Form.Field
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <Form.Item>
-                    <Form.Label>
-                      {t("conversations.customer.panel.fields.phone")}
-                    </Form.Label>
-                    <Form.Control>
-                      <Input {...field} value={field.value ?? ""} />
-                    </Form.Control>
-                    <Form.ErrorMessage />
-                  </Form.Item>
-                )}
-              />
-              <Form.Field
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <Form.Item>
-                    <Form.Label>
-                      {t("conversations.customer.panel.fields.email")}
-                    </Form.Label>
-                    <Form.Control>
-                      <Input {...field} value={field.value ?? ""} />
-                    </Form.Control>
-                    <Form.ErrorMessage />
-                  </Form.Item>
-                )}
-              />
-              <Form.Field
-                control={form.control}
-                name="language"
-                render={({ field }) => (
-                  <Form.Item>
-                    <Form.Label>
-                      {t("conversations.customer.panel.fields.language")}
-                    </Form.Label>
-                    <Form.Control>
-                      <Input
-                        {...field}
-                        value={field.value ?? ""}
-                        placeholder={t(
-                          "conversations.customer.panel.fields.languagePlaceholder",
-                        )}
-                      />
-                    </Form.Control>
-                    <Form.ErrorMessage />
-                  </Form.Item>
-                )}
-              />
-              <SavedFieldsSection fields={customer?.metadata} />
-              <Form.Field
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <Form.Item>
-                    <Form.Label>
-                      {t("conversations.customer.panel.fields.notes")}
-                    </Form.Label>
-                    <Form.Control>
-                      <Textarea {...field} value={field.value ?? ""} rows={4} />
-                    </Form.Control>
-                    <Form.ErrorMessage />
-                  </Form.Item>
-                )}
-              />
-              <div className="flex gap-x-2">
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="small"
-                  isLoading={isPending}
-                  disabled={isPending || !form.formState.isDirty}
-                >
-                  {t("actions.save")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="small"
-                  disabled={isPending || !form.formState.isDirty}
-                  onClick={() => form.reset()}
-                >
-                  {t("actions.cancel")}
-                </Button>
-              </div>
-            </form>
-          </Form>
+          <div className="flex flex-col gap-y-2.5 px-4 py-4">
+            <div className="flex items-center justify-between gap-x-2">
+              <Heading level="h3">
+                {t("conversations.customer.panel.details")}
+              </Heading>
+              <IconButton
+                size="small"
+                variant="transparent"
+                onClick={() => setEditing(true)}
+                aria-label={t("actions.edit")}
+              >
+                <PencilSquare />
+              </IconButton>
+            </div>
+            <DetailRow
+              label={t("conversations.customer.panel.fields.name")}
+              value={customer?.name}
+            />
+            <DetailRow
+              label={t("conversations.customer.panel.fields.phone")}
+              value={customer?.phone}
+            />
+            <DetailRow
+              label={t("conversations.customer.panel.fields.email")}
+              value={customer?.email}
+            />
+            <DetailRow
+              label={t("conversations.customer.panel.fields.language")}
+              value={customer?.language}
+            />
+            <SavedFieldsSection fields={customer?.metadata} />
+            <DetailRow
+              label={t("conversations.customer.panel.fields.notes")}
+              value={customer?.notes}
+            />
+          </div>
+          <CustomerEditDrawer
+            customerId={customerId}
+            customer={customer}
+            open={editing}
+            onOpenChange={setEditing}
+          />
 
           <div className="border-ui-border-base border-t px-4 py-4">
             <Heading level="h3" className="mb-2">
@@ -353,32 +242,37 @@ export function CustomerSidePanel({
 
           {conversationId && (
             <div className="border-ui-border-base border-t px-4 py-4">
-              <Heading level="h3" className="mb-2">
-                {t("conversations.customer.panel.conversations.title")}
-              </Heading>
-              <ConversationsSection
-                customerId={customerId}
-                conversationId={conversationId}
-              />
-            </div>
-          )}
-
-          {conversationId && (
-            <div className="border-ui-border-base border-t px-4 py-4">
               <TimezoneSection conversationId={conversationId} />
             </div>
           )}
 
           {conversationId && (
-            <div className="border-ui-border-base border-t px-4 py-4">
-              <Heading level="h3" className="mb-2">
-                {t("conversations.customer.panel.followups.title")}
-              </Heading>
-              <FollowupsSection
-                conversationId={conversationId}
-                onViewMessage={onViewMessage}
-              />
-            </div>
+            // Looked at now and then, so folded until opened.
+            <Accordion
+              type="multiple"
+              value={openSections}
+              onValueChange={handleOpenSections}
+              className="border-ui-border-base border-t"
+            >
+              <FoldedSection
+                value="followups"
+                title={t("conversations.customer.panel.followups.title")}
+              >
+                <FollowupsSection
+                  conversationId={conversationId}
+                  onViewMessage={onViewMessage}
+                />
+              </FoldedSection>
+              <FoldedSection
+                value="conversations"
+                title={t("conversations.customer.panel.conversations.title")}
+              >
+                <ConversationsSection
+                  customerId={customerId}
+                  conversationId={conversationId}
+                />
+              </FoldedSection>
+            </Accordion>
           )}
         </>
       )}

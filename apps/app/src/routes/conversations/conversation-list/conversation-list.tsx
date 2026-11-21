@@ -104,7 +104,8 @@ export const ConversationList = () => {
     }
   }, [isLoading, basePath]);
 
-  const showChatbot = groupBy !== "chatbot";
+  // One chatbot answers everywhere in most shops: its name on every row is noise.
+  const showChatbot = groupBy !== "chatbot" && (chatbots?.length ?? 0) > 1;
   const isFiltered = !!(
     search ||
     statusFilter ||

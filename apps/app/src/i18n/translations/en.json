@@ -2425,6 +2425,11 @@
     "customer": {
       "panel": {
         "title": "Customer",
+        "details": "Details",
+        "edit": {
+          "title": "Edit customer",
+          "description": "Name, phone, email, language and notes."
+        },
         "fields": {
           "name": "Name",
           "phone": "Phone",

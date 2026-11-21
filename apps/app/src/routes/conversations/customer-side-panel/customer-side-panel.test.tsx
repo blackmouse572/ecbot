@@ -35,6 +35,17 @@ vi.mock("./components/marketing-section", () => ({
   MarketingSection: () => null,
 }));
 
+// Folded sections have their own tests; stubs show when they mount.
+vi.mock("./components/conversations-section", () => ({
+  ConversationsSection: () => "conversations-section",
+}));
+vi.mock("./components/timezone-section", () => ({
+  TimezoneSection: () => "timezone-section",
+}));
+vi.mock("./components/followups-section", () => ({
+  FollowupsSection: () => "followups-section",
+}));
+
 vi.mock("@/hooks/api/contact-points", () => ({
   useContactPointsByCustomer: vi.fn(),
 }));
@@ -159,11 +170,11 @@ describe("CustomerSidePanel", () => {
 
     featureFlags.orders = false;
     render(<CustomerSidePanel customerId="cust-1" />);
-    await screen.findByDisplayValue("Alice Nguyen");
+    await screen.findByText("Alice Nguyen");
     expect(screen.queryByText("orders-section")).not.toBeInTheDocument();
   });
 
-  it("renders the customer's name in the editable Name field", async () => {
+  it("shows the customer's details as text, with the form one click away", async () => {
     useCustomerMock.mockReturnValue({
       customer: customerFixture,
       isLoading: false,
@@ -172,12 +183,55 @@ describe("CustomerSidePanel", () => {
       contactPoints: [],
     } as unknown as UseContactPointsReturn);
 
+    const user = userEvent.setup();
     render(<CustomerSidePanel customerId="cust-1" />);
 
-    // The form pre-populates from the customer fixture; the name should be
-    // visible as the current value of the Name input.
-    const nameInput = await screen.findByDisplayValue("Alice Nguyen");
-    expect(nameInput).toBeInTheDocument();
+    // Read-only by default: no inputs competing with the chat.
+    expect(await screen.findByText("Alice Nguyen")).toBeInTheDocument();
+    expect(screen.getByText("+84 909 111 222")).toBeInTheDocument();
+    expect(screen.getByText("VIP customer")).toBeInTheDocument();
+    expect(screen.queryByDisplayValue("Alice Nguyen")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "actions.edit" }));
+    expect(await screen.findByDisplayValue("Alice Nguyen")).toBeInTheDocument();
+  });
+
+  it("marks an empty detail as not set", async () => {
+    useCustomerMock.mockReturnValue({
+      customer: { ...customerFixture, email: null },
+      isLoading: false,
+    } as unknown as UseCustomerReturn);
+    useContactPointsMock.mockReturnValue({
+      contactPoints: [],
+    } as unknown as UseContactPointsReturn);
+
+    render(<CustomerSidePanel customerId="cust-1" />);
+
+    expect(await screen.findByText("general.notSet")).toBeInTheDocument();
+  });
+
+  it("folds other conversations and reminders until opened", async () => {
+    useCustomerMock.mockReturnValue({
+      customer: customerFixture,
+      isLoading: false,
+    } as unknown as UseCustomerReturn);
+    useContactPointsMock.mockReturnValue({
+      contactPoints: [],
+    } as unknown as UseContactPointsReturn);
+
+    const user = userEvent.setup();
+    render(<CustomerSidePanel customerId="cust-1" conversationId="conv-1" />);
+
+    expect(screen.queryByText("conversations-section")).not.toBeInTheDocument();
+    expect(screen.getByText("timezone-section")).toBeInTheDocument();
+    expect(screen.queryByText("followups-section")).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "conversations.customer.panel.followups.title",
+      }),
+    );
+    expect(screen.getByText("followups-section")).toBeInTheDocument();
   });
 
   it("submitting an edited name + email calls useUpdateCustomer's mutateAsync with the new values", async () => {
@@ -192,6 +246,9 @@ describe("CustomerSidePanel", () => {
     const user = userEvent.setup();
     render(<CustomerSidePanel customerId="cust-1" />);
 
+    await user.click(
+      await screen.findByRole("button", { name: "actions.edit" }),
+    );
     const nameInput = await screen.findByDisplayValue("Alice Nguyen");
     const emailInput = await screen.findByDisplayValue("alice@example.com");
 
