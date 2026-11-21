@@ -20,7 +20,7 @@ export const FoldedSection: FC<Props> = ({ value, title, children }) => (
           className="txt-compact-small-plus text-ui-fg-base hover:text-ui-fg-subtle focus-visible:shadow-borders-focus group/fold flex w-full items-center justify-between rounded-md py-3 text-left outline-none transition-colors"
         >
           {title}
-          <ChevronDownMini className="text-ui-fg-muted transition-transform duration-200 group-data-[state=open]/fold:rotate-180" />
+          <ChevronDownMini className="text-ui-fg-muted size-3 transition-transform duration-200 group-data-[state=open]/fold:rotate-180" />
         </button>
       }
     />
