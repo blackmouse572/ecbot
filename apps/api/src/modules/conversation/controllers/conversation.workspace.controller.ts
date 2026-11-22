@@ -103,7 +103,7 @@ export class ConversationWorkspaceController {
     @ConversationWorkspaceListDoc()
     @ResponsePaging('conversation.workspace.list')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.READ],
     })
     @UserProtected()
@@ -182,7 +182,7 @@ export class ConversationWorkspaceController {
     @ConversationWorkspaceMarkReadDoc()
     @Response('conversation.workspace.markRead')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.READ],
     })
     @UserProtected()
@@ -213,7 +213,7 @@ export class ConversationWorkspaceController {
     @ConversationWorkspaceGetDoc()
     @Response('conversation.workspace.get')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.READ],
     })
     @UserProtected()
@@ -251,7 +251,7 @@ export class ConversationWorkspaceController {
     @ConversationWorkspaceUpdateStatusDoc()
     @Response('conversation.workspace.updateStatus')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.UPDATE],
     })
     @UserProtected()
@@ -298,7 +298,7 @@ export class ConversationWorkspaceController {
     @ConversationWorkspaceUpdateBotDoc()
     @Response('conversation.workspace.updateBot')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.UPDATE],
     })
     @UserProtected()
@@ -345,7 +345,7 @@ export class ConversationWorkspaceController {
     @ConversationWorkspaceUpdateTimezoneDoc()
     @Response('conversation.workspace.updateTimezone')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.UPDATE],
     })
     @UserProtected()
@@ -391,7 +391,7 @@ export class ConversationWorkspaceController {
     @ConversationWorkspaceListMessagesDoc()
     @ResponsePaging('conversation.workspace.listMessages')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.READ],
     })
     @UserProtected()
@@ -461,7 +461,7 @@ export class ConversationWorkspaceController {
     @ConversationWorkspaceAttachmentDoc()
     @Response('conversation.attachment')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.UPDATE],
     })
     @UserProtected()
@@ -498,7 +498,7 @@ export class ConversationWorkspaceController {
     @ConversationWorkspaceSendMessageDoc()
     @Response('conversation.workspace.sendMessage')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.UPDATE],
     })
     @UserProtected()
@@ -549,7 +549,7 @@ export class ConversationWorkspaceController {
     @ConversationWorkspaceReactToMessageDoc()
     @Response('conversation.workspace.reactToMessage')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.UPDATE],
     })
     @UserProtected()

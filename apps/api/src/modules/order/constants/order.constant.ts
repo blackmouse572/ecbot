@@ -17,22 +17,35 @@ export const ORDER_CODE_PREFIX = 'DH';
 export const ORDER_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export const ORDER_CODE_ATTEMPTS = 5;
 
-// Orders and product groups are customer data, so they share the CUSTOMER
-// permission, one action per verb like the customer routes.
+// Orders have their own permission, one action per verb like the customer
+// routes. Product groups are read with ORDER (Sales picks them on orders) and
+// changed with MARKETING (image, link and repurchase cycle feed campaigns).
 export const ORDER_ABILITY_READ = {
-    subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+    subject: ENUM_POLICY_SUBJECT.ORDER,
     action: [ENUM_POLICY_ACTION.READ],
 };
 export const ORDER_ABILITY_CREATE = {
-    subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+    subject: ENUM_POLICY_SUBJECT.ORDER,
     action: [ENUM_POLICY_ACTION.CREATE],
 };
 export const ORDER_ABILITY_UPDATE = {
-    subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+    subject: ENUM_POLICY_SUBJECT.ORDER,
     action: [ENUM_POLICY_ACTION.UPDATE],
 };
 export const ORDER_ABILITY_DELETE = {
-    subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+    subject: ENUM_POLICY_SUBJECT.ORDER,
+    action: [ENUM_POLICY_ACTION.DELETE],
+};
+export const PRODUCT_GROUP_ABILITY_CREATE = {
+    subject: ENUM_POLICY_SUBJECT.MARKETING,
+    action: [ENUM_POLICY_ACTION.CREATE],
+};
+export const PRODUCT_GROUP_ABILITY_UPDATE = {
+    subject: ENUM_POLICY_SUBJECT.MARKETING,
+    action: [ENUM_POLICY_ACTION.UPDATE],
+};
+export const PRODUCT_GROUP_ABILITY_DELETE = {
+    subject: ENUM_POLICY_SUBJECT.MARKETING,
     action: [ENUM_POLICY_ACTION.DELETE],
 };
 

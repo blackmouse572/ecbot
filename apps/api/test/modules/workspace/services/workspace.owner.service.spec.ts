@@ -286,7 +286,7 @@ describe('WorkspaceOwnerService', () => {
             ).rejects.toThrow(NotFoundException);
         });
 
-        it('should fall back to the built-in Member role (not Admin) when no roleId is given', async () => {
+        it('should fall back to the built-in Sales role (not Admin) when no roleId is given', async () => {
             mockInvitationService.checkExistingInvitation.mockResolvedValue(
                 null
             );
@@ -304,7 +304,7 @@ describe('WorkspaceOwnerService', () => {
                     workspace: workspace.id,
                     isActive: true,
                     type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
-                    name: 'Member',
+                    name: 'Sales',
                 })
             );
             expect(mockInvitationService.create).toHaveBeenCalledWith(
@@ -312,7 +312,7 @@ describe('WorkspaceOwnerService', () => {
             );
         });
 
-        it('refuses with a clear error, not a 500, when the built-in Member role is off', async () => {
+        it('refuses with a clear error, not a 500, when the built-in Sales role is off', async () => {
             mockInvitationService.checkExistingInvitation.mockResolvedValue(
                 null
             );
@@ -386,7 +386,7 @@ describe('WorkspaceOwnerService', () => {
             );
         });
 
-        it('refuses with a clear error when the built-in Member role is off', async () => {
+        it('refuses with a clear error when the built-in Sales role is off', async () => {
             mockRoleService.findOne.mockResolvedValue(null);
 
             await expect(
@@ -399,14 +399,14 @@ describe('WorkspaceOwnerService', () => {
             expect(mockWorkspaceMemberRepository.create).not.toHaveBeenCalled();
         });
 
-        it('gives an approved join request the built-in Member role, not Admin', async () => {
+        it('gives an approved join request the built-in Sales role, not Admin', async () => {
             await service.addMemberToWorkspace(workspace.id, randomUUID());
 
             expect(mockRoleService.findOne).toHaveBeenCalledWith(
                 expect.objectContaining({
                     workspace: workspace.id,
                     type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
-                    name: 'Member',
+                    name: 'Sales',
                 })
             );
         });

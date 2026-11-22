@@ -39,7 +39,7 @@ export class CustomerMarketingBackfillWorkspaceController {
     @CustomerMarketingBackfillWorkspaceGetDoc()
     @Response('customerMarketing.backfill.get')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.READ],
     })
     @UserProtected()
@@ -56,7 +56,7 @@ export class CustomerMarketingBackfillWorkspaceController {
     @CustomerMarketingBackfillWorkspaceStartDoc()
     @Response('customerMarketing.backfill.start')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.UPDATE],
     })
     @UserProtected()

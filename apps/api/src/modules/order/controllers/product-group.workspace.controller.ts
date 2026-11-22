@@ -48,10 +48,10 @@ import {
     ResponsePaging,
 } from 'src/common/response/decorators/response.decorator';
 import {
-    ORDER_ABILITY_CREATE,
-    ORDER_ABILITY_DELETE,
     ORDER_ABILITY_READ,
-    ORDER_ABILITY_UPDATE,
+    PRODUCT_GROUP_ABILITY_CREATE,
+    PRODUCT_GROUP_ABILITY_DELETE,
+    PRODUCT_GROUP_ABILITY_UPDATE,
 } from '../constants/order.constant';
 import { PRODUCT_GROUP_PARAM } from '../constants/order.doc.constant';
 import {
@@ -133,7 +133,7 @@ export class ProductGroupWorkspaceController {
 
     @ProductGroupWorkspaceCreateDoc()
     @Response('order.productGroup.workspace.create')
-    @WorkspaceScopedProtected(ORDER_ABILITY_CREATE)
+    @WorkspaceScopedProtected(PRODUCT_GROUP_ABILITY_CREATE)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -150,7 +150,7 @@ export class ProductGroupWorkspaceController {
 
     @ProductGroupWorkspaceUpdateDoc()
     @Response('order.productGroup.workspace.update')
-    @WorkspaceScopedProtected(ORDER_ABILITY_UPDATE)
+    @WorkspaceScopedProtected(PRODUCT_GROUP_ABILITY_UPDATE)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -172,7 +172,7 @@ export class ProductGroupWorkspaceController {
 
     @ProductGroupWorkspaceDeleteDoc()
     @Response('order.productGroup.workspace.delete')
-    @WorkspaceScopedProtected(ORDER_ABILITY_DELETE)
+    @WorkspaceScopedProtected(PRODUCT_GROUP_ABILITY_DELETE)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -189,7 +189,7 @@ export class ProductGroupWorkspaceController {
 
     @ProductGroupWorkspaceUploadImageDoc()
     @Response('order.productGroup.workspace.uploadImage')
-    @WorkspaceScopedProtected(ORDER_ABILITY_UPDATE)
+    @WorkspaceScopedProtected(PRODUCT_GROUP_ABILITY_UPDATE)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -210,7 +210,7 @@ export class ProductGroupWorkspaceController {
 
     @ProductGroupWorkspaceUpdateImageDoc()
     @Response('order.productGroup.workspace.updateImage')
-    @WorkspaceScopedProtected(ORDER_ABILITY_UPDATE)
+    @WorkspaceScopedProtected(PRODUCT_GROUP_ABILITY_UPDATE)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
@@ -245,7 +245,7 @@ export class ProductGroupWorkspaceController {
 
     @ProductGroupWorkspaceDeleteImageDoc()
     @Response('order.productGroup.workspace.deleteImage')
-    @WorkspaceScopedProtected(ORDER_ABILITY_UPDATE)
+    @WorkspaceScopedProtected(PRODUCT_GROUP_ABILITY_UPDATE)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()

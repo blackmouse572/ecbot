@@ -85,7 +85,7 @@ export class ConversationClientController {
     @ConversationClientListDoc()
     @ResponsePaging('conversation.workspace.list')
     @ClientCredentialProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.READ],
     })
     @Get('/')
@@ -152,7 +152,7 @@ export class ConversationClientController {
     @ConversationClientGetDoc()
     @Response('conversation.workspace.get')
     @ClientCredentialProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.READ],
     })
     @Get('/:id')
@@ -186,7 +186,7 @@ export class ConversationClientController {
     @ConversationClientListMessagesDoc()
     @ResponsePaging('conversation.workspace.listMessages')
     @ClientCredentialProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.READ],
     })
     @Get('/:id/messages')
@@ -242,7 +242,7 @@ export class ConversationClientController {
     @ConversationClientSendMessageDoc()
     @Response('conversation.workspace.sendMessage')
     @ClientCredentialProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.UPDATE],
     })
     @Post('/:id/messages')
@@ -290,7 +290,7 @@ export class ConversationClientController {
     @ConversationClientUpdateStatusDoc()
     @Response('conversation.workspace.updateStatus')
     @ClientCredentialProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.UPDATE],
     })
     @Patch('/:id/status')
@@ -320,7 +320,7 @@ export class ConversationClientController {
     @ConversationClientUpdateBotDoc()
     @Response('conversation.workspace.updateBot')
     @ClientCredentialProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.UPDATE],
     })
     @Patch('/:id/bot')
@@ -350,7 +350,7 @@ export class ConversationClientController {
     @ConversationClientUpdateTimezoneDoc()
     @Response('conversation.workspace.updateTimezone')
     @ClientCredentialProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.UPDATE],
     })
     @Patch('/:id/timezone')

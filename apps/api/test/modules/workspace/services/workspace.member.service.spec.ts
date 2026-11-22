@@ -267,11 +267,11 @@ describe('WorkspaceMemberService', () => {
             );
         });
 
-        it('grants the built-in Member role (by name, never Admin) when the invitation has none', async () => {
+        it('grants the built-in Sales role (by name, never Admin) when the invitation has none', async () => {
             const memberRoleId = randomUUID();
             mockRoleService.findOne.mockResolvedValue({
                 id: memberRoleId,
-                name: 'Member',
+                name: 'Sales',
             });
             mockInvitationService.findOneByToken.mockResolvedValue({
                 id: invitationId,
@@ -287,7 +287,7 @@ describe('WorkspaceMemberService', () => {
             expect(mockRoleService.findOne).toHaveBeenCalledWith(
                 expect.objectContaining({
                     workspace: workspaceId,
-                    name: 'Member',
+                    name: 'Sales',
                     isActive: true,
                 }),
                 undefined
@@ -299,7 +299,7 @@ describe('WorkspaceMemberService', () => {
             );
         });
 
-        it('refuses a role-less invitation when the Member role is off', async () => {
+        it('refuses a role-less invitation when the Sales role is off', async () => {
             mockRoleService.findOne.mockResolvedValue(null);
             mockInvitationService.findOneByToken.mockResolvedValue({
                 id: invitationId,

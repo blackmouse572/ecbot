@@ -69,7 +69,7 @@ export class MarketingSavedAudienceClientController {
     @MarketingSavedAudienceListDoc('client')
     @ResponsePaging('marketingAudience.saved.list')
     @ClientCredentialProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.READ],
     })
     @Get('/')
@@ -103,7 +103,7 @@ export class MarketingSavedAudienceClientController {
     @MarketingSavedAudienceCreateDoc('client')
     @Response('marketingAudience.saved.create')
     @ClientCredentialProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.CREATE],
     })
     @Post('/')
@@ -125,7 +125,7 @@ export class MarketingSavedAudienceClientController {
     @MarketingSavedAudienceUpdateDoc('client')
     @Response('marketingAudience.saved.update')
     @ClientCredentialProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.UPDATE],
     })
     @Patch(`/:${MARKETING_AUDIENCE_PARAM}`)
@@ -148,7 +148,7 @@ export class MarketingSavedAudienceClientController {
     @MarketingSavedAudienceDeleteDoc('client')
     @Response('marketingAudience.saved.delete')
     @ClientCredentialProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.DELETE],
     })
     @HttpCode(HttpStatus.NO_CONTENT)

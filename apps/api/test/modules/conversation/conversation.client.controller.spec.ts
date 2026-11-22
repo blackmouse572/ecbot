@@ -89,7 +89,7 @@ describe('ConversationClientController', () => {
     // Same ability as the matching workspace route: the key can do no more
     // than its creator.
     it.each(['list', 'get', 'listMessages'] as const)(
-        '%s requires CHATBOT read',
+        '%s requires CONVERSATION read',
         handler => {
             expect(
                 Reflect.getMetadata(
@@ -98,7 +98,7 @@ describe('ConversationClientController', () => {
                 )
             ).toEqual([
                 {
-                    subject: ENUM_POLICY_SUBJECT.CHATBOT,
+                    subject: ENUM_POLICY_SUBJECT.CONVERSATION,
                     action: [ENUM_POLICY_ACTION.READ],
                 },
             ]);
@@ -110,7 +110,7 @@ describe('ConversationClientController', () => {
         'updateStatus',
         'updateBot',
         'updateTimezone',
-    ] as const)('%s requires CHATBOT update', handler => {
+    ] as const)('%s requires CONVERSATION update', handler => {
         expect(
             Reflect.getMetadata(
                 CLIENT_CREDENTIAL_POLICY_ABILITY_META_KEY,
@@ -118,7 +118,7 @@ describe('ConversationClientController', () => {
             )
         ).toEqual([
             {
-                subject: ENUM_POLICY_SUBJECT.CHATBOT,
+                subject: ENUM_POLICY_SUBJECT.CONVERSATION,
                 action: [ENUM_POLICY_ACTION.UPDATE],
             },
         ]);
