@@ -80,6 +80,7 @@ function makeHarness(
         isStopMessage: jest.fn(async (_ws: string, text: string) =>
             isMarketingOptOutMessage(text)
         ),
+        stopReply: jest.fn(async (): Promise<string | null> => null),
     };
     const service = new CustomerMarketingService(
         em,
@@ -174,6 +175,19 @@ describe('CustomerMarketingService', () => {
                 'huỷ đăng ký'
             );
             expect(states.get('c1')?.permission).toBe(PERMISSION.STOPPED);
+        });
+
+        it("confirms with the shop's own text, or the built-in one when it cannot be read", async () => {
+            const { service, settings } = makeHarness();
+            settings.stopReply.mockResolvedValueOnce('Dạ shop ngưng gửi ạ.');
+            await expect(
+                service.stopReplyText('w1', { primaryLanguage: 'vi' })
+            ).resolves.toBe('Dạ shop ngưng gửi ạ.');
+
+            settings.stopReply.mockRejectedValueOnce(new Error('db down'));
+            await expect(
+                service.stopReplyText('w1', { primaryLanguage: 'vi' })
+            ).resolves.toContain('dừng gửi tin ưu đãi');
         });
 
         it('leaves the permission alone on an ordinary negative reply', async () => {

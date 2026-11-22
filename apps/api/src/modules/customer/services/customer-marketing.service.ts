@@ -89,15 +89,19 @@ export class CustomerMarketingService {
         return this.marketingSettings.isStopMessage(workspaceId, text);
     }
 
-    /** The opt-out confirmation: the shop's own, else the built-in one. */
+    /**
+     * The opt-out confirmation: the shop's own, else the built-in one. A
+     * failed settings read falls back to the built-in text, so the customer
+     * is always told.
+     */
     async stopReplyText(
         workspaceId: string,
         chatbot: { primaryLanguage?: string | null }
     ): Promise<string> {
-        return (
-            (await this.marketingSettings.stopReply(workspaceId)) ??
-            optOutReplyText(chatbot)
-        );
+        const own = await this.marketingSettings
+            .stopReply(workspaceId)
+            .catch(() => null);
+        return own ?? optOutReplyText(chatbot);
     }
 
     // Cài đặt gửi tin lives with the marketing module, which reads customers.

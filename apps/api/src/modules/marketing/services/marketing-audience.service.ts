@@ -1,10 +1,9 @@
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { ENUM_CUSTOMER_JOURNEY_STAGE } from '@app/modules/customer/enums/customer-marketing.enum';
+import { HelperDateService } from '@app/common/helper/services/helper.date.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { plainToInstance } from 'class-transformer';
 import { isUUID } from 'class-validator';
-import { DateTime } from 'luxon';
 import {
     MARKETING_AUDIENCE_LIST_OPERATORS,
     MARKETING_AUDIENCE_MAX_DAYS,
@@ -50,7 +49,7 @@ export class MarketingAudienceService {
     constructor(
         private readonly repository: MarketingAudienceRepository,
         private readonly settingsService: MarketingSettingsService,
-        private readonly configService: ConfigService
+        private readonly helperDateService: HelperDateService
     ) {}
 
     async preview(
@@ -99,16 +98,15 @@ export class MarketingAudienceService {
         );
     }
 
-    /** The send rules apply in the shop's time (the app timezone). */
+    /** The send rules count days in the shop's time, the app timezone. */
     private async window(
         workspaceId: string,
         now: Date
     ): Promise<IMarketingAudienceWindow> {
-        const zone = this.configService.get<string>('app.timezone') ?? 'UTC';
         return {
             workspaceId,
             now,
-            today: DateTime.fromJSDate(now, { zone }).toISODate()!,
+            today: this.helperDateService.formatToIsoDate(now),
             rules: await this.settingsService.rules(workspaceId),
         };
     }

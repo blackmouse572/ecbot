@@ -20,6 +20,9 @@ function makeService(saved: Record<string, unknown> | null = null) {
             row = { ...data };
             return row;
         }),
+        getEntityManager: () => ({
+            getReference: (_: unknown, id: string) => ({ id }),
+        }),
         save: jest.fn(async (entity: Record<string, unknown>) => {
             row = entity;
             return entity;
@@ -51,7 +54,7 @@ describe('MarketingSettingsService', () => {
             restDays: 14,
         });
         expect(repository.create).toHaveBeenCalledWith({
-            workspace: 'ws1',
+            workspace: { id: 'ws1' },
             maxPer30Days: 2,
             restDays: 14,
         });

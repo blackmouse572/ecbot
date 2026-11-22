@@ -1,5 +1,5 @@
 import { EntityManager } from '@mikro-orm/postgresql';
-import { DateTime } from 'luxon';
+import { HelperDateService } from '@app/common/helper/services/helper.date.service';
 import { ENUM_ACCOUNT_TYPE as A } from '@app/modules/account/enums/account.enum';
 import { ContactPointEntity } from '@app/modules/customer/repository/entities/contact-point.entity';
 import { CustomerMarketingStateEntity } from '@app/modules/customer/repository/entities/customer-marketing-state.entity';
@@ -98,10 +98,8 @@ describe('E2E — marketing send rules', () => {
                 customer: c,
                 channel: A.FACEBOOK_PAGE,
                 status,
-                // The shop's day, in the app timezone the API counts in.
-                sendDay: DateTime.fromJSDate(at, {
-                    zone: process.env.APP_TIMEZONE ?? 'Asia/Ho_Chi_Minh',
-                }).toISODate(),
+                // The shop's day, as the API counts it.
+                sendDay: ctx.app.get(HelperDateService).formatToIsoDate(at),
                 sentAt: status === M.SENT ? at : null,
             } as MarketingMessageEntity);
         };

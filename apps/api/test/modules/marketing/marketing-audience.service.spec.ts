@@ -23,13 +23,13 @@ describe('MarketingAudienceService', () => {
         sendTo: '20:00',
     };
     const settings = { rules: jest.fn() };
-    const config = { get: () => 'Asia/Ho_Chi_Minh' };
+    // The shop's day, as HelperDateService gives it in the app timezone.
+    const helperDate = { formatToIsoDate: () => '2026-11-20' };
     const service = new MarketingAudienceService(
         repository as any,
         settings as any,
-        config as any
+        helperDate as any
     );
-    // 07:00 on the 20th in Hồ Chí Minh.
     const window = { workspaceId: 'ws1', now, today: '2026-11-20', rules };
 
     beforeEach(() => {

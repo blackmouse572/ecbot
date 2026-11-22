@@ -4,6 +4,7 @@ import {
     optOutWord,
 } from '@app/modules/customer/utils/customer-marketing-opt-out.util';
 import { UniqueConstraintViolationException } from '@mikro-orm/core';
+import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import {
@@ -68,7 +69,9 @@ export class MarketingSettingsService {
         try {
             return this.map(
                 await this.repository.create({
-                    workspace: workspaceId as any,
+                    workspace: this.repository
+                        .getEntityManager()
+                        .getReference(WorkspaceEntity, workspaceId),
                     ...defined,
                 })
             );
