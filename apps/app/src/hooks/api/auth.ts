@@ -8,7 +8,6 @@ import {
   authPublicControllerSignUpV1,
   authSharedControllerChangePasswordV1,
   authSharedControllerLogoutV1,
-  authSharedControllerRefreshV1,
   type AuthChangePasswordRequestDto,
   type AuthLoginMfaChallengeResponseDto,
   verificationEmailControllerResendVerificationEmailV1,
@@ -196,20 +195,6 @@ export const useResendEmailOtp = (email: string, userId: string) => {
 //     ...options,
 //   });
 // };
-
-export const useRefreshToken = () => {
-  return useMutation({
-    mutationFn: () => {
-      return authSharedControllerRefreshV1({
-        withCredentials: true,
-        headers: {
-          Authorization: null,
-        },
-        throwOnError: false,
-      });
-    },
-  });
-};
 
 export const useLogout = () => {
   const setLastWorkspaceSlug = useSetLastWorkspaceSlug();

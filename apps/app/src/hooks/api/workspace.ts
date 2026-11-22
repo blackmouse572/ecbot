@@ -126,7 +126,12 @@ export function useWorkspace() {
 // Context provider for workspace
 export function useEnsureWorkspace() {
   const { workspaces, isLoading: isLoadingWorkspaces } = useWorkspaceList();
-  const { workspace, isLoading: isLoadingWorkspace, error } = useWorkspace();
+  const {
+    workspace,
+    isLoading: isLoadingWorkspace,
+    error,
+    refetch,
+  } = useWorkspace();
   const isSuspended = isWorkspaceSuspendedError(error);
   const navigate = useNavigate();
   const { workspaceSlug } = useParams<{ workspaceSlug: string }>();
@@ -176,12 +181,24 @@ export function useEnsureWorkspace() {
     isWorkspaceNotFoundError(error) &&
     !workspaces.some((w) => w.slug === workspaceSlug);
 
+  // Any other failure (a 5xx, a dropped connection) is shown with a retry.
+  // A 401 is left out: the session is being renewed or sent to /login.
+  const loadFailed =
+    !isLoading &&
+    !workspace &&
+    !isSuspended &&
+    !isNotFound &&
+    !!error &&
+    (error as { response?: { status?: number } }).response?.status !== 401;
+
   return {
     workspace,
     isLoading,
     hasWorkspaces: workspaces.length > 0,
     isSuspended,
     isNotFound,
+    loadFailed,
+    retry: refetch,
   };
 }
 

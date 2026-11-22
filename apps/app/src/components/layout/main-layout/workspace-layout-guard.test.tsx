@@ -1,5 +1,5 @@
 import "@/i18n";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -67,5 +67,65 @@ describe.each([
 
     expect(screen.getByText("This workspace is suspended")).toBeTruthy();
     expect(screen.queryByText("page content")).toBeNull();
+  });
+});
+
+// QA D16: a stale session left the workspace query failed (401/403) but
+// neither loading, suspended nor not found, so the shell rendered its pages
+// and they threw reading `slug` of the undefined workspace.
+describe.each([
+  ["MainLayout", MainLayout, "/x/dashboard"],
+  [
+    "WorkspaceSettingsLayout",
+    WorkspaceSettingsLayout,
+    "/x/settings/client-credentials",
+  ],
+])("%s when the workspace resolved to nothing", (_, Layout, path) => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("shows the loading state and never renders the page", () => {
+    ensured = {
+      isLoading: false,
+      hasWorkspaces: true,
+      isNotFound: false,
+      isSuspended: false,
+      workspace: undefined,
+    };
+    renderLayout(Layout, path);
+
+    expect(screen.queryByText("page content")).toBeNull();
+    expect(screen.queryByText("Workspace not found")).toBeNull();
+  });
+});
+
+describe.each([
+  ["MainLayout", MainLayout, "/x/dashboard"],
+  [
+    "WorkspaceSettingsLayout",
+    WorkspaceSettingsLayout,
+    "/x/settings/client-credentials",
+  ],
+])("%s when the workspace failed to load", (_, Layout, path) => {
+  it("offers a retry instead of a spinner and never renders the page", () => {
+    const retry = vi.fn();
+    ensured = {
+      isLoading: false,
+      hasWorkspaces: true,
+      isNotFound: false,
+      isSuspended: false,
+      loadFailed: true,
+      retry,
+      workspace: undefined,
+    };
+    renderLayout(Layout, path);
+
+    expect(
+      screen.getByText("Couldn't load this. Try again later."),
+    ).toBeTruthy();
+    expect(screen.queryByText("page content")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Try Again" }));
+    expect(retry).toHaveBeenCalledTimes(1);
   });
 });
