@@ -1,3 +1,4 @@
+import { MarketingSendService } from 'src/modules/marketing/services/marketing-send.service';
 import { isMarketingOptOutMessage } from '../../../src/modules/customer/utils/customer-marketing-opt-out.util';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import {
@@ -82,15 +83,20 @@ function makeHarness(
         ),
         stopReply: jest.fn(async (): Promise<string | null> => null),
     };
+    const sends = { markReplied: jest.fn(async () => undefined) };
     const service = new CustomerMarketingService(
         em,
         stateRepository as any,
         eventRepository as any,
         customerRepository as any,
         {} as any,
-        { get: jest.fn(() => settings) } as any
+        {
+            get: jest.fn((type: unknown) =>
+                type === MarketingSendService ? sends : settings
+            ),
+        } as any
     );
-    return { service, states, events, em, settings };
+    return { service, states, events, em, settings, sends };
 }
 
 const bot = { actor: ACTOR.BOT, reason: 'test' };
@@ -119,6 +125,25 @@ describe('CustomerMarketingService', () => {
                     conversationId: 'conv-1',
                 }),
             ]);
+        });
+
+        it('answers the offers of the last 72 hours, even when that mark fails', async () => {
+            const { service, sends } = makeHarness();
+            await service.recordInbound({
+                customerId: 'c1',
+                workspaceId: 'w1',
+                text: 'cho mình xem mẫu này',
+            });
+            expect(sends.markReplied).toHaveBeenCalledWith('c1');
+
+            sends.markReplied.mockRejectedValueOnce(new Error('db down'));
+            await expect(
+                service.recordInbound({
+                    customerId: 'c1',
+                    workspaceId: 'w1',
+                    text: 'còn không shop',
+                })
+            ).resolves.toEqual({ optedOut: false });
         });
 
         it('stops offers on "dừng", once, with the message linked', async () => {

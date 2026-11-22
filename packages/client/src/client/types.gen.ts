@@ -1556,6 +1556,14 @@ export type CustomerMarketingBackfillTaskDto = {
     runId: string;
 };
 
+export type MarketingSendTaskDto = {
+    jobName: 'deliver';
+    /**
+     * The marketing_messages row
+     */
+    messageId: string;
+};
+
 export type UserUpdateClaimUsernameRequestDto = {
     [key: string]: unknown;
 };
@@ -12903,6 +12911,76 @@ export type CustomerMarketingBackfillTaskControllerHandleV1Responses = {
 };
 
 export type CustomerMarketingBackfillTaskControllerHandleV1Response = CustomerMarketingBackfillTaskControllerHandleV1Responses[keyof CustomerMarketingBackfillTaskControllerHandleV1Responses];
+
+export type MarketingSendTaskControllerHandleV1Data = {
+    body: MarketingSendTaskDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/system/tasks/marketing-send';
+};
+
+export type MarketingSendTaskControllerHandleV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSendTaskControllerHandleV1Error = MarketingSendTaskControllerHandleV1Errors[keyof MarketingSendTaskControllerHandleV1Errors];
+
+export type MarketingSendTaskControllerHandleV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSendTaskControllerHandleV1Response = MarketingSendTaskControllerHandleV1Responses[keyof MarketingSendTaskControllerHandleV1Responses];
 
 export type UserUserControllerDeleteV1Data = {
     body?: never;
