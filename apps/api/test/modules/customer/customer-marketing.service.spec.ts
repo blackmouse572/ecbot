@@ -1,3 +1,4 @@
+import { isMarketingOptOutMessage } from '../../../src/modules/customer/utils/customer-marketing-opt-out.util';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import {
     ENUM_CUSTOMER_JOURNEY_STAGE as STAGE,
@@ -74,15 +75,22 @@ function makeHarness(
                 : null
         ),
     };
+    // Cài đặt gửi tin with the built-in keywords unless a test says otherwise.
+    const settings = {
+        isStopMessage: jest.fn(async (_ws: string, text: string) =>
+            isMarketingOptOutMessage(text)
+        ),
+        stopReply: jest.fn(async (): Promise<string | null> => null),
+    };
     const service = new CustomerMarketingService(
         em,
         stateRepository as any,
         eventRepository as any,
         customerRepository as any,
         {} as any,
-        { get: jest.fn() } as any
+        { get: jest.fn(() => settings) } as any
     );
-    return { service, states, events, em };
+    return { service, states, events, em, settings };
 }
 
 const bot = { actor: ACTOR.BOT, reason: 'test' };
@@ -150,6 +158,36 @@ describe('CustomerMarketingService', () => {
                 })
             ).resolves.toEqual({ optedOut: true });
             expect(events).toHaveLength(count);
+        });
+
+        it("stops offers on the shop's own keyword from Cài đặt gửi tin", async () => {
+            const { service, states, settings } = makeHarness();
+            settings.isStopMessage.mockResolvedValue(true);
+            await expect(
+                service.recordInbound({
+                    customerId: 'c1',
+                    workspaceId: 'w1',
+                    text: 'huỷ đăng ký',
+                })
+            ).resolves.toEqual({ optedOut: true });
+            expect(settings.isStopMessage).toHaveBeenCalledWith(
+                'w1',
+                'huỷ đăng ký'
+            );
+            expect(states.get('c1')?.permission).toBe(PERMISSION.STOPPED);
+        });
+
+        it("confirms with the shop's own text, or the built-in one when it cannot be read", async () => {
+            const { service, settings } = makeHarness();
+            settings.stopReply.mockResolvedValueOnce('Dạ shop ngưng gửi ạ.');
+            await expect(
+                service.stopReplyText('w1', { primaryLanguage: 'vi' })
+            ).resolves.toBe('Dạ shop ngưng gửi ạ.');
+
+            settings.stopReply.mockRejectedValueOnce(new Error('db down'));
+            await expect(
+                service.stopReplyText('w1', { primaryLanguage: 'vi' })
+            ).resolves.toContain('dừng gửi tin ưu đãi');
         });
 
         it('leaves the permission alone on an ordinary negative reply', async () => {

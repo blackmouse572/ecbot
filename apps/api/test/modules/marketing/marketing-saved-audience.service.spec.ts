@@ -24,7 +24,11 @@ describe('MarketingSavedAudienceService', () => {
         delete: jest.fn(),
     };
     // The real checks, so a saved audience is held to the preview's rules.
-    const audiences = new MarketingAudienceService({} as any);
+    const audiences = new MarketingAudienceService(
+        {} as any,
+        {} as any,
+        {} as any
+    );
     const service = new MarketingSavedAudienceService(
         repository as any,
         audiences

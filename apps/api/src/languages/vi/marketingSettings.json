@@ -1,0 +1,8 @@
+{
+    "get": "Đã tải cài đặt gửi tin.",
+    "update": "Đã lưu cài đặt gửi tin.",
+    "error": {
+        "sendHours": "Giờ bắt đầu gửi phải sớm hơn giờ kết thúc.",
+        "stopKeywords": "Cần ít nhất một từ khoá dừng."
+    }
+}
