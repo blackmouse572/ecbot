@@ -47,6 +47,10 @@ export type ConversationListQuery = {
   chatbot?: string;
   customer?: string;
   botEnabled?: boolean;
+  /** Customer tag ids, comma separated: any of them matches. */
+  tag?: string;
+  /** Customer journey stages, comma separated. */
+  stage?: string;
   orderBy?: string;
   orderDirection?: "ASC" | "DESC";
 };
@@ -97,6 +101,8 @@ export const useConversations = (query: ConversationListQuery = {}) => {
           ...(query.account && { account: query.account }),
           ...(query.chatbot && { chatbot: query.chatbot }),
           ...(query.customer && { customer: query.customer }),
+          ...(query.tag && { tag: query.tag }),
+          ...(query.stage && { stage: query.stage }),
           ...(query.botEnabled !== undefined && {
             botEnabled: String(query.botEnabled),
           }),

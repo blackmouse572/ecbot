@@ -32,6 +32,19 @@ export class CustomerTagAssignmentRepository extends DatabaseRepository<Customer
         } as any);
     }
 
+    /**
+     * A `find` fragment on customers holding any of the tags. The sub-query
+     * is a plain value, so one fragment serves both a page and its count.
+     */
+    customerListFilter(tagIds: string[]): Record<string, any> {
+        const customerIds = this.em
+            .createQueryBuilder(CustomerTagAssignmentEntity, 'a')
+            .select('a.customer')
+            .where({ tag: { $in: tagIds }, deletedAt: null })
+            .getKnexQuery();
+        return { id: { $in: customerIds } };
+    }
+
     async findByTag(tagId: string): Promise<CustomerTagAssignmentEntity[]> {
         return this.find({
             tag: tagId,

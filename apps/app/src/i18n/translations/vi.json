@@ -2357,6 +2357,8 @@
         "allChatbots": "Tất cả agent",
         "account": "Tài khoản",
         "allAccounts": "Tất cả tài khoản",
+        "tag": "Thẻ khách hàng",
+        "stage": "Giai đoạn",
         "groupBy": "Nhóm theo"
       },
       "groupBy": {

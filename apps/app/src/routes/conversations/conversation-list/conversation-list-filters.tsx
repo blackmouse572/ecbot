@@ -1,6 +1,10 @@
 import { Input } from "@medusajs/ui";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { CUSTOMER_STAGES } from "@/components/customer-marketing";
+import { useCustomerTagList } from "@/hooks/api/customer-tags";
+import { useFeatureFlags } from "@/hooks/api/feature-flags";
+import { useAbility } from "@repo/auth";
 import {
   DataTableFilter,
   type Filter,
@@ -29,6 +33,10 @@ export const ConversationListFilters = ({
   accounts,
 }: Props) => {
   const { t } = useTranslation();
+  const { flags } = useFeatureFlags();
+  // Tags and stages are customer labels: the API asks for read CUSTOMER.
+  const canReadCustomers = useAbility().can("read", "CUSTOMER");
+  const { tags } = useCustomerTagList({ enabled: canReadCustomers });
 
   const filters = useMemo<Filter[]>(
     () => [
@@ -58,8 +66,37 @@ export const ConversationListFilters = ({
         searchable: true,
         options: accounts.map((a) => ({ label: a.name ?? a.id, value: a.id })),
       },
+      ...(canReadCustomers
+        ? [
+            {
+              key: "tag",
+              label: t("conversations.list.filter.tag"),
+              type: "select" as const,
+              multiple: true,
+              searchable: true,
+              options: tags.map((tag) => ({
+                label: tag.emoji ? `${tag.emoji} ${tag.name}` : tag.name,
+                value: tag.id,
+              })),
+            },
+          ]
+        : []),
+      ...(canReadCustomers && flags.marketing
+        ? [
+            {
+              key: "stage",
+              label: t("conversations.list.filter.stage"),
+              type: "select" as const,
+              multiple: true,
+              options: CUSTOMER_STAGES.map((value) => ({
+                label: t(`customerMarketing.stage.${value}`),
+                value,
+              })),
+            },
+          ]
+        : []),
     ],
-    [t, chatbots, accounts],
+    [t, chatbots, accounts, tags, canReadCustomers, flags.marketing],
   );
 
   return (

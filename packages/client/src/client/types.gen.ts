@@ -28775,6 +28775,14 @@ export type ConversationWorkspaceControllerListV1Data = {
     };
     query?: {
         /**
+         * Journey stages of the conversation's customer, with ',' delimiter. A customer with no labels yet counts as NEW.
+         */
+        stage?: string;
+        /**
+         * Customer tag ids, with ',' delimiter: conversations whose customer has any of them.
+         */
+        tag?: string;
+        /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
          */
         search?: string;

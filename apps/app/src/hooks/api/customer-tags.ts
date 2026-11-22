@@ -43,13 +43,13 @@ export const customerTagQueryKeys = {
   ...queryKeysFactory<typeof CUSTOMER_TAG_QUERY_KEY>(CUSTOMER_TAG_QUERY_KEY),
 };
 
-export const useCustomerTagList = () => {
+export const useCustomerTagList = ({ enabled = true } = {}) => {
   const { workspace } = useWorkspace();
   const slug = workspace?.slug;
 
   const { data, ...rest } = useQuery({
     queryKey: customerTagQueryKeys.list(),
-    enabled: !!slug,
+    enabled: !!slug && enabled,
     queryFn: () =>
       customerTagWorkspaceControllerListV1({
         path: { workspace: slug! },

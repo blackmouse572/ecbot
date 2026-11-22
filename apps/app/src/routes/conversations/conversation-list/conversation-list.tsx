@@ -9,6 +9,8 @@ import {
   type ConversationStatus,
 } from "@/hooks/api/conversations";
 import { useChatbots } from "@/hooks/api/chatbot";
+import { useFeatureFlags } from "@/hooks/api/feature-flags";
+import { useAbility } from "@repo/auth";
 import { useAccounts } from "@/hooks/api/accounts";
 import { usePendingMergeCustomerIds } from "@/hooks/api/customer-merge-suggestions";
 import { useWorkspace } from "@/hooks/api/workspace";
@@ -72,6 +74,15 @@ export const ConversationList = () => {
     (searchParams.get(`${p}_status`) as ConversationStatus | null) ?? undefined;
   const chatbotFilter = searchParams.get(`${p}_chatbot`) ?? undefined;
   const accountFilter = searchParams.get(`${p}_account`) ?? undefined;
+  // Tag and stage in the URL are ignored while their filters are hidden: both
+  // need read CUSTOMER, and stage also the Marketing flag.
+  const canReadCustomers = useAbility().can("read", "CUSTOMER");
+  const { flags } = useFeatureFlags();
+  const tagFilter =
+    (canReadCustomers && searchParams.get(`${p}_tag`)) || undefined;
+  const stageFilter =
+    (canReadCustomers && flags.marketing && searchParams.get(`${p}_stage`)) ||
+    undefined;
 
   const query = useMemo(
     () => ({
@@ -83,8 +94,17 @@ export const ConversationList = () => {
       status: statusFilter ? [statusFilter] : undefined,
       chatbot: chatbotFilter || undefined,
       account: accountFilter || undefined,
+      tag: tagFilter,
+      stage: stageFilter,
     }),
-    [search, statusFilter, chatbotFilter, accountFilter],
+    [
+      search,
+      statusFilter,
+      chatbotFilter,
+      accountFilter,
+      tagFilter,
+      stageFilter,
+    ],
   );
 
   const { conversations, refetch, isRefetching, isLoading, isError } =
@@ -110,7 +130,9 @@ export const ConversationList = () => {
     search ||
     statusFilter ||
     chatbotFilter ||
-    accountFilter
+    accountFilter ||
+    tagFilter ||
+    stageFilter
   );
 
   const groups = useMemo(() => {
