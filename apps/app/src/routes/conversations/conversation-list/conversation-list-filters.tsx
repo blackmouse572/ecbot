@@ -71,7 +71,7 @@ export const ConversationListFilters = ({
             {
               key: "tag",
               label: t("conversations.list.filter.tag"),
-              type: "select",
+              type: "select" as const,
               multiple: true,
               searchable: true,
               options: tags.map((tag) => ({
