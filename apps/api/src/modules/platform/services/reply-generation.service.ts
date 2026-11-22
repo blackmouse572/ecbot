@@ -1,3 +1,4 @@
+import { CustomerMarketingService } from '@app/modules/customer/services/customer-marketing.service';
 import * as Sentry from '@sentry/nestjs';
 import { AccountService } from '@app/modules/account/services/account.service';
 import { TokenUsageDelta } from '@app/modules/chatbot/interfaces/token-usage-wire.interface';
@@ -15,7 +16,6 @@ import { ModuleRef } from '@nestjs/core';
 import { randomUUID } from 'crypto';
 import { MESSAGE_TYPING_REFRESH_MS } from '../constants/message-debounce.constant';
 import { handoffReplyText } from '../utils/handoff-reply.util';
-import { optOutReplyText } from '@app/modules/customer/utils/customer-marketing-opt-out.util';
 import { fallbackReplyText } from '../utils/fallback-reply.util';
 import { text as toText } from '../interfaces/message-model';
 import { IMessageAttachment } from '@app/modules/conversation/interfaces/message-media.interface';
@@ -502,19 +502,22 @@ export class ReplyGenerationService {
         );
     }
 
-    /** Confirm a "dừng" opt-out, in the chatbot's language. */
+    /** Confirm an opt-out: the shop's own text, else the built-in one. */
     async sendOptOutReply(
         chatbot: any,
         account: any,
         senderId: string,
         conversationId: string
     ): Promise<boolean> {
+        const text = await this.moduleRef
+            .get(CustomerMarketingService, { strict: false })
+            .stopReplyText(chatbot.workspace.id, chatbot);
         return this.sendBotText(
             chatbot,
             account,
             senderId,
             conversationId,
-            optOutReplyText(chatbot)
+            text
         );
     }
 

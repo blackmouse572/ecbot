@@ -59,7 +59,8 @@ import { MarketingEventRepository } from '../repository/repositories/marketing-e
 import { customerProductReactionResponse } from '../utils/customer-product-reaction.util';
 import { customerMarketingFirstSource } from '../utils/customer-marketing-first-source.util';
 import { customerMarketingFreeWindows } from '../utils/customer-marketing-free-window.util';
-import { isMarketingOptOutMessage } from '../utils/customer-marketing-opt-out.util';
+import { MarketingSettingsService } from '@app/modules/marketing/services/marketing-settings.service';
+import { optOutReplyText } from '../utils/customer-marketing-opt-out.util';
 
 const DAY_MS = 86_400_000;
 
@@ -79,6 +80,34 @@ export class CustomerMarketingService {
         private readonly reactionRepository: CustomerProductReactionRepository,
         private readonly moduleRef: ModuleRef
     ) {}
+
+    /** Whether a whole message is one of the workspace's opt-out keywords. */
+    private isStopMessage(
+        workspaceId: string,
+        text: string | null | undefined
+    ): Promise<boolean> {
+        return this.marketingSettings.isStopMessage(workspaceId, text);
+    }
+
+    /**
+     * The opt-out confirmation: the shop's own, else the built-in one. A
+     * failed settings read falls back to the built-in text, so the customer
+     * is always told.
+     */
+    async stopReplyText(
+        workspaceId: string,
+        chatbot: { primaryLanguage?: string | null }
+    ): Promise<string> {
+        const own = await this.marketingSettings
+            .stopReply(workspaceId)
+            .catch(() => null);
+        return own ?? optOutReplyText(chatbot);
+    }
+
+    // Cài đặt gửi tin lives with the marketing module, which reads customers.
+    private get marketingSettings(): MarketingSettingsService {
+        return this.moduleRef.get(MarketingSettingsService, { strict: false });
+    }
 
     /**
      * Every inbound message: creates the row at Mới biết, keeps the last
@@ -587,7 +616,10 @@ export class CustomerMarketingService {
             em
         );
         state.lastInboundAt = new Date();
-        const optedOut = isMarketingOptOutMessage(input.text);
+        const optedOut = await this.isStopMessage(
+            input.workspaceId,
+            input.text
+        );
         if (optedOut) {
             this.applyPermission(
                 state,

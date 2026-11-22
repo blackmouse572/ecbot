@@ -15,7 +15,22 @@ const GROUP = '0193a5d2-7c1e-7b3a-9f1e-2b8c4d6e8f10';
 describe('MarketingAudienceService', () => {
     const now = new Date('2026-11-20T00:00:00.000Z');
     const repository = { preview: jest.fn(), reached: jest.fn() };
-    const service = new MarketingAudienceService(repository as any);
+    const rules = {
+        maxPer30Days: 3,
+        restAfter: 3,
+        restDays: 30,
+        sendFrom: '09:00',
+        sendTo: '20:00',
+    };
+    const settings = { rules: jest.fn() };
+    // The shop's day, as HelperDateService gives it in the app timezone.
+    const helperDate = { formatToIsoDate: () => '2026-11-20' };
+    const service = new MarketingAudienceService(
+        repository as any,
+        settings as any,
+        helperDate as any
+    );
+    const window = { workspaceId: 'ws1', now, today: '2026-11-20', rules };
 
     beforeEach(() => {
         jest.resetAllMocks();
@@ -30,16 +45,16 @@ describe('MarketingAudienceService', () => {
             ],
         });
         repository.reached.mockResolvedValue({ ids: ['c1', 'c2'], total: 48 });
+        settings.rules.mockResolvedValue(rules);
     });
 
     it('counts who it reaches and every exclusion reason, in order', async () => {
         const preview = await service.preview('ws1', { preset: T.NEW }, now);
 
-        expect(repository.preview).toHaveBeenCalledWith(
-            'ws1',
-            { preset: T.NEW },
-            now
-        );
+        expect(settings.rules).toHaveBeenCalledWith('ws1');
+        expect(repository.preview).toHaveBeenCalledWith(window, {
+            preset: T.NEW,
+        });
         expect(preview).toEqual({
             count: 48,
             excluded: {
@@ -49,6 +64,8 @@ describe('MarketingAudienceService', () => {
                     { reason: X.HOSTILE, count: 0 },
                     { reason: X.PAUSED, count: 2 },
                     { reason: X.DEFERRED, count: 0 },
+                    { reason: X.CAPPED, count: 0 },
+                    { reason: X.RESTING, count: 0 },
                 ],
             },
             channels: [
@@ -61,11 +78,10 @@ describe('MarketingAudienceService', () => {
         const condition = { field: F.STAGE, operator: O.IN, values: [S.NEW] };
         await service.preview('ws1', { conditions: [condition] }, now);
 
-        expect(repository.preview).toHaveBeenCalledWith(
-            'ws1',
-            { match: M.ALL, conditions: [condition] },
-            now
-        );
+        expect(repository.preview).toHaveBeenCalledWith(window, {
+            match: M.ALL,
+            conditions: [condition],
+        });
     });
 
     it('pages the reached customers with their total', async () => {
@@ -73,9 +89,8 @@ describe('MarketingAudienceService', () => {
             service.reached('ws1', { preset: T.NEW }, 20, 40, now)
         ).resolves.toEqual({ ids: ['c1', 'c2'], total: 48 });
         expect(repository.reached).toHaveBeenCalledWith(
-            'ws1',
+            window,
             { preset: T.NEW },
-            now,
             20,
             40
         );

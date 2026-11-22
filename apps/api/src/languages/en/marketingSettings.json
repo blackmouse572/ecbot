@@ -1,0 +1,8 @@
+{
+    "get": "Send settings loaded.",
+    "update": "Send settings saved.",
+    "error": {
+        "sendHours": "The send window must start before it ends.",
+        "stopKeywords": "Add at least one stop keyword."
+    }
+}

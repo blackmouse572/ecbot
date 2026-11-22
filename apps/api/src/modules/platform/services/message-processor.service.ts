@@ -178,7 +178,8 @@ export class MessageProcessorService implements OnModuleInit {
                 platform: account.type,
                 externalSenderId: event.senderId,
                 // An anonymous sender (API channel) who opts out is recorded,
-                // so offers stay stopped.
+                // so offers stay stopped. The built-in words only: a shop's
+                // own keyword needs a known customer.
                 ...(isMarketingOptOutMessage(event.text)
                     ? { createAnonymous: true }
                     : {}),

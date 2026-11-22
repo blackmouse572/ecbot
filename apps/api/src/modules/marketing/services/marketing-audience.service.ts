@@ -1,5 +1,6 @@
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { ENUM_CUSTOMER_JOURNEY_STAGE } from '@app/modules/customer/enums/customer-marketing.enum';
+import { HelperDateService } from '@app/common/helper/services/helper.date.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { isUUID } from 'class-validator';
@@ -17,8 +18,12 @@ import {
     ENUM_MARKETING_AUDIENCE_FIELD as F,
     ENUM_MARKETING_AUDIENCE_MATCH,
 } from '../enums/marketing-audience.enum';
-import { IMarketingAudience } from '../interfaces/marketing-audience.interface';
+import {
+    IMarketingAudience,
+    IMarketingAudienceWindow,
+} from '../interfaces/marketing-audience.interface';
 import { MarketingAudienceRepository } from '../repository/repositories/marketing-audience.repository';
+import { MarketingSettingsService } from './marketing-settings.service';
 
 const STAGES = Object.values(ENUM_CUSTOMER_JOURNEY_STAGE) as string[];
 const CHANNELS = Object.values(ENUM_ACCOUNT_TYPE) as string[];
@@ -41,17 +46,21 @@ const invalid = (): BadRequestException =>
 /** Audiences (#504): who a preset or a set of conditions reaches. */
 @Injectable()
 export class MarketingAudienceService {
-    constructor(private readonly repository: MarketingAudienceRepository) {}
+    constructor(
+        private readonly repository: MarketingAudienceRepository,
+        private readonly settingsService: MarketingSettingsService,
+        private readonly helperDateService: HelperDateService
+    ) {}
 
     async preview(
         workspaceId: string,
         dto: MarketingAudienceRequestDto,
         now: Date = new Date()
     ): Promise<MarketingAudiencePreviewResponseDto> {
+        const audience = this.toAudience(dto);
         const { reasons, channels } = await this.repository.preview(
-            workspaceId,
-            this.toAudience(dto),
-            now
+            await this.window(workspaceId, now),
+            audience
         );
         const countOf = (reason: ENUM_MARKETING_AUDIENCE_EXCLUSION | null) =>
             reasons.find(r => r.reason === reason)?.count ?? 0;
@@ -80,13 +89,26 @@ export class MarketingAudienceService {
         offset: number,
         now: Date = new Date()
     ): Promise<{ ids: string[]; total: number }> {
+        const audience = this.toAudience(dto);
         return this.repository.reached(
-            workspaceId,
-            this.toAudience(dto),
-            now,
+            await this.window(workspaceId, now),
+            audience,
             limit,
             offset
         );
+    }
+
+    /** The send rules count days in the shop's time, the app timezone. */
+    private async window(
+        workspaceId: string,
+        now: Date
+    ): Promise<IMarketingAudienceWindow> {
+        return {
+            workspaceId,
+            now,
+            today: this.helperDateService.formatToIsoDate(now),
+            rules: await this.settingsService.rules(workspaceId),
+        };
     }
 
     /** A preset, or conditions that each fit their field; anything else is a 400. */

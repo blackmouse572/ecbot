@@ -14,7 +14,9 @@ import {
     MARKETING_TODO_WIN_BACK_FROM_DAYS,
     MARKETING_TODO_WIN_BACK_TO_DAYS,
 } from '../constants/marketing-overview.constant';
+import { MARKETING_REPLY_WINDOW_HOURS } from '../constants/marketing-send.constant';
 import { ENUM_MARKETING_TODO } from '../enums/marketing-overview.enum';
+import { ENUM_MARKETING_MESSAGE_STATUS } from '../enums/marketing-send.enum';
 
 /*
  * SQL shared by Tổng quan and audiences, so a "Việc nên làm" row and its
@@ -128,3 +130,42 @@ export const TODO_DEFERRED: Partial<Record<ENUM_MARKETING_TODO, string>> = {
 export const TODO_KEYS = Object.values(ENUM_MARKETING_TODO);
 
 export const num = (value: unknown): number => Number(value ?? 0);
+
+/*
+ * Send rules (#505). They read the workspace's settings from `w`: `w.cap`
+ * (offers per 30 days), `w.rest_after`, `w.rest_days`, and `w.today`, the
+ * shop's calendar day.
+ */
+const M = ENUM_MARKETING_MESSAGE_STATUS;
+const OFFERS = `FROM marketing_messages m
+    WHERE m.customer_id = l.id AND m.deleted_at IS NULL`;
+
+/** Had the most offers allowed: one today (sent or queued), or the 30-day cap. */
+export const CAPPED = `(EXISTS (
+        SELECT 1 ${OFFERS}
+            AND m.status IN ('${M.QUEUED}', '${M.SENT}')
+            AND m.send_day = w.today
+    ) OR (
+        SELECT COUNT(*) ${OFFERS}
+            AND m.status = '${M.SENT}'
+            AND m.sent_at > ${ago(30)}
+    ) >= w.cap)`;
+
+/**
+ * Resting: the last `rest_after` offers were all sent after the customer's
+ * last message (none answered), and the last one was sent less than
+ * 72 hours plus `rest_days` ago.
+ */
+export const RESTING = `COALESCE((
+    SELECT COUNT(*) = w.rest_after
+        AND bool_and(r.sent_at > COALESCE(l.last_inbound_at, '-infinity'))
+        AND MAX(r.sent_at) > w.now - make_interval(
+            days => w.rest_days, hours => ${MARKETING_REPLY_WINDOW_HOURS}
+        )
+    FROM (
+        SELECT m.sent_at,
+               ROW_NUMBER() OVER (ORDER BY m.sent_at DESC) AS k
+        ${OFFERS} AND m.status = '${M.SENT}'
+    ) r
+    WHERE r.k <= w.rest_after
+), false)`;

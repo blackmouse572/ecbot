@@ -36,10 +36,7 @@ import { HandoffIntentService } from './handoff-intent.service';
 import { handoffReplyText } from '../utils/handoff-reply.util';
 import { CustomerMarketingService } from '@app/modules/customer/services/customer-marketing.service';
 import { TrackedLinkAttributionService } from '@app/modules/customer/services/tracked-link-attribution.service';
-import {
-    isMarketingOptOutMessage,
-    optOutReplyText,
-} from '@app/modules/customer/utils/customer-marketing-opt-out.util';
+import { isMarketingOptOutMessage } from '@app/modules/customer/utils/customer-marketing-opt-out.util';
 import { fallbackReplyText } from '../utils/fallback-reply.util';
 import { shouldHandOff } from '../utils/handoff-decision.util';
 import type { ReplyMedia } from '../interfaces/message-model';
@@ -236,7 +233,10 @@ export class WidgetChatService {
         }
 
         if (optedOut) {
-            const reply = optOutReplyText(chatbot);
+            const reply = await this.customerMarketing.stopReplyText(
+                account.workspace.id,
+                chatbot
+            );
             await this.persistReply(conversation.id, reply, []);
             this.streamFallback(res, reply);
             return;
