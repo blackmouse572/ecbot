@@ -814,35 +814,106 @@ describe('StreamingDelivery.deliver (incremental)', () => {
     });
 
     // The real HTTP stream errors once we abort it. That abort is our reaction
-    // to the AI's error frame, not a newer message, so it must not read as a
-    // supersede (which drops the turn silently, with no fallback line).
-    it('reports an AI error frame as a failure, not a supersede, when the abort errors the stream', async () => {
-        const abort = new AbortController();
-        const stream = sse([
-            line({ type: 'error', errorText: 'Error code: 402' }),
-            DONE,
-        ]);
-        abort.signal.addEventListener('abort', () =>
-            stream.destroy(new Error('canceled'))
-        );
-        const res = await new StreamingDelivery().deliver({
+    // to the AI's error frame or a guardrail block, not a newer message, so it
+    // must not read as a supersede (which drops the turn silently, with no
+    // fallback line).
+    it.each([
+        {
+            frame: { type: 'error', errorText: 'Error code: 402' },
+            expected: { guardrailBlocked: false, generationFailed: true },
+        },
+        {
+            frame: {
+                type: 'data-guardrail',
+                data: { reason: 'guardrail_system_prompt' },
+            },
+            expected: { guardrailBlocked: true, generationFailed: false },
+        },
+    ])(
+        'reports a $frame.type frame as itself, not a supersede, when the abort errors the stream',
+        async ({ frame, expected }) => {
+            const abort = new AbortController();
+            const stream = sse([line(frame), DONE]);
+            abort.signal.addEventListener('abort', () =>
+                stream.destroy(new Error('canceled'))
+            );
+            const res = await new StreamingDelivery().deliver({
+                adapter: makeAdapter(),
+                account: {} as any,
+                senderId: 'S',
+                conversationId: 'C',
+                chatbot: GUARD_OFF,
+                stream,
+                abort,
+                isCurrent: async () => true,
+                onSegmentPersist: async () => 'nonce',
+                onSent: async () => {},
+                onFailed: async () => {},
+            });
+            expect(res).toMatchObject({
+                anySent: false,
+                superseded: false,
+                ...expected,
+            });
+        }
+    );
+
+    it('logs the AI error text so the upstream failure shows in prod logs', async () => {
+        const sd = new StreamingDelivery();
+        const error = jest
+            .spyOn((sd as any).logger, 'error')
+            .mockImplementation(() => undefined);
+        await sd.deliver({
             adapter: makeAdapter(),
             account: {} as any,
             senderId: 'S',
             conversationId: 'C',
             chatbot: GUARD_OFF,
-            stream,
+            stream: sse([
+                line({ type: 'error', errorText: 'Error code: 402' }),
+                DONE,
+            ]),
+            abort: new AbortController(),
+            isCurrent: async () => true,
+            onSegmentPersist: async () => 'nonce',
+            onSent: async () => {},
+            onFailed: async () => {},
+        });
+        expect(error).toHaveBeenCalledWith(
+            expect.stringContaining('Error code: 402')
+        );
+    });
+
+    // An abort that set no reason must not flush the buffered text to the
+    // customer: treat it as superseded.
+    it('treats an abort with no reason as a supersede and sends nothing', async () => {
+        const abort = new AbortController();
+        const stream = new Readable({ read() {} });
+        abort.signal.addEventListener('abort', () =>
+            stream.destroy(new Error('canceled'))
+        );
+        const adapter = makeAdapter();
+        const pending = new StreamingDelivery().deliver({
+            adapter,
+            account: {} as any,
+            senderId: 'S',
+            conversationId: 'C',
+            chatbot: GUARD_OFF,
+            stream: stream as any,
             abort,
             isCurrent: async () => true,
             onSegmentPersist: async () => 'nonce',
             onSent: async () => {},
             onFailed: async () => {},
         });
-        expect(res).toMatchObject({
-            anySent: false,
-            superseded: false,
-            generationFailed: true,
-        });
+        stream.push(
+            Buffer.from(line({ type: 'text-delta', id: 't1', delta: 'half' }))
+        );
+        await new Promise(r => setImmediate(r));
+        abort.abort();
+        const res = await pending;
+        expect(adapter.sendMessage).not.toHaveBeenCalled();
+        expect(res).toMatchObject({ anySent: false, superseded: true });
     });
 });
 

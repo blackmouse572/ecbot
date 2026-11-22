@@ -226,6 +226,9 @@ export class StreamingDelivery {
                         (parsed.data as { reason: string })?.reason ?? '';
                     p.abort.abort();
                 } else if (parsed.type === 'error') {
+                    this.logger.error(
+                        `AI error frame: ${(parsed as { errorText?: string }).errorText ?? 'unknown'}`
+                    );
                     failed = true;
                     p.abort.abort();
                 } else if (parsed.type === 'message-metadata') {
@@ -292,8 +295,12 @@ export class StreamingDelivery {
                 // reason first (superseded, blocked or failed), so pass that
                 // on: calling a blocked or failed turn superseded drops it
                 // silently, with no fallback line.
-                if (p.abort.signal.aborted || superseded || blocked) {
+                if (superseded || blocked || failed) {
                     finish(superseded);
+                } else if (p.abort.signal.aborted) {
+                    // An abort with no reason must not flush buffered text to
+                    // the customer, so treat it as superseded.
+                    finish(true);
                 } else {
                     this.logger.warn(`stream error: ${err.message}`);
                     failed = true;
