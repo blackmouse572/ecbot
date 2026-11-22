@@ -67,6 +67,10 @@ import { MessageGetResponseDto } from '../dtos/response/message.get.response.dto
 import { ENUM_CONVERSATION_STATUS } from '../enums/conversation.enum';
 import { ConversationMessagingService } from '../services/conversation-messaging.service';
 import { ConversationService } from '../services/conversation.service';
+import { conversationCustomerFilterFromQuery } from '../utils/conversation-customer-filter.util';
+import { ENUM_CUSTOMER_JOURNEY_STAGE } from '@app/modules/customer/enums/customer-marketing.enum';
+import { CustomerMarketingService } from '@app/modules/customer/services/customer-marketing.service';
+import { CustomerTagAssignmentService } from '@app/modules/customer/services/customer-tag-assignment.service';
 import {
     ConversationWorkspaceGetDoc,
     ConversationWorkspaceListDoc,
@@ -97,7 +101,9 @@ export class ConversationWorkspaceController {
         private readonly conversationService: ConversationService,
         private readonly paginationService: PaginationService,
         private readonly conversationMessagingService: ConversationMessagingService,
-        private readonly activityService: ActivityService
+        private readonly activityService: ActivityService,
+        private readonly marketingService: CustomerMarketingService,
+        private readonly tagAssignmentService: CustomerTagAssignmentService
     ) {}
 
     @ConversationWorkspaceListDoc()
@@ -144,8 +150,28 @@ export class ConversationWorkspaceController {
         @PaginationQueryFilterEqual('contactPoint.customer.id', {
             queryField: 'customer',
         })
-        customer: Record<string, any>
+        customer: Record<string, any>,
+        @PaginationQueryFilterInEnum(
+            'stage',
+            undefined,
+            ENUM_CUSTOMER_JOURNEY_STAGE
+        )
+        stage?: Record<string, any>,
+        @PaginationQueryFilterEqual('tag', { raw: true })
+        tag?: Record<string, any>
     ): Promise<IResponsePaging<ConversationGetResponseDto>> {
+        const { stages, tagIds } = conversationCustomerFilterFromQuery(
+            stage,
+            tag
+        );
+        const customerConditions = [
+            ...(stages?.length
+                ? [this.marketingService.customerListFilter({ stages })]
+                : []),
+            ...(tagIds?.length
+                ? [this.tagAssignmentService.customerListFilter(tagIds)]
+                : []),
+        ];
         const find: Record<string, any> = {
             ..._search,
             ...status,
@@ -154,6 +180,16 @@ export class ConversationWorkspaceController {
             ...chatbot,
             ...botEnabled,
             ...customer,
+            // $and keeps this apart from the `customer` filter's contactPoint key.
+            ...(customerConditions.length && {
+                $and: [
+                    {
+                        contactPoint: {
+                            customer: { $and: customerConditions },
+                        },
+                    },
+                ],
+            }),
         };
 
         const [conversations, total] = await Promise.all([

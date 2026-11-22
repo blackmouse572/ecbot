@@ -1,4 +1,5 @@
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
+import { ENUM_CUSTOMER_JOURNEY_STAGE } from '@app/modules/customer/enums/customer-marketing.enum';
 import { ENUM_CONVERSATION_STATUS } from '../enums/conversation.enum';
 
 export const ConversationDocParamsId = [
@@ -60,5 +61,27 @@ export const ConversationDocQueryBotEnabled = [
         type: 'string',
         example: 'true,false',
         description: "Whether the bot replies, boolean with ',' delimiter",
+    },
+];
+
+export const ConversationDocQueryCustomerFilters = [
+    {
+        name: 'stage',
+        allowEmptyValue: true,
+        required: false,
+        type: 'string',
+        example: [
+            ENUM_CUSTOMER_JOURNEY_STAGE.ASKED_PRICE,
+            ENUM_CUSTOMER_JOURNEY_STAGE.BOUGHT_ONCE,
+        ].join(','),
+        description:
+            "Journey stages of the conversation's customer, with ',' delimiter. A customer with no labels yet counts as NEW.",
+    },
+    {
+        name: 'tag',
+        required: false,
+        type: 'string',
+        description:
+            "Customer tag ids, with ',' delimiter: conversations whose customer has any of them.",
     },
 ];

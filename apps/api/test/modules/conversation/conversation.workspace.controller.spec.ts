@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConversationWorkspaceController } from '../../../src/modules/conversation/controllers/conversation.workspace.controller';
 import { ENUM_CONVERSATION_STATUS } from '../../../src/modules/conversation/enums/conversation.enum';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
@@ -40,12 +40,22 @@ const mockActivityService = {
     createByUserWithWorkspace: jest.fn(),
 };
 
+const mockMarketingService = {
+    customerListFilter: jest.fn(),
+};
+
+const mockTagAssignmentService = {
+    customerListFilter: jest.fn(),
+};
+
 function buildController(): ConversationWorkspaceController {
     return new ConversationWorkspaceController(
         mockConversationService as any,
         mockPaginationService as any,
         mockConversationMessagingService as any,
-        mockActivityService as any
+        mockActivityService as any,
+        mockMarketingService as any,
+        mockTagAssignmentService as any
     );
 }
 
@@ -341,6 +351,109 @@ describe('ConversationWorkspaceController', () => {
                 workspaceId,
                 expect.objectContaining(expectedFind)
             );
+        });
+
+        it('filters by the customer journey stage and tags, through the contact point', async () => {
+            const stageFragment = { id: { $in: 'stage-subquery' } };
+            const tagFragment = { id: { $in: 'tag-subquery' } };
+            mockMarketingService.customerListFilter.mockReturnValue({
+                $and: [stageFragment],
+            });
+            mockTagAssignmentService.customerListFilter.mockReturnValue(
+                tagFragment
+            );
+            mockConversationService.findByWorkspace.mockResolvedValue([]);
+            mockConversationService.countByWorkspace.mockResolvedValue(0);
+            const tagA = '0b7c4f8e-3f7a-4c55-9d1e-1f2a3b4c5d6e';
+            const tagB = '9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d';
+
+            await controller.list(
+                workspace,
+                operatorId,
+                basePagination as any,
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                { stage: { $in: ['ASKED_PRICE', 'NEW'] } },
+                { tag: `${tagA},${tagB}` }
+            );
+
+            expect(
+                mockMarketingService.customerListFilter
+            ).toHaveBeenCalledWith({ stages: ['ASKED_PRICE', 'NEW'] });
+            expect(
+                mockTagAssignmentService.customerListFilter
+            ).toHaveBeenCalledWith([tagA, tagB]);
+            const expected = {
+                $and: [
+                    {
+                        contactPoint: {
+                            customer: {
+                                $and: [{ $and: [stageFragment] }, tagFragment],
+                            },
+                        },
+                    },
+                ],
+            };
+            expect(
+                mockConversationService.findByWorkspace
+            ).toHaveBeenCalledWith(workspaceId, expected, expect.anything());
+            expect(
+                mockConversationService.countByWorkspace
+            ).toHaveBeenCalledWith(workspaceId, expected);
+        });
+
+        it('does not filter by customer when neither stage nor tag is given', async () => {
+            mockConversationService.findByWorkspace.mockResolvedValue([]);
+            mockConversationService.countByWorkspace.mockResolvedValue(0);
+
+            await controller.list(
+                workspace,
+                operatorId,
+                basePagination as any,
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                undefined,
+                undefined
+            );
+
+            expect(
+                mockMarketingService.customerListFilter
+            ).not.toHaveBeenCalled();
+            expect(
+                mockTagAssignmentService.customerListFilter
+            ).not.toHaveBeenCalled();
+            expect(
+                mockConversationService.findByWorkspace
+            ).toHaveBeenCalledWith(workspaceId, {}, expect.anything());
+        });
+
+        it('rejects a tag that is not an id', async () => {
+            await expect(
+                controller.list(
+                    workspace,
+                    operatorId,
+                    basePagination as any,
+                    {},
+                    {},
+                    {},
+                    {},
+                    {},
+                    {},
+                    undefined,
+                    { tag: 'vip' }
+                )
+            ).rejects.toBeInstanceOf(BadRequestException);
+            expect(
+                mockConversationService.findByWorkspace
+            ).not.toHaveBeenCalled();
         });
 
         it('should merge search filter into the find object', async () => {

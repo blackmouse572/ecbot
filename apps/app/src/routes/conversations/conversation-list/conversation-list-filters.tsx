@@ -1,6 +1,9 @@
 import { Input } from "@medusajs/ui";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { CUSTOMER_STAGES } from "@/components/customer-marketing";
+import { useCustomerTagList } from "@/hooks/api/customer-tags";
+import { useFeatureFlags } from "@/hooks/api/feature-flags";
 import {
   DataTableFilter,
   type Filter,
@@ -29,6 +32,8 @@ export const ConversationListFilters = ({
   accounts,
 }: Props) => {
   const { t } = useTranslation();
+  const { tags } = useCustomerTagList();
+  const { flags } = useFeatureFlags();
 
   const filters = useMemo<Filter[]>(
     () => [
@@ -58,8 +63,33 @@ export const ConversationListFilters = ({
         searchable: true,
         options: accounts.map((a) => ({ label: a.name ?? a.id, value: a.id })),
       },
+      {
+        key: "tag",
+        label: t("conversations.list.filter.tag"),
+        type: "select",
+        multiple: true,
+        searchable: true,
+        options: tags.map((tag) => ({
+          label: tag.emoji ? `${tag.emoji} ${tag.name}` : tag.name,
+          value: tag.id,
+        })),
+      },
+      ...(flags.marketing
+        ? [
+            {
+              key: "stage",
+              label: t("conversations.list.filter.stage"),
+              type: "select" as const,
+              multiple: true,
+              options: CUSTOMER_STAGES.map((value) => ({
+                label: t(`customerMarketing.stage.${value}`),
+                value,
+              })),
+            },
+          ]
+        : []),
     ],
-    [t, chatbots, accounts],
+    [t, chatbots, accounts, tags, flags.marketing],
   );
 
   return (

@@ -42,6 +42,11 @@ export class CustomerTagAssignmentService {
         return this.customerTagAssignmentRepository.findByCustomer(customerId);
     }
 
+    /** A `find` fragment on customers holding any of the tags. */
+    customerListFilter(tagIds: string[]): Record<string, any> {
+        return this.customerTagAssignmentRepository.customerListFilter(tagIds);
+    }
+
     async apply(
         customerId: string,
         tagId: string,

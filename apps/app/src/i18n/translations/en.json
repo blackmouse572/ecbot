@@ -2320,6 +2320,8 @@
         "allChatbots": "All agents",
         "account": "Account",
         "allAccounts": "All accounts",
+        "tag": "Customer tag",
+        "stage": "Stage",
         "groupBy": "Group by"
       },
       "groupBy": {
