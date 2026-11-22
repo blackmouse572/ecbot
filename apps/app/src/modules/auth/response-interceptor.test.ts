@@ -188,6 +188,16 @@ describe("handleAuthError", () => {
     expect(onSessionExpired).not.toHaveBeenCalled();
   });
 
+  it('refreshes a 401 from a workspace whose slug is "public"', async () => {
+    refreshFn.mockResolvedValue(refreshed("fresh"));
+    requestFn.mockResolvedValue({ data: "ok" });
+
+    await handleAuthError(unauthorized("/api/v1/workspace/public/profile"));
+
+    expect(refreshFn).toHaveBeenCalledTimes(1);
+    expect(requestFn).toHaveBeenCalledTimes(1);
+  });
+
   it("does not refresh a 401 on a request sent without a token", async () => {
     store.set(tokenAtom, null);
     const error = {
