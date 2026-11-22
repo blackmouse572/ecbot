@@ -5,6 +5,7 @@ import { ConversationListFilters } from "./conversation-list-filters";
 
 const state = vi.hoisted(() => ({
   marketing: false,
+  canReadCustomers: true,
   filters: [] as Filter[],
 }));
 vi.mock("@/hooks/api/feature-flags", () => ({
@@ -14,6 +15,12 @@ vi.mock("@/hooks/api/feature-flags", () => ({
       customerSources: false,
       marketing: state.marketing,
     },
+  }),
+}));
+vi.mock("@repo/auth", () => ({
+  useAbility: () => ({
+    can: (action: string, subject: string) =>
+      action === "read" && subject === "CUSTOMER" && state.canReadCustomers,
   }),
 }));
 vi.mock("@/hooks/api/customer-tags", () => ({
@@ -52,6 +59,7 @@ const byKey = (key: string) => state.filters.find((f) => f.key === key);
 describe("ConversationListFilters", () => {
   beforeEach(() => {
     state.marketing = false;
+    state.canReadCustomers = true;
     state.filters = [];
   });
 
@@ -93,5 +101,13 @@ describe("ConversationListFilters", () => {
       "BOUGHT_ONCE",
       "BOUGHT_REPEAT",
     ]);
+  });
+
+  it("hides tag and stage for a role that cannot read customers", () => {
+    state.marketing = true;
+    state.canReadCustomers = false;
+    renderFilters();
+    expect(byKey("tag")).toBeUndefined();
+    expect(byKey("stage")).toBeUndefined();
   });
 });

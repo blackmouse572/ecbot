@@ -5,6 +5,7 @@ import { ConversationList } from "./conversation-list";
 
 const state = vi.hoisted(() => ({
   marketing: false,
+  canReadCustomers: true,
   useConversations: vi.fn(),
 }));
 vi.mock("@/hooks/api/conversations", () => ({
@@ -26,6 +27,12 @@ vi.mock("@/hooks/api/feature-flags", () => ({
       customerSources: false,
       marketing: state.marketing,
     },
+  }),
+}));
+vi.mock("@repo/auth", () => ({
+  useAbility: () => ({
+    can: (action: string, subject: string) =>
+      action === "read" && subject === "CUSTOMER" && state.canReadCustomers,
   }),
 }));
 vi.mock("@/hooks/api/chatbot", () => ({
@@ -60,6 +67,7 @@ const lastQuery = () => state.useConversations.mock.calls.at(-1)?.[0];
 describe("ConversationList filters", () => {
   beforeEach(() => {
     state.marketing = false;
+    state.canReadCustomers = true;
     state.useConversations.mockClear();
   });
 
@@ -76,6 +84,14 @@ describe("ConversationList filters", () => {
 
   it("drops a stage in the URL while Marketing is off", () => {
     renderAt("/lumi/conversations?conv_stage=ASKED_PRICE");
+    expect(lastQuery().stage).toBeUndefined();
+  });
+
+  it("drops tag and stage for a role that cannot read customers", () => {
+    state.marketing = true;
+    state.canReadCustomers = false;
+    renderAt("/lumi/conversations?conv_tag=tag-1&conv_stage=ASKED_PRICE");
+    expect(lastQuery().tag).toBeUndefined();
     expect(lastQuery().stage).toBeUndefined();
   });
 });

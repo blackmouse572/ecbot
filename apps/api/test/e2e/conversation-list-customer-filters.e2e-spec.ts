@@ -11,6 +11,7 @@ import { createWorkspace, wsBase } from './utils/workspace.helper';
 describe('E2E — conversation list customer filters', () => {
     let ctx: E2EContext;
     let ownerToken: string;
+    let agentToken: string;
     let workspaceId: string;
     const tags: Record<'vip' | 'west' | 'removed', string> = {
         vip: '',
@@ -115,6 +116,26 @@ describe('E2E — conversation list customer filters', () => {
         });
         await addConversation('unlabelled', { tags: ['removed'] });
         await addConversation('no-customer');
+
+        // A member whose role reads conversations but not customers.
+        const [{ id: agentId }] = await sql.execute(
+            `select id from users where email = ?`,
+            [SEED_USERS.business]
+        );
+        const roleId = await one(
+            `insert into roles (id, name, type, is_active, permissions, workspace_id, created_at, updated_at)
+             values (gen_random_uuid(), 'Chat only', 'WORKSPACE_MEMBER', true, ?, ?, now(), now()) returning id`,
+            [
+                JSON.stringify([{ subject: 'CHATBOT', action: ['read'] }]),
+                workspaceId,
+            ]
+        );
+        await sql.execute(
+            `insert into workspace_members (id, workspace_id, user_id, role_id, created_at)
+             values (gen_random_uuid(), ?, ?, ?, now())`,
+            [workspaceId, agentId, roleId]
+        );
+        agentToken = await login(ctx.app, ctx.base, SEED_USERS.business);
     });
 
     afterAll(async () => {
@@ -163,5 +184,18 @@ describe('E2E — conversation list customer filters', () => {
             .get(`${wsBase(ctx.base)}/${workspaceId}/conversations?tag=vip`)
             .set('Authorization', `Bearer ${ownerToken}`);
         expect(res.status).toBe(400);
+    });
+
+    it('needs the customer read ability to filter by tag or stage', async () => {
+        const get = (query: string) =>
+            http(ctx.app)
+                .get(
+                    `${wsBase(ctx.base)}/${workspaceId}/conversations?${query}`
+                )
+                .set('Authorization', `Bearer ${agentToken}`);
+
+        expect((await get('')).status).toBe(200);
+        expect((await get(`tag=${tags.vip}`)).status).toBe(403);
+        expect((await get('stage=NEW')).status).toBe(403);
     });
 });

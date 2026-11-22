@@ -1,10 +1,18 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+    BadRequestException,
+    ForbiddenException,
+    NotFoundException,
+} from '@nestjs/common';
 import { ConversationWorkspaceController } from '../../../src/modules/conversation/controllers/conversation.workspace.controller';
 import { ENUM_CONVERSATION_STATUS } from '../../../src/modules/conversation/enums/conversation.enum';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import { WorkspaceEntity } from '../../../src/modules/workspace/repository/entities/workspace.entity';
 import { ConversationGetResponseDto } from '../../../src/modules/conversation/dtos/response/conversation.get.response.dto';
-import { ENUM_POLICY_SUBJECT } from '../../../src/modules/policy/enums/policy.enum';
+import {
+    ENUM_POLICY_ACTION,
+    ENUM_POLICY_ROLE_TYPE,
+    ENUM_POLICY_SUBJECT,
+} from '../../../src/modules/policy/enums/policy.enum';
 
 const mockConversationService = {
     findByWorkspace: jest.fn(),
@@ -48,6 +56,10 @@ const mockTagAssignmentService = {
     customerListFilter: jest.fn(),
 };
 
+const mockAbilityService = {
+    can: jest.fn(),
+};
+
 function buildController(): ConversationWorkspaceController {
     return new ConversationWorkspaceController(
         mockConversationService as any,
@@ -55,7 +67,8 @@ function buildController(): ConversationWorkspaceController {
         mockConversationMessagingService as any,
         mockActivityService as any,
         mockMarketingService as any,
-        mockTagAssignmentService as any
+        mockTagAssignmentService as any,
+        mockAbilityService as any
     );
 }
 
@@ -119,6 +132,7 @@ describe('ConversationWorkspaceController', () => {
         mockConversationService.mapGet.mockReturnValue(mockMappedConversation);
         mockPaginationService.totalPage.mockReturnValue(1);
         mockConversationService.getUnreadCounts.mockResolvedValue(new Map());
+        mockAbilityService.can.mockResolvedValue(true);
     });
 
     describe('list', () => {
@@ -378,7 +392,17 @@ describe('ConversationWorkspaceController', () => {
                 {},
                 {},
                 { stage: { $in: ['ASKED_PRICE', 'NEW'] } },
-                { tag: `${tagA},${tagB}` }
+                { tag: `${tagA},${tagB}` },
+                ENUM_POLICY_ROLE_TYPE.USER
+            );
+
+            expect(mockAbilityService.can).toHaveBeenCalledWith(
+                workspace,
+                { id: operatorId, type: ENUM_POLICY_ROLE_TYPE.USER },
+                {
+                    subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+                    action: [ENUM_POLICY_ACTION.READ],
+                }
             );
 
             expect(
@@ -424,6 +448,7 @@ describe('ConversationWorkspaceController', () => {
                 undefined
             );
 
+            expect(mockAbilityService.can).not.toHaveBeenCalled();
             expect(
                 mockMarketingService.customerListFilter
             ).not.toHaveBeenCalled();
@@ -433,6 +458,35 @@ describe('ConversationWorkspaceController', () => {
             expect(
                 mockConversationService.findByWorkspace
             ).toHaveBeenCalledWith(workspaceId, {}, expect.anything());
+        });
+
+        it('refuses the tag and stage filters without reading customers', async () => {
+            mockAbilityService.can.mockResolvedValue(false);
+
+            for (const [stage, tag] of [
+                [{ stage: { $in: ['ASKED_PRICE'] } }, undefined],
+                [undefined, { tag: '0b7c4f8e-3f7a-4c55-9d1e-1f2a3b4c5d6e' }],
+            ]) {
+                await expect(
+                    controller.list(
+                        workspace,
+                        operatorId,
+                        basePagination as any,
+                        {},
+                        {},
+                        {},
+                        {},
+                        {},
+                        {},
+                        stage,
+                        tag,
+                        ENUM_POLICY_ROLE_TYPE.USER
+                    )
+                ).rejects.toBeInstanceOf(ForbiddenException);
+            }
+            expect(
+                mockConversationService.findByWorkspace
+            ).not.toHaveBeenCalled();
         });
 
         it('rejects a tag that is not an id', async () => {
