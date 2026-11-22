@@ -965,6 +965,10 @@ export type ChatbotPreviewMetaResponseDto = {
     welcomeMessage?: string;
     primaryLanguage?: string;
     /**
+     * Quick replies to show under the welcome message, from the agent's goals.
+     */
+    suggestedReplies: Array<string>;
+    /**
      * When this share link stops working. Surfaced so the standalone page can show the time left instead of decoding the token client-side.
      */
     expiresAt: string;

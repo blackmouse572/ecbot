@@ -1,3 +1,4 @@
+import { suggestedReplies, type AgentProfile } from "@repo/agent-blueprint";
 import { useChatbot } from "@/hooks/api";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { TwoColumnPageSkeleton } from "@repo/ui/common-components";
@@ -126,6 +127,11 @@ export function ChatbotDetails() {
               heading={t("chatbot.chat.heading")}
               subheading={<TestChatNotice />}
               chatbotId={chatbot.id}
+              greeting={chatbot.welcomeMessage?.trim() || undefined}
+              suggestedReplies={suggestedReplies(
+                chatbot.agentProfile as unknown as AgentProfile | undefined,
+                chatbot.primaryLanguage,
+              )}
               renderInput={<AIChatInput />}
               transport={chatTransport}
               canSubmit={!!token}

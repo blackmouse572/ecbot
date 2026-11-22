@@ -21,6 +21,14 @@ export class ChatbotPreviewMetaResponseDto {
     primaryLanguage?: string;
 
     @ApiProperty({
+        type: [String],
+        description:
+            "Quick replies to show under the welcome message, from the agent's goals.",
+        example: ['Mình muốn đặt lịch', 'Cho mình xem bảng giá'],
+    })
+    suggestedReplies: string[];
+
+    @ApiProperty({
         description:
             'When this share link stops working. Surfaced so the standalone page can show the time left instead of decoding the token client-side.',
     })

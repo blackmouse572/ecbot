@@ -1,3 +1,4 @@
+import { suggestedReplies } from '@repo/agent-blueprint';
 import {
     Body,
     Controller,
@@ -77,6 +78,10 @@ export class ChatbotPreviewPublicController {
                 avatar: chatbot.avatar,
                 welcomeMessage: chatbot.welcomeMessage,
                 primaryLanguage: chatbot.primaryLanguage,
+                suggestedReplies: suggestedReplies(
+                    chatbot.agentProfile,
+                    chatbot.primaryLanguage
+                ),
                 expiresAt,
             },
         };
