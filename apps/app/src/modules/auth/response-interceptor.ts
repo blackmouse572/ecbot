@@ -13,9 +13,10 @@ import { logoutGuard, tokenAtom } from "./state";
 // calls (useImpersonationRefresh / useEndImpersonation own those).
 // Public endpoints never take a session, so their 401s (an expired MFA
 // challenge, a spent impersonation code, a dead share link) are answers their
-// callers render, not a stale token.
+// callers render, not a stale token. Matched by full prefix: a workspace slug
+// can be "public" (/api/v1/workspace/public/...).
 const SKIP_URL_FRAGMENTS = [
-  "/public/",
+  "/api/v1/public/",
   "/shared/auth/refresh",
   "/impersonate/end",
   "/impersonate/refresh",

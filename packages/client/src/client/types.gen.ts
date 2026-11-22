@@ -7458,7 +7458,7 @@ export type MarketingSavedAudienceUpdateRequestDto = {
 };
 
 export type MarketingAudienceExclusionDto = {
-    reason: 'STOPPED' | 'HOSTILE' | 'PAUSED' | 'DEFERRED';
+    reason: 'STOPPED' | 'HOSTILE' | 'PAUSED' | 'DEFERRED' | 'CAPPED' | 'RESTING';
     count: number;
 };
 
@@ -7612,6 +7612,56 @@ export type MarketingOverviewResponseDto = {
      */
     todoTotal: MarketingOverviewTodoCountDto;
     health: MarketingOverviewHealthDto;
+};
+
+export type MarketingSettingsGetResponseDto = {
+    maxPer30Days: number;
+    /**
+     * Fixed: one offer a shop day.
+     */
+    maxPerDay: number;
+    restAfter: number;
+    restDays: number;
+    sendFrom: string;
+    sendTo: string;
+    stopKeywords: Array<string>;
+    /**
+     * Null: the built-in text in the agent language.
+     */
+    stopReply: string | null;
+};
+
+export type MarketingSettingsUpdateRequestDto = {
+    /**
+     * Offers per customer in any 30 days.
+     */
+    maxPer30Days?: number;
+    /**
+     * Unanswered offers in a row before the customer rests.
+     */
+    restAfter?: number;
+    /**
+     * Days a customer rests.
+     */
+    restDays?: number;
+    /**
+     * Earliest send time, shop time, "HH:mm".
+     */
+    sendFrom?: string;
+    /**
+     * Latest send time, shop time, "HH:mm"; after sendFrom.
+     */
+    sendTo?: string;
+    /**
+     * Whole messages that opt a customer out, case and punctuation ignored. Null: the built-in words.
+     */
+    stopKeywords?: Array<string> | null;
+    /**
+     * Sent when a customer opts out. Null: the built-in text in the agent language.
+     */
+    stopReply?: {
+        [key: string]: unknown;
+    } | null;
 };
 
 export type FollowupListResponseDto = {
@@ -36938,6 +36988,157 @@ export type MarketingOverviewWorkspaceControllerGetV1Responses = {
 
 export type MarketingOverviewWorkspaceControllerGetV1Response = MarketingOverviewWorkspaceControllerGetV1Responses[keyof MarketingOverviewWorkspaceControllerGetV1Responses];
 
+export type MarketingSettingsWorkspaceControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/marketing/settings';
+};
+
+export type MarketingSettingsWorkspaceControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSettingsWorkspaceControllerGetV1Error = MarketingSettingsWorkspaceControllerGetV1Errors[keyof MarketingSettingsWorkspaceControllerGetV1Errors];
+
+export type MarketingSettingsWorkspaceControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MarketingSettingsGetResponseDto;
+    };
+};
+
+export type MarketingSettingsWorkspaceControllerGetV1Response = MarketingSettingsWorkspaceControllerGetV1Responses[keyof MarketingSettingsWorkspaceControllerGetV1Responses];
+
+export type MarketingSettingsWorkspaceControllerUpdateV1Data = {
+    body: MarketingSettingsUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/marketing/settings';
+};
+
+export type MarketingSettingsWorkspaceControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSettingsWorkspaceControllerUpdateV1Error = MarketingSettingsWorkspaceControllerUpdateV1Errors[keyof MarketingSettingsWorkspaceControllerUpdateV1Errors];
+
+export type MarketingSettingsWorkspaceControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MarketingSettingsGetResponseDto;
+    };
+};
+
+export type MarketingSettingsWorkspaceControllerUpdateV1Response = MarketingSettingsWorkspaceControllerUpdateV1Responses[keyof MarketingSettingsWorkspaceControllerUpdateV1Responses];
+
 export type FollowupWorkspaceControllerListV1Data = {
     body?: never;
     headers?: {
@@ -41003,6 +41204,141 @@ export type MarketingSavedAudienceClientControllerUpdateV1Responses = {
 };
 
 export type MarketingSavedAudienceClientControllerUpdateV1Response = MarketingSavedAudienceClientControllerUpdateV1Responses[keyof MarketingSavedAudienceClientControllerUpdateV1Responses];
+
+export type MarketingSettingsClientControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/client/marketing/settings';
+};
+
+export type MarketingSettingsClientControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSettingsClientControllerGetV1Error = MarketingSettingsClientControllerGetV1Errors[keyof MarketingSettingsClientControllerGetV1Errors];
+
+export type MarketingSettingsClientControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MarketingSettingsGetResponseDto;
+    };
+};
+
+export type MarketingSettingsClientControllerGetV1Response = MarketingSettingsClientControllerGetV1Responses[keyof MarketingSettingsClientControllerGetV1Responses];
+
+export type MarketingSettingsClientControllerUpdateV1Data = {
+    body: MarketingSettingsUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/client/marketing/settings';
+};
+
+export type MarketingSettingsClientControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSettingsClientControllerUpdateV1Error = MarketingSettingsClientControllerUpdateV1Errors[keyof MarketingSettingsClientControllerUpdateV1Errors];
+
+export type MarketingSettingsClientControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MarketingSettingsGetResponseDto;
+    };
+};
+
+export type MarketingSettingsClientControllerUpdateV1Response = MarketingSettingsClientControllerUpdateV1Responses[keyof MarketingSettingsClientControllerUpdateV1Responses];
 
 export type ToolClientControllerListV1Data = {
     body?: never;
