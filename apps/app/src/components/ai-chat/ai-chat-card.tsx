@@ -27,6 +27,7 @@ import { BuildingLoader } from "./ai-loader";
 import { chatErrorMessage } from "./chat-error-message";
 import { ToolTrace } from "./tool-trace";
 import { ChatMessageMedia } from "./chat-message-media";
+import { ChatSuggestedReplies } from "./chat-suggested-replies";
 import {
   type ChatTransportConfig,
   isEmptyRenderModel,
@@ -67,10 +68,12 @@ function AIChatMessages({
   audience,
   showKnowledgeSources,
   greeting,
+  suggestedReplies,
 }: {
   audience: ChatAudience;
   showKnowledgeSources?: boolean;
   greeting?: string;
+  suggestedReplies?: string[];
 }) {
   const internals = audience === "owner";
   const { messages, status, error } = useAIChat();
@@ -83,10 +86,23 @@ function AIChatMessages({
       {greeting && (
         <MessageScrollerItem key="greeting" messageId="greeting">
           <Message from="assistant">
-            <MessageContent className={BUBBLE_CLASS.assistant}>
+            <MessageContent
+              className={clx(BUBBLE_CLASS.assistant, BUBBLE_ENTER)}
+            >
               <MessageResponse>{greeting}</MessageResponse>
             </MessageContent>
           </Message>
+        </MessageScrollerItem>
+      )}
+      {greeting && !!suggestedReplies?.length && !displayMessages.length && (
+        <MessageScrollerItem
+          key="suggested-replies"
+          messageId="suggested-replies"
+        >
+          <ChatSuggestedReplies
+            replies={suggestedReplies}
+            enterClassName={BUBBLE_ENTER}
+          />
         </MessageScrollerItem>
       )}
       {displayMessages.map((message, index) => {
@@ -290,6 +306,11 @@ export type AIChatCardProps = {
    * Display only: it is never sent back as part of the conversation.
    */
   greeting?: string;
+  /**
+   * Quick replies under the greeting until the first message. Tapping one
+   * sends it. Shown only with a greeting.
+   */
+  suggestedReplies?: string[];
 };
 
 export function AIChatCard(props: AIChatCardProps) {
@@ -306,6 +327,7 @@ export function AIChatCard(props: AIChatCardProps) {
     audience = "owner",
     showKnowledgeSources,
     greeting,
+    suggestedReplies,
   } = props;
 
   return (
@@ -338,6 +360,7 @@ export function AIChatCard(props: AIChatCardProps) {
                 audience={audience}
                 showKnowledgeSources={showKnowledgeSources}
                 greeting={greeting}
+                suggestedReplies={suggestedReplies}
               />
             </MessageScrollerContent>
           </MessageScrollerViewport>

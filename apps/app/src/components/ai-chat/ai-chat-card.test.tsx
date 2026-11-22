@@ -1,6 +1,6 @@
 import "@/i18n";
 import { TooltipProvider } from "@medusajs/ui";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { AIChatCard } from "./ai-chat-card";
 import type { ChatTransportConfig } from "./use-ai-chat-stream";
@@ -8,6 +8,7 @@ import type { ChatTransportConfig } from "./use-ai-chat-stream";
 const chat = vi.hoisted(() => ({
   messages: [] as unknown[],
   status: "ready" as string,
+  sendMessage: vi.fn(),
 }));
 
 vi.mock("./use-ai-chat-stream", async () => ({
@@ -18,7 +19,7 @@ vi.mock("./use-ai-chat-stream", async () => ({
     messages: chat.messages,
     status: chat.status,
     error: undefined,
-    sendMessage: vi.fn(),
+    sendMessage: chat.sendMessage,
     stop: vi.fn(),
     setMessages: vi.fn(),
   }),
@@ -234,6 +235,42 @@ describe("AIChatCard greeting", () => {
     expect(greeting!.compareDocumentPosition(screen.getByText("Hi"))).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
+    chat.messages = [];
+  });
+});
+
+describe("AIChatCard suggested replies", () => {
+  const card = (
+    <TooltipProvider>
+      <AIChatCard
+        chatbotId="bot-1"
+        transport={transport}
+        greeting="Xin chào!"
+        suggestedReplies={["Mình muốn đặt lịch", "Cho mình xem bảng giá"]}
+      />
+    </TooltipProvider>
+  );
+
+  it("offers the replies under the greeting and sends the one tapped", () => {
+    chat.messages = [];
+    chat.sendMessage.mockClear();
+    render(card);
+
+    fireEvent.click(screen.getByRole("button", { name: "Mình muốn đặt lịch" }));
+    expect(chat.sendMessage).toHaveBeenCalledWith({
+      text: "Mình muốn đặt lịch",
+    });
+  });
+
+  it("hides them once the conversation has started", () => {
+    chat.messages = [
+      { id: "u1", role: "user", parts: [{ type: "text", text: "Hi" }] },
+    ];
+    render(card);
+
+    expect(
+      screen.queryByRole("button", { name: "Mình muốn đặt lịch" }),
+    ).not.toBeInTheDocument();
     chat.messages = [];
   });
 });

@@ -34,9 +34,8 @@ export function Preview() {
       const res = await chatbotPreviewPublicControllerMetaV1({
         path: { token: token! },
       });
-      return (
-        res.data as unknown as { data: ChatbotPreviewMetaResponseDto }
-      ).data;
+      return (res.data as unknown as { data: ChatbotPreviewMetaResponseDto })
+        .data;
     },
     enabled: !!token,
     // A share token is fixed for the life of the page; a failure means the
@@ -94,6 +93,8 @@ export function Preview() {
         // from the token. The card uses this solely for the tool-invocation
         // query key, which the share transport disables anyway.
         chatbotId="shared-preview"
+        greeting={data.welcomeMessage?.trim() || undefined}
+        suggestedReplies={data.suggestedReplies}
         transport={transport}
         renderInput={
           <>
