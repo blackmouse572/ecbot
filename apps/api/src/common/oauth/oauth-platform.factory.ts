@@ -31,6 +31,7 @@ export class OAuthPlatformFactory {
             case ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE:
                 return this.instagramService;
             case ENUM_ACCOUNT_TYPE.ZALO_ACCOUNT:
+            case ENUM_ACCOUNT_TYPE.ZALO_PAGE:
                 return this.zaloService;
             case ENUM_ACCOUNT_TYPE.TIKTOK_SHOP:
                 return this.tiktokShopService;
