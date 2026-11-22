@@ -111,6 +111,19 @@ export class MarketingMessageRepository extends DatabaseRepository<MarketingMess
         return state?.permission === ENUM_CUSTOMER_MARKETING_PERMISSION.STOPPED;
     }
 
+    /**
+     * Marks a QUEUED row as being sent (sent_at set while still QUEUED), so
+     * one run of its task goes on. False when another run claimed it.
+     */
+    async claim(id: string): Promise<boolean> {
+        const changed = await this.em.nativeUpdate(
+            MarketingMessageEntity,
+            { id, status: S.QUEUED, sentAt: null },
+            { sentAt: new Date() }
+        );
+        return changed > 0;
+    }
+
     /** Ends a QUEUED row; false when another run already ended it. */
     async finish(
         id: string,

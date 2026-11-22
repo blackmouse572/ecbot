@@ -11,6 +11,14 @@ export interface IMarketingSendRules {
     sendTo: string;
 }
 
+/** A customer's last message on one channel, and the conversation it is in. */
+export interface IMarketingLastInbound {
+    customerId: string;
+    channel: ENUM_ACCOUNT_TYPE;
+    conversationId: string;
+    lastInboundAt: Date;
+}
+
 /** The free route to one customer, or why there is none. */
 export type IMarketingRoute =
     | {

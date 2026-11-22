@@ -23,6 +23,7 @@ describe('MarketingSendService', () => {
         findQueued: jest.fn(),
         isStopped: jest.fn(),
         finish: jest.fn(),
+        claim: jest.fn(),
         markReplied: jest.fn(),
     };
     const audience = { toAudience: jest.fn(a => a), reached: jest.fn() };
@@ -90,6 +91,7 @@ describe('MarketingSendService', () => {
         settings.stopKeyword.mockResolvedValue('dừng');
         ledger.stats.mockResolvedValue({ queued: 1 });
         ledger.finish.mockResolvedValue(true);
+        ledger.claim.mockResolvedValue(true);
         messages.insertPendingOutbound.mockResolvedValue({});
         messenger.sendMessage.mockResolvedValue({ externalId: 'mid.1' });
         zalo.sendMessage.mockResolvedValue({ externalId: 'z.1' });
@@ -227,6 +229,12 @@ describe('MarketingSendService', () => {
                 now
             );
             expect(ledger.plan.mock.calls[0][2]).toHaveLength(501);
+            // The inbound lookup is paged the same way.
+            expect(
+                conversations.lastInboundByCustomerChannel.mock.calls.map(
+                    c => c[0].length
+                )
+            ).toEqual([500, 1]);
         });
 
         it('fails a row whose task could not be created, freeing the day', async () => {
@@ -337,6 +345,17 @@ describe('MarketingSendService', () => {
             });
         });
 
+        it('lets only the run that claims the row send it', async () => {
+            ledger.findQueued.mockResolvedValue(row());
+            inbound();
+            ledger.claim.mockResolvedValue(false);
+
+            await service.deliver('m1', now);
+
+            expect(messenger.sendMessage).not.toHaveBeenCalled();
+            expect(ledger.finish).not.toHaveBeenCalled();
+        });
+
         it('skips a customer who opted out after the send was planned', async () => {
             ledger.findQueued.mockResolvedValue(row());
             ledger.isStopped.mockResolvedValue(true);
@@ -346,6 +365,7 @@ describe('MarketingSendService', () => {
             expect(messenger.sendMessage).not.toHaveBeenCalled();
             expect(ledger.finish).toHaveBeenCalledWith('m1', {
                 status: S.SKIPPED,
+                sentAt: null,
                 skipReason: R.OPTED_OUT,
             });
         });
@@ -359,6 +379,7 @@ describe('MarketingSendService', () => {
             expect(messenger.sendMessage).not.toHaveBeenCalled();
             expect(ledger.finish).toHaveBeenCalledWith('m1', {
                 status: S.SKIPPED,
+                sentAt: null,
                 skipReason: R.WINDOW_CLOSED,
             });
         });
@@ -375,6 +396,7 @@ describe('MarketingSendService', () => {
             expect(messages.markOutboundFailed).toHaveBeenCalled();
             expect(ledger.finish).toHaveBeenCalledWith('m1', {
                 status: S.FAILED,
+                sentAt: null,
             });
         });
     });

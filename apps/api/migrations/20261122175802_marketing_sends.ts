@@ -63,6 +63,8 @@ export class Migration20261122175802_marketing_sends extends Migration {
     }
 
     override async down(): Promise<void> {
+        // Every offer belongs to a send, and the sends go with this rollback.
+        this.addSql(`delete from "marketing_messages";`);
         this.addSql(
             `alter table "marketing_messages" drop constraint "marketing_messages_send_id_foreign";`
         );
@@ -86,5 +88,7 @@ export class Migration20261122175802_marketing_sends extends Migration {
         this.addSql(
             `alter table "marketing_messages" add constraint "marketing_messages_skip_reason_check" check("skip_reason" in ('NO_CHANNEL', 'WINDOW_CLOSED'));`
         );
+
+        this.addSql(`drop table if exists "marketing_sends" cascade;`);
     }
 }

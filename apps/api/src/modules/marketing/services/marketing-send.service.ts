@@ -27,6 +27,7 @@ import {
     ENUM_MARKETING_SKIP_REASON,
 } from '../enums/marketing-send.enum';
 import {
+    IMarketingLastInbound,
     IMarketingSendInput,
     IMarketingSendStats,
 } from '../interfaces/marketing-send.interface';
@@ -94,15 +95,11 @@ export class MarketingSendService {
             rules.sendTo
         );
         const sendDay = this.helperDateService.formatToIsoDate(sendAt);
-        const inbound =
-            await this.conversationRepository.lastInboundByCustomerChannel(
-                customerIds,
-                workspaceId
-            );
+        const inbound = await this.lastInbound(customerIds, workspaceId);
         const rows = customerIds.map(customerId => {
             const route = marketingRoute(
                 customerId,
-                inbound.filter(r => r.customerId === customerId),
+                inbound.get(customerId) ?? [],
                 channel => this.windowHours(channel),
                 sendAt
             );
@@ -124,6 +121,9 @@ export class MarketingSendService {
                       sendDay,
                   };
         });
+        // A crash between this write and the last task leaves those rows
+        // QUEUED with no task: the customer misses that one day (the cap
+        // counts QUEUED only on its own send_day) and is free again after.
         const queued = await this.marketingMessageRepository.plan(
             workspaceId,
             send.id,
@@ -148,6 +148,9 @@ export class MarketingSendService {
         const row = await this.marketingMessageRepository.findQueued(messageId);
         // Already sent, failed or skipped: a retried task sends nothing.
         if (!row) return;
+        // Two overlapping runs of one task both read QUEUED; only the one
+        // that claims the row goes on.
+        if (!(await this.marketingMessageRepository.claim(row.id))) return;
 
         const skip = await this.skipReason(row, now);
         const conversation = row.conversation;
@@ -178,6 +181,28 @@ export class MarketingSendService {
 
     stats(sendId: string): Promise<IMarketingSendStats> {
         return this.marketingMessageRepository.stats(sendId);
+    }
+
+    /** Each customer's last message per channel, read in pages. */
+    private async lastInbound(
+        customerIds: string[],
+        workspaceId: string
+    ): Promise<Map<string, IMarketingLastInbound[]>> {
+        const byCustomer = new Map<string, IMarketingLastInbound[]>();
+        for (let i = 0; i < customerIds.length; i += MARKETING_SEND_PAGE_SIZE) {
+            const rows =
+                await this.conversationRepository.lastInboundByCustomerChannel(
+                    customerIds.slice(i, i + MARKETING_SEND_PAGE_SIZE),
+                    workspaceId
+                );
+            for (const row of rows) {
+                byCustomer.set(row.customerId, [
+                    ...(byCustomer.get(row.customerId) ?? []),
+                    row,
+                ]);
+            }
+        }
+        return byCustomer;
     }
 
     private async reachedIds(
@@ -340,12 +365,17 @@ export class MarketingSendService {
     private async finish(
         row: MarketingMessageEntity,
         update: Partial<
-            Pick<MarketingMessageEntity, 'status' | 'skipReason' | 'sentAt'>
+            Pick<MarketingMessageEntity, 'skipReason' | 'sentAt'>
         > & { status: S }
     ): Promise<void> {
-        await this.marketingMessageRepository.finish(row.id, update);
+        const ended = await this.marketingMessageRepository.finish(row.id, {
+            sentAt: null,
+            ...update,
+        });
         this.logger.log(
-            `marketing message=${row.id} status=${update.status} reason=${update.skipReason ?? '-'}`
+            ended
+                ? `marketing message=${row.id} status=${update.status} reason=${update.skipReason ?? '-'}`
+                : `marketing message=${row.id} already ended elsewhere`
         );
     }
 
