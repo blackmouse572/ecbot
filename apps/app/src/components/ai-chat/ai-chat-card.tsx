@@ -294,7 +294,7 @@ export type AIChatCardProps = {
    */
   greeting?: string;
   /**
-   * Quick replies under the input until the first message. Tapping one
+   * Quick replies just above the input until the first message. Tapping one
    * sends it. Shown only with a greeting.
    */
   suggestedReplies?: string[];
@@ -352,13 +352,13 @@ export function AIChatCard(props: AIChatCardProps) {
           </MessageScrollerViewport>
           <MessageScrollerButton />
         </MessageScroller>
-        {renderInput}
         {greeting && !!suggestedReplies?.length && (
           <ChatSuggestedReplies
             replies={suggestedReplies}
             enterClassName={BUBBLE_ENTER}
           />
         )}
+        {renderInput}
       </Container>
     </AIChatProvider>
   );

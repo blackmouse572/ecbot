@@ -252,16 +252,16 @@ describe("AIChatCard suggested replies", () => {
     </TooltipProvider>
   );
 
-  it("offers the replies under the input and sends the one tapped", () => {
+  it("offers the replies just above the input and sends the one tapped", () => {
     chat.messages = [];
     chat.sendMessage.mockClear();
     render(card);
 
     expect(
       screen
-        .getByRole("textbox", { name: "Message" })
+        .getByRole("button", { name: "Mình muốn đặt lịch" })
         .compareDocumentPosition(
-          screen.getByRole("button", { name: "Mình muốn đặt lịch" }),
+          screen.getByRole("textbox", { name: "Message" }),
         ),
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 

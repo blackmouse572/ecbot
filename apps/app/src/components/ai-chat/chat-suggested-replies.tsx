@@ -8,7 +8,7 @@ type Props = {
   enterClassName: string;
 };
 
-// Quick replies under the chat input: tapping one sends it as the visitor's
+// Quick replies just above the chat input: tapping one sends it as the visitor's
 // first message. They go away once the conversation starts.
 export const ChatSuggestedReplies: FC<Props> = ({
   replies,
@@ -19,7 +19,7 @@ export const ChatSuggestedReplies: FC<Props> = ({
   if (messages.length) return null;
 
   return (
-    <div className="flex flex-wrap gap-2 px-4 py-3">
+    <div className="bg-ui-bg-base relative -mt-px flex flex-wrap gap-2 border-b-0 px-4 pt-1 pb-3">
       {replies.map((reply, index) => (
         <Button
           key={reply}
