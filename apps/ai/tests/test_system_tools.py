@@ -68,12 +68,60 @@ async def test_update_customer_profile_errors_when_no_context(monkeypatch):
     assert result == {"error": "no customer context"}
 
 
-async def test_apply_customer_tag_errors_when_no_context(monkeypatch):
+async def test_apply_customer_tag_errors_when_no_customer_on_a_live_chat(monkeypatch):
+    # A live conversation whose customer could not be created (plan limit).
     monkeypatch.setattr(system_tools_module, "_get_customer_id", lambda: None)
+    monkeypatch.setattr(system_tools_module, "_is_test_chat", lambda: False)
+    monkeypatch.setattr(system_tools_module, "_get_session_id", lambda: None)
     result = await apply_customer_tag.ainvoke({"name": "VIP"})
     assert result["error"] == "no customer context"
-    # Test chat has no customer: the agent must not promise a staff handoff.
     assert "staff" in result["instruction"]
+
+
+# ─── Test chat (preview): checked against the real tags, nothing written ─────
+
+_TAGS = [("Cần nhân viên", True), ("Khiếu nại", True), ("VIP", False)]
+
+
+def _patch_test_chat(monkeypatch, tags=_TAGS):
+    monkeypatch.setattr(system_tools_module, "_get_customer_id", lambda: None)
+    monkeypatch.setattr(system_tools_module, "_is_test_chat", lambda: True)
+    monkeypatch.setattr(system_tools_module, "_workspace_tags", AsyncMock(return_value=tags))
+
+    class _NoCalls:
+        async def post(self, path, json):  # pragma: no cover - must not run
+            raise AssertionError(f"test chat must not write: {path}")
+
+    monkeypatch.setattr(
+        system_tools_module.ApiClient, "get_instance", staticmethod(lambda: _NoCalls())
+    )
+
+
+async def test_test_chat_simulates_a_handoff_tag(monkeypatch):
+    _patch_test_chat(monkeypatch)
+    result = await apply_customer_tag.ainvoke({"name": "Cần nhân viên"})
+    assert result == {"ok": True, "preview": True, "triggeredHandoff": True}
+
+
+async def test_test_chat_simulates_a_plain_tag_without_handoff(monkeypatch):
+    _patch_test_chat(monkeypatch)
+    result = await apply_customer_tag.ainvoke({"name": "VIP"})
+    assert result == {"ok": True, "preview": True, "triggeredHandoff": False}
+
+
+async def test_test_chat_accepts_the_name_with_its_emoji(monkeypatch):
+    _patch_test_chat(monkeypatch)
+    result = await apply_customer_tag.ainvoke({"name": "Khiếu nại 🚨"})
+    assert result["triggeredHandoff"] is True
+
+
+async def test_test_chat_rejects_an_invented_tag_and_lists_the_real_ones(monkeypatch):
+    _patch_test_chat(monkeypatch)
+    result = await apply_customer_tag.ainvoke({"name": "Hỗ trợ kỹ thuật"})
+    assert "ok" not in result
+    assert result["validTags"] == ["Cần nhân viên", "Khiếu nại", "VIP"]
+    assert "again" in result["instruction"]
+    assert "Do not tell the customer a staff member will take over" in result["instruction"]
 
 
 async def test_remove_customer_tag_errors_when_no_context(monkeypatch):
@@ -308,6 +356,43 @@ def _stub_api_client_failing(monkeypatch):
     monkeypatch.setattr(
         system_tools_module.ApiClient, "get_instance", staticmethod(lambda: _Stub())
     )
+
+
+async def test_live_unknown_tag_lists_the_real_ones(monkeypatch):
+    _patch_runtime(monkeypatch, customer_id="cust-1", session_id="conv-1")
+    monkeypatch.setattr(system_tools_module, "_workspace_tags", AsyncMock(return_value=_TAGS))
+
+    class _Stub:
+        async def post(self, path, json):
+            raise system_tools_module.ApiClientError(
+                "POST /tags/apply failed: 404 customerTag.error.notFound", status_code=404
+            )
+
+    monkeypatch.setattr(
+        system_tools_module.ApiClient, "get_instance", staticmethod(lambda: _Stub())
+    )
+    result = await apply_customer_tag.ainvoke({"name": "Handoff"})
+    assert result["validTags"] == ["Cần nhân viên", "Khiếu nại", "VIP"]
+    assert "again" in result["instruction"]
+
+
+async def test_handoff_tag_that_did_not_hand_over_says_not_to_promise(monkeypatch):
+    # apps/api found no conversation: the tag stuck, the handoff did not fire.
+    _patch_runtime(monkeypatch, customer_id="cust-1", session_id="conv-1")
+    _stub_api_client(
+        monkeypatch, response={"ok": True, "triggeredHandoff": False, "triggersHandoff": True}
+    )
+    result = await apply_customer_tag.ainvoke({"name": "Cần nhân viên"})
+    assert result["instruction"] == system_tools_module.HANDOFF_FAILED
+
+
+async def test_plain_tag_gets_no_instruction(monkeypatch):
+    _patch_runtime(monkeypatch, customer_id="cust-1", session_id="conv-1")
+    _stub_api_client(
+        monkeypatch, response={"ok": True, "triggeredHandoff": False, "triggersHandoff": False}
+    )
+    result = await apply_customer_tag.ainvoke({"name": "VIP"})
+    assert "instruction" not in result
 
 
 async def test_apply_customer_tag_api_error_does_not_claim_chat_unsupported(monkeypatch):

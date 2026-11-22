@@ -81,7 +81,9 @@ async def chat_endpoint(chat_request: ChatRequest, request: Request):
         config = get_agent_config(chat_request, request)
         with apply_cassette(cassette_name_for(chat_request.message)):
             response = await ctx.agent.ainvoke(
-                input=await get_agent_input(chat_request, retrieval=retrieval),
+                input=await get_agent_input(
+                    chat_request, retrieval=retrieval, workspace_id=ctx.chatbot.workspace_id if ctx.chatbot else None
+                ),
                 context=get_agent_context(
                     chat_request, request, ctx.chatbot, retrieval=retrieval, sources=source_attributions
                 ),
@@ -268,7 +270,9 @@ async def chat_stream_endpoint(chat_request: ChatRequest, request: Request):
         config = get_agent_config(chat_request, request)
         with apply_cassette(cassette_name_for(message)):
             async for event in ctx.agent.astream_events(
-                input=await get_agent_input(chat_request, retrieval=retrieval),
+                input=await get_agent_input(
+                    chat_request, retrieval=retrieval, workspace_id=ctx.chatbot.workspace_id if ctx.chatbot else None
+                ),
                 context=get_agent_context(
                     chat_request, request, ctx.chatbot, retrieval=retrieval, sources=source_attributions
                 ),

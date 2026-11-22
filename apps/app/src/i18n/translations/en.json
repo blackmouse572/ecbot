@@ -1242,6 +1242,7 @@
         "stopped": "The chat stopped before this call answered.",
         "failedStep": "Failed",
         "handedOverStep": "Handed over to staff",
+        "handedOverTestStep": "Handed over to staff (test only, nothing was sent)",
         "knowledgeStep": "Searched knowledge base",
         "sources_one": "{{count}} source",
         "sources_other": "{{count}} sources",

@@ -21,6 +21,12 @@ import { TOOL_TRACE_ROW, TOOL_TRACE_STEP } from "./tool-trace-classes";
 const formatElapsed = (ms: number) =>
   ms < 1000 ? `${Math.round(ms)}ms` : `${(ms / 1000).toFixed(1)}s`;
 
+// The test chat checks the tag but writes nothing (apps/ai apply_customer_tag).
+const isTestOnly = (result: unknown) =>
+  typeof result === "object" &&
+  result !== null &&
+  (result as { preview?: unknown }).preview === true;
+
 type Props = {
   call: ChatToolCall;
   elapsedMs?: number;
@@ -50,7 +56,9 @@ export const ToolTraceStep: FC<Props> = ({ call, elapsedMs }) => {
       : kind === "skill"
         ? t("chatbot.chat.trace.loadedSkillStep")
         : kind === "handoff"
-          ? t("chatbot.chat.trace.handedOverStep")
+          ? isTestOnly(call.result)
+            ? t("chatbot.chat.trace.handedOverTestStep")
+            : t("chatbot.chat.trace.handedOverStep")
           : t("chatbot.chat.trace.called");
   const slug = typeof call.args.slug === "string" ? call.args.slug : undefined;
   // A handoff reads as a sentence on its own ("Handed over to staff").

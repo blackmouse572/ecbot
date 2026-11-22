@@ -26,7 +26,7 @@ from eccho_ai.llm.prompts import loader
 from eccho_ai.llm.tools import system_tools
 from eccho_ai.models.chat import Chatbots
 from eccho_ai.modules.chat import services
-from eccho_ai.modules.chat.customer_context import render_customer_context
+from eccho_ai.modules.chat.customer_context import render_customer_context, render_tag_catalog
 from eccho_ai.modules.chat.models.agent_models import AgentRequestContext
 from eccho_ai.modules.chat.models.chat_models import ChatHistoryMessage, ChatRequest
 from eccho_ai.modules.chat.constants import DEFAULT_MAX_TOOL_ITERATIONS
@@ -56,7 +56,11 @@ class FakeApi:
             name = json["tagName"] if json["tagName"] in names else tag_name(json["tagName"])
             if name not in names:
                 raise ApiClientError(f"POST {path} failed: 404 customerTag.error.notFound", status_code=404)
-            return {"ok": True, "triggeredHandoff": name in case.handoff_tags}
+            handoff = name in case.handoff_tags
+            return {"ok": True, "triggeredHandoff": handoff, "triggersHandoff": handoff}
+        if path.endswith("/customer"):
+            # An anonymous visitor's Customer, created when a tool saves something.
+            return {"customerId": str(uuid4())}
         for suffix, result in case.tool_results.items():
             if path.endswith(suffix):
                 return result
@@ -69,7 +73,13 @@ class FakeApi:
         return {"ok": True}
 
 
+def _catalog_rows(case: Case) -> list[tuple[Any, ...]]:
+    return [(t.name, t.emoji, t.description, t.handoff, t.notify, None) for t in case.tags]
+
+
 def _customer_block(case: Case) -> str:
+    if case.chat != "live":
+        return render_tag_catalog(_catalog_rows(case))
     c = case.customer
     customer = SimpleNamespace(
         name=c.get("name"),
@@ -78,12 +88,15 @@ def _customer_block(case: Case) -> str:
         notes=c.get("notes"),
         metadata_=c.get("fields") or {},
     )
-    rows = [(t.name, t.emoji, t.description, t.handoff, t.notify, None) for t in case.tags]
-    return render_customer_context(customer, list(c.get("applied_tags") or []), rows, None)  # type: ignore[arg-type]
+    return render_customer_context(customer, list(c.get("applied_tags") or []), _catalog_rows(case), None)  # type: ignore[arg-type]
 
 
-async def _fake_context_block(customer_id: str | None) -> str:
+async def _fake_context_block(customer_id: str | None, workspace_id: Any = None) -> str:
     return _customer_block(_case.get())
+
+
+async def _fake_workspace_tags() -> list[tuple[str, bool]]:
+    return sorted((t.name, t.handoff) for t in _case.get().tags)
 
 
 async def _fake_metadata(customer_id: str) -> dict[str, Any]:
@@ -97,6 +110,7 @@ def _arm_template() -> str:
 _PATCHES = [
     patch.object(ApiClient, "get_instance", staticmethod(lambda: FakeApi())),
     patch.object(system_tools, "_read_customer_metadata", _fake_metadata),
+    patch.object(system_tools, "_workspace_tags", _fake_workspace_tags),
     patch.object(services, "build_customer_context_block", _fake_context_block),
     patch.object(loader, "system_prompt_template", _arm_template),
 ]
@@ -151,13 +165,14 @@ async def run_sample(case: Case, compiled: Compiled, model: str, template: str) 
     _case.set(case)
     _template.set(template)
     chatbot = chatbot_for(case, compiled, model)
-    conversation_id = str(uuid4())
+    thread_id = str(uuid4())
+    conversation_id = None if case.chat == "test" else thread_id
     request = ChatRequest(
         chatbot_id=str(chatbot.id),
         message=case.message,
         history=[ChatHistoryMessage(role=r, content=c) for r, c in case.history],  # type: ignore[arg-type]
         conversation_id=conversation_id,
-        customer_id=str(uuid4()),
+        customer_id=str(uuid4()) if case.chat == "live" else None,
         agent_timezone=TIMEZONE,
         orders_enabled=case.orders,
     )
@@ -173,7 +188,7 @@ async def run_sample(case: Case, compiled: Compiled, model: str, template: str) 
     )
     config = {
         "recursion_limit": DEFAULT_MAX_TOOL_ITERATIONS * 2 + 1,
-        "configurable": {"thread_id": conversation_id},
+        "configurable": {"thread_id": thread_id},
     }
     try:
         result = await get_shared_agent().ainvoke(

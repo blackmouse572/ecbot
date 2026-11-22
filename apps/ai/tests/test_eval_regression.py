@@ -163,6 +163,44 @@ async def test_a_sample_runs_through_the_production_agent(cases):
     assert '"triggeredHandoff": true' in tool_messages[0].content
 
 
+@pytest.mark.parametrize(
+    ("key", "simulated"),
+    [("handover/angry_test_chat/en", True), ("handover/asks_for_staff_anonymous/en", False)],
+)
+async def test_a_chat_without_a_customer_sees_the_catalog_alone(cases, key, simulated):
+    """Test chat and anonymous visitors: no customer block, the real tag
+    names, and the tag call answers like production (simulated in test chat)."""
+    from eval.regression import harness
+    from eval.regression.blueprint import Compiled
+
+    case = _case(cases, key)
+    script = iter([
+        AIMessage(content="", tool_calls=[{"name": "apply_customer_tag", "args": {"name": "Needs staff"}, "id": "c1"}]),
+        AIMessage(content="A staff member will take it from here."),
+    ])
+    _ScriptedModel.seen = []
+    model = _ScriptedModel(messages=script)
+    harness.install_stubs()
+    get_shared_agent.cache_clear()
+    try:
+        with (
+            patch.object(AppVars, "OPENROUTER_API_KEY", SecretStr("test-key")),
+            patch("eccho_ai.llm.agents.middleware.build_chat_model", return_value=model),
+        ):
+            turn = await harness.run_sample(case, Compiled("", ""), "deepseek/x", "<agent>{general_knowledge}</agent>")
+    finally:
+        patch.stopall()
+        get_shared_agent.cache_clear()
+    assert turn.error is None
+    assert run_rule("handoff", True, case, turn)[0]
+    first_call = next(m for m in _ScriptedModel.seen if isinstance(m, list) and m and hasattr(m[0], "content"))
+    newest = first_call[-1].content
+    assert "# Customer context" not in newest and '"Needs staff"' in newest
+    tool_messages = [m for m in _ScriptedModel.seen[-1] if getattr(m, "type", "") == "tool"]
+    assert '"triggeredHandoff": true' in tool_messages[0].content
+    assert ('"preview": true' in tool_messages[0].content) is simulated
+
+
 def test_a_selector_that_matches_nothing_fails_the_run():
     from eval.regression.__main__ import main
 

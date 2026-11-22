@@ -6,6 +6,7 @@ are re-exported here for callers/tests that import them from this module.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 import sentry_sdk
 from fastapi import Request
@@ -140,6 +141,7 @@ def _build_rag_message(
 async def get_agent_input(
     chat_request: ChatRequest,
     retrieval: RAGRetrievalResult | None = None,
+    workspace_id: str | UUID | None = None,
 ) -> Command[str] | dict[str, list[Any]]:
     if chat_request.action:
         # Deferred: langgraph is only needed on resume requests, not at import time / process boot.
@@ -172,7 +174,9 @@ async def get_agent_input(
     if note:
         customer_message = f"{note}\n\n{customer_message}"
     message = _build_rag_message(customer_message, retrieval, can_search=can_search_again(retrieval))
-    block = await build_customer_context_block(chat_request.customer_id)
+    block = await build_customer_context_block(
+        chat_request.customer_id, workspace_id=workspace_id
+    )
     if block:
         message = f"{block}\n\n{message}"
     messages.append(HumanMessage(content=message))

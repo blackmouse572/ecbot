@@ -194,6 +194,15 @@ async def test_customer_context_rides_on_the_newest_message_after_history(monkey
     assert messages[-1].content == "Customer: VIP\n\nhello"
 
 
+async def test_customer_context_gets_the_chatbot_workspace(monkeypatch):
+    """Without a Customer the block is the workspace's tag catalog, so the
+    agent hands over with a real tag name (preview, anonymous visitors)."""
+    block = AsyncMock(return_value=None)
+    monkeypatch.setattr("eccho_ai.modules.chat.services.build_customer_context_block", block)
+    await get_agent_input(_req(), workspace_id="ws-1")
+    block.assert_awaited_once_with(None, workspace_id="ws-1")
+
+
 async def test_summary_comes_first_as_data(monkeypatch):
     monkeypatch.setattr(
         "eccho_ai.modules.chat.services.build_customer_context_block",
