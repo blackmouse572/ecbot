@@ -24,13 +24,13 @@ vi.mock("@/hooks/api/workspace-roles", () => ({
       },
       {
         id: "r-admin",
-        name: "Admin",
+        name: "Manager",
         type: "WORKSPACE_MEMBER",
         isActive: true,
       },
       {
         id: "r-member",
-        name: "Member",
+        name: "Sales",
         type: "WORKSPACE_MEMBER",
         isActive: true,
       },
@@ -92,11 +92,11 @@ describe("Invitations page", () => {
     expect(screen.getByText("fields.role")).toBeInTheDocument();
     expect(
       screen.getByRole("combobox", { name: "fields.role" }),
-    ).toHaveTextContent("Admin");
+    ).toHaveTextContent("roles.builtIn.manager.name");
   });
 
-  // Accept grants the built-in Member role when the invitation has none.
-  it("shows the Member default for an invitation with no role", () => {
+  // Accept grants the built-in Sales role when the invitation has none.
+  it("shows the Sales default for an invitation with no role", () => {
     vi.mocked(useInvitations).mockReturnValue({
       invitations: [
         { id: "i1", inviteeEmail: "a@mail.com", status: "PENDING" },

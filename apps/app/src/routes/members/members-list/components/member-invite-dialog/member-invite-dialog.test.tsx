@@ -38,13 +38,13 @@ vi.mock("@/hooks/api/workspace-roles", () => ({
       },
       {
         id: "r-admin",
-        name: "Admin",
+        name: "Manager",
         type: "WORKSPACE_MEMBER",
         isActive: true,
       },
       {
         id: "r-member",
-        name: "Member",
+        name: "Sales",
         type: "WORKSPACE_MEMBER",
         isActive: true,
       },
@@ -119,7 +119,7 @@ describe("MemberInviteDialog", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("invites as Member and names the invitee", async () => {
+  it("invites as Sales and names the invitee", async () => {
     invitableUsers.current = [
       { id: "u-1", name: "Lan", email: "lan@example.com" },
     ];

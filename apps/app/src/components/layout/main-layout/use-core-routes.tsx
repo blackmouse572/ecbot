@@ -35,8 +35,8 @@ export const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
     to: `${baseUrl}/${ROUTES.Orders}`,
     icon: <Receipt />,
     ability: {
-      action: "manage",
-      subject: "CUSTOMER",
+      action: "read",
+      subject: "ORDER",
     },
     badge: (
       <Badge size="2xsmall" color="blue">
@@ -62,7 +62,7 @@ export const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
       to: `${baseUrl}/${ROUTES.Customers}`,
       icon: <Users />,
       ability: {
-        action: "manage",
+        action: "read",
         subject: "CUSTOMER",
       },
       items: [
@@ -87,8 +87,8 @@ export const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
       to: `${baseUrl}/${ROUTES.Conversations}`,
       icon: <ChatBubbleLeftRight />,
       ability: {
-        action: "manage",
-        subject: "CHATBOT",
+        action: "read",
+        subject: "CONVERSATION",
       },
       hint: (
         <LazyFeatureHint
@@ -145,7 +145,7 @@ export const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
           icon: <BellAlert />,
           ability: {
             action: "read",
-            subject: "CHATBOT",
+            subject: "CONVERSATION",
           },
         },
         ...enterpriseNavItems({ t, baseUrl }),

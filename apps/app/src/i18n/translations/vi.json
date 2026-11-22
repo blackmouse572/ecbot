@@ -1596,7 +1596,7 @@
       "empty": "Lời mời bạn gửi từ trang Thành viên sẽ nằm ở đây cho tới khi được chấp nhận.",
       "emptyTitle": "Không có lời mời đang chờ",
       "noReadPermission": "Bạn không thể xem lời mời trong workspace này. Hãy nhờ chủ workspace.",
-      "defaultRole": "Member (mặc định)",
+      "defaultRole": "Bán hàng (mặc định)",
       "status": {
         "PENDING": "Đang chờ",
         "ACCEPTED": "Đã chấp nhận",
@@ -1631,7 +1631,10 @@
       "customerData": "Dữ liệu khách hàng",
       "member": "Đội ngũ",
       "clientCredential": "API key",
-      "workspace": "Cài đặt workspace"
+      "workspace": "Cài đặt workspace",
+      "conversation": "Hội thoại",
+      "order": "Đơn hàng",
+      "marketing": "Tiếp thị"
     },
     "title": "Vai trò",
     "description": "Quản lý vai trò và quyền hạn cho các thành viên",
@@ -1688,6 +1691,24 @@
       "none": "Không có quyền",
       "view": "Chỉ xem",
       "full": "Toàn quyền"
+    },
+    "builtIn": {
+      "manager": {
+        "name": "Quản lý",
+        "description": "Điều hành workspace hằng ngày. Có mọi quyền trừ kênh, vai trò, lời mời và thanh toán."
+      },
+      "sales": {
+        "name": "Bán hàng",
+        "description": "Chat với khách, cập nhật thông tin khách hàng và lên đơn."
+      },
+      "marketing": {
+        "name": "Marketing",
+        "description": "Chạy tiếp thị: tổng quan, tệp khách, gửi tin và nguồn khách. Xem được hội thoại, khách hàng và đơn hàng."
+      },
+      "developer": {
+        "name": "Developer",
+        "description": "Xây agent, kiến thức, công cụ, skills và API key. Xem hội thoại và khách hàng để kiểm tra câu trả lời."
+      }
     }
   },
   "profile": {

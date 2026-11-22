@@ -45,6 +45,24 @@ describe("member cells", () => {
     expect(screen.getByText("Quản trị viên")).toBeInTheDocument();
   });
 
+  it("translates the built-in Manager, Sales, Marketing and Developer roles", async () => {
+    await i18n.changeLanguage("vi");
+    render(
+      <>
+        {["Manager", "Sales", "Marketing", "Developer"].map((name) => (
+          <MembersRoleCell
+            key={name}
+            memberRole={{ name, type: "WORKSPACE_MEMBER" }}
+          />
+        ))}
+      </>,
+    );
+    expect(screen.getByText("Quản lý")).toBeInTheDocument();
+    expect(screen.getByText("Bán hàng")).toBeInTheDocument();
+    expect(screen.getByText("Marketing")).toBeInTheDocument();
+    expect(screen.getByText("Developer")).toBeInTheDocument();
+  });
+
   it("does not repeat the owner label next to the name (the role column shows it)", () => {
     render(
       <MembersNameCell

@@ -18,7 +18,7 @@ vi.mock("@/hooks/api/workspace-roles", () => ({
       },
       {
         id: "r-member",
-        name: "Member",
+        name: "Sales",
         type: "WORKSPACE_MEMBER",
         isActive: true,
       },
@@ -42,8 +42,9 @@ describe("useInvitableRoles", () => {
     ]);
   });
 
-  // Admin shares the WORKSPACE_MEMBER type, so the default is picked by name.
-  it("defaults to the built-in Member role, not Admin", () => {
+  // Built-in roles share the WORKSPACE_MEMBER type, so the default is picked
+  // by name, and a custom role with the same name is not it.
+  it("defaults to the built-in Sales role", () => {
     const { result } = renderHook(() => useInvitableRoles());
 
     expect(result.current.defaultRoleId).toBe("r-member");
