@@ -49,6 +49,10 @@ class Case:
     min_pass: float = 0.67
     note: str = ""
     tool_results: dict[str, Any] = field(default_factory=dict)
+    # live: a Customer with its context block; anonymous: a widget/API
+    # visitor with no Customer yet; test: the dashboard test chat (no
+    # conversation either). The last two see the tag catalog alone.
+    chat: str = "live"
 
     @property
     def key(self) -> str:
@@ -118,7 +122,7 @@ def load_cases(directory: Path = SCENARIOS_DIR) -> list[Case]:
                         profile={**agent[lang], **(_pick(raw.get("profile"), lang) or {})},
                         extra_instructions=_pick(agent.get("extra_instructions"), lang),
                         orders=bool(raw.get("orders", agent.get("orders", False))),
-                        tags=tuple(Tag(**t) for t in agent["tags"][lang]),
+                        tags=tuple(Tag(**t) for t in (_pick(raw.get("tags"), lang) or agent["tags"][lang])),
                         customer={**(_pick(raw.get("customer"), lang) or {})},
                         history=_history(raw.get("history", []), lang),
                         message=message,
@@ -126,6 +130,7 @@ def load_cases(directory: Path = SCENARIOS_DIR) -> list[Case]:
                         min_pass=float(raw.get("min_pass", doc.get("min_pass", 0.67))),
                         note=raw.get("note", ""),
                         tool_results=raw.get("tool_results", {}),
+                        chat=raw.get("chat", "live"),
                     )
                 )
     keys = [c.key for c in cases]

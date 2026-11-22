@@ -12,6 +12,7 @@ the Phase 10 Tool Registry).
 import asyncio
 import logging
 import time
+import unicodedata
 from typing import Annotated, Any
 from uuid import UUID
 
@@ -36,6 +37,7 @@ from eccho_ai.llm.tools.constants import (
     HANDOFF_FAILED,
     HANDOFF_UNAVAILABLE,
     ORDER_NOT_RECORDED,
+    TAG_NOT_FOUND,
 )
 from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.retrievers.vector_store import PgVectorStore
@@ -102,20 +104,6 @@ async def _ensure_customer_id() -> str | None:
         # already in context, so dropping the entry is safe.
         if not lock.locked():
             _ENSURE_LOCKS.pop(conversation_id, None)
-    conversation_id = _as_uuid(_get_session_id())
-    if not conversation_id:
-        return None
-    try:
-        result = await ApiClient.get_instance().post(
-            f"/system/conversations/{conversation_id}/customer", {}
-        )
-    except ApiClientError as exc:
-        logger.warning("ensure customer failed for %s: %s", conversation_id, exc)
-        return None
-    customer_id = result.get("customerId") if isinstance(result, dict) else None
-    if customer_id:
-        _remember_customer_id(customer_id)
-    return customer_id
 
 
 def _remember_customer_id(customer_id: str) -> None:
@@ -371,10 +359,79 @@ async def update_customer_profile(
         return {"error": str(exc)}
 
 
+def _is_test_chat() -> bool:
+    """The dashboard test chat (and MCP test_chatbot): no conversation."""
+    from langgraph.runtime import get_runtime
+
+    try:
+        ctx = get_runtime(AgentRequestContext).context
+    except Exception:  # pragma: no cover — runtime missing outside agent
+        return True
+    return getattr(ctx, "conversation_id", None) is None
+
+
+async def _workspace_tags() -> list[tuple[str, bool]]:
+    """(name, triggers_handoff) of the chatbot's workspace tags, by name."""
+    chatbot = _get_chatbot()
+    workspace_id = getattr(chatbot, "workspace_id", None)
+    if workspace_id is None:
+        return []
+    repo = PostgresRepo.get_instance()
+    try:
+        async with repo.session_factory() as session:
+            stmt = (
+                select(col(CustomerTags.name), col(CustomerTags.triggers_handoff))
+                .where(
+                    col(CustomerTags.workspace_id) == workspace_id,
+                    col(CustomerTags.deleted_at).is_(None),
+                )
+                .order_by(col(CustomerTags.name))
+            )
+            rows = (await session.exec(stmt)).all()  # type: ignore[attr-defined]
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("workspace tags unavailable: %s", exc)
+        return []
+    return [(name, bool(handoff)) for name, handoff in rows]
+
+
+def _without_emoji(name: str) -> str:
+    # Mirrors apps/api findOneByWorkspaceAndName: some models send the
+    # catalog's emoji with the name ("Angry 🚨").
+    return "".join(
+        ch for ch in name
+        if unicodedata.category(ch) not in ("So", "Sk") and ch not in "\ufe0f\u200d"
+    ).strip()
+
+
+def _find_tag(name: str, tags: list[tuple[str, bool]]) -> tuple[str, bool] | None:
+    for wanted in (name.strip(), _without_emoji(name)):
+        for tag in tags:
+            if tag[0] == wanted:
+                return tag
+    return None
+
+
+def _unknown_tag(name: str, tags: list[tuple[str, bool]]) -> dict[str, Any]:
+    return {
+        "error": f'No tag is named "{name}"',
+        "validTags": [tag[0] for tag in tags],
+        "instruction": TAG_NOT_FOUND,
+    }
+
+
 @tool
 async def apply_customer_tag(name: str) -> dict[str, Any]:
     """Apply a workspace tag (by name) to the customer. May fire a handoff."""
     started = time.perf_counter()
+    if not _get_customer_id() and _is_test_chat():
+        # Nothing to write to: check the name against the real tags and
+        # answer as a live chat would, so the owner can test handovers.
+        tags = await _workspace_tags()
+        tag = _find_tag(name, tags)
+        _log_call("apply_customer_tag", _truncate(name), f"test_chat found={tag is not None}", 0)
+        if tag is None:
+            return _unknown_tag(name, tags)
+        return {"ok": True, "preview": True, "triggeredHandoff": tag[1]}
     customer_id = await _ensure_customer_id()
     if not customer_id:
         _log_call("apply_customer_tag", _truncate(name), "no_context", 0)
@@ -397,7 +454,11 @@ async def apply_customer_tag(name: str) -> dict[str, Any]:
             f"ok handoff={triggered}",
             (time.perf_counter() - started) * 1000,
         )
-        return result if isinstance(result, dict) else {"data": result}
+        if not isinstance(result, dict):
+            return {"data": result}
+        if result.get("triggersHandoff") and not triggered:
+            return {**result, "instruction": HANDOFF_FAILED}
+        return result
     except ApiClientError as exc:
         _log_call(
             "apply_customer_tag",
@@ -405,6 +466,8 @@ async def apply_customer_tag(name: str) -> dict[str, Any]:
             "error",
             (time.perf_counter() - started) * 1000,
         )
+        if exc.status_code == 404:
+            return _unknown_tag(name, await _workspace_tags())
         return {"error": str(exc), "instruction": HANDOFF_FAILED}
 
 

@@ -346,3 +346,50 @@ async def test_marketing_line_for_a_stopped_or_hostile_customer(sqlite_repo):
 
     assert "Offers: STOPPED (never ask; reopen only if the customer asks for offers)" in block
     assert "Hostile: yes (never ask about offers)" in block
+
+
+# ---------------------------------------------------------------------------
+# Tag catalog without a Customer (preview, first message of an anonymous
+# widget/API visitor): the agent still needs the real tag names, or it invents
+# one ("Handoff") that 404s and the handoff never fires.
+# ---------------------------------------------------------------------------
+
+
+async def test_no_customer_still_gets_the_workspace_tag_catalog(sqlite_repo):
+    workspace_id = uuid4()
+    await _make_tag(sqlite_repo, workspace_id, "Cần nhân viên", triggers_handoff=True)
+
+    block = await build_customer_context_block(None, workspace_id=workspace_id)
+
+    assert "# Customer context" not in block
+    assert "# Tag catalog" in block
+    assert '- "Cần nhân viên" (triggers handoff)' in block
+
+
+async def test_unknown_customer_still_gets_the_workspace_tag_catalog(sqlite_repo):
+    workspace_id = uuid4()
+    await _make_tag(sqlite_repo, workspace_id, "Needs staff", triggers_handoff=True)
+
+    block = await build_customer_context_block(uuid4(), workspace_id=workspace_id)
+
+    assert "# Customer context" not in block
+    assert '"Needs staff"' in block
+
+
+async def test_no_customer_and_no_workspace_returns_empty_string(sqlite_repo):
+    assert await build_customer_context_block(None, workspace_id=None) == ""
+
+
+async def test_handoff_tags_come_first_and_are_never_cut(sqlite_repo):
+    customer = await _make_customer(sqlite_repo)
+    # Seeded first (oldest), then the shop adds many of its own tags.
+    await _make_tag(sqlite_repo, customer.workspace_id, "Cần nhân viên", triggers_handoff=True)
+    for i in range(23):
+        await _make_tag(sqlite_repo, customer.workspace_id, f"tag-{i:02d}")
+
+    block = await build_customer_context_block(customer.id)
+
+    catalog_lines = [line for line in block.splitlines() if line.startswith("- ")]
+    assert catalog_lines[0] == '- "Cần nhân viên" (triggers handoff)'
+    assert len(catalog_lines) == 21
+    assert catalog_lines[-1].strip() == "- …"

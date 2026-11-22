@@ -65,7 +65,11 @@ describe('CustomerTagSystemController (#174)', () => {
             expect(
                 mockConversationService.triggerHandoff
             ).not.toHaveBeenCalled();
-            expect(result).toEqual({ ok: true, triggeredHandoff: false });
+            expect(result).toEqual({
+                ok: true,
+                triggeredHandoff: false,
+                triggersHandoff: false,
+            });
         });
     });
 
@@ -106,12 +110,41 @@ describe('CustomerTagSystemController (#174)', () => {
                 'vi',
                 'tag-handoff'
             );
-            expect(result).toEqual({ ok: true, triggeredHandoff: true });
+            expect(result).toEqual({
+                ok: true,
+                triggeredHandoff: true,
+                triggersHandoff: true,
+            });
         });
     });
 
     // #288: an "Order placed" style tag tells the team without turning the
     // bot off.
+    describe('POST /apply with a handoff tag that cannot hand over', () => {
+        it('says the tag triggers handoff even though none fired, so the agent does not promise one', async () => {
+            mockCustomerTagService.findOneByWorkspaceAndName.mockResolvedValue({
+                id: 'tag-handoff',
+                name: 'Needs staff',
+                triggersHandoff: true,
+            });
+            mockConversationRepository.findOneById.mockResolvedValue(null);
+
+            const result = await controller.apply('cust-1', {
+                tagName: 'Needs staff',
+                conversationId: 'conv-gone',
+            } as any);
+
+            expect(
+                mockConversationService.triggerHandoff
+            ).not.toHaveBeenCalled();
+            expect(result).toEqual({
+                ok: true,
+                triggeredHandoff: false,
+                triggersHandoff: true,
+            });
+        });
+    });
+
     describe('POST /apply with a notifiesTeam=true tag', () => {
         it('assigns the tag and notifies the team with the tag name, without a handoff', async () => {
             mockCustomerTagService.findOneByWorkspaceAndName.mockResolvedValue({
@@ -148,7 +181,11 @@ describe('CustomerTagSystemController (#174)', () => {
             expect(
                 mockConversationService.triggerHandoff
             ).not.toHaveBeenCalled();
-            expect(result).toEqual({ ok: true, triggeredHandoff: false });
+            expect(result).toEqual({
+                ok: true,
+                triggeredHandoff: false,
+                triggersHandoff: false,
+            });
         });
 
         it('only hands off when the tag also triggers handoff (the handoff already notifies)', async () => {
