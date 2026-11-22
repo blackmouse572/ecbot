@@ -33,6 +33,10 @@ const CUSTOMER_READ = {
     subject: ENUM_POLICY_SUBJECT.CUSTOMER,
     action: [ENUM_POLICY_ACTION.READ],
 };
+const CONVERSATION_READ = {
+    subject: ENUM_POLICY_SUBJECT.CONVERSATION,
+    action: [ENUM_POLICY_ACTION.READ],
+};
 const CHATBOT_READ = {
     subject: ENUM_POLICY_SUBJECT.CHATBOT,
     action: [ENUM_POLICY_ACTION.READ],
@@ -40,7 +44,7 @@ const CHATBOT_READ = {
 
 const HANDLERS = [
     ['conversion', 'getConversion', [CUSTOMER_READ]],
-    ['marketing', 'getMarketing', [CUSTOMER_READ, CHATBOT_READ]],
+    ['marketing', 'getMarketing', [CUSTOMER_READ, CONVERSATION_READ]],
     ['bot', 'getBot', [CHATBOT_READ]],
     ['customers', 'getCustomers', [CUSTOMER_READ]],
 ] as const;

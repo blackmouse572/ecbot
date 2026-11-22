@@ -169,7 +169,7 @@ export const workspaceMemberControllerListMyInvitationsV1 = <ThrowOnError extend
 /**
  * Accept one of my invitations
  *
- * Joins the workspace with the invitation role (Member when it has none). 404 when the invitation is not a pending one sent to my verified email.
+ * Joins the workspace with the invitation role (Sales when it has none). 404 when the invitation is not a pending one sent to my verified email.
  */
 export const workspaceMemberControllerAcceptMyInvitationV1 = <ThrowOnError extends boolean = false>(options: Options<WorkspaceMemberControllerAcceptMyInvitationV1Data, ThrowOnError>): RequestResult<WorkspaceMemberControllerAcceptMyInvitationV1Responses, WorkspaceMemberControllerAcceptMyInvitationV1Errors, ThrowOnError> => (options.client ?? client).post<WorkspaceMemberControllerAcceptMyInvitationV1Responses, WorkspaceMemberControllerAcceptMyInvitationV1Errors, ThrowOnError>({
     responseType: 'json',

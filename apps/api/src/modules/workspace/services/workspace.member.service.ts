@@ -318,7 +318,7 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
     /**
      * The one accept path, shared by the emailed link (token), the in-app
      * Accept button (id) and the join code. Grants the invitation row's role,
-     * or the built-in Member role when it has none, and marks it accepted.
+     * or the built-in Sales role when it has none, and marks it accepted.
      */
     async acceptInvitation(
         invitation: InvitationEntity,
@@ -382,8 +382,8 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
         // The invitation row's role is the one to grant: it is set when the
         // invite is sent and changes when an owner edits it on the
         // Invitations page. The token's roleId is frozen at send time, so it
-        // would ignore that edit. No role: the built-in Member role (never
-        // Admin, which shares its type).
+        // would ignore that edit. No role: the built-in Sales role, looked up
+        // by name (every built-in role shares its type).
         const role = await this.roleService.findOne(
             invitation.role?.id
                 ? {
@@ -401,8 +401,8 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
         );
 
         if (!role && !invitation.role?.id) {
-            // The owner turned the built-in Member role off. Never fall back
-            // to Admin, which shares its type.
+            // The owner turned the built-in Sales role off. Never fall back
+            // to another built-in role, which shares its type.
             throw new ConflictException({
                 statusCode:
                     ENUM_WORKSPACE_STATUS_CODE_ERROR.DEFAULT_MEMBER_ROLE_MISSING,

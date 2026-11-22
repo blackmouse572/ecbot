@@ -726,6 +726,7 @@
             "CUSTOMER_DATA",
             "CONTACT_POINT",
             "CONVERSATION",
+            "MARKETING",
             "INVITATION",
             "CLIENT_CREDENTIAL",
             "SKILL",

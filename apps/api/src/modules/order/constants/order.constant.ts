@@ -18,8 +18,9 @@ export const ORDER_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export const ORDER_CODE_ATTEMPTS = 5;
 
 // Orders have their own permission, one action per verb like the customer
-// routes. Product groups are read with ORDER (Sales picks them on orders) and
-// changed with MARKETING (image, link and repurchase cycle feed campaigns).
+// routes. Product groups are read and created with ORDER (Sales picks or adds
+// them on an order) and changed with MARKETING (image, link and repurchase
+// cycle feed campaigns).
 export const ORDER_ABILITY_READ = {
     subject: ENUM_POLICY_SUBJECT.ORDER,
     action: [ENUM_POLICY_ACTION.READ],
@@ -35,10 +36,6 @@ export const ORDER_ABILITY_UPDATE = {
 export const ORDER_ABILITY_DELETE = {
     subject: ENUM_POLICY_SUBJECT.ORDER,
     action: [ENUM_POLICY_ACTION.DELETE],
-};
-export const PRODUCT_GROUP_ABILITY_CREATE = {
-    subject: ENUM_POLICY_SUBJECT.MARKETING,
-    action: [ENUM_POLICY_ACTION.CREATE],
 };
 export const PRODUCT_GROUP_ABILITY_UPDATE = {
     subject: ENUM_POLICY_SUBJECT.MARKETING,

@@ -21,9 +21,9 @@ export class WorkspaceMyInvitationResponseDto {
     inviterName: string;
 
     @ApiProperty({
-        example: 'Member',
+        example: 'Sales',
         description:
-            'The role granted on accept: the invitation role, or Member when it has none',
+            'The role granted on accept: the invitation role, or Sales when it has none',
     })
     @Expose()
     roleName: string;

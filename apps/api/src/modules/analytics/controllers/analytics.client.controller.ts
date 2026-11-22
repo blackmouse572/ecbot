@@ -79,7 +79,7 @@ export class AnalyticsClientController {
     @Response('analytics.workspace.marketing')
     @ClientCredentialProtected(
         { subject: ENUM_POLICY_SUBJECT.CUSTOMER, action: READ },
-        { subject: ENUM_POLICY_SUBJECT.CHATBOT, action: READ }
+        { subject: ENUM_POLICY_SUBJECT.CONVERSATION, action: READ }
     )
     @Get('/marketing')
     async marketing(

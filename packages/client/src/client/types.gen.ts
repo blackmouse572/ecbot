@@ -480,7 +480,7 @@ export type WorkspaceMyInvitationResponseDto = {
      */
     inviterName: string;
     /**
-     * The role granted on accept: the invitation role, or Member when it has none
+     * The role granted on accept: the invitation role, or Sales when it has none
      */
     roleName: string;
     expiresAt: string;

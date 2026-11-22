@@ -260,7 +260,7 @@ export class InvitationService implements IInvitationService {
         options?: IDatabaseFindOneOptions
     ): Promise<InvitationEntity> {
         // `role` is the mapped relation; assigning a bare `roleId` was never
-        // persisted. No role clears it, and accept then grants Member.
+        // persisted. No role clears it, and accept then grants Sales.
         const em = this.invitationRepository.getEntityManager();
         return this.invitationRepository.updateEntity(
             { id: id },

@@ -385,7 +385,7 @@ export enum ENUM_POLICY_SUBJECT {
 }
 ```
 
-`manage` matches every action, so an action that a role holding `manage X` must not get needs its own subject, not a new action on `X`. Example: the default workspace Member role manages `CUSTOMER`, while exporting (`READ`) and permanently erasing (`DELETE`) a customer's data require `CUSTOMER_DATA`, which only the owner and the default Admin role hold. Role permissions are stored per role row, so a new workspace subject also needs a data migration for existing roles (see `20261009120000_grant_customer_data_permission`).
+`manage` matches every action, so an action that a role holding `manage X` must not get needs its own subject, not a new action on `X`. Example: the default workspace Sales role manages `CUSTOMER`, while exporting (`READ`) and permanently erasing (`DELETE`) a customer's data require `CUSTOMER_DATA`, which only the owner and the default Manager role hold. Role permissions are stored per role row, so a new workspace subject also needs a data migration for existing roles (see `20261009120000_grant_customer_data_permission`).
 
 ### Policy Implementation Examples
 

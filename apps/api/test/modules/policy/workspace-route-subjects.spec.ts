@@ -13,6 +13,7 @@ import { MarketingSettingsWorkspaceController } from '../../../src/modules/marke
 import { MarketingSettingsClientController } from '../../../src/modules/marketing/controllers/marketing-settings.client.controller';
 import { MarketingSavedAudienceClientController } from '../../../src/modules/marketing/controllers/marketing-saved-audience.client.controller';
 import { CustomerMarketingBackfillWorkspaceController } from '../../../src/modules/customer/controllers/customer-marketing-backfill.workspace.controller';
+import { AnalyticsWorkspaceController } from '../../../src/modules/analytics/controllers/analytics.workspace.controller';
 import { TrackedLinkWorkspaceController } from '../../../src/modules/customer/controllers/tracked-link.workspace.controller';
 
 // The global setup swaps these decorators for no-ops; record what each route
@@ -99,29 +100,45 @@ describe('workspace route subjects', () => {
         }
     });
 
-    // Sales picks product groups on orders and filters customers by source,
-    // so reads stay open to them; changing either is marketing work.
+    // Sales picks or adds product groups on orders and filters customers by
+    // source, so those stay open to them; changing either is marketing work.
     it.each([
         [
             'product groups',
             ws(ProductGroupWorkspaceController),
             ENUM_POLICY_SUBJECT.ORDER,
+            ['read', 'create'],
         ],
         [
             'customer sources',
             ws(TrackedLinkWorkspaceController),
             ENUM_POLICY_SUBJECT.CUSTOMER,
+            ['read'],
         ],
-    ])('%s read with %s, change with MARKETING', (_, handlers, readSubject) => {
-        expect(handlers.length).toBeGreaterThan(0);
-        for (const h of handlers) {
-            const isRead = h.actions.every(a => a === 'read');
-            expect({ name: h.name, subjects: h.subjects }).toEqual({
-                name: h.name,
-                subjects: [
-                    isRead ? readSubject : ENUM_POLICY_SUBJECT.MARKETING,
-                ],
-            });
+    ])(
+        '%s use %s for %j, MARKETING for the rest',
+        (_, handlers, openSubject, openActions) => {
+            expect(handlers.length).toBeGreaterThan(0);
+            for (const h of handlers) {
+                const open = h.actions.every(a => openActions.includes(a));
+                expect({ name: h.name, subjects: h.subjects }).toEqual({
+                    name: h.name,
+                    subjects: [
+                        open ? openSubject : ENUM_POLICY_SUBJECT.MARKETING,
+                    ],
+                });
+            }
         }
+    );
+
+    // The Marketing role views conversations but not agents.
+    it('marketing analytics needs CUSTOMER and CONVERSATION read', () => {
+        const marketing = ws(AnalyticsWorkspaceController).find(h =>
+            h.name.endsWith('.marketing')
+        );
+        expect(marketing?.subjects).toEqual([
+            ENUM_POLICY_SUBJECT.CUSTOMER,
+            ENUM_POLICY_SUBJECT.CONVERSATION,
+        ]);
     });
 });

@@ -48,8 +48,8 @@ import {
     ResponsePaging,
 } from 'src/common/response/decorators/response.decorator';
 import {
+    ORDER_ABILITY_CREATE,
     ORDER_ABILITY_READ,
-    PRODUCT_GROUP_ABILITY_CREATE,
     PRODUCT_GROUP_ABILITY_DELETE,
     PRODUCT_GROUP_ABILITY_UPDATE,
 } from '../constants/order.constant';
@@ -133,7 +133,7 @@ export class ProductGroupWorkspaceController {
 
     @ProductGroupWorkspaceCreateDoc()
     @Response('order.productGroup.workspace.create')
-    @WorkspaceScopedProtected(PRODUCT_GROUP_ABILITY_CREATE)
+    @WorkspaceScopedProtected(ORDER_ABILITY_CREATE)
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()

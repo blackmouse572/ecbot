@@ -257,7 +257,7 @@ export class CustomerWorkspaceController {
 
     @CustomerWorkspaceEraseDoc()
     @Response('customer.workspace.erase')
-    // CUSTOMER_DATA, not CUSTOMER: the Member role manages CUSTOMER, and
+    // CUSTOMER_DATA, not CUSTOMER: the Sales role manages CUSTOMER, and
     // permanent erasure is for the workspace owner and admins. As a DELETE it
     // is also refused to an admin impersonating the user (read-only mode).
     @WorkspaceScopedProtected({
