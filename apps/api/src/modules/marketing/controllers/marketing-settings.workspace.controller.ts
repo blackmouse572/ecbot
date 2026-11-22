@@ -43,7 +43,7 @@ export class MarketingSettingsWorkspaceController {
     @MarketingSettingsGetDoc('workspace')
     @Response('marketingSettings.get')
     @WorkspacePolicyAbilityProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.READ],
     })
     @UserProtected()
@@ -59,7 +59,7 @@ export class MarketingSettingsWorkspaceController {
     @MarketingSettingsUpdateDoc('workspace')
     @Response('marketingSettings.update')
     @WorkspacePolicyAbilityProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.UPDATE],
     })
     @UserProtected()

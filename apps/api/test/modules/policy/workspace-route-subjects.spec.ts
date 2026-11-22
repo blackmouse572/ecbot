@@ -9,6 +9,8 @@ import { OrderWorkspaceController } from '../../../src/modules/order/controllers
 import { ProductGroupWorkspaceController } from '../../../src/modules/order/controllers/product-group.workspace.controller';
 import { MarketingOverviewWorkspaceController } from '../../../src/modules/marketing/controllers/marketing-overview.workspace.controller';
 import { MarketingAudienceWorkspaceController } from '../../../src/modules/marketing/controllers/marketing-audience.workspace.controller';
+import { MarketingSettingsWorkspaceController } from '../../../src/modules/marketing/controllers/marketing-settings.workspace.controller';
+import { MarketingSettingsClientController } from '../../../src/modules/marketing/controllers/marketing-settings.client.controller';
 import { MarketingSavedAudienceClientController } from '../../../src/modules/marketing/controllers/marketing-saved-audience.client.controller';
 import { CustomerMarketingBackfillWorkspaceController } from '../../../src/modules/customer/controllers/customer-marketing-backfill.workspace.controller';
 import { TrackedLinkWorkspaceController } from '../../../src/modules/customer/controllers/tracked-link.workspace.controller';
@@ -84,6 +86,8 @@ describe('workspace route subjects', () => {
             'client saved audiences',
             client(MarketingSavedAudienceClientController),
         ],
+        ['send settings', ws(MarketingSettingsWorkspaceController)],
+        ['client send settings', client(MarketingSettingsClientController)],
         [
             'classifier backfill',
             ws(CustomerMarketingBackfillWorkspaceController),

@@ -39,7 +39,7 @@ export class MarketingSettingsClientController {
     @MarketingSettingsGetDoc('client')
     @Response('marketingSettings.get')
     @ClientCredentialProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.READ],
     })
     @Get('/')
@@ -52,7 +52,7 @@ export class MarketingSettingsClientController {
     @MarketingSettingsUpdateDoc('client')
     @Response('marketingSettings.update')
     @ClientCredentialProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.UPDATE],
     })
     @Patch('/')

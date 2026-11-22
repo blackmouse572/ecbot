@@ -36,7 +36,7 @@ describe('MarketingSettingsClientController', () => {
     it.each([
         ['get', ENUM_POLICY_ACTION.READ],
         ['update', ENUM_POLICY_ACTION.UPDATE],
-    ] as const)('%s is guarded and needs CUSTOMER %s', (handler, action) => {
+    ] as const)('%s is guarded and needs MARKETING %s', (handler, action) => {
         const method = MarketingSettingsClientController.prototype[handler];
         expect(Reflect.getMetadata(GUARDS_METADATA, method)).toEqual([
             ClientCredentialGuard,
@@ -48,7 +48,7 @@ describe('MarketingSettingsClientController', () => {
                 method
             )
         ).toEqual([
-            { subject: ENUM_POLICY_SUBJECT.CUSTOMER, action: [action] },
+            { subject: ENUM_POLICY_SUBJECT.MARKETING, action: [action] },
         ]);
     });
 
