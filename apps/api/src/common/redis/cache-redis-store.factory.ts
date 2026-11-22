@@ -9,6 +9,9 @@ const logger = new Logger('CacheRedis');
  * reconnecting from its node-redis client but not `error`, so a socket reset
  * (managed Redis dropping an idle TLS connection) went unhandled and Node
  * exited the process. With a listener, node-redis just reconnects.
+ *
+ * The store also swallows a failed get/set and emits `error` on itself, so
+ * the same listener goes there too, or a failed cache write leaves no log.
  */
 export function createCacheRedisStore(
     configService: ConfigService
@@ -23,10 +26,12 @@ export function createCacheRedisStore(
         username: configService.get<string>('redis.cached.username'),
         password: configService.get<string>('redis.cached.password'),
     });
-    store.client.on('error', (error: NodeJS.ErrnoException) => {
+    const onError = (error: NodeJS.ErrnoException) => {
         logger.warn(
-            `Cache Redis connection error (${error.code ?? 'unknown'}): ${error.message}`
+            `Cache Redis error (${error.code ?? 'unknown'}): ${error.message}`
         );
-    });
+    };
+    store.client.on('error', onError);
+    store.on('error', onError);
     return store;
 }
