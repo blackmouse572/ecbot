@@ -109,6 +109,12 @@ describe('OAuthPlatformFactory', () => {
         );
     });
 
+    it('returns the Zalo service for ZALO_PAGE, so its token refreshes', () => {
+        expect(factory.getService(ENUM_ACCOUNT_TYPE.ZALO_PAGE)).toBe(
+            mockZaloService
+        );
+    });
+
     it('returns the TikTok Shop service for TIKTOK_SHOP', () => {
         expect(factory.getService(ENUM_ACCOUNT_TYPE.TIKTOK_SHOP)).toBe(
             mockTiktokService
