@@ -247,14 +247,23 @@ describe("AIChatCard suggested replies", () => {
         transport={transport}
         greeting="Xin chào!"
         suggestedReplies={["Mình muốn đặt lịch", "Cho mình xem bảng giá"]}
+        renderInput={<textarea aria-label="Message" />}
       />
     </TooltipProvider>
   );
 
-  it("offers the replies under the greeting and sends the one tapped", () => {
+  it("offers the replies under the input and sends the one tapped", () => {
     chat.messages = [];
     chat.sendMessage.mockClear();
     render(card);
+
+    expect(
+      screen
+        .getByRole("textbox", { name: "Message" })
+        .compareDocumentPosition(
+          screen.getByRole("button", { name: "Mình muốn đặt lịch" }),
+        ),
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 
     fireEvent.click(screen.getByRole("button", { name: "Mình muốn đặt lịch" }));
     expect(chat.sendMessage).toHaveBeenCalledWith({

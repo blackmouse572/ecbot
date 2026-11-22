@@ -68,12 +68,10 @@ function AIChatMessages({
   audience,
   showKnowledgeSources,
   greeting,
-  suggestedReplies,
 }: {
   audience: ChatAudience;
   showKnowledgeSources?: boolean;
   greeting?: string;
-  suggestedReplies?: string[];
 }) {
   const internals = audience === "owner";
   const { messages, status, error } = useAIChat();
@@ -92,17 +90,6 @@ function AIChatMessages({
               <MessageResponse>{greeting}</MessageResponse>
             </MessageContent>
           </Message>
-        </MessageScrollerItem>
-      )}
-      {greeting && !!suggestedReplies?.length && !displayMessages.length && (
-        <MessageScrollerItem
-          key="suggested-replies"
-          messageId="suggested-replies"
-        >
-          <ChatSuggestedReplies
-            replies={suggestedReplies}
-            enterClassName={BUBBLE_ENTER}
-          />
         </MessageScrollerItem>
       )}
       {displayMessages.map((message, index) => {
@@ -307,7 +294,7 @@ export type AIChatCardProps = {
    */
   greeting?: string;
   /**
-   * Quick replies under the greeting until the first message. Tapping one
+   * Quick replies under the input until the first message. Tapping one
    * sends it. Shown only with a greeting.
    */
   suggestedReplies?: string[];
@@ -360,13 +347,18 @@ export function AIChatCard(props: AIChatCardProps) {
                 audience={audience}
                 showKnowledgeSources={showKnowledgeSources}
                 greeting={greeting}
-                suggestedReplies={suggestedReplies}
               />
             </MessageScrollerContent>
           </MessageScrollerViewport>
           <MessageScrollerButton />
         </MessageScroller>
         {renderInput}
+        {greeting && !!suggestedReplies?.length && (
+          <ChatSuggestedReplies
+            replies={suggestedReplies}
+            enterClassName={BUBBLE_ENTER}
+          />
+        )}
       </Container>
     </AIChatProvider>
   );
