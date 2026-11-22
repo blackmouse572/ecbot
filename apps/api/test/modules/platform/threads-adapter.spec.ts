@@ -292,6 +292,113 @@ describe('ThreadsPlatformAdapter.sendMessage', () => {
         expect(post.mock.calls[2][1].get('text')).toBe(vi);
     });
 
+    // What Threads answers when the reply target was deleted or filtered after
+    // its webhook fired (code 100, subcode 33).
+    const graphError = (code: number, subcode?: number) =>
+        Object.assign(new Error('Request failed with status code 400'), {
+            isAxiosError: true,
+            response: {
+                status: 400,
+                data: {
+                    error: {
+                        message: 'The requested resource does not exist',
+                        code,
+                        error_subcode: subcode,
+                    },
+                },
+            },
+        });
+    const vanished = () => graphError(100, 33);
+
+    // A reply under one of our posts: the root is ours, the replied-to post
+    // may be another customer's comment.
+    const latest = {
+        externalId: 'R9',
+        raw: {
+            field: 'replies',
+            replied_to: { id: 'PARENT' },
+            root_post: { id: 'ROOT', owner_id: ME },
+        },
+    };
+
+    it("falls back to our own root post when a reply's target is gone", async () => {
+        const post = jest
+            .fn()
+            .mockRejectedValueOnce(vanished()) // R9
+            .mockResolvedValueOnce({ data: { id: 'C1' } }) // ROOT
+            .mockResolvedValueOnce({ data: { id: 'PUB1' } });
+        const adapter = makeAdapter(
+            { axiosRef: { post } },
+            { findLatestInboundBySender: jest.fn().mockResolvedValue(latest) }
+        );
+
+        const res = await adapter.sendMessage(ACCOUNT, 'lan.nguyen', {
+            content: { kind: 'text', text: 'Dạ còn ạ' },
+            fallbackText: 'Dạ còn ạ',
+        });
+
+        expect(res).toEqual({ externalId: 'PUB1' });
+        expect(
+            post.mock.calls.slice(0, 2).map(c => c[1].get('reply_to_id'))
+        ).toEqual(['R9', 'ROOT']);
+        expect(post.mock.calls[2][1].get('creation_id')).toBe('C1');
+    });
+
+    // Never answer in public under someone else's post: a vanished mention
+    // lives in the customer's own thread.
+    it.each([
+        [
+            'a mention',
+            {
+                field: 'mentions',
+                replied_to: { id: 'THEIRS' },
+                root_post: { id: 'THEIR_ROOT', username: 'lan.nguyen' },
+            },
+        ],
+        [
+            "a reply under someone else's post",
+            {
+                field: 'replies',
+                replied_to: { id: 'THEIRS' },
+                root_post: { id: 'THEIR_ROOT', owner_id: 'someone-else' },
+            },
+        ],
+    ])('does not fall back for %s', async (_, raw) => {
+        const post = jest.fn().mockRejectedValue(vanished());
+        const adapter = makeAdapter(
+            { axiosRef: { post } },
+            {
+                findLatestInboundBySender: jest
+                    .fn()
+                    .mockResolvedValue({ externalId: 'R9', raw }),
+            }
+        );
+
+        await expect(
+            adapter.sendMessage(ACCOUNT, 'lan.nguyen', {
+                content: { kind: 'text', text: 'hi' },
+                fallbackText: 'hi',
+            })
+        ).rejects.toMatchObject({ status: 502 });
+        expect(post).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not retry other Threads errors', async () => {
+        const post = jest.fn().mockRejectedValue(graphError(190));
+        const adapter = makeAdapter(
+            { axiosRef: { post } },
+            { findLatestInboundBySender: jest.fn().mockResolvedValue(latest) }
+        );
+
+        await expect(
+            adapter.sendMessage(ACCOUNT, 'lan.nguyen', {
+                content: { kind: 'text', text: 'hi' },
+                fallbackText: 'hi',
+            })
+        ).rejects.toMatchObject({ status: 502 });
+        expect(post).toHaveBeenCalledTimes(1);
+    });
+
     it('fails without a post to reply to', async () => {
         const post = jest.fn();
         const adapter = makeAdapter(
