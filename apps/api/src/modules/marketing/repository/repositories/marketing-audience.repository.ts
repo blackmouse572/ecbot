@@ -12,14 +12,17 @@ import {
 import {
     IMarketingAudience,
     IMarketingAudienceCondition,
+    IMarketingAudienceWindow,
     IMarketingAudiencePreviewRow,
     IMarketingSql,
 } from '../../interfaces/marketing-audience.interface';
 import {
+    CAPPED,
     K,
     LIVE,
     P,
     PAUSED,
+    RESTING,
     S,
     TODO_CONDITIONS,
     TODO_DEFERRED,
@@ -28,8 +31,20 @@ import {
 } from '../marketing.sql';
 
 // Condition values are always bound through `?`; only enum values and
-// column names are inlined.
-const WINDOW = `w AS (SELECT ?::uuid AS ws, ?::timestamptz AS now)`;
+// column names are inlined. The send rules ride along for CAPPED and RESTING.
+const WINDOW = `w AS (
+    SELECT ?::uuid AS ws, ?::timestamptz AS now, ?::date AS today,
+           ?::int AS cap, ?::int AS rest_after, ?::int AS rest_days
+)`;
+
+const windowParams = (w: IMarketingAudienceWindow): unknown[] => [
+    w.workspaceId,
+    w.now.toISOString(),
+    w.today,
+    w.rules.maxPer30Days,
+    w.rules.restAfter,
+    w.rules.restDays,
+];
 
 const CONFIRMED_ORDERS = `FROM orders o
     WHERE o.customer_id = l.id
@@ -194,6 +209,8 @@ const picked = (audience: IMarketingAudience): IMarketingSql => {
                    WHEN l.hostile THEN '${X.HOSTILE}'
                    WHEN ${PAUSED} THEN '${X.PAUSED}'
                    ${deferred ? `WHEN ${deferred.sql} THEN '${X.DEFERRED}'` : ''}
+                   WHEN ${CAPPED} THEN '${X.CAPPED}'
+                   WHEN ${RESTING} THEN '${X.RESTING}'
                END AS reason
         FROM live l
         CROSS JOIN w
@@ -218,11 +235,10 @@ export class MarketingAudienceRepository extends DatabaseRepository<CustomerEnti
 
     /** Matching customers by exclusion reason, and reached ones by channel. */
     async preview(
-        workspaceId: string,
-        audience: IMarketingAudience,
-        now: Date
+        w: IMarketingAudienceWindow,
+        audience: IMarketingAudience
     ): Promise<IMarketingAudiencePreviewRow> {
-        const window = [workspaceId, now.toISOString()];
+        const window = windowParams(w);
         const p = picked(audience);
         const [reasons, channels] = await Promise.all([
             this.run(
@@ -256,13 +272,12 @@ export class MarketingAudienceRepository extends DatabaseRepository<CustomerEnti
 
     /** One page of reached customers, latest message first, and their total. */
     async reached(
-        workspaceId: string,
+        w: IMarketingAudienceWindow,
         audience: IMarketingAudience,
-        now: Date,
         limit: number,
         offset: number
     ): Promise<{ ids: string[]; total: number }> {
-        const window = [workspaceId, now.toISOString()];
+        const window = windowParams(w);
         const p = picked(audience);
         const [rows, [count]] = await Promise.all([
             this.run(

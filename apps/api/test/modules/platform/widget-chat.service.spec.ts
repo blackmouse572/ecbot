@@ -1,3 +1,4 @@
+import { optOutReplyText } from 'src/modules/customer/utils/customer-marketing-opt-out.util';
 import { memoryStub } from '../../helpers/memory-stub';
 import { TurnContextService } from '@app/modules/platform/services/turn-context.service';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
@@ -74,6 +75,9 @@ function setup(overrides: Record<string, any> = {}) {
         recordInbound: jest.fn(async () => ({
             optedOut: overrides.optedOut ?? false,
         })),
+        stopReplyText: jest.fn(async (_ws: string, chatbot: any) =>
+            optOutReplyText(chatbot)
+        ),
     };
     const attribution = {
         recordArrival: jest.fn(async () => ({ greeting: null })),
@@ -713,6 +717,10 @@ describe('WidgetChatService attachments', () => {
                 messageId: 'msg-in',
             });
             expect(chatbotAIService.streamChat).not.toHaveBeenCalled();
+            expect(customerMarketing.stopReplyText).toHaveBeenCalledWith(
+                'ws-1',
+                expect.anything()
+            );
             expect(
                 messageRepository.insertPendingOutbound
             ).toHaveBeenCalledWith(
