@@ -393,3 +393,15 @@ async def test_handoff_tags_come_first_and_are_never_cut(sqlite_repo):
     assert catalog_lines[0] == '- "Cần nhân viên" (triggers handoff)'
     assert len(catalog_lines) == 21
     assert catalog_lines[-1].strip() == "- …"
+
+
+async def test_catalog_keeps_a_hard_cap_even_with_many_handoff_tags(sqlite_repo):
+    customer = await _make_customer(sqlite_repo)
+    for i in range(25):
+        await _make_tag(sqlite_repo, customer.workspace_id, f"handoff-{i:02d}", triggers_handoff=True)
+
+    block = await build_customer_context_block(customer.id)
+
+    catalog_lines = [line for line in block.splitlines() if line.startswith("- ")]
+    assert len(catalog_lines) == 21
+    assert catalog_lines[-1].strip() == "- …"
