@@ -31,7 +31,7 @@ export class MarketingOverviewWorkspaceController {
     @MarketingOverviewWorkspaceGetDoc()
     @Response('marketingOverview.workspace.get')
     @WorkspacePolicyAbilityProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.READ],
     })
     @UserProtected()

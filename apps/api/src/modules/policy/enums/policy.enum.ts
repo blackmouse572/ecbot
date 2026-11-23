@@ -29,12 +29,16 @@ export enum ENUM_POLICY_SUBJECT {
     CUSTOMER = 'CUSTOMER',
     /**
      * A customer's personal data as a whole: export (READ) and permanent
-     * erasure (DELETE). Separate from CUSTOMER so the Member role's
+     * erasure (DELETE). Separate from CUSTOMER so the Sales role's
      * `manage CUSTOMER` does not cover it.
      */
     CUSTOMER_DATA = 'CUSTOMER_DATA',
     CONTACT_POINT = 'CONTACT_POINT',
     CONVERSATION = 'CONVERSATION',
+    // Marketing tools for shops: overview, audiences, sends, customer
+    // sources and product groups (#502-#507). Split from CUSTOMER so the
+    // Sales role can work customers without them.
+    MARKETING = 'MARKETING',
     INVITATION = 'INVITATION',
     CLIENT_CREDENTIAL = 'CLIENT_CREDENTIAL',
     SKILL = 'SKILL',

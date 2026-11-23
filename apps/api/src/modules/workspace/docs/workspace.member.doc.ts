@@ -56,7 +56,7 @@ export function WorkspaceMyInvitationAcceptDoc(): MethodDecorator {
         Doc({
             summary: 'Accept one of my invitations',
             description:
-                'Joins the workspace with the invitation role (Member when it has none). 404 when the invitation is not a pending one sent to my verified email.',
+                'Joins the workspace with the invitation role (Sales when it has none). 404 when the invitation is not a pending one sent to my verified email.',
         }),
         DocAuth({ jwtAccessToken: true }),
         DocGuard({ role: true }),

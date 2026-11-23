@@ -47,7 +47,7 @@ describe('MarketingSavedAudienceClientController', () => {
         ['create', ENUM_POLICY_ACTION.CREATE],
         ['update', ENUM_POLICY_ACTION.UPDATE],
         ['delete', ENUM_POLICY_ACTION.DELETE],
-    ] as const)('%s is guarded and needs CUSTOMER %s', (handler, action) => {
+    ] as const)('%s is guarded and needs MARKETING %s', (handler, action) => {
         const method =
             MarketingSavedAudienceClientController.prototype[handler];
         expect(Reflect.getMetadata(GUARDS_METADATA, method)).toEqual([
@@ -60,7 +60,7 @@ describe('MarketingSavedAudienceClientController', () => {
                 method
             )
         ).toEqual([
-            { subject: ENUM_POLICY_SUBJECT.CUSTOMER, action: [action] },
+            { subject: ENUM_POLICY_SUBJECT.MARKETING, action: [action] },
         ]);
     });
 

@@ -118,7 +118,7 @@ describe('Workspace creation — customer-tag seeding (contract)', () => {
         expect(CUSTOMER_TAG_DEFAULTS.en).toHaveLength(12);
     });
 
-    it('creates default workspace roles with CUSTOMER manage permission', async () => {
+    it('creates the built-in workspace roles in the same session', async () => {
         await service.create(owner, dto);
 
         expect(roleService.createManyWithWorkspace).toHaveBeenCalledWith(
@@ -126,16 +126,6 @@ describe('Workspace creation — customer-tag seeding (contract)', () => {
             expect.objectContaining({ id: 'ws-1' }),
             { em: session }
         );
-        for (const role of WORKSPACE_DEFAULT_MEMBER_ROLES) {
-            expect(role.permissions).toEqual(
-                expect.arrayContaining([
-                    {
-                        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
-                        action: [ENUM_POLICY_ACTION.MANAGE],
-                    },
-                ])
-            );
-        }
     });
 
     it('seeds every CUSTOMER_TAG_DEFAULTS entry with the correct (name, emoji, triggersHandoff)', async () => {

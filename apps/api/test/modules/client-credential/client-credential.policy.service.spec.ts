@@ -19,7 +19,9 @@ function build({
     roleIds = [{ id: 'role-1' }],
     role = {
         isActive: true,
-        permissions: WORKSPACE_DEFAULT_MEMBER_ROLES[0].permissions,
+        permissions: WORKSPACE_DEFAULT_MEMBER_ROLES.find(
+            r => r.name === 'Sales'
+        )!.permissions,
         type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
     } as Record<string, unknown> | null,
 } = {}) {
@@ -64,21 +66,13 @@ describe('ClientCredentialPolicyService.findAbilities', () => {
         const { findAbilities } = build();
 
         await expect(findAbilities()).resolves.toEqual([
-            { subject: ENUM_POLICY_SUBJECT.CHATBOT, action: ALL_ACTIONS },
-            { subject: ENUM_POLICY_SUBJECT.RAG, action: ALL_ACTIONS },
             {
-                subject: ENUM_POLICY_SUBJECT.KNOWLEDGE_BASE,
-                action: ALL_ACTIONS,
-            },
-            {
-                subject: ENUM_POLICY_SUBJECT.TOOL,
+                subject: ENUM_POLICY_SUBJECT.CHATBOT,
                 action: [ENUM_POLICY_ACTION.READ],
             },
             { subject: ENUM_POLICY_SUBJECT.CUSTOMER, action: ALL_ACTIONS },
-            {
-                subject: ENUM_POLICY_SUBJECT.SKILL,
-                action: [ENUM_POLICY_ACTION.READ],
-            },
+            { subject: ENUM_POLICY_SUBJECT.CONVERSATION, action: ALL_ACTIONS },
+            { subject: ENUM_POLICY_SUBJECT.ORDER, action: ALL_ACTIONS },
         ]);
     });
 
@@ -114,7 +108,9 @@ describe('ClientCredentialPolicyService.findAbilities', () => {
         const { findAbilities } = build({
             role: {
                 isActive: false,
-                permissions: WORKSPACE_DEFAULT_MEMBER_ROLES[0].permissions,
+                permissions: WORKSPACE_DEFAULT_MEMBER_ROLES.find(
+                    r => r.name === 'Sales'
+                )!.permissions,
                 type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
             },
         });

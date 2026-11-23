@@ -1,6 +1,5 @@
 import {
     ALLOWED_ADMIN_WORKSPACE_POLICY_SUBJECT,
-    ALLOWED_MEMBER_WORKSPACE_POLICY_SUBJECT,
     ALLOWED_WORKSPACE_POLICY_SUBJECT,
 } from '../../../../src/modules/role/constants/role.list.constant';
 import { WORKSPACE_DEFAULT_MEMBER_ROLES } from '../../../../src/modules/workspace/constants/workspace.constant';
@@ -11,26 +10,13 @@ import {
 import { PolicyAbilityFactory } from '../../../../src/modules/policy/factories/policy.factory';
 
 describe('workspace customer permissions', () => {
-    it('includes CUSTOMER in every default workspace role permission catalog', () => {
+    it('includes CUSTOMER in the owner and Manager catalogs', () => {
         expect(ALLOWED_WORKSPACE_POLICY_SUBJECT).toContain(
-            ENUM_POLICY_SUBJECT.CUSTOMER
-        );
-        expect(ALLOWED_MEMBER_WORKSPACE_POLICY_SUBJECT).toContain(
             ENUM_POLICY_SUBJECT.CUSTOMER
         );
         expect(ALLOWED_ADMIN_WORKSPACE_POLICY_SUBJECT).toContain(
             ENUM_POLICY_SUBJECT.CUSTOMER
         );
-        for (const role of WORKSPACE_DEFAULT_MEMBER_ROLES) {
-            expect(role.permissions).toEqual(
-                expect.arrayContaining([
-                    {
-                        action: ['manage'],
-                        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
-                    },
-                ])
-            );
-        }
     });
 });
 
@@ -45,8 +31,8 @@ describe('customer data rights permissions', () => {
                 .permissions as any
         );
 
-    it('refuses export and erase to the default Member role', () => {
-        const member = abilityOf('Member');
+    it('refuses export and erase to the default Sales role', () => {
+        const member = abilityOf('Sales');
 
         expect(
             member.can(ENUM_POLICY_ACTION.DELETE, ENUM_POLICY_SUBJECT.CUSTOMER)
@@ -65,8 +51,8 @@ describe('customer data rights permissions', () => {
         ).toBe(false);
     });
 
-    it('allows export and erase to the default Admin role', () => {
-        const admin = abilityOf('Admin');
+    it('allows export and erase to the default Manager role', () => {
+        const admin = abilityOf('Manager');
 
         expect(
             admin.can(
@@ -84,9 +70,6 @@ describe('customer data rights permissions', () => {
 
     it('is in the owner catalog, so new owner roles hold it', () => {
         expect(ALLOWED_WORKSPACE_POLICY_SUBJECT).toContain(
-            ENUM_POLICY_SUBJECT.CUSTOMER_DATA
-        );
-        expect(ALLOWED_MEMBER_WORKSPACE_POLICY_SUBJECT).not.toContain(
             ENUM_POLICY_SUBJECT.CUSTOMER_DATA
         );
     });

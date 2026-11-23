@@ -54,7 +54,7 @@ describe('WorkspaceInvitationAcceptService', () => {
         memberService.getUserWorkspaces.mockResolvedValue([]);
         memberService.acceptInvitation.mockResolvedValue({
             workspace,
-            role: { id: 'role-member', name: 'Member' },
+            role: { id: 'role-sales', name: 'Sales' },
         });
     });
 
@@ -90,12 +90,12 @@ describe('WorkspaceInvitationAcceptService', () => {
     });
 
     describe('mapMine', () => {
-        it('falls back to Member for a role-less invitation and trims the inviter', () => {
+        it('falls back to Sales for a role-less invitation and trims the inviter', () => {
             expect(service.mapMine(invitation)).toEqual({
                 id: 'inv-1',
                 workspace,
                 inviterName: 'Lan',
-                roleName: 'Member',
+                roleName: 'Sales',
                 expiresAt: invitation.expiresAt,
             });
         });
@@ -166,7 +166,7 @@ describe('WorkspaceInvitationAcceptService', () => {
             expect(service.mapAccepted(result)).toEqual({
                 joined: true,
                 workspace,
-                roleName: 'Member',
+                roleName: 'Sales',
             });
         });
 
@@ -232,7 +232,7 @@ describe('WorkspaceInvitationAcceptService', () => {
                 'me@mail.com',
                 { workspace: 'ws-1' }
             );
-            expect(result?.role.name).toBe('Member');
+            expect(result?.role.name).toBe('Sales');
             expect(tx.nativeUpdate).toHaveBeenCalled();
         });
 

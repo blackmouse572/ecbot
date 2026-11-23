@@ -86,7 +86,7 @@ export class MarketingAudienceWorkspaceController {
     @MarketingSavedAudienceListDoc('workspace')
     @ResponsePaging('marketingAudience.saved.list')
     @WorkspacePolicyAbilityProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.READ],
     })
     @UserProtected()
@@ -123,7 +123,7 @@ export class MarketingAudienceWorkspaceController {
     @MarketingSavedAudienceCreateDoc('workspace')
     @Response('marketingAudience.saved.create')
     @WorkspacePolicyAbilityProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.CREATE],
     })
     @UserProtected()
@@ -143,7 +143,7 @@ export class MarketingAudienceWorkspaceController {
     @MarketingSavedAudienceUpdateDoc('workspace')
     @Response('marketingAudience.saved.update')
     @WorkspacePolicyAbilityProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.UPDATE],
     })
     @UserProtected()
@@ -164,7 +164,7 @@ export class MarketingAudienceWorkspaceController {
     @MarketingSavedAudienceDeleteDoc('workspace')
     @Response('marketingAudience.saved.delete')
     @WorkspacePolicyAbilityProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.DELETE],
     })
     @UserProtected()
@@ -184,7 +184,7 @@ export class MarketingAudienceWorkspaceController {
     @MarketingAudienceWorkspacePreviewDoc()
     @Response('marketingAudience.workspace.preview')
     @WorkspacePolicyAbilityProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.READ],
     })
     @UserProtected()
@@ -204,7 +204,7 @@ export class MarketingAudienceWorkspaceController {
     @MarketingAudienceWorkspaceCustomersDoc()
     @ResponsePaging('marketingAudience.workspace.customers')
     @WorkspacePolicyAbilityProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.READ],
     })
     @UserProtected()

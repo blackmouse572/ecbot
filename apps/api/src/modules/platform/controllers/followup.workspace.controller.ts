@@ -53,7 +53,7 @@ export class FollowupWorkspaceController {
     @FollowupWorkspaceListDoc()
     @ResponsePaging('followup.workspace.list')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.READ],
     })
     @UserProtected()
@@ -102,7 +102,7 @@ export class FollowupWorkspaceController {
     @FollowupWorkspaceCancelDoc()
     @Response('followup.workspace.cancel')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CHATBOT,
+        subject: ENUM_POLICY_SUBJECT.CONVERSATION,
         action: [ENUM_POLICY_ACTION.DELETE],
     })
     @UserProtected()

@@ -160,7 +160,7 @@ export class TrackedLinkWorkspaceController {
     @TrackedLinkWorkspaceCreateDoc()
     @Response('trackedLink.workspace.create')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.CREATE],
     })
     @UserProtected()
@@ -180,7 +180,7 @@ export class TrackedLinkWorkspaceController {
     @TrackedLinkWorkspaceCreateChildDoc()
     @Response('trackedLink.workspace.createChild')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.CREATE],
     })
     @UserProtected()
@@ -205,7 +205,7 @@ export class TrackedLinkWorkspaceController {
     @TrackedLinkWorkspaceUpdateDoc()
     @Response('trackedLink.workspace.update')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.UPDATE],
     })
     @UserProtected()
@@ -230,7 +230,7 @@ export class TrackedLinkWorkspaceController {
     @TrackedLinkWorkspaceDeleteDoc()
     @Response('trackedLink.workspace.delete')
     @WorkspaceScopedProtected({
-        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
         action: [ENUM_POLICY_ACTION.DELETE],
     })
     @UserProtected()

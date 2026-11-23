@@ -31,8 +31,8 @@ const READ = [ENUM_POLICY_ACTION.READ];
 
 /**
  * One endpoint per dashboard tab, each behind the abilities of the pages its
- * numbers come from. Conversations are read through CHATBOT, as on the
- * conversations page: CONVERSATION is not a subject a role can be granted.
+ * numbers come from: conversations through CONVERSATION, as on the
+ * conversations page, and bot replies through CHATBOT.
  */
 @ApiTags('modules.workspace.analytics')
 @Controller({ version: '1', path: '/:workspace/analytics' })
@@ -66,7 +66,7 @@ export class AnalyticsWorkspaceController {
     @Response('analytics.workspace.marketing')
     @WorkspacePolicyAbilityProtected(
         { subject: ENUM_POLICY_SUBJECT.CUSTOMER, action: READ },
-        { subject: ENUM_POLICY_SUBJECT.CHATBOT, action: READ }
+        { subject: ENUM_POLICY_SUBJECT.CONVERSATION, action: READ }
     )
     @UserProtected()
     @AuthJwtAccessProtected()
