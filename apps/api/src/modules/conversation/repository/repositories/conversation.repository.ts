@@ -205,6 +205,53 @@ export class ConversationRepository extends DatabaseRepository<ConversationEntit
             lastInboundAt: new Date(row.last_inbound_at),
         }));
     }
+
+    /**
+     * lastInboundByChannel for many customers at once, with the conversation
+     * each last wrote in on that channel: where a marketing offer goes.
+     */
+    async lastInboundByCustomerChannel(
+        customerIds: string[],
+        workspaceId: string
+    ): Promise<
+        {
+            customerId: string;
+            channel: ENUM_ACCOUNT_TYPE;
+            conversationId: string;
+            lastInboundAt: Date;
+        }[]
+    > {
+        if (!customerIds.length) return [];
+        const rows: {
+            customer_id: string;
+            channel: ENUM_ACCOUNT_TYPE;
+            conversation_id: string;
+            last_inbound_at: Date;
+        }[] = await this.em.getConnection().execute(
+            `
+            SELECT DISTINCT ON (cp.customer_id, a.type)
+                cp.customer_id, a.type AS channel, conv.id AS conversation_id,
+                m.date_sent AS last_inbound_at
+            FROM messages m
+            JOIN conversations conv ON conv.id = m.conversation_id
+            JOIN contact_points cp ON cp.id = conv.contact_point_id
+            JOIN accounts a ON a.id = conv.account_id
+            JOIN chatbots cb ON cb.id = conv.chatbot_id
+            WHERE cp.customer_id IN (?)
+                AND cb.workspace_id = ?::uuid
+                AND m.direction = ?
+                AND conv.deleted_at IS NULL
+            ORDER BY cp.customer_id, a.type, m.date_sent DESC
+            `,
+            [customerIds, workspaceId, ENUM_MESSAGE_DIRECTION.INBOUND]
+        );
+        return rows.map(row => ({
+            customerId: row.customer_id,
+            channel: row.channel,
+            conversationId: row.conversation_id,
+            lastInboundAt: new Date(row.last_inbound_at),
+        }));
+    }
 }
 
 /**

@@ -59,6 +59,7 @@ import { MarketingEventRepository } from '../repository/repositories/marketing-e
 import { customerProductReactionResponse } from '../utils/customer-product-reaction.util';
 import { customerMarketingFirstSource } from '../utils/customer-marketing-first-source.util';
 import { customerMarketingFreeWindows } from '../utils/customer-marketing-free-window.util';
+import { MarketingSendService } from '@app/modules/marketing/services/marketing-send.service';
 import { MarketingSettingsService } from '@app/modules/marketing/services/marketing-settings.service';
 import { optOutReplyText } from '../utils/customer-marketing-opt-out.util';
 
@@ -109,12 +110,30 @@ export class CustomerMarketingService {
         return this.moduleRef.get(MarketingSettingsService, { strict: false });
     }
 
+    private get marketingSends(): MarketingSendService {
+        return this.moduleRef.get(MarketingSendService, { strict: false });
+    }
+
     /**
      * Every inbound message: creates the row at Mới biết, keeps the last
      * message date, and applies the opt-out keyword. `optedOut` tells the
      * caller to send the confirmation instead of an agent reply.
      */
     async recordInbound(
+        input: ICustomerMarketingInbound
+    ): Promise<{ optedOut: boolean }> {
+        const result = await this.applyInboundOnce(input);
+        // Any message answers the offers of the last 72 hours. Losing that
+        // mark must not lose the customer's turn.
+        try {
+            await this.marketingSends.markReplied(input.customerId);
+        } catch {
+            // Only the reply count is off.
+        }
+        return result;
+    }
+
+    private async applyInboundOnce(
         input: ICustomerMarketingInbound
     ): Promise<{ optedOut: boolean }> {
         try {

@@ -8,10 +8,12 @@ const HOUR_MS = 3_600_000;
  * recent first. `windowHours` is the channel's `freeMessageWindowHours`:
  * null is no limit, undefined is no free route for offers (left out).
  */
-export function customerMarketingFreeWindows(
-    lastInbound: Omit<ICustomerMarketingFreeWindow, 'openUntil'>[],
+export function customerMarketingFreeWindows<
+    T extends Omit<ICustomerMarketingFreeWindow, 'openUntil'>,
+>(
+    lastInbound: T[],
     windowHours: (channel: ENUM_ACCOUNT_TYPE) => number | null | undefined
-): ICustomerMarketingFreeWindow[] {
+): (T & Pick<ICustomerMarketingFreeWindow, 'openUntil'>)[] {
     return lastInbound
         .flatMap(row => {
             const hours = windowHours(row.channel);

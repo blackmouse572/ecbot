@@ -13,6 +13,8 @@ import { KnowledgeBaseServicesModule } from 'src/modules/knowledge-base/services
 import { CustomerTagClassifierTaskController } from 'src/modules/customer/controllers/customer-tag-classifier.task.controller';
 import { CustomerMarketingBackfillTaskController } from 'src/modules/customer/controllers/customer-marketing-backfill.task.controller';
 import { CustomerModule } from 'src/modules/customer/customer.module';
+import { MarketingSendTaskController } from 'src/modules/marketing/controllers/marketing-send.task.controller';
+import { MarketingModule } from 'src/modules/marketing/marketing.module';
 
 /**
  * Cloud Tasks callback consumers, one controller per queue
@@ -33,6 +35,7 @@ import { CustomerModule } from 'src/modules/customer/customer.module';
         KnowledgeIngestTaskController,
         CustomerTagClassifierTaskController,
         CustomerMarketingBackfillTaskController,
+        MarketingSendTaskController,
     ],
     providers: [],
     exports: [],
@@ -43,6 +46,7 @@ import { CustomerModule } from 'src/modules/customer/customer.module';
         PlatformModule,
         KnowledgeBaseServicesModule,
         CustomerModule,
+        MarketingModule,
     ],
 })
 export class RoutesTasksModule {}
