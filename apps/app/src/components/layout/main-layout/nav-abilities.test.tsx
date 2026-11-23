@@ -24,6 +24,18 @@ const flatten = (items: NavItem[]): NavItem[] =>
 const abilityOf = (items: NavItem[], to: string) =>
   flatten(items).find((item) => item.to === to)?.ability;
 
+type Ability = NonNullable<NavItem["ability"]>;
+// What the sidebar shows: NavItem drops an item whose ability fails, and its
+// children with it.
+const reachable = (items: NavItem[], can: (a: Ability) => boolean): string[] =>
+  items
+    .filter((item) => !item.ability || can(item.ability))
+    .flatMap((item) => [item.to, ...reachable(item.items ?? [], can)]);
+const readOnly =
+  (...subjects: string[]) =>
+  (a: Ability) =>
+    a.action === "read" && subjects.includes(a.subject);
+
 // The built-in Marketing and Developer roles only view conversations and
 // customers, and Sales has no marketing, so each entry asks for read on the
 // area's own permission.
@@ -50,4 +62,23 @@ describe("nav abilities", () => {
       });
     },
   );
+
+  it("Sales reaches conversations, follow-ups, orders and customers", () => {
+    const sales = readOnly("CONVERSATION", "CUSTOMER", "ORDER", "CHATBOT");
+    expect(reachable(core(), sales)).toEqual(
+      expect.arrayContaining([
+        "/lumi/conversations",
+        "/lumi/followups",
+        "/lumi/orders",
+        "/lumi/customers",
+      ]),
+    );
+  });
+
+  it("Marketing reaches follow-ups without the Agents group", () => {
+    const marketingRole = readOnly("CONVERSATION", "CUSTOMER", "ORDER");
+    const shown = reachable(core(), marketingRole);
+    expect(shown).toContain("/lumi/followups");
+    expect(shown).not.toContain("/lumi/chatbot");
+  });
 });

@@ -97,6 +97,19 @@ export const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
         />
       ),
       badge: <PausedConversationsBadge />,
+      // Follow-ups are conversation work, so they sit here rather than under
+      // Agents, which Sales and Marketing cannot open.
+      items: [
+        {
+          label: t("followups.title"),
+          to: `${baseUrl}/${ROUTES.Followups}`,
+          icon: <BellAlert />,
+          ability: {
+            action: "read",
+            subject: "CONVERSATION",
+          },
+        },
+      ],
     },
     {
       label: t("agents.title"),
@@ -138,15 +151,6 @@ export const useCoreRoutes = (): Omit<INavItem, "pathname">[] => {
             subject: "SKILL",
           },
           hint: <LazyFeatureHint feature="skills" icon={<AcademicCap />} />,
-        },
-        {
-          label: t("followups.title"),
-          to: `${baseUrl}/${ROUTES.Followups}`,
-          icon: <BellAlert />,
-          ability: {
-            action: "read",
-            subject: "CONVERSATION",
-          },
         },
         ...enterpriseNavItems({ t, baseUrl }),
       ],

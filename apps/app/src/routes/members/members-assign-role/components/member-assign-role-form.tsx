@@ -62,12 +62,14 @@ export function MembersAssignRoleForm({ item }: MembersAssignRoleFormProps) {
     }
   });
 
-  const filteredRoles =
-    roles?.filter((role) =>
-      roleLabel(role)
-        .label.toLowerCase()
-        .includes(debounceSearch.toLowerCase()),
-    ) || [];
+  const filteredRoles = (roles ?? [])
+    .map((role) => {
+      const { label, description } = roleLabel(role);
+      return { ...role, label, description };
+    })
+    .filter((role) =>
+      role.label.toLowerCase().includes(debounceSearch.toLowerCase()),
+    );
   const selected = roles?.find((role) => role.id === selectedRole);
 
   return (
@@ -126,10 +128,10 @@ export function MembersAssignRoleForm({ item }: MembersAssignRoleFormProps) {
                                     >
                                       <div className="flex items-center justify-between w-full">
                                         <span className="flex flex-col">
-                                          <span>{roleLabel(role).label}</span>
-                                          {roleLabel(role).description && (
+                                          <span>{role.label}</span>
+                                          {role.description && (
                                             <span className="txt-compact-xsmall text-ui-fg-subtle">
-                                              {roleLabel(role).description}
+                                              {role.description}
                                             </span>
                                           )}
                                         </span>
