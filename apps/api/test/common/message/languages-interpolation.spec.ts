@@ -74,9 +74,8 @@ describe('language files', () => {
         const [base, ...rest] = languages;
         expect(rest.length).toBeGreaterThan(0);
         for (const lang of rest) {
-            const shared = jsonFiles(base).filter(f =>
-                jsonFiles(lang).includes(f)
-            );
+            const langFiles = jsonFiles(lang);
+            const shared = jsonFiles(base).filter(f => langFiles.includes(f));
             expect({ lang, shared: shared.length > 0 }).toEqual({
                 lang,
                 shared: true,

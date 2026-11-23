@@ -178,3 +178,70 @@ describe('WorkspacePolicyGuard stranger', () => {
         });
     });
 });
+
+// A super admin and the workspace owner pass without a role lookup, even when
+// the route needs an ability they hold no role for.
+describe('WorkspacePolicyGuard bypass', () => {
+    const run = (userId: string, type: ENUM_POLICY_ROLE_TYPE) => {
+        const workspaceMemberService = {
+            isUserMemberOfWorkspace: jest.fn().mockResolvedValue(false),
+            getMemberWorkspaceRoles: jest.fn().mockResolvedValue([]),
+        };
+        const guard = new WorkspacePolicyGuard(
+            {
+                get: jest.fn(() => [
+                    {
+                        action: [ENUM_POLICY_ACTION.CREATE],
+                        subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+                    },
+                ]),
+            } as any,
+            workspaceMemberService as any,
+            { findOneById: jest.fn() } as any,
+            new PolicyAbilityFactory()
+        );
+        const context = {
+            getHandler: jest.fn(),
+            switchToHttp: () => ({
+                getRequest: () => ({
+                    __user: { id: userId },
+                    __workspace: {
+                        id: 'workspace-1',
+                        owner: { id: 'owner-1' },
+                    },
+                    params: { workspace: 'workspace-1' },
+                    user: { type },
+                }),
+            }),
+        } as any;
+
+        return {
+            canActivate: guard.canActivate(context),
+            workspaceMemberService,
+        };
+    };
+
+    it('lets a super admin through without checking roles', async () => {
+        const { canActivate, workspaceMemberService } = run(
+            'admin-1',
+            ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN
+        );
+
+        await expect(canActivate).resolves.toBe(true);
+        expect(
+            workspaceMemberService.getMemberWorkspaceRoles
+        ).not.toHaveBeenCalled();
+    });
+
+    it('lets the workspace owner through without checking roles', async () => {
+        const { canActivate, workspaceMemberService } = run(
+            'owner-1',
+            ENUM_POLICY_ROLE_TYPE.USER
+        );
+
+        await expect(canActivate).resolves.toBe(true);
+        expect(
+            workspaceMemberService.getMemberWorkspaceRoles
+        ).not.toHaveBeenCalled();
+    });
+});
