@@ -965,6 +965,10 @@ export type ChatbotPreviewMetaResponseDto = {
     welcomeMessage?: string;
     primaryLanguage?: string;
     /**
+     * Quick replies to show under the welcome message, from the agent's goals.
+     */
+    suggestedReplies: Array<string>;
+    /**
      * When this share link stops working. Surfaced so the standalone page can show the time left instead of decoding the token client-side.
      */
     expiresAt: string;
@@ -1554,6 +1558,14 @@ export type CustomerTagClassifierTaskDto = {
 export type CustomerMarketingBackfillTaskDto = {
     jobName: 'batch';
     runId: string;
+};
+
+export type MarketingSendTaskDto = {
+    jobName: 'deliver';
+    /**
+     * The marketing_messages row
+     */
+    messageId: string;
 };
 
 export type UserUpdateClaimUsernameRequestDto = {
@@ -12903,6 +12915,76 @@ export type CustomerMarketingBackfillTaskControllerHandleV1Responses = {
 };
 
 export type CustomerMarketingBackfillTaskControllerHandleV1Response = CustomerMarketingBackfillTaskControllerHandleV1Responses[keyof CustomerMarketingBackfillTaskControllerHandleV1Responses];
+
+export type MarketingSendTaskControllerHandleV1Data = {
+    body: MarketingSendTaskDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/system/tasks/marketing-send';
+};
+
+export type MarketingSendTaskControllerHandleV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSendTaskControllerHandleV1Error = MarketingSendTaskControllerHandleV1Errors[keyof MarketingSendTaskControllerHandleV1Errors];
+
+export type MarketingSendTaskControllerHandleV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSendTaskControllerHandleV1Response = MarketingSendTaskControllerHandleV1Responses[keyof MarketingSendTaskControllerHandleV1Responses];
 
 export type UserUserControllerDeleteV1Data = {
     body?: never;
@@ -28774,6 +28856,14 @@ export type ConversationWorkspaceControllerListV1Data = {
         workspace: string;
     };
     query?: {
+        /**
+         * Journey stages of the conversation's customer, with ',' delimiter. A customer with no labels yet counts as NEW.
+         */
+        stage?: string;
+        /**
+         * Customer tag ids, with ',' delimiter: conversations whose customer has any of them.
+         */
+        tag?: string;
         /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
          */

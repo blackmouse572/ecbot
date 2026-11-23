@@ -112,6 +112,12 @@ export class MarketingSettingsService {
         );
     }
 
+    /** The keyword an offer tells the customer to send to opt out. */
+    async stopKeyword(workspaceId: string): Promise<string> {
+        const saved = await this.find(workspaceId);
+        return (saved?.stopKeywords ?? CUSTOMER_MARKETING_OPT_OUT_KEYWORDS)[0];
+    }
+
     /** The shop's own opt-out confirmation, or null for the built-in one. */
     async stopReply(workspaceId: string): Promise<string | null> {
         return (await this.find(workspaceId))?.stopReply ?? null;

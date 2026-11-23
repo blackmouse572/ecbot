@@ -26,6 +26,7 @@ import { CloudTasksQueueModule } from '@app/worker/cloud-tasks-queue.module';
 import { MemberJoinedEmailService } from './services/member-joined-email.service';
 import { WorkspaceSeatQuotaService } from './services/workspace-seat-quota.service';
 import { WorkspaceInvitationAcceptService } from './services/workspace-invitation-accept.service';
+import { WorkspaceAbilityService } from './services/workspace-ability.service';
 
 @Module({
     imports: [
@@ -56,9 +57,11 @@ import { WorkspaceInvitationAcceptService } from './services/workspace-invitatio
         MemberJoinedEmailService,
         WorkspaceSeatQuotaService,
         WorkspaceInvitationAcceptService,
+        WorkspaceAbilityService,
     ],
     controllers: [WorkspaceController, WorkspaceMemberController],
     exports: [
+        WorkspaceAbilityService,
         WorkspaceOwnerService,
         WorkspaceAdminService,
         WorkspaceMemberService,

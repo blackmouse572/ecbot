@@ -100,8 +100,30 @@ describe('ChatbotPreviewPublicController', () => {
                 avatar: 'https://cdn.example.com/a.png',
                 welcomeMessage: 'Xin chao',
                 primaryLanguage: 'vi',
+                suggestedReplies: [],
                 expiresAt: new Date(EXP_SECONDS * 1000),
             });
+        });
+
+        it('suggests replies from the agent goals, not the profile itself', async () => {
+            const { controller } = setup({
+                chatbotService: {
+                    findOne: jest.fn().mockResolvedValue({
+                        ...activeChatbot,
+                        agentProfile: {
+                            goals: ['book_appointments', 'promotions'],
+                            facts: { address: 'SECRET ADDRESS' },
+                        },
+                    }),
+                },
+            });
+            const result = await controller.meta('tok');
+
+            expect(result.data.suggestedReplies).toEqual([
+                'Mình muốn đặt lịch',
+                'Đang có khuyến mãi gì không?',
+            ]);
+            expect(JSON.stringify(result.data)).not.toContain('SECRET');
         });
 
         it('never leaks the prompt, model or guardrail config', async () => {

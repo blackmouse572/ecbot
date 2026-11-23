@@ -9,6 +9,7 @@ import {
 } from '@app/common/doc/decorators/doc.decorator';
 import { ENUM_DOC_REQUEST_BODY_TYPE } from '@app/common/doc/enums/doc.enum';
 import { WorkspaceDocParamsId } from '@app/modules/workspace/constants/workspace.doc.constant';
+import { ConversationDocQueryCustomerFilters } from '../constants/conversation.doc.constant';
 import { applyDecorators } from '@nestjs/common';
 import { ConversationReactToMessageRequestDto } from '../dtos/request/conversation.react-to-message.request.dto';
 import { ConversationWorkspaceSendMessageRequestDto } from '../dtos/request/conversation.workspace.send-message.request.dto';
@@ -25,6 +26,7 @@ export function ConversationWorkspaceListDoc(): MethodDecorator {
         }),
         DocRequest({
             params: [...WorkspaceDocParamsId],
+            queries: ConversationDocQueryCustomerFilters,
         }),
         DocAuth({
             xApiKey: true,

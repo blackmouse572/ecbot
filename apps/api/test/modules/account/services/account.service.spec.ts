@@ -183,6 +183,18 @@ describe('AccountService - syncAccount', () => {
         expect(upsertCall.type).toBe(ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE);
     });
 
+    it('stores a Zalo OA login as the ZALO_PAGE channel its adapter serves', async () => {
+        await service.syncAccount(
+            'auth-code',
+            ENUM_ACCOUNT_TYPE.ZALO_ACCOUNT,
+            'ws-1',
+            'user-1'
+        );
+
+        const upsertCall = mockAccountRepository.upsert.mock.calls[0][0];
+        expect(upsertCall.type).toBe(ENUM_ACCOUNT_TYPE.ZALO_PAGE);
+    });
+
     it('throws NotFoundException when platform service returns no access token', async () => {
         mockPlatformService.getTokenAndProfile.mockResolvedValueOnce({
             ...mockOAuthResult,

@@ -1177,6 +1177,7 @@
         "stopped": "Cuộc trò chuyện dừng trước khi công cụ trả lời.",
         "failedStep": "Lỗi",
         "handedOverStep": "Đã chuyển cho nhân viên",
+        "handedOverTestStep": "Đã chuyển cho nhân viên (chỉ là thử, không gửi gì)",
         "knowledgeStep": "Đã tìm trong cơ sở kiến thức",
         "sources_one": "{{count}} nguồn",
         "sources_other": "{{count}} nguồn",
@@ -2357,6 +2358,8 @@
         "allChatbots": "Tất cả agent",
         "account": "Tài khoản",
         "allAccounts": "Tất cả tài khoản",
+        "tag": "Thẻ khách hàng",
+        "stage": "Giai đoạn",
         "groupBy": "Nhóm theo"
       },
       "groupBy": {

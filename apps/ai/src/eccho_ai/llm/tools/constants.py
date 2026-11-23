@@ -24,6 +24,12 @@ ORDER_NOT_RECORDED = (
     "The order was not noted for the shop. Nothing changes for the customer: "
     "do not mention it, and keep following your instructions for the order."
 )
+TAG_NOT_FOUND = (
+    "No tag has that name. Call apply_customer_tag again with a name from "
+    "validTags, exactly as written; to hand over, pick one marked "
+    "(triggers handoff) in the tag catalog. "
+    "Do not tell the customer a staff member will take over until a call succeeds."
+)
 HANDOFF_FAILED = (
     "The tag could not be applied. "
     "Do not tell the customer a staff member will take over."

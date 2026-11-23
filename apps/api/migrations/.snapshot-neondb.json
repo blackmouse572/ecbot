@@ -13698,7 +13698,7 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "unique": false,
+          "unique": true,
           "length": null,
           "precision": null,
           "scale": null,
@@ -13773,7 +13773,8 @@
           "comment": null,
           "enumItems": [
             "NO_CHANNEL",
-            "WINDOW_CLOSED"
+            "WINDOW_CLOSED",
+            "OPTED_OUT"
           ],
           "mappedType": "enum"
         },
@@ -13824,6 +13825,38 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "send_id": {
+          "name": "send_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "conversation_id": {
+          "name": "conversation_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
         }
       },
       "name": "marketing_messages",
@@ -13838,6 +13871,18 @@
           "keyName": "marketing_messages_created_at_index",
           "unique": false,
           "primary": false
+        },
+        {
+          "columnNames": [
+            "customer_id",
+            "send_day"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "marketing_messages_customer_id_send_day_unique",
+          "unique": true,
+          "primary": false,
+          "expression": "CREATE UNIQUE INDEX marketing_messages_customer_id_send_day_unique ON public.marketing_messages USING btree (customer_id, send_day) WHERE (status = ANY (ARRAY['QUEUED'::text, 'SENT'::text]))"
         },
         {
           "columnNames": [
@@ -13882,6 +13927,16 @@
         },
         {
           "columnNames": [
+            "send_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "marketing_messages_send_id_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
             "updated_at"
           ],
           "composite": false,
@@ -13903,6 +13958,19 @@
       ],
       "checks": [],
       "foreignKeys": {
+        "marketing_messages_conversation_id_foreign": {
+          "columnNames": [
+            "conversation_id"
+          ],
+          "constraintName": "marketing_messages_conversation_id_foreign",
+          "localTableName": "public.marketing_messages",
+          "referencedTableName": "public.conversations",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "set null"
+        },
         "marketing_messages_created_by_id_foreign": {
           "columnNames": [
             "created_by_id"
@@ -13942,6 +14010,19 @@
           "updateRule": "cascade",
           "deleteRule": "set null"
         },
+        "marketing_messages_send_id_foreign": {
+          "columnNames": [
+            "send_id"
+          ],
+          "constraintName": "marketing_messages_send_id_foreign",
+          "localTableName": "public.marketing_messages",
+          "referencedTableName": "public.marketing_sends",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "cascade"
+        },
         "marketing_messages_updated_by_id_foreign": {
           "columnNames": [
             "updated_by_id"
@@ -13961,6 +14042,323 @@
           ],
           "constraintName": "marketing_messages_workspace_id_foreign",
           "localTableName": "public.marketing_messages",
+          "referencedTableName": "public.workspaces",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "no action"
+        }
+      },
+      "nativeEnums": {},
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "deleted": {
+          "name": "deleted",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "CURRENT_TIMESTAMP",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "created_by_id": {
+          "name": "created_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_by_id": {
+          "name": "updated_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "deleted_by_id": {
+          "name": "deleted_by_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "workspace_id": {
+          "name": "workspace_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "audience": {
+          "name": "audience",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "text": {
+          "name": "text",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        }
+      },
+      "name": "marketing_sends",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "created_at"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "marketing_sends_created_at_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "deleted_at"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "marketing_sends_deleted_at_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "deleted"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "marketing_sends_deleted_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "marketing_sends_pkey",
+          "unique": true,
+          "primary": true
+        },
+        {
+          "columnNames": [
+            "updated_at"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "marketing_sends_updated_at_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "workspace_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "marketing_sends_workspace_id_index",
+          "unique": false,
+          "primary": false
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "marketing_sends_created_by_id_foreign": {
+          "columnNames": [
+            "created_by_id"
+          ],
+          "constraintName": "marketing_sends_created_by_id_foreign",
+          "localTableName": "public.marketing_sends",
+          "referencedTableName": "public.users",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "set null"
+        },
+        "marketing_sends_deleted_by_id_foreign": {
+          "columnNames": [
+            "deleted_by_id"
+          ],
+          "constraintName": "marketing_sends_deleted_by_id_foreign",
+          "localTableName": "public.marketing_sends",
+          "referencedTableName": "public.users",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "set null"
+        },
+        "marketing_sends_updated_by_id_foreign": {
+          "columnNames": [
+            "updated_by_id"
+          ],
+          "constraintName": "marketing_sends_updated_by_id_foreign",
+          "localTableName": "public.marketing_sends",
+          "referencedTableName": "public.users",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "set null"
+        },
+        "marketing_sends_workspace_id_foreign": {
+          "columnNames": [
+            "workspace_id"
+          ],
+          "constraintName": "marketing_sends_workspace_id_foreign",
+          "localTableName": "public.marketing_sends",
           "referencedTableName": "public.workspaces",
           "referencedColumnNames": [
             "id"

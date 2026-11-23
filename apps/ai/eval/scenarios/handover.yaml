@@ -70,3 +70,36 @@ cases:
       en: After my facial last week my skin broke out in red bumps. What kind of spa are you running?
     expect:
       - handoff: true
+
+  - id: asks_for_staff_anonymous
+    chat: anonymous
+    note: "2026-11-22: a website visitor with no Customer yet saw no tag list and invented tag names (Handoff, Hỗ trợ kỹ thuật)"
+    message:
+      vi: Mình muốn nói chuyện với nhân viên, bot trả lời không đúng ý mình.
+      en: I want to talk to a person, the bot is not answering what I asked.
+    expect:
+      - handoff: true
+
+  - id: angry_test_chat
+    chat: test
+    note: "2026-11-22: the dashboard test chat hands over with a real tag (simulated, nothing written)"
+    message:
+      vi: Đặt đồ ăn cả tiếng rồi mà chưa thấy đâu. Đói muốn xỉu luôn 😤
+      en: I ordered an hour ago and it still hasn't arrived. I'm starving 😤
+    expect:
+      - handoff: true
+
+  - id: asks_for_staff_no_handoff_tag
+    note: "2026-11-22: with no handoff tag the bot must not say it passed the message to staff"
+    tags:
+      vi:
+        - {name: Khách tiềm năng cao, emoji: "🔥", description: Khách đã thể hiện ý định mua rõ ràng.}
+      en:
+        - {name: Hot lead, emoji: "🔥", description: Customer has shown strong buying intent.}
+    message:
+      vi: Cho mình gặp nhân viên được không?
+      en: Can I talk to a real person please?
+    expect:
+      - reply_not_matches:
+          vi: "đã chuyển|đã báo|để lại cho|chuyển (tin nhắn|cho|tới|đến)|nhân viên sẽ (liên hệ|phản hồi|hỗ trợ)|đội ngũ sẽ"
+          en: "passed (it|this|your)|forwarded|let (the|our) team know|(staff|team|someone) will (reach|get back|contact|be in touch)|handed (you )?over"

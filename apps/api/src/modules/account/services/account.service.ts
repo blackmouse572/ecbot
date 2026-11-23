@@ -54,12 +54,14 @@ import { AccountRepository } from '../repository/repositories/account.repository
 // Every account read carries enough of its workspace to label the row.
 const WORKSPACE_JOIN = { path: 'workspace', select: 'name slug avatar' };
 
-// An Instagram login is itself the messaging channel (no Page in between),
-// stored under the type InstagramPlatformAdapter is registered for.
+// An Instagram login or a Zalo OA login is itself the messaging channel (no
+// Page in between), stored under the type its platform adapter is registered
+// for, so sends can find the adapter.
 const LINKED_CHANNEL_TYPE: Partial<
     Record<ENUM_ACCOUNT_TYPE, ENUM_ACCOUNT_TYPE>
 > = {
     [ENUM_ACCOUNT_TYPE.INSTAGRAM_ACCOUNT]: ENUM_ACCOUNT_TYPE.INSTAGRAM_PAGE,
+    [ENUM_ACCOUNT_TYPE.ZALO_ACCOUNT]: ENUM_ACCOUNT_TYPE.ZALO_PAGE,
 };
 
 const PAGE_SUBSCRIPTION_FIELDS =

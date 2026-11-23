@@ -6,6 +6,8 @@ import { CustomerMarketingStateEntity } from '@app/modules/customer/repository/e
 import { CustomerEntity } from '@app/modules/customer/repository/entities/customer.entity';
 import { ENUM_MARKETING_MESSAGE_STATUS as M } from '@app/modules/marketing/enums/marketing-send.enum';
 import { MarketingMessageEntity } from '@app/modules/marketing/repository/entities/marketing-message.entity';
+import { MarketingSendEntity } from '@app/modules/marketing/repository/entities/marketing-send.entity';
+import { ENUM_MARKETING_AUDIENCE_MATCH } from '@app/modules/marketing/enums/marketing-audience.enum';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { http } from './utils/http';
 import { bootstrapE2E, E2EContext } from './utils/app.setup';
@@ -91,10 +93,16 @@ describe('E2E — marketing send rules', () => {
             } as CustomerMarketingStateEntity);
             return c;
         };
+        const send = em.create(MarketingSendEntity, {
+            workspace,
+            audience: { match: ENUM_MARKETING_AUDIENCE_MATCH.ALL, conditions: [] },
+            text: 'Ưu đãi',
+        } as Partial<MarketingSendEntity> as MarketingSendEntity);
         const offer = (c: CustomerEntity, daysAgo: number, status = M.SENT) => {
             const at = ago(daysAgo);
             em.create(MarketingMessageEntity, {
                 workspace,
+                send,
                 customer: c,
                 channel: A.FACEBOOK_PAGE,
                 status,

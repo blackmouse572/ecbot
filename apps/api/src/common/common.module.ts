@@ -1,4 +1,3 @@
-import KeyvRedis from '@keyv/redis';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { CacheModule, CacheOptions } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
@@ -23,6 +22,7 @@ import { AuthModule } from 'src/modules/auth/auth.module';
 import { PolicyModule } from 'src/modules/policy/policy.module';
 import { FacebookModule } from './facebook/facebook.module';
 import { ComposioModule } from './composio/composio.module';
+import { createCacheRedisStore } from './redis/cache-redis-store.factory';
 import { RedisAvailabilityModule } from './redis/redis-availability.module';
 import { REDIS_AVAILABLE } from './redis/redis-availability.provider';
 
@@ -61,28 +61,7 @@ import { REDIS_AVAILABLE } from './redis/redis-availability.provider';
                 // Redis was unreachable at boot — fall back to Keyv's default
                 // in-memory Map store instead of KeyvRedis (no `stores`).
                 stores: redisAvailable
-                    ? [
-                          new KeyvRedis({
-                              socket: {
-                                  host: configService.get<string>(
-                                      'redis.cached.host'
-                                  ),
-                                  port: configService.get<number>(
-                                      'redis.cached.port'
-                                  ),
-                                  tls: configService.get<boolean>(
-                                      'redis.cached.tls'
-                                  ),
-                                  family: 0, // Fix for Railway DNS resolution issues
-                              },
-                              username: configService.get<string>(
-                                  'redis.cached.username'
-                              ),
-                              password: configService.get<string>(
-                                  'redis.cached.password'
-                              ),
-                          }),
-                      ]
+                    ? [createCacheRedisStore(configService)]
                     : undefined,
             }),
             inject: [ConfigService, REDIS_AVAILABLE],

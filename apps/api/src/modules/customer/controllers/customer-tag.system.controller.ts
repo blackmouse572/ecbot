@@ -21,6 +21,9 @@ import { CustomerTagService } from '../services/customer-tag.service';
 interface ApplyResponse {
     ok: true;
     triggeredHandoff: boolean;
+    /** The tag hands over: with `triggeredHandoff` false, the handoff did not
+     * fire (no conversation), so the agent must not promise one. */
+    triggersHandoff: boolean;
 }
 
 interface RemoveResponse {
@@ -136,7 +139,11 @@ export class CustomerTagSystemController {
             }
         }
 
-        return { ok: true, triggeredHandoff };
+        return {
+            ok: true,
+            triggeredHandoff,
+            triggersHandoff: Boolean(tag.triggersHandoff),
+        };
     }
 
     @Post('/remove')

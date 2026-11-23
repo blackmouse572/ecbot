@@ -27,6 +27,7 @@ import { BuildingLoader } from "./ai-loader";
 import { chatErrorMessage } from "./chat-error-message";
 import { ToolTrace } from "./tool-trace";
 import { ChatMessageMedia } from "./chat-message-media";
+import { ChatSuggestedReplies } from "./chat-suggested-replies";
 import {
   type ChatTransportConfig,
   isEmptyRenderModel,
@@ -83,7 +84,9 @@ function AIChatMessages({
       {greeting && (
         <MessageScrollerItem key="greeting" messageId="greeting">
           <Message from="assistant">
-            <MessageContent className={BUBBLE_CLASS.assistant}>
+            <MessageContent
+              className={clx(BUBBLE_CLASS.assistant, BUBBLE_ENTER)}
+            >
               <MessageResponse>{greeting}</MessageResponse>
             </MessageContent>
           </Message>
@@ -290,6 +293,11 @@ export type AIChatCardProps = {
    * Display only: it is never sent back as part of the conversation.
    */
   greeting?: string;
+  /**
+   * Quick replies just above the input until the first message. Tapping one
+   * sends it. Shown only with a greeting.
+   */
+  suggestedReplies?: string[];
 };
 
 export function AIChatCard(props: AIChatCardProps) {
@@ -306,6 +314,7 @@ export function AIChatCard(props: AIChatCardProps) {
     audience = "owner",
     showKnowledgeSources,
     greeting,
+    suggestedReplies,
   } = props;
 
   return (
@@ -343,6 +352,12 @@ export function AIChatCard(props: AIChatCardProps) {
           </MessageScrollerViewport>
           <MessageScrollerButton />
         </MessageScroller>
+        {greeting && !!suggestedReplies?.length && (
+          <ChatSuggestedReplies
+            replies={suggestedReplies}
+            enterClassName={BUBBLE_ENTER}
+          />
+        )}
         {renderInput}
       </Container>
     </AIChatProvider>

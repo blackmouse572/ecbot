@@ -16,6 +16,7 @@ import {
 } from '@app/modules/auth/decorators/auth.jwt.decorator';
 import {
     ENUM_POLICY_ACTION,
+    ENUM_POLICY_ROLE_TYPE,
     ENUM_POLICY_SUBJECT,
 } from '@app/modules/policy/enums/policy.enum';
 import { UserProtected } from '@app/modules/user/decorators/user.decorator';
@@ -35,6 +36,7 @@ import {
     Patch,
     Post,
     Query,
+    ForbiddenException,
     UnprocessableEntityException,
     UploadedFile,
     UseInterceptors,
@@ -67,6 +69,12 @@ import { MessageGetResponseDto } from '../dtos/response/message.get.response.dto
 import { ENUM_CONVERSATION_STATUS } from '../enums/conversation.enum';
 import { ConversationMessagingService } from '../services/conversation-messaging.service';
 import { ConversationService } from '../services/conversation.service';
+import { conversationCustomerFilterFromQuery } from '../utils/conversation-customer-filter.util';
+import { ENUM_CUSTOMER_JOURNEY_STAGE } from '@app/modules/customer/enums/customer-marketing.enum';
+import { CustomerMarketingService } from '@app/modules/customer/services/customer-marketing.service';
+import { CustomerTagAssignmentService } from '@app/modules/customer/services/customer-tag-assignment.service';
+import { WorkspaceAbilityService } from '@app/modules/workspace/services/workspace-ability.service';
+import { ENUM_POLICY_STATUS_CODE_ERROR } from '@app/modules/policy/enums/policy.status-code.enum';
 import {
     ConversationWorkspaceGetDoc,
     ConversationWorkspaceListDoc,
@@ -97,7 +105,10 @@ export class ConversationWorkspaceController {
         private readonly conversationService: ConversationService,
         private readonly paginationService: PaginationService,
         private readonly conversationMessagingService: ConversationMessagingService,
-        private readonly activityService: ActivityService
+        private readonly activityService: ActivityService,
+        private readonly marketingService: CustomerMarketingService,
+        private readonly tagAssignmentService: CustomerTagAssignmentService,
+        private readonly abilityService: WorkspaceAbilityService
     ) {}
 
     @ConversationWorkspaceListDoc()
@@ -144,8 +155,47 @@ export class ConversationWorkspaceController {
         @PaginationQueryFilterEqual('contactPoint.customer.id', {
             queryField: 'customer',
         })
-        customer: Record<string, any>
+        customer: Record<string, any>,
+        @PaginationQueryFilterInEnum(
+            'stage',
+            undefined,
+            ENUM_CUSTOMER_JOURNEY_STAGE
+        )
+        stage?: Record<string, any>,
+        @PaginationQueryFilterEqual('tag', { raw: true })
+        tag?: Record<string, any>,
+        @AuthJwtPayload('type') userType?: ENUM_POLICY_ROLE_TYPE
     ): Promise<IResponsePaging<ConversationGetResponseDto>> {
+        const { stages, tagIds } = conversationCustomerFilterFromQuery(
+            stage,
+            tag
+        );
+        // Tags and stages are customer labels: filtering on them needs the
+        // customer read ability, not only the conversations one.
+        if (
+            (stages?.length || tagIds?.length) &&
+            !(await this.abilityService.can(
+                workspace,
+                { id: operatorId, type: userType },
+                {
+                    subject: ENUM_POLICY_SUBJECT.CUSTOMER,
+                    action: [ENUM_POLICY_ACTION.READ],
+                }
+            ))
+        ) {
+            throw new ForbiddenException({
+                statusCode: ENUM_POLICY_STATUS_CODE_ERROR.ABILITY_FORBIDDEN,
+                message: 'policy.error.abilityForbidden',
+            });
+        }
+        const customerConditions = [
+            ...(stages?.length
+                ? [this.marketingService.customerListFilter({ stages })]
+                : []),
+            ...(tagIds?.length
+                ? [this.tagAssignmentService.customerListFilter(tagIds)]
+                : []),
+        ];
         const find: Record<string, any> = {
             ..._search,
             ...status,
@@ -154,6 +204,16 @@ export class ConversationWorkspaceController {
             ...chatbot,
             ...botEnabled,
             ...customer,
+            // $and keeps this apart from the `customer` filter's contactPoint key.
+            ...(customerConditions.length && {
+                $and: [
+                    {
+                        contactPoint: {
+                            customer: { $and: customerConditions },
+                        },
+                    },
+                ],
+            }),
         };
 
         const [conversations, total] = await Promise.all([

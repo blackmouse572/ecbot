@@ -94,27 +94,30 @@ export const DataTableFilter = ({
   );
 
   /**
-   * Catch up with filters already in the URL when the page first mounts —
-   * this covers navigating straight to a link with filters applied.
+   * Catch up with filters already in the URL — this covers navigating
+   * straight to a link with filters applied. Each definition is read once,
+   * when it first appears, so one that loads later (a filter behind a
+   * feature flag) still picks up its URL value, and a removed chip stays
+   * removed.
    */
-  const hasSyncedFromUrl = useRef(false);
+  const syncedKeys = useRef(new Set<string>());
 
   useEffect(() => {
-    if (!hasSyncedFromUrl.current) {
-      const missing = readActiveFiltersFromUrl(
-        searchParams,
-        filters,
-        prefix,
-      ).filter(
-        (candidate) => !activeFilters.find((af) => af.key === candidate.key),
-      );
+    const fresh = filters.filter((f) => !syncedKeys.current.has(f.key));
+    if (fresh.length === 0) return;
+    fresh.forEach((f) => syncedKeys.current.add(f.key));
 
-      if (missing.length > 0) {
-        setActiveFilters((prev) => [...prev, ...missing]);
-      }
+    const missing = readActiveFiltersFromUrl(
+      searchParams,
+      fresh,
+      prefix,
+    ).filter(
+      (candidate) => !activeFilters.find((af) => af.key === candidate.key),
+    );
+
+    if (missing.length > 0) {
+      setActiveFilters((prev) => [...prev, ...missing]);
     }
-
-    hasSyncedFromUrl.current = true;
   }, [filters, prefix, searchParams, activeFilters]);
 
   const addFilter = (filter: Filter) => {

@@ -85,6 +85,25 @@ describe("ToolTrace", () => {
     expect(screen.getByText("3 sources")).toBeInTheDocument();
   });
 
+  it("says a test chat handover was only a test", () => {
+    render(
+      <ToolTrace
+        running={false}
+        toolCalls={[
+          call({
+            kind: "handoff",
+            toolName: "apply_customer_tag",
+            args: { name: "Needs staff" },
+            result: { ok: true, preview: true, triggeredHandoff: true },
+          }),
+        ]}
+      />,
+    );
+    expect(
+      row(/Handed over to staff \(test only, nothing was sent\)/),
+    ).toBeInTheDocument();
+  });
+
   it("sums the turn up and ends with Done once it finishes", () => {
     const calls = [
       call({ invocationId: "a" }),
