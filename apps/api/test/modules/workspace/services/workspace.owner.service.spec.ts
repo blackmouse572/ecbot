@@ -105,10 +105,6 @@ describe('WorkspaceOwnerService', () => {
         });
     });
 
-    it('should be defined', () => {
-        expect(service).toBeDefined();
-    });
-
     describe('generateInvitationLinkWithDetails', () => {
         it('should sign an HS256 JWT, persist the invitation and return the token/link', async () => {
             mockInvitationService.checkExistingInvitation.mockResolvedValue(

@@ -49,10 +49,6 @@ describe('InvitationService', () => {
         jest.clearAllMocks();
     });
 
-    it('should be defined', () => {
-        expect(service).toBeDefined();
-    });
-
     describe('findOneById', () => {
         it('should return the invitation when found', async () => {
             const invitation = { id: randomUUID() };

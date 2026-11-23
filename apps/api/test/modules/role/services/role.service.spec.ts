@@ -66,10 +66,6 @@ describe('RoleService', () => {
         jest.clearAllMocks();
     });
 
-    it('should be defined', () => {
-        expect(service).toBeDefined();
-    });
-
     describe('findAll', () => {
         it('should return all roles with pagination', async () => {
             const find = { isActive: true };

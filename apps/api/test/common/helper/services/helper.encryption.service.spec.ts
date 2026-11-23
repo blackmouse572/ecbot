@@ -124,87 +124,80 @@ describe('HelperEncryptionService envelope encryption', () => {
                 Buffer.alloc(8).toString('base64'),
             ].join(':');
 
+        // What fn threw. Throwing nothing fails the test, so an assertion on
+        // the result can never be skipped (a catch block would be).
+        const thrownBy = (fn: () => unknown): unknown => {
+            try {
+                fn();
+            } catch (error) {
+                return error;
+            }
+            throw new Error('expected the call to throw');
+        };
+
         it('throws key_not_found when the envelope keyId is not configured', () => {
             const service = buildService();
 
-            try {
-                service.envelopeDecrypt(envelopeWithKeyId('never-configured'));
-                throw new Error('expected envelopeDecrypt to throw');
-            } catch (error) {
-                expect(error).toBeInstanceOf(TokenEncryptionError);
-                expect((error as TokenEncryptionError).reason).toBe(
-                    'key_not_found'
-                );
-                expect((error as TokenEncryptionError).message).toBe(
-                    'Encryption key not found for keyId "never-configured"'
-                );
-            }
+            const error = thrownBy(() =>
+                service.envelopeDecrypt(envelopeWithKeyId('never-configured'))
+            );
+            expect(error).toBeInstanceOf(TokenEncryptionError);
+            expect(error).toMatchObject({
+                reason: 'key_not_found',
+                message:
+                    'Encryption key not found for keyId "never-configured"',
+            });
         });
 
         it('throws key_length when the configured key is not 32 bytes', () => {
             const service = buildService();
 
-            try {
-                service.envelopeDecrypt(envelopeWithKeyId('short'));
-                throw new Error('expected envelopeDecrypt to throw');
-            } catch (error) {
-                expect(error).toBeInstanceOf(TokenEncryptionError);
-                expect((error as TokenEncryptionError).reason).toBe(
-                    'key_length'
-                );
-                expect((error as TokenEncryptionError).message).toBe(
-                    'Encryption key "short" must be exactly 32 bytes for AES-256-GCM'
-                );
-            }
+            const error = thrownBy(() =>
+                service.envelopeDecrypt(envelopeWithKeyId('short'))
+            );
+            expect(error).toBeInstanceOf(TokenEncryptionError);
+            expect(error).toMatchObject({
+                reason: 'key_length',
+                message:
+                    'Encryption key "short" must be exactly 32 bytes for AES-256-GCM',
+            });
         });
 
         it('throws invalid_format when the envelope is malformed', () => {
             const service = buildService();
 
-            try {
-                service.envelopeDecrypt('v1:v1:missing-the-rest');
-                throw new Error('expected envelopeDecrypt to throw');
-            } catch (error) {
-                expect(error).toBeInstanceOf(TokenEncryptionError);
-                expect((error as TokenEncryptionError).reason).toBe(
-                    'invalid_format'
-                );
-                expect((error as TokenEncryptionError).message).toBe(
-                    'Invalid envelope format'
-                );
-            }
+            const malformed = thrownBy(() =>
+                service.envelopeDecrypt('v1:v1:missing-the-rest')
+            );
+            expect(malformed).toBeInstanceOf(TokenEncryptionError);
+            expect(malformed).toMatchObject({
+                reason: 'invalid_format',
+                message: 'Invalid envelope format',
+            });
 
             // Same reason for a well-shaped envelope with a bad IV/auth tag size.
-            try {
+            const badSizes = thrownBy(() =>
                 service.envelopeDecrypt(
                     ['v1', 'v1', 'AAAA', 'AAAA', 'AAAA'].join(':')
-                );
-                throw new Error('expected envelopeDecrypt to throw');
-            } catch (error) {
-                expect(error).toBeInstanceOf(TokenEncryptionError);
-                expect((error as TokenEncryptionError).reason).toBe(
-                    'invalid_format'
-                );
-            }
+                )
+            );
+            expect(badSizes).toBeInstanceOf(TokenEncryptionError);
+            expect(badSizes).toMatchObject({ reason: 'invalid_format' });
         });
 
         it('throws unsupported_version for a future envelope version', () => {
             const service = buildService();
 
-            try {
+            const error = thrownBy(() =>
                 service.envelopeDecrypt(
                     'v2:v1:AAAAAAAAAAAAAAAA:AAAAAAAAAAAAAAAAAAAAAA==:AAAAAAAAAAAAAAAAAAAAAA=='
-                );
-                throw new Error('expected envelopeDecrypt to throw');
-            } catch (error) {
-                expect(error).toBeInstanceOf(TokenEncryptionError);
-                expect((error as TokenEncryptionError).reason).toBe(
-                    'unsupported_version'
-                );
-                expect((error as TokenEncryptionError).message).toBe(
-                    'Unsupported envelope version'
-                );
-            }
+                )
+            );
+            expect(error).toBeInstanceOf(TokenEncryptionError);
+            expect(error).toMatchObject({
+                reason: 'unsupported_version',
+                message: 'Unsupported envelope version',
+            });
         });
 
         it('throws auth_failed when the ciphertext does not authenticate', () => {
@@ -214,15 +207,11 @@ describe('HelperEncryptionService envelope encryption', () => {
                 .split(':');
             parts[4] = Buffer.from('tampered-ciphertext').toString('base64');
 
-            try {
-                service.envelopeDecrypt(parts.join(':'));
-                throw new Error('expected envelopeDecrypt to throw');
-            } catch (error) {
-                expect(error).toBeInstanceOf(TokenEncryptionError);
-                expect((error as TokenEncryptionError).reason).toBe(
-                    'auth_failed'
-                );
-            }
+            const error = thrownBy(() =>
+                service.envelopeDecrypt(parts.join(':'))
+            );
+            expect(error).toBeInstanceOf(TokenEncryptionError);
+            expect(error).toMatchObject({ reason: 'auth_failed' });
         });
 
         // The #384 backfill detects plaintext rows by attempting a legacy
@@ -231,12 +220,10 @@ describe('HelperEncryptionService envelope encryption', () => {
         it('does not type a legacy/plaintext decrypt failure as TokenEncryptionError', () => {
             const service = buildService();
 
-            try {
-                service.envelopeDecrypt('EAAB-raw-platform-token');
-                throw new Error('expected envelopeDecrypt to throw');
-            } catch (error) {
-                expect(error).not.toBeInstanceOf(TokenEncryptionError);
-            }
+            const error = thrownBy(() =>
+                service.envelopeDecrypt('EAAB-raw-platform-token')
+            );
+            expect(error).not.toBeInstanceOf(TokenEncryptionError);
         });
     });
 });
