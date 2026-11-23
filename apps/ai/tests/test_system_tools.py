@@ -376,6 +376,61 @@ async def test_live_unknown_tag_lists_the_real_ones(monkeypatch):
     assert "again" in result["instruction"]
 
 
+def _stub_api_404(monkeypatch):
+    class _Stub:
+        async def post(self, path, json):
+            raise system_tools_module.ApiClientError("POST failed: 404 Not found", status_code=404)
+
+    monkeypatch.setattr(
+        system_tools_module.ApiClient, "get_instance", staticmethod(lambda: _Stub())
+    )
+
+
+async def test_live_404_on_a_real_tag_means_the_customer_is_gone(monkeypatch):
+    # apps/api 404s on a missing customer too; the name was right, so a retry
+    # with another name would only loop until the iteration cap.
+    _patch_runtime(monkeypatch, customer_id="cust-gone", session_id="conv-1")
+    monkeypatch.setattr(system_tools_module, "_workspace_tags", AsyncMock(return_value=_TAGS))
+    _stub_api_404(monkeypatch)
+    result = await apply_customer_tag.ainvoke({"name": "Cần nhân viên"})
+    assert result["instruction"] == system_tools_module.HANDOFF_FAILED
+    assert "validTags" not in result
+
+
+async def test_live_404_when_tags_cannot_be_read_does_not_ask_for_a_retry(monkeypatch):
+    _patch_runtime(monkeypatch, customer_id="cust-1", session_id="conv-1")
+    monkeypatch.setattr(system_tools_module, "_workspace_tags", AsyncMock(return_value=None))
+    _stub_api_404(monkeypatch)
+    result = await apply_customer_tag.ainvoke({"name": "Handoff"})
+    assert result["instruction"] == system_tools_module.HANDOFF_FAILED
+
+
+async def test_test_chat_when_tags_cannot_be_read_does_not_ask_for_a_retry(monkeypatch):
+    _patch_test_chat(monkeypatch, tags=None)
+    result = await apply_customer_tag.ainvoke({"name": "Cần nhân viên"})
+    assert result["instruction"] == system_tools_module.HANDOFF_FAILED
+
+
+async def test_test_chat_matches_like_apps_api_and_keeps_accent_marks(monkeypatch):
+    # apps/api strips emoji, not modifier symbols such as ^ or ´.
+    _patch_test_chat(monkeypatch)
+    result = await apply_customer_tag.ainvoke({"name": "VIP^"})
+    assert "validTags" in result
+
+
+async def test_valid_tags_list_handoff_tags_first_and_is_capped(monkeypatch):
+    tags = [(f"tag-{i:02d}", False) for i in range(30)] + [("Cần nhân viên", True)]
+    _patch_test_chat(monkeypatch, tags=tags)
+    result = await apply_customer_tag.ainvoke({"name": "Handoff"})
+    assert result["validTags"][0] == "Cần nhân viên"
+    assert len(result["validTags"]) == 20
+
+
+def test_missing_runtime_is_not_the_test_chat():
+    # Outside an agent run: answer "no customer context", never a simulated success.
+    assert system_tools_module._is_test_chat() is False
+
+
 async def test_handoff_tag_that_did_not_hand_over_says_not_to_promise(monkeypatch):
     # apps/api found no conversation: the tag stuck, the handoff did not fire.
     _patch_runtime(monkeypatch, customer_id="cust-1", session_id="conv-1")

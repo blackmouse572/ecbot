@@ -26,6 +26,7 @@ from sqlmodel import col
 
 from eccho_ai.models.customer_tags import CustomerTags
 from eccho_ai.models.customers import Customers
+from eccho_ai.modules.chat.customer_context import MAX_CATALOG_TAGS
 from eccho_ai.modules.chat.models.agent_models import AgentRequestContext
 from eccho_ai.core.api_client import ApiClient, ApiClientError
 from eccho_ai.core.postgres import PostgresRepo
@@ -365,17 +366,19 @@ def _is_test_chat() -> bool:
 
     try:
         ctx = get_runtime(AgentRequestContext).context
-    except Exception:  # pragma: no cover — runtime missing outside agent
-        return True
-    return getattr(ctx, "conversation_id", None) is None
+    except Exception:
+        # Outside an agent run: "no customer context", never a simulated success.
+        return False
+    return ctx is not None and getattr(ctx, "conversation_id", None) is None
 
 
-async def _workspace_tags() -> list[tuple[str, bool]]:
-    """(name, triggers_handoff) of the chatbot's workspace tags, by name."""
+async def _workspace_tags() -> list[tuple[str, bool]] | None:
+    """(name, triggers_handoff) of the chatbot's workspace tags, by name.
+    None when they cannot be read."""
     chatbot = _get_chatbot()
     workspace_id = getattr(chatbot, "workspace_id", None)
     if workspace_id is None:
-        return []
+        return None
     repo = PostgresRepo.get_instance()
     try:
         async with repo.session_factory() as session:
@@ -390,7 +393,7 @@ async def _workspace_tags() -> list[tuple[str, bool]]:
             rows = (await session.exec(stmt)).all()  # type: ignore[attr-defined]
     except Exception as exc:  # noqa: BLE001
         logger.warning("workspace tags unavailable: %s", exc)
-        return []
+        return None
     return [(name, bool(handoff)) for name, handoff in rows]
 
 
@@ -399,7 +402,7 @@ def _without_emoji(name: str) -> str:
     # catalog's emoji with the name ("Angry 🚨").
     return "".join(
         ch for ch in name
-        if unicodedata.category(ch) not in ("So", "Sk") and ch not in "\ufe0f\u200d"
+        if unicodedata.category(ch) != "So" and ch not in "\ufe0f\u200d"
     ).strip()
 
 
@@ -414,7 +417,8 @@ def _find_tag(name: str, tags: list[tuple[str, bool]]) -> tuple[str, bool] | Non
 def _unknown_tag(name: str, tags: list[tuple[str, bool]]) -> dict[str, Any]:
     return {
         "error": f'No tag is named "{name}"',
-        "validTags": [tag[0] for tag in tags],
+        # Handoff tags first, capped like the catalog the agent reads.
+        "validTags": [t[0] for t in sorted(tags, key=lambda t: not t[1])][:MAX_CATALOG_TAGS],
         "instruction": TAG_NOT_FOUND,
     }
 
@@ -427,6 +431,9 @@ async def apply_customer_tag(name: str) -> dict[str, Any]:
         # Nothing to write to: check the name against the real tags and
         # answer as a live chat would, so the owner can test handovers.
         tags = await _workspace_tags()
+        if not tags:
+            _log_call("apply_customer_tag", _truncate(name), "test_chat no_tags", 0)
+            return {"error": "workspace tags unavailable", "instruction": HANDOFF_FAILED}
         tag = _find_tag(name, tags)
         _log_call("apply_customer_tag", _truncate(name), f"test_chat found={tag is not None}", 0)
         if tag is None:
@@ -467,7 +474,11 @@ async def apply_customer_tag(name: str) -> dict[str, Any]:
             (time.perf_counter() - started) * 1000,
         )
         if exc.status_code == 404:
-            return _unknown_tag(name, await _workspace_tags())
+            # apps/api also 404s on a missing customer: only a name that is
+            # not in the catalog is worth a retry with another name.
+            tags = await _workspace_tags()
+            if tags and _find_tag(name, tags) is None:
+                return _unknown_tag(name, tags)
         return {"error": str(exc), "instruction": HANDOFF_FAILED}
 
 

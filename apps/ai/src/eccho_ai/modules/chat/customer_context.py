@@ -2,7 +2,8 @@
 (after the history, so its changes never break the prompt cache of the turns
 before it; see `services.get_agent_input`).
 
-Keeps the block bounded: the tag catalog is capped at 20 entries, staff notes
+Keeps the block bounded: the tag catalog is capped at 20 entries (handoff
+tags first, so the shop's own tags never push them out), staff notes
 at MAX_NOTES_LEN characters and saved fields at MAX_FIELDS keys.
 Only confirmed-unified Customers (merged_into_customer_id IS NULL) are visible
 to the agent — pending merge suggestions stay invisible, even though the
@@ -231,13 +232,11 @@ def render_customer_context(
 
 def render_tag_catalog(catalog_rows: list[tuple[Any, ...]]) -> str:
     """The tag catalog, from (name, emoji, description, triggers_handoff,
-    notifies_team, created_at) rows, newest first. Handoff tags come first and
-    are never cut: the seeded ones are the oldest, so a shop's own tags would
-    otherwise push them past the cap."""
-    handoff = [row for row in catalog_rows if row[3]]
-    others = [row for row in catalog_rows if not row[3]]
-    room = max(MAX_CATALOG_TAGS - len(handoff), 0)
-    rows = handoff + others[:room]
+    notifies_team, created_at) rows, newest first. Handoff tags come first: the
+    seeded ones are the oldest, so a shop's own tags would otherwise push them
+    past the cap."""
+    ordered = [row for row in catalog_rows if row[3]] + [row for row in catalog_rows if not row[3]]
+    rows = ordered[:MAX_CATALOG_TAGS]
 
     lines = [
         "# Tag catalog (apply with the apply_customer_tag tool when warranted;"
@@ -249,6 +248,6 @@ def render_tag_catalog(catalog_rows: list[tuple[Any, ...]]) -> str:
         lines.append(
             _format_tag_line(name, emoji, description, bool(triggers_handoff), bool(notifies_team))
         )
-    if len(others) > room:
+    if len(ordered) > MAX_CATALOG_TAGS:
         lines.append("- …")
     return "\n".join(lines)
