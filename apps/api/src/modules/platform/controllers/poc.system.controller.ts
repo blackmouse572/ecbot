@@ -45,18 +45,28 @@ class PocInboundDto {
     receivedAt?: number;
 }
 
-class PocReplyDto {
+export class PocReplyDto {
     @IsString()
     conversationId: string;
 
     @IsString()
     senderId: string;
 
+    /**
+     * Null (or absent) for a sender on an anonymous channel — website widget,
+     * API channel (see ANONYMOUS_CHANNELS). Those senders get no Customer
+     * until they share something, and the reply does not need one: apps/ai
+     * takes `customer_id: None` and builds no customer context block.
+     * Rejecting null here lost every reply on the edge debounce path (the
+     * in-process debounce has no DTO, so only the edge broke).
+     */
+    @IsOptional()
     @IsString()
-    customerId: string;
+    customerId?: string | null;
 
+    @IsOptional()
     @IsString()
-    contactPointId: string;
+    contactPointId?: string | null;
 
     @IsArray()
     @IsString({ each: true })
