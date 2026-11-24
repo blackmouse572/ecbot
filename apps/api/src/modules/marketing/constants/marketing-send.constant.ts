@@ -32,6 +32,15 @@ export const MARKETING_SEND_TASK_PREFIX = 'marketing-send-';
 /** Reached customers are read in pages of this many when a send starts. */
 export const MARKETING_SEND_PAGE_SIZE = 500;
 
+/**
+ * Offers a page (Account) gets per minute within one send: the send's
+ * offers on each page are scheduled in minute buckets of this many, so a
+ * big send is spread out rather than all at its start. The count is per
+ * send: two sends started together on one page each get this many. Within
+ * a bucket the queue's own dispatch limit spaces the tasks.
+ */
+export const MARKETING_SEND_PER_ACCOUNT_PER_MINUTE = 30;
+
 /** Tasks created at once when a send starts. */
 export const MARKETING_SEND_ENQUEUE_BATCH = 20;
 

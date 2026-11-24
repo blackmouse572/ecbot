@@ -13774,7 +13774,9 @@
           "enumItems": [
             "NO_CHANNEL",
             "WINDOW_CLOSED",
-            "OPTED_OUT"
+            "OPTED_OUT",
+            "ACCOUNT_BLOCKED",
+            "SEND_HOURS_ENDED"
           ],
           "mappedType": "enum"
         },

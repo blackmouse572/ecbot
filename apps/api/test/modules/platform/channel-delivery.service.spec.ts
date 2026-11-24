@@ -83,6 +83,22 @@ describe('ChannelDeliveryService.run', () => {
         );
     });
 
+    it('alerts at once when the platform blocks the account from sending', async () => {
+        const { service, alerts } = makeService();
+        const acc = account();
+        const send = jest
+            .fn()
+            .mockRejectedValue(upstream(400, { error: { code: 2022 } }));
+
+        await expect(service.run(acc, send)).rejects.toBeDefined();
+        expect(send).toHaveBeenCalledTimes(1);
+        expect(alerts.open).toHaveBeenCalledWith(
+            acc,
+            ENUM_CHANNEL_ALERT.SEND_FAILING,
+            expect.anything()
+        );
+    });
+
     it('opens a send-failing alert on the third failure in a row', async () => {
         const { service, alerts } = makeService();
         const send = jest.fn().mockRejectedValue(upstream(400));

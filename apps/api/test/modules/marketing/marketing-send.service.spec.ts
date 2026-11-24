@@ -1,3 +1,4 @@
+import { HttpException, HttpStatus } from '@nestjs/common';
 import { ENUM_ACCOUNT_TYPE as A } from 'src/modules/account/enums/account.enum';
 import {
     ENUM_MARKETING_MESSAGE_STATUS as S,
@@ -25,6 +26,7 @@ describe('MarketingSendService', () => {
         finish: jest.fn(),
         claim: jest.fn(),
         markReplied: jest.fn(),
+        skipQueuedOnAccount: jest.fn(),
     };
     const audience = { toAudience: jest.fn(a => a), reached: jest.fn() };
     const settings = { rules: jest.fn(), stopKeyword: jest.fn() };
@@ -108,12 +110,14 @@ describe('MarketingSendService', () => {
                     customerId: 'lan',
                     channel: A.FACEBOOK_PAGE,
                     conversationId: 'conv-lan',
+                    accountId: 'page-1',
                     lastInboundAt: ago(2),
                 },
                 {
                     customerId: 'minh',
                     channel: A.FACEBOOK_PAGE,
                     conversationId: 'conv-minh',
+                    accountId: 'page-1',
                     lastInboundAt: ago(30),
                 },
             ]);
@@ -237,6 +241,88 @@ describe('MarketingSendService', () => {
             ).toEqual([500, 1]);
         });
 
+        it('paces each page: 30 offers a minute, pages side by side', async () => {
+            const ids = Array.from({ length: 32 }, (_, i) => `c${i}`);
+            audience.reached.mockResolvedValue({
+                ids: [...ids, 'other'],
+                total: 33,
+            });
+            conversations.lastInboundByCustomerChannel.mockResolvedValue([
+                ...ids.map(id => ({
+                    customerId: id,
+                    channel: A.FACEBOOK_PAGE,
+                    conversationId: `conv-${id}`,
+                    accountId: 'page-1',
+                    lastInboundAt: ago(1),
+                })),
+                {
+                    customerId: 'other',
+                    channel: A.FACEBOOK_PAGE,
+                    conversationId: 'conv-other',
+                    accountId: 'page-2',
+                    lastInboundAt: ago(1),
+                },
+            ]);
+            ledger.plan.mockImplementation(async (_w, _s, rows) =>
+                rows.map((r: any) => ({
+                    id: `m-${r.customerId}`,
+                    customerId: r.customerId,
+                    sendDay: r.sendDay,
+                }))
+            );
+
+            await service.send('ws1', input, undefined, now);
+
+            const at = new Map(
+                tasks.enqueue.mock.calls.map(c => [
+                    c[2].messageId,
+                    c[3].scheduleTime.getTime(),
+                ])
+            );
+            expect(at.get('m-c0')).toBe(now.getTime());
+            expect(at.get('m-c29')).toBe(now.getTime());
+            expect(at.get('m-c30')).toBe(now.getTime() + 60_000);
+            expect(at.get('m-c31')).toBe(now.getTime() + 60_000);
+            expect(at.get('m-other')).toBe(now.getTime());
+        });
+
+        it('does not pace past closing: the rest is skipped, not sent late', async () => {
+            // Now is 10:00 shop time and the shop closes at 10:01.
+            settings.rules.mockResolvedValue({
+                maxPer30Days: 3,
+                restAfter: 3,
+                restDays: 30,
+                sendFrom: '09:00',
+                sendTo: '10:01',
+            });
+            const ids = Array.from({ length: 31 }, (_, i) => `c${i}`);
+            audience.reached.mockResolvedValue({ ids, total: 31 });
+            conversations.lastInboundByCustomerChannel.mockResolvedValue(
+                ids.map(id => ({
+                    customerId: id,
+                    channel: A.FACEBOOK_PAGE,
+                    conversationId: `conv-${id}`,
+                    accountId: 'page-1',
+                    lastInboundAt: ago(1),
+                }))
+            );
+            ledger.plan.mockImplementation(async (_w, _s, rows) =>
+                rows.map((r: any) => ({
+                    id: `m-${r.customerId}`,
+                    customerId: r.customerId,
+                    sendDay: r.sendDay,
+                }))
+            );
+
+            await service.send('ws1', input, undefined, now);
+
+            expect(tasks.enqueue).toHaveBeenCalledTimes(30);
+            expect(ledger.finish).toHaveBeenCalledWith('m-c30', {
+                status: S.SKIPPED,
+                skipReason: R.SEND_HOURS_ENDED,
+            });
+        });
+
         it('fails a row whose task could not be created, freeing the day', async () => {
             tasks.enqueue.mockRejectedValue(new Error('queue down'));
 
@@ -257,11 +343,11 @@ describe('MarketingSendService', () => {
             channel,
             workspace: { id: 'ws1' },
             customer: { id: 'lan' },
-            send: { text: 'Mẫu mới về', imageUrl },
+            send: { id: 'send1', text: 'Mẫu mới về', imageUrl },
             conversation: {
                 id: 'conv-lan',
                 senderId: 'psid-1',
-                account: { type: channel },
+                account: { id: 'page-1', type: channel },
                 chatbot: { id: 'bot1', primaryLanguage: 'vi' },
             },
         });
@@ -298,7 +384,7 @@ describe('MarketingSendService', () => {
                 })
             );
             expect(messenger.sendMessage).toHaveBeenCalledWith(
-                { type: A.FACEBOOK_PAGE },
+                { id: 'page-1', type: A.FACEBOOK_PAGE },
                 'psid-1',
                 {
                     content: { kind: 'text', text: 'Mẫu mới về' },
@@ -398,6 +484,42 @@ describe('MarketingSendService', () => {
                 status: S.FAILED,
                 sentAt: null,
             });
+        });
+
+        it('pauses the rest of the send on that page when the platform blocks it', async () => {
+            ledger.findQueued.mockResolvedValue(row());
+            inbound();
+            messenger.sendMessage.mockRejectedValue(
+                new HttpException(
+                    {
+                        upstreamStatus: 400,
+                        platformError: { error: { code: 2022 } },
+                        message: 'x',
+                    },
+                    HttpStatus.BAD_GATEWAY
+                )
+            );
+
+            await service.deliver('m1', now);
+
+            expect(ledger.finish).toHaveBeenCalledWith('m1', {
+                status: S.FAILED,
+                sentAt: null,
+            });
+            expect(ledger.skipQueuedOnAccount).toHaveBeenCalledWith(
+                'send1',
+                'page-1'
+            );
+        });
+
+        it('keeps sending to others when the failure is about one customer', async () => {
+            ledger.findQueued.mockResolvedValue(row());
+            inbound();
+            messenger.sendMessage.mockRejectedValue(new Error('boom'));
+
+            await service.deliver('m1', now);
+
+            expect(ledger.skipQueuedOnAccount).not.toHaveBeenCalled();
         });
     });
 });

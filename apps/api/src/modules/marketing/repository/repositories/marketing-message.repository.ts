@@ -124,6 +124,36 @@ export class MarketingMessageRepository extends DatabaseRepository<MarketingMess
         return changed > 0;
     }
 
+    /**
+     * The platform blocked a page: the send's offers still waiting on that
+     * page are skipped, so their tasks send nothing. Rows another run has
+     * already claimed are left to finish.
+     */
+    async skipQueuedOnAccount(
+        sendId: string,
+        accountId: string
+    ): Promise<void> {
+        await this.em.getConnection().execute(
+            `
+            UPDATE marketing_messages mm
+            SET status = ?, skip_reason = ?, updated_at = now()
+            FROM conversations c
+            WHERE c.id = mm.conversation_id
+                AND mm.send_id = ?::uuid
+                AND c.account_id = ?::uuid
+                AND mm.status = ?
+                AND mm.sent_at IS NULL
+            `,
+            [
+                S.SKIPPED,
+                ENUM_MARKETING_SKIP_REASON.ACCOUNT_BLOCKED,
+                sendId,
+                accountId,
+                S.QUEUED,
+            ]
+        );
+    }
+
     /** Ends a QUEUED row; false when another run already ended it. */
     async finish(
         id: string,

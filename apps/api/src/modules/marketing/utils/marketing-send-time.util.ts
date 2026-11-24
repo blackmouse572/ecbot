@@ -21,3 +21,12 @@ export function marketingSendAt(
     if (local < at(local, to)) return now;
     return at(local.plus({ days: 1 }), from).toJSDate();
 }
+
+/** The closing time ("HH:mm" `to` in `zone`) on the shop day of `sendAt`. */
+export function marketingSendEnd(
+    sendAt: Date,
+    zone: string | undefined,
+    to: string
+): Date {
+    return at(DateTime.fromJSDate(sendAt, { zone }), to).toJSDate();
+}

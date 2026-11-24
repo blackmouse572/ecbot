@@ -16,6 +16,8 @@ export interface IMarketingLastInbound {
     customerId: string;
     channel: ENUM_ACCOUNT_TYPE;
     conversationId: string;
+    /** The page (Account) that conversation is on. */
+    accountId: string;
     lastInboundAt: Date;
 }
 
