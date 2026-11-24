@@ -4,13 +4,46 @@ description: The Marketing overview shows which stage your customers are at, who
 faq:
   - q: Who does the To do this week list leave out?
     a: Customers who opted out of offers, are paused, or are marked Upset. The total shows how many were left out.
-  - q: Which date range does the page use?
-    a: Pick one in the top right. Stage moves and list health compare that range with the same number of days before it.
+  - q: Does the date range change the To do this week list?
+    a: No. The range changes the funnel, stage moves and list health. Each To do row keeps its own window, such as the last 7 days for Asked price.
+  - q: Does Ecbot send messages from the Marketing overview?
+    a: Not yet. A number opens the filtered customer list, and you message each customer from their conversation.
   - q: Who can open the Marketing overview?
     a: Members whose role can read Marketing, such as the Owner, Manager and Marketing roles.
 ---
 
-The Marketing overview is the first page of the **Marketing** group in the app's sidebar. It shows how many customers are at each stage, which of them are worth a message this week, and whether customers are opting out because the shop messages too much.
+The Marketing overview shows how many customers are at each stage, which of them are worth a message this week, and whether customers are opting out because the shop messages too much. It is the first page of the **Marketing** group in the app's sidebar.
+
+## How Marketing works
+
+Marketing in Ecbot follows one cycle, and each step has its own page:
+
+<FlowDiagram
+  arrows
+  title="The marketing cycle"
+  steps={[
+    { name: "Attract", hint: ["tracked links", "and QR codes"] },
+    { name: "Understand", hint: ["stages and", "offer permission"] },
+    { name: "Record", hint: ["confirm orders,", "product groups"] },
+    { name: "Find", hint: ["who is worth", "a message"] },
+    { name: "Act", hint: ["message them,", "watch results"], tone: "accent" },
+  ]}
+  caption="Where customers come from, where they are in buying, and who to contact next."
+/>
+
+1. **Attract**: see which flyer, post, counter or KOL brings customers, with [Customer sources](/docs/marketing/sources).
+2. **Understand**: Ecbot labels each customer with a stage and whether they want offers, see [Customer stages and offers](/docs/marketing/stages).
+3. **Record**: confirmed orders tell Ecbot who bought what and when, see [Orders and product groups](/docs/marketing/orders).
+4. **Find**: this page lists who is worth a message this week, and why.
+5. **Act**: you message those customers, then watch the stages and list health change.
+
+New to Marketing? Follow [Set up Marketing](/docs/marketing/setup) first, so this page has orders and sources to work from.
+
+<Callout type="warn" title="This page does not send messages">
+  A number opens the customer list filtered to those customers. Ecbot does not
+  send anything from here: you message each customer from their conversation.
+  Sending offers to a whole group from Ecbot comes in a later release.
+</Callout>
 
 ## When to use it
 
@@ -35,18 +68,28 @@ Open it once a week to decide who to message next. Every number on the page open
 
 ## To do this week
 
-One row per stage, with how many customers are worth a message and why:
+One row per group of customers, with how many are worth a message, and what to do once you open the list:
 
-| Row              | Who it counts                                                                                     |
-| ---------------- | ------------------------------------------------------------------------------------------------- |
-| **New**          | Customers who wrote for the first time this week. Answer quickly so they keep asking.             |
-| **Interested**   | Customers who looked at products but did not ask the price.                                       |
-| **Asked price**  | Customers who asked the price in the last 7 days and did not buy.                                 |
-| **Bought once**  | Customers who bought for the first time 15 to 30 days ago, ready for something that goes with it. |
-| **Repeat buyer** | Customers about to run out, based on each product group's repurchase cycle.                       |
-| **Win-back**     | Customers who bought but have not come back in 31 to 90 days.                                     |
+| Row              | Who it counts                                                               | What to do next                                                                    |
+| ---------------- | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **New**          | Customers who wrote for the first time this week.                           | Check they got a quick, useful answer, so they keep asking.                        |
+| **Interested**   | Customers who looked at products but did not ask the price.                 | Send the price, a photo or a review of the product they looked at.                 |
+| **Asked price**  | Customers who asked the price in the last 7 days and did not buy.           | Read the chat, answer what held them back (size, shipping, price), offer to order. |
+| **Bought once**  | Customers who bought for the first time 15 to 30 days ago.                  | Ask how the product went, and suggest something that goes with it.                 |
+| **Repeat buyer** | Customers about to run out, based on each product group's repurchase cycle. | Remind them to reorder before they run out.                                        |
+| **Win-back**     | Customers who bought but have not come back in 31 to 90 days.               | Send something new or a small offer to bring them back.                            |
 
-Ecbot leaves out customers who opted out, are paused or are upset, and says how many it left out.
+These rows are groups to act on this week, not stages. **Win-back** is not a stage: a Win-back customer is still at Bought once or Repeat buyer. See [Stages and To do rows](/docs/marketing/stages#stages-and-to-do-rows).
+
+### Who you can contact
+
+Each row only counts customers the shop may send offers to. Ecbot leaves out customers who:
+
+- stopped offers for good, or sent "stop",
+- paused offers, or paused the product group the row is about,
+- are marked **Upset**.
+
+The total at the top says how many customers were left out. Leave them out of your messages too.
 
 <OfferCheckDiagram />
 
@@ -93,5 +136,9 @@ A rise in opt-outs is a sign the shop is messaging too much.
     Opted out and Paused tell you whether the shop messages too much.
   </Mark>
 </Screenshot>
+
+## The date range and the To do rows
+
+The date range in the top right changes the funnel, stage moves and list health. It does not change the To do rows: each row keeps its own window, such as the last 7 days for Asked price or 31 to 90 days for Win-back, and counts customers as of today.
 
 Read [Customer stages and offers](/docs/marketing/stages) for how each stage is set.

@@ -25,16 +25,77 @@ faq:
 
 ## Xác nhận đơn từ chat
 
+<Callout type="warn" title="Xác nhận đơn để Tiếp thị chạy đúng">
+  Đơn bot ghi trong chat nằm ở **Chờ xác nhận** cho tới khi nhân viên kiểm tra.
+  Chỉ đơn đã xác nhận mới đưa khách sang Đã mua 1 lần hoặc Mua lại, được tính
+  cho Nguồn khách, và giúp Ecbot học chu kỳ mua lại.
+</Callout>
+
 Khi khách đặt hàng trong chat, bot ghi đơn ở trạng thái **Chờ xác nhận**. Mở đơn, kiểm tra số lượng và giá, rồi bấm **Xác nhận đơn**. Đơn chưa xác nhận hoặc đã huỷ không được tính là đã mua.
 
 ## Thêm đơn từ nơi khác
 
 - **Thêm đơn** để ghi lại đơn đặt qua điện thoại, Shopee hay tại cửa hàng. Tìm khách theo tên hoặc số điện thoại, thêm sản phẩm và nhóm hàng, rồi chọn ngày đặt.
-- **Nhập file** đọc file CSV có dòng đầu là tên các cột. Mỗi dòng là một sản phẩm, và các dòng cùng mã đơn gộp thành một đơn. Tải file mẫu để xem Ecbot đọc những cột nào.
+- **Nhập file** đưa vào nhiều đơn một lần, xem phần tiếp theo.
+
+## Nhập các đơn cũ
+
+Nếu shop đã bán trước khi dùng Ecbot, hãy nhập các đơn cũ để Ecbot biết ai đã mua và mua lúc nào.
+
+<Steps>
+<Step>
+
+### Đưa đơn hàng vào file CSV
+
+Xuất từ Excel, Google Sheets hoặc trang quản lý của sàn ra file CSV, dòng đầu là tên các cột. Mỗi dòng là một sản phẩm trong đơn. Trong **Nhập file**, tải **File mẫu** để xem ví dụ với 3 đơn.
+
+</Step>
+<Step>
+
+### Kiểm tra các cột
+
+| Cột                                     | Có cần không?   | Ghi chú                                                                                                          |
+| --------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Số điện thoại khách**                 | Bắt buộc        | Ghép đơn với khách. Số điện thoại mới sẽ tạo khách mới.                                                          |
+| **Tên sản phẩm** hoặc **Tổng tiền đơn** | Ít nhất một cột | Dòng không có cả hai sẽ bị bỏ qua.                                                                               |
+| **Mã đơn**                              | Nên có          | Các dòng cùng mã gộp thành một đơn. Mã đã có trong Ecbot sẽ được bỏ qua, nên nhập lại cùng một file vẫn an toàn. |
+| **Ngày đặt**                            | Nên có          | Ngày trước tháng, ví dụ 01/11/2026 hoặc 01/11/2026 14:30.                                                        |
+| **Nhóm hàng**                           | Nên có          | Tên nhóm Ecbot chưa có sẽ tạo nhóm mới.                                                                          |
+| **Trạng thái**                          | Không bắt buộc  | Không có cột này thì mọi đơn được tính là đã xác nhận. Đơn đã huỷ bị bỏ qua.                                     |
+
+Tên khách, số lượng và đơn giá cũng được đọc.
+
+</Step>
+<Step>
+
+### Ghép cột và xem trước
+
+Tải file lên. Ecbot tự đoán cột nào là gì, bạn chỉ cần kiểm tra. Trước khi lưu, Ecbot cho biết sẽ thêm bao nhiêu đơn, bao nhiêu khách mới và nhóm hàng mới, và những dòng nào không đọc được, vì sao.
+
+</Step>
+<Step>
+
+### Nhập, rồi kiểm tra vài khách
+
+Bấm **Nhập**. Mở hai, ba khách bạn biết để kiểm tra đơn và giai đoạn của họ. Đơn đã xác nhận giờ được tính vào chu kỳ mua lại của từng nhóm hàng.
+
+</Step>
+</Steps>
 
 ## Nhóm hàng
 
 Mở thẻ **Nhóm hàng**. Mỗi nhóm có tên, ví dụ "Kem chống nắng", và **Chu kỳ mua lại**: số ngày khách thường dùng hết. Sản phẩm có tên chứa tên nhóm sẽ tự vào nhóm khi bot ghi đơn.
+
+Gom những sản phẩm dùng hết với tốc độ gần nhau. Ví dụ (số minh hoạ, không phải mặc định của Ecbot):
+
+| Sản phẩm              | Nhóm hàng      | Chu kỳ mua lại |
+| --------------------- | -------------- | -------------- |
+| Kem chống nắng SPF 50 | Kem chống nắng | 60 ngày        |
+| Kem chống nắng SPF 30 | Kem chống nắng | 60 ngày        |
+| Sữa rửa mặt           | Sữa rửa mặt    | 45 ngày        |
+| Kem dưỡng ban đêm     | Kem dưỡng      | 90 ngày        |
+
+Tách những sản phẩm dùng hết với tốc độ rất khác nhau ra nhóm riêng, nếu không lời nhắc sẽ đến quá sớm hoặc quá muộn.
 
 <Screenshot
   name="product-groups"
@@ -46,4 +107,10 @@ Mở thẻ **Nhóm hàng**. Mỗi nhóm có tên, ví dụ "Kem chống nắng",
   <Mark id="create">**Tạo nhóm hàng** để thêm nhóm mới.</Mark>
 </Screenshot>
 
-Ecbot bắt đầu với chu kỳ bạn đặt. Khi nhóm có từ 5 lần mua lại trở lên, Ecbot học chu kỳ từ các đơn đã xác nhận, và bảng hiện cả hai số. Tổng quan tiếp thị dùng chu kỳ này để đếm khách sắp dùng hết hàng, xem [Tổng quan tiếp thị](/docs/marketing).
+### Ecbot học chu kỳ thế nào
+
+- **Khi chưa đủ dữ liệu**, Ecbot dùng chu kỳ bạn đặt.
+- **Khi nhóm có từ 5 lần mua lại trở lên** (cùng một khách mua lại trong nhóm), Ecbot học chu kỳ từ các đơn đã xác nhận: lấy số ở giữa của số ngày giữa các lần mua.
+- Bảng hiện chu kỳ đang dùng, chu kỳ bạn đặt và chu kỳ Ecbot học được, để bạn so sánh.
+
+Tổng quan tiếp thị dùng chu kỳ này để đếm khách sắp dùng hết hàng, xem [Tổng quan tiếp thị](/docs/marketing).

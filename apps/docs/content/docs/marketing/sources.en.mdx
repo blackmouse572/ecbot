@@ -4,6 +4,8 @@ description: Customer sources are tracked links and QR codes that show which fly
 faq:
   - q: Which channels can a tracked link open?
     a: Connected channels that can open a chat from a link, such as Messenger, Instagram, Telegram, WhatsApp and the website chat. Threads and the API channel cannot.
+  - q: Which source gets the credit when a customer opens two links?
+    a: The first one. Each customer keeps their first tracked link as First source, and orders count toward that source.
   - q: Do customers see the source name?
     a: No. Only you and your team see it. Customers see the greeting the agent sends.
   - q: What happens when I stop a source?
@@ -11,6 +13,21 @@ faq:
 ---
 
 Customer sources are tracked links and QR codes. Every customer who opens one is recorded with that source, so you can see which flyer, post, counter or KOL brings customers and orders. Open **Customer sources** in the **Marketing** group of the sidebar.
+
+## An example: a Tết promotion
+
+You launch a new sunscreen for Tết. You put QR codes on the store counter, post on Facebook, and work with two KOLs. Which of them brings customers who buy?
+
+| Where customers see it | What you create                               |
+| ---------------------- | --------------------------------------------- |
+| Facebook post          | A source "Tết sunscreen" with its main link   |
+| Store counter          | A QR code inside that source, named "Counter" |
+| KOL Linh               | A KOL link inside that source, named "Linh"   |
+| KOL Minh               | A KOL link inside that source, named "Minh"   |
+
+After a week, the list shows new customers, potential customers, orders and close rate for each one, so you can see which place or person sells best.
+
+A **source** is the campaign or activity, such as "Tết sunscreen". Each **link or QR code** inside it is one place or person you hand it to. They share the source's greeting and tags, and each one is counted on its own.
 
 <Screenshot
   name="customer-sources"
@@ -25,6 +42,12 @@ Customer sources are tracked links and QR codes. Every customer who opens one is
 
 ## Create a tracked link
 
+<Callout title="Which channels work">
+  A tracked link opens a chat on Messenger, Instagram, Telegram, WhatsApp or
+  your website chat. Threads and the API channel cannot open a chat from a link,
+  so they cannot have tracked links.
+</Callout>
+
 1. Click **Create link**.
 2. Enter a **Source name** only your team sees, such as "Flyer in the Tết gift box".
 3. Pick the channel customers will chat on. For the website chat, enter the page where your chat widget runs.
@@ -38,4 +61,15 @@ Inside a source, add a QR code for each place, such as a counter or a standee, a
 
 ## Read the results
 
-The list shows each source's **New customers**, **Potential** customers (they asked the price or ordered), confirmed **Orders** and **Close rate** (orders per new customer). The customer panel shows each customer's **First source**.
+| Column            | What it tells you                                                             |
+| ----------------- | ----------------------------------------------------------------------------- |
+| **New customers** | How many customers this link brought: people whose first tracked link it was. |
+| **Potential**     | How many of them showed buying interest: they asked the price or ordered.     |
+| **Orders**        | Confirmed orders those customers placed after opening the link.               |
+| **Close rate**    | Orders per new customer: how well the link turns visitors into buyers.        |
+
+Only confirmed orders count, see [Orders and product groups](/docs/marketing/orders).
+
+### First source only
+
+Each customer keeps the **first** tracked link they ever opened, shown as **First source** in the customer panel. If they open a second link later, their first source and its results do not change. So a customer who first came from the counter QR and later opened a KOL link still counts for the counter.

@@ -14,6 +14,7 @@ import { Faq } from "@/components/faq";
 import { JsonLd } from "@/components/json-ld";
 import { getMDXComponents } from "@/components/mdx";
 import { ConversationStatusDiagram } from "@/components/conversation-status-diagram";
+import { FlowDiagram } from "@/components/flow-diagram";
 import { OfferCheckDiagram } from "@/components/offer-check-diagram";
 import { StageJourneyDiagram } from "@/components/stage-journey-diagram";
 import { Mark, Screenshot } from "@/components/screenshot";
@@ -121,6 +122,7 @@ export default async function DocPage(props: Props) {
             StageJourneyDiagram: () => (
               <StageJourneyDiagram lang={lang === "vi" ? "vi" : "en"} />
             ),
+            FlowDiagram,
             OfferCheckDiagram: () => (
               <OfferCheckDiagram lang={lang === "vi" ? "vi" : "en"} />
             ),

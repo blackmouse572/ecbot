@@ -4,13 +4,46 @@ description: Tổng quan tiếp thị cho biết khách đang ở giai đoạn n
 faq:
   - q: Việc nên làm tuần này bỏ ra những khách nào?
     a: Khách đã dừng nhận tin, đang tạm ngưng hoặc đang Khó chịu. Ô tổng cho biết đã bỏ bao nhiêu khách.
-  - q: Trang dùng khoảng ngày nào?
-    a: Bạn chọn ở góc trên bên phải. Khách chuyển giai đoạn và độ khoẻ danh sách so khoảng đó với cùng số ngày ngay trước.
+  - q: Khoảng ngày có đổi Việc nên làm tuần này không?
+    a: Không. Khoảng ngày đổi biểu đồ phễu, khách chuyển giai đoạn và độ khoẻ danh sách. Mỗi dòng Việc nên làm giữ khung ngày riêng, ví dụ 7 ngày qua với Hỏi giá.
+  - q: Ecbot có gửi tin từ Tổng quan tiếp thị không?
+    a: Chưa. Mỗi con số mở danh sách khách đã lọc, và bạn nhắn cho từng khách trong cuộc trò chuyện của họ.
   - q: Ai mở được Tổng quan tiếp thị?
     a: Thành viên có vai trò được xem Tiếp thị, như Chủ sở hữu, Manager và Marketing.
 ---
 
-Tổng quan tiếp thị là trang đầu tiên trong nhóm **Tiếp thị** ở thanh bên của ứng dụng. Trang cho biết bao nhiêu khách ở mỗi giai đoạn, tuần này nên nhắn cho ai, và khách có đang dừng nhận tin vì shop nhắn quá nhiều không.
+Tổng quan tiếp thị cho biết bao nhiêu khách ở mỗi giai đoạn, tuần này nên nhắn cho ai, và khách có đang dừng nhận tin vì shop nhắn quá nhiều không. Đây là trang đầu tiên trong nhóm **Tiếp thị** ở thanh bên của ứng dụng.
+
+## Tiếp thị trong Ecbot hoạt động thế nào
+
+Tiếp thị trong Ecbot đi theo một vòng, mỗi bước có trang riêng:
+
+<FlowDiagram
+  arrows
+  title="Vòng tiếp thị"
+  steps={[
+    { name: "Thu hút", hint: ["link theo dõi", "và mã QR"] },
+    { name: "Hiểu khách", hint: ["giai đoạn và", "nhận ưu đãi"] },
+    { name: "Ghi đơn", hint: ["xác nhận đơn,", "nhóm hàng"] },
+    { name: "Tìm khách", hint: ["ai nên", "nhắn tuần này"] },
+    { name: "Hành động", hint: ["nhắn khách,", "xem kết quả"], tone: "accent" },
+  ]}
+  caption="Khách đến từ đâu, đang ở đâu trên đường mua hàng, và nên liên hệ ai tiếp theo."
+/>
+
+1. **Thu hút**: xem tờ rơi, bài đăng, quầy hay KOL nào mang khách về, với [Nguồn khách](/docs/marketing/sources).
+2. **Hiểu khách**: Ecbot gắn cho mỗi khách giai đoạn và việc khách có muốn nhận ưu đãi không, xem [Giai đoạn khách và nhận ưu đãi](/docs/marketing/stages).
+3. **Ghi đơn**: đơn đã xác nhận cho Ecbot biết ai mua gì và khi nào, xem [Đơn hàng và nhóm hàng](/docs/marketing/orders).
+4. **Tìm khách**: trang này liệt kê những khách nên nhắn tuần này, và vì sao.
+5. **Hành động**: bạn nhắn cho những khách đó, rồi xem giai đoạn và độ khoẻ danh sách thay đổi.
+
+Mới dùng Tiếp thị? Làm theo [Thiết lập Tiếp thị](/docs/marketing/setup) trước, để trang này có đơn hàng và nguồn khách để làm việc.
+
+<Callout type="warn" title="Trang này không gửi tin">
+  Mỗi con số mở danh sách khách đã lọc sẵn. Ecbot không gửi gì từ trang này: bạn
+  nhắn cho từng khách trong cuộc trò chuyện của họ. Gửi ưu đãi cho cả nhóm khách
+  từ Ecbot sẽ có ở bản sau.
+</Callout>
 
 ## Khi nào dùng
 
@@ -34,18 +67,28 @@ Mở trang mỗi tuần một lần để quyết định nhắn cho ai tiếp t
 
 ## Việc nên làm tuần này
 
-Mỗi giai đoạn một dòng, cho biết bao nhiêu khách nên nhắn và vì sao:
+Mỗi nhóm khách một dòng, cho biết bao nhiêu khách nên nhắn, và nên làm gì khi mở danh sách:
 
-| Dòng             | Đếm những khách nào                                                   |
-| ---------------- | --------------------------------------------------------------------- |
-| **Mới biết**     | Khách nhắn shop lần đầu trong tuần. Trả lời sớm để khách hỏi tiếp.    |
-| **Quan tâm**     | Khách xem sản phẩm nhưng chưa hỏi giá.                                |
-| **Hỏi giá**      | Khách hỏi giá trong 7 ngày qua nhưng chưa mua.                        |
-| **Đã mua 1 lần** | Khách mua lần đầu được 15 đến 30 ngày, hợp để gợi ý món dùng kèm.     |
-| **Mua lại**      | Khách sắp dùng hết hàng, tính theo chu kỳ mua lại của từng nhóm hàng. |
-| **Mời quay lại** | Khách đã mua nhưng 31 đến 90 ngày chưa quay lại.                      |
+| Dòng             | Đếm những khách nào                                                   | Nên làm gì tiếp                                                                                |
+| ---------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **Mới biết**     | Khách nhắn shop lần đầu trong tuần.                                   | Xem khách đã được trả lời nhanh và đúng chưa, để khách hỏi tiếp.                               |
+| **Quan tâm**     | Khách xem sản phẩm nhưng chưa hỏi giá.                                | Gửi giá, ảnh hoặc đánh giá của sản phẩm khách đã xem.                                          |
+| **Hỏi giá**      | Khách hỏi giá trong 7 ngày qua nhưng chưa mua.                        | Đọc lại cuộc trò chuyện, giải đáp điều khách còn băn khoăn (size, phí ship, giá), mời đặt đơn. |
+| **Đã mua 1 lần** | Khách mua lần đầu được 15 đến 30 ngày.                                | Hỏi khách dùng thấy thế nào, gợi ý món dùng kèm.                                               |
+| **Mua lại**      | Khách sắp dùng hết hàng, tính theo chu kỳ mua lại của từng nhóm hàng. | Nhắc khách đặt lại trước khi hết hàng.                                                         |
+| **Mời quay lại** | Khách đã mua nhưng 31 đến 90 ngày chưa quay lại.                      | Gửi sản phẩm mới hoặc một ưu đãi nhỏ để mời khách quay lại.                                    |
 
-Ecbot bỏ ra khách đã dừng nhận tin, đang tạm ngưng hoặc đang khó chịu, và ghi rõ đã bỏ bao nhiêu khách.
+Các dòng này là nhóm khách cần làm trong tuần, không phải giai đoạn. **Mời quay lại** không phải giai đoạn: khách trong dòng này vẫn ở Đã mua 1 lần hoặc Mua lại. Xem [Giai đoạn khách và nhận ưu đãi](/docs/marketing/stages).
+
+### Được nhắn cho ai
+
+Mỗi dòng chỉ đếm khách mà shop được gửi ưu đãi. Ecbot bỏ ra khách:
+
+- đã dừng nhận ưu đãi vĩnh viễn, hoặc đã nhắn "dừng",
+- đang tạm ngưng nhận ưu đãi, hoặc đang tạm hoãn nhóm hàng của dòng đó,
+- đang bị đánh dấu **Khó chịu**.
+
+Ô tổng ở trên cho biết đã bỏ ra bao nhiêu khách. Khi nhắn, bạn cũng bỏ qua những khách này.
 
 <OfferCheckDiagram />
 
@@ -90,5 +133,9 @@ Số khách dừng nhận tin tăng là tín hiệu shop đang nhắn quá nhi�
     Dừng nhận tin và Đang tạm ngưng cho biết shop có đang nhắn quá nhiều không.
   </Mark>
 </Screenshot>
+
+## Khoảng ngày và các dòng Việc nên làm
+
+Khoảng ngày ở góc trên bên phải đổi biểu đồ phễu, khách chuyển giai đoạn và độ khoẻ danh sách. Khoảng ngày không đổi các dòng Việc nên làm: mỗi dòng giữ khung ngày riêng, ví dụ 7 ngày qua với Hỏi giá, hay 31 đến 90 ngày với Mời quay lại, và luôn tính đến hôm nay.
 
 Đọc [Giai đoạn khách và nhận ưu đãi](/docs/marketing/stages) để biết mỗi giai đoạn được gắn thế nào.
