@@ -16,6 +16,14 @@ from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.providers.chat_model import build_chat_model
 from eccho_ai.llm.usage import sum_usage
 from eccho_ai.models.app_models import AppResponse
+from eccho_ai.modules.decision.constants import (
+    SYSTEM_PROMPT,
+    TEXT_ANSWER_MAX,
+    WRITE_MAX_TOKENS,
+    WRITE_SYSTEM_PROMPT,
+    WRITE_TEMPERATURE,
+    WRITE_TEXT_MAX,
+)
 from eccho_ai.modules.decision.models import (
     DecisionQuestion,
     DecisionRequest,
@@ -28,20 +36,6 @@ logger = logging.getLogger("uvicorn.info")
 router = APIRouter(
     prefix="/decision", tags=["Decision"], dependencies=[Depends(require_internal_token)]
 )
-
-SYSTEM_PROMPT = """\
-You answer typed questions about a piece of state, like a calibrated classifier.
-For a "choice" question, pick exactly one option id from its options and give
-your confidence from 0 to 1 that it is the right option.
-For a "noul" question, give the probability from 0 to 1 that the answer is yes.
-For a "text" question, copy the answer from the state in its own words and
-language, or give an empty string when the state does not say.
-Judge only from the state. Do not explain.
-"""
-
-
-# Matches the profile's longest text field (PROFILE_LIMITS.longText).
-TEXT_ANSWER_MAX = 1000
 
 
 def _output_model(questions: dict[str, DecisionQuestion]) -> type[BaseModel]:
@@ -131,18 +125,6 @@ async def system_one(req: DecisionRequest) -> AppResponse[DecisionResponse]:
             answers=answers, usage=sum_usage(usage_cb.usage_metadata), model=AppVars.DECISION_MODEL
         )
     )
-
-
-WRITE_SYSTEM_PROMPT = """\
-You write one short message that a shop sends to its customers, following the
-instructions exactly. Reply with the message only: no quotes around it, no
-notes, no title, no list of options.
-"""
-
-# A draft is sampled, so asking again gives another wording.
-WRITE_TEMPERATURE = 0.9
-WRITE_MAX_TOKENS = 600
-WRITE_TEXT_MAX = 1000
 
 
 @router.post("/write", response_model=AppResponse[WriteResponse])
