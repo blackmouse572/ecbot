@@ -412,6 +412,20 @@ describe('CustomerMarketingService', () => {
         });
     });
 
+    describe('recordFollow', () => {
+        it('logs a Zalo follow and unfollow without touching offers', async () => {
+            const { service, states, events } = makeHarness({ c1: 'w1' });
+            await service.recordFollow('c1', 'w1', true);
+            await service.recordFollow('c1', 'w1', false);
+            // Only the follows: no state, so no made-up "first message".
+            expect(events.map(e => [e.kind, e.actor, e.newValue])).toEqual([
+                [KIND.FOLLOW, ACTOR.RULE, 'true'],
+                [KIND.FOLLOW, ACTOR.RULE, 'false'],
+            ]);
+            expect(states.has('c1')).toBe(false);
+        });
+    });
+
     describe('mergeInto', () => {
         it('keeps the opt-out, the further stage and the hostile flag', async () => {
             const { service, states, events, em } = makeHarness({

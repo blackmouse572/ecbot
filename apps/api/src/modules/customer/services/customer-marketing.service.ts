@@ -499,6 +499,30 @@ export class CustomerMarketingService {
         return { alreadyAsked: false };
     }
 
+    /**
+     * A Zalo OA follow or unfollow, on the customer's timeline only: no
+     * marketing state is created for it (that would log a first message).
+     */
+    async recordFollow(
+        customerId: string,
+        workspaceId: string,
+        following: boolean
+    ): Promise<void> {
+        this.addEvent(
+            {
+                workspace: this.em.getReference(WorkspaceEntity, workspaceId),
+                customer: this.em.getReference(CustomerEntity, customerId),
+            },
+            ENUM_MARKETING_EVENT_KIND.FOLLOW,
+            {
+                actor: ENUM_MARKETING_EVENT_ACTOR.RULE,
+                oldValue: null,
+                newValue: String(following),
+            }
+        );
+        await this.em.flush();
+    }
+
     /** "Khó chịu": also stops offers for good. */
     async setHostile(
         customerId: string,

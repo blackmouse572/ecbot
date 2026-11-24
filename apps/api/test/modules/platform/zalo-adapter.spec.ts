@@ -1,4 +1,4 @@
-import { createHash } from 'crypto';
+import { createHash, createHmac } from 'crypto';
 import { ZaloPlatformAdapter } from '../../../src/modules/platform/adapters/zalo/zalo.platform-adapter';
 
 const APP_ID = 'app-123';
@@ -23,6 +23,10 @@ function makeAdapter(
         } as any
     );
 }
+
+// A button payload: ecbot_action:<HMAC(appSecret, action)[0:16]>.<action>
+const tap = (action: string) =>
+    `ecbot_action:${createHmac('sha256', APP_SECRET).update(action).digest('hex').slice(0, 16)}.${action}`;
 
 // mac = SHA256(appId + rawBody + timestamp + appSecret)
 const sign = (body: string, timestamp: string) =>
@@ -132,6 +136,44 @@ describe('ZaloPlatformAdapter.parse', () => {
         expect(e.timestamp).toEqual(new Date(1580890668038));
     });
 
+    it.each(['follow', 'unfollow'] as const)(
+        'reads a %s from the follower id, keyed for dedupe',
+        kind => {
+            const [e] = makeAdapter().parse(
+                JSON.stringify({
+                    app_id: APP_ID,
+                    oa_id: 'OA',
+                    event_name: kind,
+                    follower: { id: 'F' },
+                    source: 'oa_profile',
+                    timestamp: '1580890668038',
+                })
+            );
+            expect(e).toMatchObject({
+                kind,
+                accountKey: 'OA',
+                senderId: 'F',
+                externalMessageId: `${kind}:F:1580890668038`,
+            });
+        }
+    );
+
+    // A GMF group chat posts to the same webhook URL with a top-level
+    // group_id. Replying 1-1 would DM each group member, so drop it.
+    it('ignores a message sent in a GMF group chat', () => {
+        const a = makeAdapter();
+        expect(
+            a.parse(
+                wrap({
+                    event_name: 'user_send_text',
+                    group_id: 'f414c8f76fa586fbdfb4',
+                    sender: { id: 'S' },
+                    message: { msg_id: 'm1', text: 'hi' },
+                })
+            )
+        ).toEqual([]);
+    });
+
     it('normalizes an image attachment', () => {
         const a = makeAdapter();
         const [e] = a.parse(
@@ -177,6 +219,38 @@ describe('ZaloPlatformAdapter.parse', () => {
             'share',
             'file',
         ]);
+    });
+
+    const typed = (text: string) =>
+        makeAdapter().parse(
+            wrap({
+                event_name: 'user_send_text',
+                sender: { id: 'S' },
+                message: { msg_id: 'm9', text },
+            })
+        )[0];
+
+    it('reads a tapped quick reply back as an action', () => {
+        expect(
+            typed(tap('{"id":"marketing.stop","value":"dừng"}'))
+        ).toMatchObject({
+            kind: 'message',
+            text: 'dừng',
+            action: { id: 'marketing.stop', value: 'dừng' },
+        });
+    });
+
+    it('keeps typed text that only looks like a button tap', () => {
+        const forged = 'ecbot_action:0000000000000000.{"id":"marketing.stop"}';
+        const e = typed(forged);
+        expect(e.action).toBeUndefined();
+        expect(e.text).toBe(forged);
+    });
+
+    it('keeps the text of a signed tap whose action has no value', () => {
+        const e = typed(tap('plain-id'));
+        expect(e.action).toEqual({ id: 'plain-id' });
+        expect(e.text).toBe(tap('plain-id'));
     });
 
     it('classifies oa_send_text as echo', () => {
@@ -254,6 +328,44 @@ describe('ZaloPlatformAdapter.doSend', () => {
                 },
             }
         );
+    });
+
+    it('sends quick replies as hidden query buttons, at most 5', async () => {
+        const post = jest.fn().mockResolvedValue({
+            data: { error: 0, data: { message_id: 'zm3' } },
+        });
+        const a = makeAdapter({ axiosRef: { post } });
+
+        await a.sendMessage(account, 'S', {
+            content: { kind: 'text', text: 'Mẫu mới về' },
+            fallbackText: 'Mẫu mới về',
+            quickReplies: [
+                {
+                    id: 'marketing.stop',
+                    label: 'Không nhận nữa',
+                    value: 'dừng',
+                },
+                { id: 'q1', label: 'Q1' },
+                { id: 'q2', label: 'x'.repeat(120) },
+                ...[3, 4, 5].map(n => ({ id: `q${n}`, label: `Q${n}` })),
+            ],
+        });
+
+        const message = post.mock.calls[0][1].message;
+        expect(message.text).toBe('Mẫu mới về');
+        expect(message.attachment.type).toBe('template');
+        expect(message.attachment.payload.buttons).toHaveLength(5);
+        expect(message.attachment.payload.buttons[0]).toEqual({
+            title: 'Không nhận nữa',
+            type: 'oa.query.hide',
+            payload: tap('{"id":"marketing.stop","value":"dừng"}'),
+        });
+        // No value: the label is what the customer "said".
+        expect(message.attachment.payload.buttons[1].payload).toBe(
+            tap('{"id":"q1","value":"Q1"}')
+        );
+        // Zalo rejects titles over 100 characters.
+        expect(message.attachment.payload.buttons[2].title).toHaveLength(100);
     });
 
     it('degrades a card to its fallbackText (capabilities all false)', async () => {

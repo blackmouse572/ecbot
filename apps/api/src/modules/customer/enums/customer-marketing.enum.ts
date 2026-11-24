@@ -44,6 +44,8 @@ export enum ENUM_MARKETING_EVENT_KIND {
     INTENT = 'INTENT',
     /** The customer arrived through a tracked link: `trackedLinkId`. */
     SOURCE = 'SOURCE',
+    /** The customer followed (`true`) or unfollowed (`false`) the Zalo OA. */
+    FOLLOW = 'FOLLOW',
 }
 
 /** Who made a marketing label change. */

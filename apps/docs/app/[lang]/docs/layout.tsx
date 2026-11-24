@@ -1,6 +1,7 @@
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import type { ReactNode } from "react";
 import { baseOptions } from "@/lib/layout.shared";
+import { sectionsToFolders } from "@/lib/sidebar";
 import { source } from "@/lib/source";
 
 export default async function Layout({
@@ -12,7 +13,10 @@ export default async function Layout({
 }) {
   const { lang } = await params;
   return (
-    <DocsLayout tree={source.getPageTree(lang)} {...baseOptions(lang)}>
+    <DocsLayout
+      tree={sectionsToFolders(source.getPageTree(lang), 2)}
+      {...baseOptions(lang)}
+    >
       {children}
     </DocsLayout>
   );

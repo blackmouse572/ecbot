@@ -1,4 +1,7 @@
-import { marketingSendAt } from 'src/modules/marketing/utils/marketing-send-time.util';
+import {
+    marketingSendAt,
+    marketingSendEnd,
+} from 'src/modules/marketing/utils/marketing-send-time.util';
 
 const ZONE = 'Asia/Ho_Chi_Minh'; // UTC+7
 const at = (iso: string) => new Date(iso);
@@ -38,5 +41,14 @@ describe('marketingSendAt', () => {
         // 08:15 shop time, sending from 08:00 to 08:30.
         const now = at('2026-11-22T01:15:00.000Z');
         expect(marketingSendAt(now, ZONE, '08:00', '08:30')).toEqual(now);
+    });
+});
+
+describe('marketingSendEnd', () => {
+    it("gives the closing time on the send's own shop day", () => {
+        // 08:30 shop time on 23 Nov (01:30 UTC) closes at 20:00 that day.
+        expect(
+            marketingSendEnd(at('2026-11-23T01:30:00.000Z'), ZONE, '20:00')
+        ).toEqual(at('2026-11-23T13:00:00.000Z'));
     });
 });

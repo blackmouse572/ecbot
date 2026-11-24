@@ -83,6 +83,20 @@ describe('classifySendError', () => {
     });
 
     it.each([
+        [
+            'Meta commerce messaging disabled (2022)',
+            upstream(400, { error: { code: 2022 } }),
+        ],
+        [
+            'Meta page restricted from sending (10/1893063)',
+            upstream(400, { error: { code: 10, error_subcode: 1893063 } }),
+        ],
+        ['Zalo OA blocked for violations', zalo(-1351)],
+    ])('%s blocks the whole account', (_, err) => {
+        expect(classifySendError(err)).toBe(ENUM_SEND_FAILURE.ACCOUNT_BLOCKED);
+    });
+
+    it.each([
         // The request may have reached the platform: retrying could double it.
         ['timeout', axiosError('ECONNABORTED')],
         ['connection reset', axiosError('ECONNRESET')],

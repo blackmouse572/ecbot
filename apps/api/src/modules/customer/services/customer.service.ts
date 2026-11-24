@@ -159,6 +159,21 @@ export class CustomerService implements ICustomerService {
         return updated;
     }
 
+    /** The Customer behind a sender, without creating one. */
+    async findCustomerId(
+        workspaceId: string,
+        platform: IResolveContactPoint['platform'],
+        externalSenderId: string
+    ): Promise<string | null> {
+        const existing =
+            await this.contactPointRepository.findByWorkspacePlatformSender(
+                workspaceId,
+                platform,
+                externalSenderId
+            );
+        return existing ? (existing.customer as any).id : null;
+    }
+
     async resolveContactPoint(
         params: IResolveContactPoint
     ): Promise<IResolveContactPointResult> {

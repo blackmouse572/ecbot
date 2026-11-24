@@ -3907,7 +3907,9 @@
       "reactionSet": "Tạm hoãn một nhóm hàng đến {{date}}",
       "reactionEnded": "Hết tạm hoãn một nhóm hàng",
       "intent": "Quan tâm theo nhóm hàng: {{to}}",
-      "source": "Đến qua link nguồn"
+      "source": "Đến qua link nguồn",
+      "followOn": "Quan tâm Zalo OA",
+      "followOff": "Bỏ quan tâm Zalo OA"
     },
     "viewMessage": "Xem tin nhắn",
     "firstSource": {

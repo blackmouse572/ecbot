@@ -69,11 +69,17 @@ describe('language files', () => {
             );
         };
 
+        // Guard the loops: with one language or no shared file, nothing
+        // below would assert and the test would pass on an empty compare.
         const [base, ...rest] = languages;
+        expect(rest.length).toBeGreaterThan(0);
         for (const lang of rest) {
-            const shared = jsonFiles(base).filter(f =>
-                jsonFiles(lang).includes(f)
-            );
+            const langFiles = jsonFiles(lang);
+            const shared = jsonFiles(base).filter(f => langFiles.includes(f));
+            expect({ lang, shared: shared.length > 0 }).toEqual({
+                lang,
+                shared: true,
+            });
             for (const file of shared) {
                 expect({
                     file,

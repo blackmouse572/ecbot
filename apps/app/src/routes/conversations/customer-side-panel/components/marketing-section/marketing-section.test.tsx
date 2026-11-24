@@ -221,6 +221,17 @@ describe("MarketingSection", () => {
     expect(screen.getByText("Came through a source link")).toBeInTheDocument();
   });
 
+  it("words a Zalo OA follow and unfollow", () => {
+    state.events = [
+      event({ kind: "FOLLOW", actor: "RULE", newValue: "true" }),
+      event({ kind: "FOLLOW", actor: "RULE", newValue: "false" }),
+    ];
+    renderSection();
+
+    expect(screen.getByText("Followed the Zalo OA")).toBeInTheDocument();
+    expect(screen.getByText("Unfollowed the Zalo OA")).toBeInTheDocument();
+  });
+
   it("shows each paused product group with the customer's words", () => {
     state.marketing = {
       ...(state.marketing as object),

@@ -4,8 +4,10 @@ import { ENUM_MESSAGE_AUTHOR } from '@app/modules/conversation/enums/message.enu
 import { ConversationEntity } from '@app/modules/conversation/repository/entities/conversation.entity';
 import { ConversationRepository } from '@app/modules/conversation/repository/repositories/conversation.repository';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
+import { ENUM_SEND_FAILURE } from '@app/modules/platform/constants/channel-health.constant';
 import { OutboundMessage } from '@app/modules/platform/interfaces/message-model';
 import { PlatformAdapterRegistry } from '@app/modules/platform/services/platform-adapter.registry';
+import { classifySendError } from '@app/modules/platform/utils/send-failure.util';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 import { Injectable, Logger } from '@nestjs/common';
@@ -15,6 +17,7 @@ import { randomUUID } from 'crypto';
 import {
     MARKETING_SEND_ENQUEUE_BATCH,
     MARKETING_SEND_PAGE_SIZE,
+    MARKETING_SEND_PER_ACCOUNT_PER_MINUTE,
     MARKETING_SEND_QUEUE,
     MARKETING_SEND_TASK_PREFIX,
     MARKETING_STOP_ACTION_ID,
@@ -35,7 +38,10 @@ import { MarketingMessageEntity } from '../repository/entities/marketing-message
 import { MarketingMessageRepository } from '../repository/repositories/marketing-message.repository';
 import { MarketingSendRepository } from '../repository/repositories/marketing-send.repository';
 import { marketingRoute } from '../utils/marketing-route.util';
-import { marketingSendAt } from '../utils/marketing-send-time.util';
+import {
+    marketingSendAt,
+    marketingSendEnd,
+} from '../utils/marketing-send-time.util';
 import { MarketingAudienceService } from './marketing-audience.service';
 import { MarketingSettingsService } from './marketing-settings.service';
 
@@ -129,11 +135,47 @@ export class MarketingSendService {
             send.id,
             rows
         );
-        for (let i = 0; i < queued.length; i += MARKETING_SEND_ENQUEUE_BATCH) {
+        // Each page sends at its own pace from sendAt, inside the shop's
+        // hours that day; the free window is checked again when each offer
+        // goes out.
+        const closesAt = marketingSendEnd(sendAt, this.zone(), rules.sendTo);
+        const accountOf = new Map(
+            [...inbound.values()]
+                .flat()
+                .map(r => [r.conversationId, r.accountId])
+        );
+        const conversationOf = new Map(
+            rows.map(r => [r.customerId, r.conversationId])
+        );
+        const perAccount = new Map<string, number>();
+        const paced = queued.map(row => {
+            const conversationId = conversationOf.get(row.customerId);
+            const account =
+                (conversationId && accountOf.get(conversationId)) ?? '';
+            const n = perAccount.get(account) ?? 0;
+            perAccount.set(account, n + 1);
+            const minutes = Math.floor(
+                n / MARKETING_SEND_PER_ACCOUNT_PER_MINUTE
+            );
+            return {
+                id: row.id,
+                at: new Date(sendAt.getTime() + minutes * 60_000),
+            };
+        });
+        // Past closing, the offer is not sent: the customer stays free for
+        // another send on a later day.
+        for (const row of paced.filter(r => r.at >= closesAt)) {
+            await this.marketingMessageRepository.finish(row.id, {
+                status: S.SKIPPED,
+                skipReason: ENUM_MARKETING_SKIP_REASON.SEND_HOURS_ENDED,
+            });
+        }
+        const inHours = paced.filter(r => r.at < closesAt);
+        for (let i = 0; i < inHours.length; i += MARKETING_SEND_ENQUEUE_BATCH) {
             await Promise.all(
-                queued
+                inHours
                     .slice(i, i + MARKETING_SEND_ENQUEUE_BATCH)
-                    .map(row => this.enqueue(row.id, sendAt))
+                    .map(row => this.enqueue(row.id, row.at))
             );
         }
 
@@ -169,6 +211,16 @@ export class MarketingSendService {
                 `marketing message ${row.id} failed: ${error instanceof Error ? error.message : String(error)}`
             );
             await this.finish(row, { status: S.FAILED });
+            // Every other offer from this page would fail too, and keep
+            // trying could deepen the block.
+            if (
+                classifySendError(error) === ENUM_SEND_FAILURE.ACCOUNT_BLOCKED
+            ) {
+                await this.marketingMessageRepository.skipQueuedOnAccount(
+                    row.send.id,
+                    conversation.account.id
+                );
+            }
             return;
         }
         await this.finish(row, { status: S.SENT, sentAt: new Date() });
@@ -305,12 +357,16 @@ export class MarketingSendService {
         }
         // Where the customer can tap "Không nhận nữa", the tap sends the
         // stop keyword; elsewhere the last line says which word to send.
+        // Zalo shows buttons only on mobile, so its message keeps the line.
         const tap = adapter.capabilities.quickReplies;
         const hint = (
             MARKETING_STOP_HINT[language] ??
             MARKETING_STOP_HINT[DEFAULT_LANGUAGE]
         )(keyword);
-        const text = tap ? row.send.text : `${row.send.text}\n\n${hint}`;
+        const text =
+            tap && account.type !== ENUM_ACCOUNT_TYPE.ZALO_PAGE
+                ? row.send.text
+                : `${row.send.text}\n\n${hint}`;
         messages.push({
             outbound: {
                 content: { kind: 'text', text },

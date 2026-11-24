@@ -14,14 +14,36 @@ faq:
 
 Kênh là ứng dụng chat nơi agent trả lời khách. Ecbot kết nối được với Facebook Messenger, Zalo, Telegram, WhatsApp, Threads, khung chat trên website và kênh REST API cho lập trình viên. Một agent có thể trả lời trên tất cả các kênh, và mỗi trang hay bot đã kết nối được gọi là một tài khoản.
 
+## Kênh nào dùng được hôm nay
+
+Bảng này là nơi tra cứu trạng thái các kênh. Các trang khác dẫn về đây thay vì tự liệt kê. Trạng thái trong bảng là của Ecbot do chúng tôi vận hành; bản [tự cài đặt](/docs/getting-started/installation) chỉ hiện Instagram và Threads khi đã điền app id của chúng (xem [Cấu hình](/docs/dev/configuration)).
+
+| Kênh                           | Agent làm gì ở đó                                                            | Trạng thái             |
+| ------------------------------ | ---------------------------------------------------------------------------- | ---------------------- |
+| Facebook Messenger             | Trả lời tin nhắn riêng gửi tới Facebook Page                                 | Dùng được              |
+| Zalo OA                        | Trả lời tin nhắn gửi tới Zalo Official Account                               | Dùng được              |
+| Telegram                       | Trả lời tin nhắn gửi tới bot Telegram                                        | Dùng được              |
+| WhatsApp                       | Trả lời tin nhắn gửi tới số WhatsApp Business                                | Dùng được              |
+| Website                        | Trả lời trong khung chat trên website của bạn                                | Dùng được              |
+| Threads                        | Trả lời công khai các bình luận và bài nhắc đến bạn, không có tin nhắn riêng | Dùng được              |
+| REST API                       | Ứng dụng của bạn gửi tin nhắn và nhận câu trả lời                            | Cho lập trình viên     |
+| Instagram, Shopee, TikTok Shop | Tin nhắn của khách trên các ứng dụng này                                     | Sắp có, chưa dùng được |
+
 ## Kết nối một kênh
 
 Mở **Kênh** ở thanh bên và chọn **Liên kết tài khoản**. Chọn nền tảng:
 
-<Screenshot name="channel-platforms" alt="Màn hình chọn nền tảng với Facebook, Zalo, Telegram, WhatsApp, Website và API">
+<Screenshot
+  name="channel-platforms"
+  alt="Màn hình chọn nền tảng với Facebook, Zalo, Telegram, WhatsApp, Website và API"
+>
   <Mark id="facebook">Các nền tảng dùng được sẽ mở một bước kết nối ngắn.</Mark>
-  <Mark id="roadmap">Những nền tảng có nhãn **Sắp có** sẽ ra mắt sau và chưa kết nối được.</Mark>
-  <Mark id="website">**Website** cho bạn một khung chat để dán vào trang web.</Mark>
+  <Mark id="roadmap">
+    Những nền tảng có nhãn **Sắp có** sẽ ra mắt sau và chưa kết nối được.
+  </Mark>
+  <Mark id="website">
+    **Website** cho bạn một khung chat để dán vào trang web.
+  </Mark>
 </Screenshot>
 
 Sau khi kết nối, mở trang của agent và liên kết tài khoản đó để agent trả lời tin nhắn.

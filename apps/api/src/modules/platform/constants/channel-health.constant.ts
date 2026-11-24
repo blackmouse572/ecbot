@@ -6,6 +6,8 @@ export enum ENUM_SEND_FAILURE {
     TRANSIENT = 'transient',
     /** About this one customer or message (blocked the page, 24h window), not the channel. */
     RECIPIENT = 'recipient',
+    /** The platform stopped this account from sending (a policy block): every send fails. */
+    ACCOUNT_BLOCKED = 'account_blocked',
     /** Anything else, including a timeout the platform may have acted on. */
     OTHER = 'other',
 }
@@ -41,11 +43,19 @@ export const META_TRANSIENT_CODES = new Set([1, 2, 4, 17, 32, 341, 613]);
 // WhatsApp re-engagement and undeliverable; subcode 2018001: no such user.
 export const META_RECIPIENT_CODES = new Set([10, 551, 131047, 131026]);
 export const META_RECIPIENT_SUBCODES = new Set([2018001, 2018278, 2018108]);
+// 2022: commerce messaging turned off for the page. Code 10 with subcode
+// 1893063: the page is temporarily restricted from sending. Checked before
+// META_RECIPIENT_CODES, which also holds 10. Code 368 stays out: it also
+// covers policy blocks unrelated to messaging.
+export const META_ACCOUNT_BLOCKED_CODES = new Set([2022]);
+export const META_ACCOUNT_BLOCKED_SUBCODES = new Set([1893063]);
 
 // Zalo OA error codes, returned with HTTP 200.
 export const ZALO_AUTH_CODES = new Set([-216, -124]);
 // -213: not following the OA; -230 / -232: outside the interaction window.
 export const ZALO_RECIPIENT_CODES = new Set([-213, -230, -232]);
+// -1351: the OA is blocked for violations.
+export const ZALO_ACCOUNT_BLOCKED_CODES = new Set([-1351]);
 
 // Failed before the request left: nothing reached the platform.
 export const NETWORK_TRANSIENT_CODES = new Set([

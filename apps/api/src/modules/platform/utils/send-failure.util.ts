@@ -2,11 +2,14 @@ import { HttpException } from '@nestjs/common';
 import { isAxiosError } from 'axios';
 import {
     ENUM_SEND_FAILURE,
+    META_ACCOUNT_BLOCKED_CODES,
+    META_ACCOUNT_BLOCKED_SUBCODES,
     META_AUTH_CODES,
     META_RECIPIENT_CODES,
     META_RECIPIENT_SUBCODES,
     META_TRANSIENT_CODES,
     NETWORK_TRANSIENT_CODES,
+    ZALO_ACCOUNT_BLOCKED_CODES,
     ZALO_AUTH_CODES,
     ZALO_RECIPIENT_CODES,
 } from '../constants/channel-health.constant';
@@ -48,13 +51,15 @@ function upstreamOf(err: unknown): IUpstream {
 /**
  * Sort a send failure by what it says about the channel: the token is gone,
  * the request never landed and can be resent, the failure is about this one
- * customer, or something else.
+ * customer, the platform blocked the account from sending, or something else.
  */
 export function classifySendError(err: unknown): ENUM_SEND_FAILURE {
     const { status, body, networkCode, zaloCode, localKey } = upstreamOf(err);
 
     if (zaloCode !== undefined) {
         if (ZALO_AUTH_CODES.has(zaloCode)) return ENUM_SEND_FAILURE.AUTH;
+        if (ZALO_ACCOUNT_BLOCKED_CODES.has(zaloCode))
+            return ENUM_SEND_FAILURE.ACCOUNT_BLOCKED;
         if (ZALO_RECIPIENT_CODES.has(zaloCode))
             return ENUM_SEND_FAILURE.RECIPIENT;
         return ENUM_SEND_FAILURE.OTHER;
@@ -71,6 +76,11 @@ export function classifySendError(err: unknown): ENUM_SEND_FAILURE {
         if (META_AUTH_CODES.has(meta.code)) return ENUM_SEND_FAILURE.AUTH;
         if (META_TRANSIENT_CODES.has(meta.code))
             return ENUM_SEND_FAILURE.TRANSIENT;
+        if (
+            META_ACCOUNT_BLOCKED_CODES.has(meta.code) ||
+            META_ACCOUNT_BLOCKED_SUBCODES.has(meta.error_subcode)
+        )
+            return ENUM_SEND_FAILURE.ACCOUNT_BLOCKED;
         if (
             META_RECIPIENT_CODES.has(meta.code) ||
             META_RECIPIENT_SUBCODES.has(meta.error_subcode)

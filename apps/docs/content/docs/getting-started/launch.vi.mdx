@@ -1,0 +1,53 @@
+---
+title: Chạy thử và đưa agent vào hoạt động
+description: Danh sách câu nên hỏi trong khung chat thử, cách sửa câu trả lời sai, và cách kiểm tra agent trên kênh thật trước khi khách nhắn tin.
+faq:
+  - q: Tin nhắn trong khung chat thử có tính là cuộc trò chuyện thật không?
+    a: Không. Khung chat thử là riêng tư. Tin nhắn ở đó không đến khách hay kênh nào, nên bạn thử bao nhiêu lần cũng được.
+  - q: Agent trả lời sai thì tôi sửa ở đâu?
+    a: Thường là thiếu thông tin hoặc thông tin đã cũ. Bổ sung vào cơ sở kiến thức hoặc vào câu trả lời trong trình tạo agent, rồi hỏi lại đúng câu đó. Thay đổi áp dụng cho tin nhắn mới.
+  - q: Kênh đã kết nối mà agent không trả lời, vì sao?
+    a: Kiểm tra agent đã được gắn vào tài khoản kênh đó và công tắc của agent đang bật. Kênh chưa gắn agent sẽ im lặng, agent đang tắt cũng vậy.
+  - q: Agent đã hoạt động rồi thì còn chỉnh được không?
+    a: Được. Bạn sửa kiến thức, câu trả lời và quy tắc của agent bất cứ lúc nào. Đọc các cuộc trò chuyện thật trong mục Hội thoại để tìm câu agent cần trả lời tốt hơn.
+---
+
+Trước khi khách nhắn tin, hãy kiểm tra agent trả lời giống như nhân viên giỏi nhất của bạn. Hỏi thử các câu bên dưới trong khung chat thử, sửa chỗ chưa đúng, rồi nhắn một tin thật vào kênh để chắc agent đã hoạt động. Trang này dành cho khi bạn đã [tạo agent đầu tiên](/docs/getting-started/setup).
+
+## Hỏi thử những câu này
+
+Mở agent và dùng khung **Chat thử**. Tin nhắn ở đây không đến khách nào. Hãy hỏi bằng đúng cách khách hay nói:
+
+- **Giá**: "Size lớn giá bao nhiêu?" Câu trả lời phải khớp bảng giá.
+- **Chính sách**: "Mặc không vừa có đổi được không?" Agent phải nói đúng quy định đổi trả của shop.
+- **Giờ mở cửa hoặc địa chỉ**: "Chủ nhật shop có mở không?"
+- **Món shop không bán**: agent nên nói rõ hoặc gợi ý món gần giống, không tự bịa sản phẩm.
+- **Câu agent không thể biết**: agent nên làm theo quy tắc khi chưa chắc, ví dụ báo sẽ kiểm tra lại.
+- **Muốn gặp người thật**: "Cho mình nói chuyện với nhân viên." Agent phải chuyển cho nhân viên.
+- **Khách đang bực**: "Đơn của mình trễ mà không ai trả lời." Agent nên giữ bình tĩnh và chuyển cho nhân viên nếu bạn đặt quy tắc như vậy.
+- **Cách khách thường viết**: nếu khách gõ không dấu hoặc trộn tiếng Anh, hãy thử cả kiểu đó.
+
+## Sửa câu trả lời sai
+
+| Chuyện gì xảy ra                         | Sửa ở đâu                                                                                                           |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Giá hoặc thông tin sai, thiếu            | Thêm hoặc cập nhật trong [cơ sở kiến thức](/docs/agents/knowledge-base), hoặc trong câu trả lời của trình tạo agent |
+| Giọng điệu chưa hợp                      | Đổi câu trả lời về giọng nói và mức độ trang trọng trong [trình tạo agent](/docs/agents)                            |
+| Agent hứa điều shop không làm            | Thêm vào quy tắc những điều agent không được làm                                                                    |
+| Agent không chuyển cho nhân viên khi cần | Xem lại các câu về chuyển cho nhân viên và phần cài đặt chuyển giao trên trang của agent                            |
+
+Sau mỗi lần sửa, hỏi lại đúng câu đó. Thay đổi áp dụng cho tin nhắn mới.
+
+## Đưa agent vào hoạt động
+
+1. Kết nối kênh mà khách nhắn cho bạn nhiều nhất. Xem trang [Kênh](/docs/channels).
+2. Gắn agent vào tài khoản kênh đó. Kênh chưa gắn agent sẽ im lặng.
+3. Bật agent bằng công tắc ở đầu trang của agent.
+4. Dùng tài khoản cá nhân của bạn nhắn vào kênh, ví dụ hỏi giá.
+5. Mở mục **Hội thoại** và kiểm tra tin nhắn của bạn và câu trả lời của agent đã hiện ở đó.
+
+## Sau khi hoạt động
+
+- Đọc các cuộc trò chuyện mới trong mục **Hội thoại** vài ngày đầu. Mỗi câu agent trả lời chưa tốt là một thông tin cần bổ sung.
+- Để ý các cuộc trò chuyện **Chờ bạn**: agent đã chuyển chúng cho nhân viên. Xem trang [Khách hàng và cuộc trò chuyện](/docs/customers).
+- Khi phần cơ bản đã ổn, hãy dạy agent làm một việc, bắt đầu với [Ghi nhận khách tiềm năng](/docs/cookbook/use-cases/capture-lead).

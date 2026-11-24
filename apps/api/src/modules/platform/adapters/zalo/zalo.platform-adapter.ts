@@ -8,11 +8,13 @@ import {
     UnprocessableEntityException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createHash, timingSafeEqual } from 'crypto';
+import { createHash, createHmac, timingSafeEqual } from 'crypto';
 import { readCappedBody } from '@app/common/utils/read-capped-body.util';
 import { MEDIA_FETCH_TIMEOUT_MS } from '../../constants/media.constant';
 import {
     AdapterCapabilities,
+    decodeActionPayload,
+    encodeActionPayload,
     MediaContent,
     OutboundMessage,
 } from '../../interfaces/message-model';
@@ -42,14 +44,23 @@ const UPLOAD_FILE_URL = 'https://openapi.zalo.me/v2.0/oa/upload/file';
 const IMAGE_MAX_BYTES = 1_000_000;
 const FILE_MAX_BYTES = 5_000_000;
 const MESSAGE_LIMIT = 2000;
+// A message carries at most 5 template buttons, titles up to 100 characters.
+const MAX_BUTTONS = 5;
+const BUTTON_TITLE_LIMIT = 100;
+// A quick reply is an `oa.query.hide` button: tapping it sends its payload
+// back as the customer's text (hidden in their chat). The payload is
+// `ecbot_action:<sig>.<action>`, signed with the app secret, so a customer
+// who types the prefix can't make up an action. With no value the label
+// stands in, as the tapped text does on Messenger.
+const ACTION_PREFIX = 'ecbot_action:';
 // Reject webhooks whose (signed) timestamp is older than this — replay guard.
 const WEBHOOK_MAX_AGE_MS = 5 * 60 * 1000;
 
 @Injectable()
 export class ZaloPlatformAdapter extends PlatformAdapter {
     readonly type = ENUM_ACCOUNT_TYPE.ZALO_PAGE;
-    // Text, images and PDFs outbound. Cards, buttons and stickers are a
-    // tracked follow-up, so degrade() collapses them to plain text.
+    // Text with quick replies, images and PDFs outbound. Cards, buttons and
+    // stickers are a tracked follow-up, so degrade() collapses them to text.
     // Photos up to 1 MB (JPG, PNG) and PDFs up to 5 MB, as for the agent.
     private static readonly MEDIA_LIMITS = {
         image: {
@@ -61,7 +72,7 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
     readonly capabilities: AdapterCapabilities = {
         cards: false,
         buttons: false,
-        quickReplies: false,
+        quickReplies: true,
         media: true,
         editMessage: false,
         deleteMessage: false,
@@ -177,7 +188,20 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
         } catch {
             return [];
         }
-        if (!payload || typeof payload !== 'object' || !payload.sender?.id) {
+        if (
+            !payload ||
+            typeof payload !== 'object' ||
+            !(payload.sender?.id ?? payload.follower?.id)
+        ) {
+            return [];
+        }
+        // GMF group chat events share this webhook URL. Group replies go
+        // through a different API (/oa/group/message) we don't support yet,
+        // so a group message must not become a 1-1 turn or a staff echo.
+        if (payload.group_id) {
+            this.logger.debug(
+                `Zalo GMF group event dropped: event=${payload.event_name} group=${payload.group_id}`
+            );
             return [];
         }
         return [this.normalizeEvent(payload)];
@@ -194,21 +218,32 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
         // message" event; verify against a captured payload.
         else if (eventName === 'user_react_message') kind = 'reaction';
         else if (eventName.startsWith('user_send')) kind = 'message';
+        else if (eventName === 'follow' || eventName === 'unfollow') {
+            kind = eventName;
+        }
+        const senderId = payload.sender?.id ?? payload.follower?.id ?? '';
 
         const attachments = this.mapAttachments(payload.message?.attachments);
+        const typed = payload.message?.text;
+        const action = kind === 'message' ? this.readAction(typed) : undefined;
         const reactedMessageId =
             payload.reaction?.r_msg_id ?? payload.message?.msg_id;
 
         return {
             kind,
             accountKey: payload.recipient?.id ?? payload.oa_id ?? '',
-            senderId: payload.sender.id,
+            senderId,
             recipientId: payload.recipient?.id ?? '',
+            // A follow has no message id: key it by who and when, so a
+            // redelivery is still deduped.
             externalMessageId:
                 kind === 'reaction'
                     ? reactedMessageId
-                    : payload.message?.msg_id,
-            text: payload.message?.text,
+                    : kind === 'follow' || kind === 'unfollow'
+                      ? `${kind}:${senderId}:${payload.timestamp}`
+                      : payload.message?.msg_id,
+            text: action?.value ?? typed,
+            action,
             timestamp: this.toDate(payload.timestamp),
             raw: payload,
             attachments,
@@ -348,7 +383,21 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
             c.kind === 'media' ? await this.uploadFile(account, c) : null;
         if (token) return { attachment: { type: 'file', payload: { token } } };
         const text = c.kind === 'text' ? c.text : msg.fallbackText;
-        return { text: this.truncate(text) };
+        const buttons = (msg.quickReplies ?? [])
+            .slice(0, MAX_BUTTONS)
+            .map(q => ({
+                title: this.truncateGraphemes(q.label, BUTTON_TITLE_LIMIT),
+                type: 'oa.query.hide',
+                payload: this.signAction(
+                    encodeActionPayload(q.id, q.value ?? q.label)
+                ),
+            }));
+        return {
+            text: this.truncate(text),
+            ...(buttons.length && {
+                attachment: { type: 'template', payload: { buttons } },
+            }),
+        };
     }
 
     /**
@@ -391,6 +440,32 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
             );
             return null;
         }
+    }
+
+    private signAction(action: string): string {
+        return `${ACTION_PREFIX}${this.actionSig(action)}.${action}`;
+    }
+
+    /** The action a tapped button sent back, if its signature holds. */
+    private readAction(text: string | undefined) {
+        if (!text?.startsWith(ACTION_PREFIX)) return undefined;
+        const rest = text.slice(ACTION_PREFIX.length);
+        const dot = rest.indexOf('.');
+        const sig = Buffer.from(rest.slice(0, dot));
+        const action = rest.slice(dot + 1);
+        const expected = Buffer.from(this.actionSig(action));
+        const ok =
+            dot > 0 &&
+            sig.length === expected.length &&
+            timingSafeEqual(sig, expected);
+        return ok ? decodeActionPayload(action) : undefined;
+    }
+
+    private actionSig(action: string): string {
+        return createHmac('sha256', this.appSecret ?? '')
+            .update(action)
+            .digest('hex')
+            .slice(0, 16);
     }
 
     private truncate(t: string): string {
