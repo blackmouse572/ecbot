@@ -1,0 +1,29 @@
+---
+title: Orders and product groups
+description: Confirm the orders the bot notes in chat, add orders from elsewhere, and group products so Ecbot knows when a customer needs to buy again.
+noindex: true
+faq:
+  - q: Does an order the bot notes in chat count as a purchase?
+    a: Not until you confirm it. Check the quantities and prices, then press Confirm order.
+  - q: Can I add orders customers placed by phone or on Shopee?
+    a: Yes. Use Add order for one order, or Import file to bring in a CSV from Excel, Google Sheets or a marketplace.
+  - q: How does Ecbot learn a repurchase cycle?
+    a: From the days between two purchases in the same group by one customer, taking the middle value once there are 5 or more repurchases. Until then it uses the number you set.
+---
+
+Orders show what each customer bought and when. A confirmed order moves the customer to **Bought once** or **Repeat buyer**, and product groups tell Ecbot when a customer is about to run out. Open **Orders** in the sidebar.
+
+## Confirm orders from chat
+
+When a customer orders in chat, the bot notes the order as **Awaiting confirmation**. Open it, check the quantities and prices, then click **Confirm order**. An unconfirmed or cancelled order does not count as a purchase.
+
+## Add orders from elsewhere
+
+- **Add order** notes an order placed by phone, on Shopee or in store. Find the customer by name or phone, add the items and their product groups, and pick the order date.
+- **Import file** reads a CSV with the column names on the first row. Each row is one product, and rows with the same order code become one order. Download the import template to see which columns Ecbot reads.
+
+## Product groups
+
+Open the **Product groups** tab. Each group has a name, such as "Sunscreen", and a **Repurchase cycle**: how many days customers usually take to run out. Products whose name contains the group name join the group when the bot notes an order.
+
+Ecbot starts with the cycle you set. Once a group has 5 or more repurchases, it learns the cycle from your confirmed orders, and the table shows both numbers. The Marketing overview uses the cycle to count customers who are about to run out, see [Marketing overview](/docs/marketing).

@@ -1,0 +1,54 @@
+---
+title: Giai đoạn khách và nhận ưu đãi
+description: Ecbot gắn cho mỗi khách giai đoạn mua hàng, tạm hoãn theo nhóm hàng và trạng thái nhận ưu đãi, để bạn chỉ nhắn cho khách muốn nghe.
+noindex: true
+faq:
+  - q: Bot có đưa khách về giai đoạn trước được không?
+    a: Không. Bot chỉ đưa khách lên giai đoạn sau. Nhân viên chọn được mọi giai đoạn, kể cả giai đoạn trước, trong Sửa nhãn.
+  - q: Khách nhắn "dừng" thì sao?
+    a: Nhận ưu đãi chuyển sang Đã dừng vĩnh viễn và bot xác nhận bằng một câu. Khách vẫn nhắn hỏi shop được bất cứ lúc nào.
+  - q: Ai tắt được Khó chịu?
+    a: Chỉ nhân viên, trong Sửa nhãn. Bot không bao giờ tự tắt.
+---
+
+Ecbot gắn cho mỗi khách ba nhãn tiếp thị: **giai đoạn** cho biết khách đã đi tới đâu trên đường mua hàng, **tạm hoãn** cho những nhóm hàng khách muốn để sau, và **nhận ưu đãi** cho biết shop có được gửi ưu đãi cho khách không. Ecbot tự gắn từ cuộc trò chuyện, và nhân viên có thể sửa.
+
+## Giai đoạn
+
+| Giai đoạn        | Khách tới giai đoạn này khi |
+| ---------------- | --------------------------- |
+| **Mới biết**     | Khách nhắn shop lần đầu.    |
+| **Quan tâm**     | Khách hỏi về một sản phẩm.  |
+| **Hỏi giá**      | Khách hỏi giá một sản phẩm. |
+| **Đã mua 1 lần** | Đơn đầu tiên được xác nhận. |
+| **Mua lại**      | Đơn thứ hai được xác nhận.  |
+
+Khách 120 ngày không nhắn và không đặt đơn sẽ hiện **Lâu không nhắn**. Giai đoạn cũ vẫn giữ bên dưới, rê chuột lên nhãn để xem.
+
+Ecbot đọc từng cuộc trò chuyện và chỉ đưa khách lên giai đoạn sau. Đơn chỉ được tính khi bạn xác nhận, xem [Đơn hàng và nhóm hàng](/docs/marketing/orders).
+
+## Tạm hoãn theo nhóm hàng
+
+Khi khách nói "để sau" về một sản phẩm, Ecbot tạm hoãn ưu đãi cho nhóm hàng đó, mặc định 60 ngày. Ưu đãi nhóm hàng khác vẫn gửi được.
+
+## Nhận ưu đãi
+
+| Trạng thái            | Nghĩa là                                                              |
+| --------------------- | --------------------------------------------------------------------- |
+| **Chưa đồng ý**       | Bot hỏi khách một lần, khi khách vừa mua hoặc vừa khen.               |
+| **Đồng ý**            | Được gửi ưu đãi, trong khung nhắn miễn phí của từng kênh.             |
+| **Tạm ngưng**         | Không gửi ưu đãi đến một ngày, sau đó trở lại Đồng ý.                 |
+| **Đã dừng vĩnh viễn** | Không bao giờ gửi ưu đãi. Khách nhắn "dừng" hoặc "stop" cũng vào đây. |
+
+**Khó chịu** là một nhãn riêng. Ecbot bật nhãn này khi khách nói nặng lời hoặc tức giận, sau đó không gửi ưu đãi và không hỏi lại. Chỉ nhân viên tắt được.
+
+## Xem và sửa nhãn
+
+Mở một cuộc trò chuyện và tìm mục **Tiếp thị** trong khung thông tin khách. Mục này hiện giai đoạn, các nhóm hàng đang tạm hoãn, trạng thái nhận ưu đãi, thời gian nhắn miễn phí còn lại trên từng kênh, và các lần đổi nhãn gần nhất.
+
+- **Sửa nhãn** đổi giai đoạn, nhận ưu đãi hoặc Khó chịu. Bắt buộc nhập lý do, lý do hiện dưới nhãn và trong dòng thời gian.
+- **Xem tất cả** mở dòng thời gian tiếp thị: mỗi lần đổi nhãn, ai đổi (bot, Ecbot, thành viên hay ứng dụng kết nối) và vì sao, mới nhất trước.
+
+## Lọc theo giai đoạn
+
+Trong **Khách hàng**, lọc danh sách theo **Giai đoạn**, **Nhận ưu đãi** hoặc **Lâu không nhắn**. Trong **Hội thoại**, lọc theo giai đoạn để tìm các cuộc trò chuyện với khách đã hỏi giá mà chưa mua.

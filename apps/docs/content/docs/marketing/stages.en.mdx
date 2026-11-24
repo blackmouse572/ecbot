@@ -1,0 +1,54 @@
+---
+title: Customer stages and offers
+description: Ecbot labels each customer with a stage, a product group pause and an offers setting, so you only message people who want to hear from you.
+noindex: true
+faq:
+  - q: Can the bot move a customer back to an earlier stage?
+    a: No. The bot only moves a customer forward. Your staff can pick any stage, earlier ones too, in Edit labels.
+  - q: What happens when a customer sends "stop"?
+    a: Offers change to Stopped for good and the bot confirms in one line. The customer can still message the shop any time.
+  - q: Who can turn off Upset?
+    a: Only your staff, in Edit labels. The bot never turns it off.
+---
+
+Ecbot gives every customer three marketing labels: a **stage** that shows how far they are in buying, a **pause** on product groups they asked to hear about later, and an **offers** setting that says whether the shop may send them offers. Ecbot sets them from the conversation, and your staff can change them.
+
+## Stages
+
+| Stage            | How a customer gets there          |
+| ---------------- | ---------------------------------- |
+| **New**          | Their first message to the shop.   |
+| **Interested**   | They asked about a product.        |
+| **Asked price**  | They asked the price of a product. |
+| **Bought once**  | Their first order is confirmed.    |
+| **Repeat buyer** | Their second confirmed order.      |
+
+A customer with no message and no order for 120 days also shows **Inactive**. Their stage stays underneath, and hovering the label shows it.
+
+Ecbot reads each conversation and only moves a customer forward. Orders count once you confirm them, see [Orders and product groups](/docs/marketing/orders).
+
+## Product group pauses
+
+When a customer says "later" about a product, Ecbot pauses offers for that product group, by default for 60 days. Offers for other product groups can still go out.
+
+## Offers
+
+| Setting              | What it means                                                            |
+| -------------------- | ------------------------------------------------------------------------ |
+| **Not agreed yet**   | The bot asks the customer once, right after a purchase or a compliment.  |
+| **Agreed**           | Offers may be sent, within each channel's free messaging window.         |
+| **Paused**           | No offers until a date, then back to Agreed.                             |
+| **Stopped for good** | Never send offers. A customer who sends "stop" or "dừng" lands here too. |
+
+**Upset** is a separate flag. Ecbot turns it on when a customer is rude or angry, and then sends no offers and stops asking. Only your staff can turn it off.
+
+## See and change labels
+
+Open a conversation and find **Marketing** in the customer panel. It shows the stage, any product group pauses, the offers setting, how long the free messaging window has left on each channel, and the latest label changes.
+
+- **Edit labels** changes the stage, offers or Upset. A reason is required, and it shows under the label and in the timeline.
+- **View all** opens the marketing timeline: every change, who made it (the bot, Ecbot, a team member or a connected app) and why, newest first.
+
+## Filter by stage
+
+In **Customers**, filter the list by **Stage**, **Offers** or **Inactive**. In **Conversations**, filter by stage to find chats with customers who asked the price but did not buy.

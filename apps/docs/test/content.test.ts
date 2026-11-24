@@ -18,14 +18,21 @@ const pages = (fs.readdirSync(DIR, { recursive: true }) as string[])
     // "agents/skills.en.mdx" -> base "agents/skills", url path "agents/skills";
     // "agents/index.en.mdx" -> url path "agents"; "index.en.mdx" -> "".
     const [base, lang] = file.replace(/\.mdx$/, "").split(".");
-    const { data, content } = matter(fs.readFileSync(path.join(DIR, file), "utf8"));
+    const { data, content } = matter(
+      fs.readFileSync(path.join(DIR, file), "utf8"),
+    );
     const urlPath = base!.replace(/(^|\/)index$/, "");
     return { file, slug: base!, urlPath, lang: lang!, data, content };
   });
 
 /** Snapshot of the marketing menu (eccho-ee lib/solutions-menu.ts) the docs hub
  * links to. Update it when a solution page is added or removed there. */
-const MARKETING_SOLUTIONS = ["sales-agent", "customer-support", "ecommerce-retail", "spa-wellness"];
+const MARKETING_SOLUTIONS = [
+  "sales-agent",
+  "customer-support",
+  "ecommerce-retail",
+  "spa-wellness",
+];
 
 const urlPaths = new Set(pages.map((p) => p.urlPath));
 
@@ -36,7 +43,10 @@ describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
 
   it("exists in every language", () => {
     for (const other of LANGS) {
-      expect(fs.existsSync(path.join(DIR, `${slug}.${other}.mdx`)), `${slug}.${other}.mdx`).toBe(true);
+      expect(
+        fs.existsSync(path.join(DIR, `${slug}.${other}.mdx`)),
+        `${slug}.${other}.mdx`,
+      ).toBe(true);
     }
   });
 
@@ -56,7 +66,9 @@ describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
 
   it("opens with a short answer paragraph", () => {
     const first = content.trim().split(/\n\s*\n/)[0]!;
-    expect(first, "first block must be a paragraph").not.toMatch(/^(#|<|-|\d+\.)/);
+    expect(first, "first block must be a paragraph").not.toMatch(
+      /^(#|<|-|\d+\.)/,
+    );
     expect(first.split(/\s+/).length).toBeLessThanOrEqual(70);
   });
 
@@ -67,7 +79,10 @@ describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
 
   it("links only to docs pages that exist", () => {
     for (const [, target] of content.matchAll(/\]\(\/docs\/?([^)#\s]*)/g)) {
-      expect(urlPaths.has(target!.replace(/\/$/, "")), `broken link /docs/${target}`).toBe(true);
+      expect(
+        urlPaths.has(target!.replace(/\/$/, "")),
+        `broken link /docs/${target}`,
+      ).toBe(true);
     }
   });
 
@@ -76,24 +91,35 @@ describe.each(pages)("$file", ({ file, slug, lang, data, content }) => {
     for (const [, href] of content.matchAll(/\]\((\/[^)#\s]*)/g)) {
       if (href!.startsWith("/docs")) continue;
 
-      expect(href!.startsWith(`/${lang}/`), `${href} from a ${lang} page`).toBe(true);
+      expect(href!.startsWith(`/${lang}/`), `${href} from a ${lang} page`).toBe(
+        true,
+      );
 
       const solution = `/${lang}/solutions/`;
 
       if (href!.startsWith(solution)) {
-        expect(MARKETING_SOLUTIONS).toContain(href!.slice(solution.length).replace(/\/$/, ""));
+        expect(MARKETING_SOLUTIONS).toContain(
+          href!.slice(solution.length).replace(/\/$/, ""),
+        );
       }
     }
 
     if (slug === "index") {
       for (const solution of MARKETING_SOLUTIONS)
-        expect(content, `index links /${lang}/solutions/${solution}`).toContain(`](/${lang}/solutions/${solution})`);
+        expect(content, `index links /${lang}/solutions/${solution}`).toContain(
+          `](/${lang}/solutions/${solution})`,
+        );
     }
   });
 
   it("uses screenshots and marks that were captured in this language", () => {
-    const data = shots as Record<string, Record<string, { marks: Record<string, unknown> }>>;
-    for (const [tag] of content.matchAll(/<Screenshot[\s\S]*?<\/Screenshot>/g)) {
+    const data = shots as Record<
+      string,
+      Record<string, { marks: Record<string, unknown> }>
+    >;
+    for (const [tag] of content.matchAll(
+      /<Screenshot[\s\S]*?<\/Screenshot>/g,
+    )) {
       const name = tag.match(/name="([^"]+)"/)![1]!;
       const shot = data[name]?.[lang];
       expect(shot, `screenshot "${name}" (${lang})`).toBeDefined();
@@ -116,8 +142,32 @@ describe("legal drafts", () => {
 
   it("are not in the navigation", () => {
     for (const lang of LANGS) {
-      const meta = JSON.parse(fs.readFileSync(path.join(DIR, `meta.${lang}.json`), "utf8"));
+      const meta = JSON.parse(
+        fs.readFileSync(path.join(DIR, `meta.${lang}.json`), "utf8"),
+      );
       expect(meta.pages).not.toContain("legal");
+    }
+  });
+});
+
+// Grow sales pages describe screens behind the `marketing`, `customerSources`
+// and `orders` flags. They stay out of navigation and search until rollout.
+describe("Grow sales drafts", () => {
+  const marketing = pages.filter((p) => p.slug.startsWith("marketing/"));
+
+  it("are noindex", () => {
+    expect(marketing.length).toBe(8);
+    for (const p of marketing) expect(p.data.noindex, p.file).toBe(true);
+  });
+
+  it("are not in the navigation", () => {
+    for (const lang of LANGS) {
+      const meta = JSON.parse(
+        fs.readFileSync(path.join(DIR, `meta.${lang}.json`), "utf8"),
+      );
+      expect(
+        meta.pages.filter((p: string) => p.startsWith("marketing")),
+      ).toEqual([]);
     }
   });
 });

@@ -1,0 +1,29 @@
+---
+title: Đơn hàng và nhóm hàng
+description: Xác nhận đơn bot ghi trong chat, thêm đơn từ nơi khác, và gom sản phẩm thành nhóm để Ecbot biết khi nào khách cần mua lại.
+noindex: true
+faq:
+  - q: Đơn bot ghi trong chat có được tính là đã mua không?
+    a: Chỉ sau khi bạn xác nhận. Kiểm tra số lượng và giá rồi bấm Xác nhận đơn.
+  - q: Tôi thêm được đơn khách đặt qua điện thoại hay Shopee không?
+    a: Được. Dùng Thêm đơn cho từng đơn, hoặc Nhập file để đưa vào file CSV từ Excel, Google Sheets hay trang quản lý của sàn.
+  - q: Ecbot học chu kỳ mua lại thế nào?
+    a: Từ số ngày giữa hai lần mua cùng nhóm của một khách, lấy số ở giữa khi có từ 5 lần mua lại trở lên. Chưa đủ thì dùng số bạn đặt.
+---
+
+Đơn hàng cho biết mỗi khách mua gì, lúc nào. Đơn đã xác nhận đưa khách sang **Đã mua 1 lần** hoặc **Mua lại**, còn nhóm hàng giúp Ecbot biết khi nào khách sắp dùng hết. Mở **Đơn hàng** ở thanh bên.
+
+## Xác nhận đơn từ chat
+
+Khi khách đặt hàng trong chat, bot ghi đơn ở trạng thái **Chờ xác nhận**. Mở đơn, kiểm tra số lượng và giá, rồi bấm **Xác nhận đơn**. Đơn chưa xác nhận hoặc đã huỷ không được tính là đã mua.
+
+## Thêm đơn từ nơi khác
+
+- **Thêm đơn** để ghi lại đơn đặt qua điện thoại, Shopee hay tại cửa hàng. Tìm khách theo tên hoặc số điện thoại, thêm sản phẩm và nhóm hàng, rồi chọn ngày đặt.
+- **Nhập file** đọc file CSV có dòng đầu là tên các cột. Mỗi dòng là một sản phẩm, và các dòng cùng mã đơn gộp thành một đơn. Tải file mẫu để xem Ecbot đọc những cột nào.
+
+## Nhóm hàng
+
+Mở thẻ **Nhóm hàng**. Mỗi nhóm có tên, ví dụ "Kem chống nắng", và **Chu kỳ mua lại**: số ngày khách thường dùng hết. Sản phẩm có tên chứa tên nhóm sẽ tự vào nhóm khi bot ghi đơn.
+
+Ecbot bắt đầu với chu kỳ bạn đặt. Khi nhóm có từ 5 lần mua lại trở lên, Ecbot học chu kỳ từ các đơn đã xác nhận, và bảng hiện cả hai số. Tổng quan tiếp thị dùng chu kỳ này để đếm khách sắp dùng hết hàng, xem [Tổng quan tiếp thị](/docs/marketing).
