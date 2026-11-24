@@ -34,12 +34,16 @@ import { CustomerMergeSuggestionService } from './customer-merge-suggestion.serv
 import { ANONYMOUS_CHANNELS } from '../constants/customer.constant';
 
 const CUSTOMER_LIMIT_FULL_TTL_MS = 60_000;
+/** One WARNING per workspace per window: every unrecorded sender hits here. */
+const CUSTOMER_LIMIT_WARN_INTERVAL_MS = 10 * 60_000;
 
 @Injectable()
 export class CustomerService implements ICustomerService {
     private readonly logger = new Logger(CustomerService.name);
     /** Workspace id → until when its customer limit is known to be full. */
     private readonly customerLimitFullUntil = new Map<string, number>();
+    /** Workspace id → when its at-limit WARNING was last emitted. */
+    private readonly customerLimitWarnedAt = new Map<string, number>();
 
     constructor(
         private readonly customerRepository: CustomerRepository,
@@ -200,9 +204,7 @@ export class CustomerService implements ICustomerService {
         }
 
         if (await this.isAtCustomerLimit(workspaceId)) {
-            this.logger.debug(
-                `Customer limit reached for workspace ${workspaceId}: not recording ${platform}/${externalSenderId}`
-            );
+            this._warnCustomerLimitReached(workspaceId, platform);
             return { contactPoint: null, customerId: null, created: false };
         }
 
@@ -274,6 +276,30 @@ export class CustomerService implements ICustomerService {
             contactPoint: { id: contactPoint.id },
         } as any);
         return contactPoint.customer.id;
+    }
+
+    /**
+     * A dropped sender is lost data, so it has to show up at WARNING in prod.
+     * Every unrecorded sender of a full workspace lands here, hence the
+     * per-workspace throttle; the sender id itself stays out of the line (it
+     * identifies the customer on the platform).
+     */
+    private _warnCustomerLimitReached(
+        workspaceId: string,
+        platform: IResolveContactPoint['platform']
+    ): void {
+        const warnedAt = this.customerLimitWarnedAt.get(workspaceId);
+        if (
+            warnedAt !== undefined &&
+            Date.now() - warnedAt < CUSTOMER_LIMIT_WARN_INTERVAL_MS
+        ) {
+            return;
+        }
+
+        this.customerLimitWarnedAt.set(workspaceId, Date.now());
+        this.logger.warn(
+            `Customer limit reached for workspace ${workspaceId}: not recording new ${platform} senders`
+        );
     }
 
     /** True once the workspace keeps as many customers as its plan allows. */
