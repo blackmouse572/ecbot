@@ -286,6 +286,29 @@ describe('AccountService - syncAccount', () => {
         expect(result.pages.map(p => p.id)).toEqual(['account-uuid-2']);
     });
 
+    it('stores additional accounts under the same channel type as the first', async () => {
+        mockPlatformService.getTokenAndProfile.mockResolvedValueOnce({
+            ...mockOAuthResult,
+            additionalAccounts: [
+                {
+                    accessToken: 'raw-second-token',
+                    externalId: 'ext-456',
+                    name: 'Second OA',
+                },
+            ],
+        });
+
+        await service.syncAccount(
+            'auth-code',
+            ENUM_ACCOUNT_TYPE.ZALO_ACCOUNT,
+            'ws-1',
+            'user-1'
+        );
+
+        const secondUpsert = mockAccountRepository.upsert.mock.calls[1][0];
+        expect(secondUpsert.type).toBe(ENUM_ACCOUNT_TYPE.ZALO_PAGE);
+    });
+
     // A sibling the user did not pick must not be pulled out of the workspace
     // it already lives in — only the number they connected moves, as on every
     // other channel.
