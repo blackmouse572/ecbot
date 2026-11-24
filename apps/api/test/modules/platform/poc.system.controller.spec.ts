@@ -1,4 +1,4 @@
-import { BadGatewayException } from '@nestjs/common';
+import { BadGatewayException, ValidationPipe } from '@nestjs/common';
 import { NotImplementedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -6,7 +6,11 @@ import {
     REQUEST_CUSTOM_TIMEOUT_VALUE_META_KEY,
 } from '../../../src/common/request/constants/request.constant';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
-import { PocSystemController } from '../../../src/modules/platform/controllers/poc.system.controller';
+import { REQUEST_VALIDATION_PIPE_OPTIONS } from '../../../src/common/request/constants/request.constant';
+import {
+    PocReplyDto,
+    PocSystemController,
+} from '../../../src/modules/platform/controllers/poc.system.controller';
 import { PlatformAdapterRegistry } from '../../../src/modules/platform/services/platform-adapter.registry';
 import { MessageProcessorService } from '../../../src/modules/platform/services/message-processor.service';
 import { ReplyGenerationService } from '../../../src/modules/platform/services/reply-generation.service';
@@ -178,5 +182,41 @@ describe('PocSystemController.inbound', () => {
         expect(
             Reflect.getMetadata(REQUEST_CUSTOM_TIMEOUT_VALUE_META_KEY, handler)
         ).toBe('300s');
+    });
+});
+
+// The edge Worker echoes the debounce job's meta back verbatim. An anonymous
+// channel (website widget, API channel) has no Customer, so customerId is null
+// and contactPointId is dropped — both used to fail here with 422 and the
+// customer got no reply at all (#600).
+describe('PocReplyDto validation', () => {
+    const pipe = new ValidationPipe(REQUEST_VALIDATION_PIPE_OPTIONS);
+    const meta = { type: 'body' as const, metatype: PocReplyDto };
+    const body = {
+        conversationId: 'c',
+        senderId: 's',
+        texts: ['hi'],
+        messageIds: ['m1'],
+    };
+
+    it('accepts a null customerId from an anonymous channel sender', async () => {
+        const value = (await pipe.transform(
+            { ...body, customerId: null },
+            meta
+        )) as PocReplyDto;
+        expect(value).toBeInstanceOf(PocReplyDto);
+        expect(value.customerId).toBeNull();
+    });
+
+    it('accepts a body with neither customerId nor contactPointId', async () => {
+        await expect(pipe.transform(body, meta)).resolves.toBeInstanceOf(
+            PocReplyDto
+        );
+    });
+
+    it('still rejects a customerId that is not a string', async () => {
+        await expect(
+            pipe.transform({ ...body, customerId: 42 }, meta)
+        ).rejects.toBeDefined();
     });
 });
