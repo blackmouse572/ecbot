@@ -16,6 +16,8 @@ export enum ENUM_MARKETING_SKIP_REASON {
     OPTED_OUT = 'OPTED_OUT',
     /** The platform blocked the page from sending, so the rest of the send stopped. */
     ACCOUNT_BLOCKED = 'ACCOUNT_BLOCKED',
+    /** Paced past the shop's closing hour that day, so it was not sent. */
+    SEND_HOURS_ENDED = 'SEND_HOURS_ENDED',
 }
 
 export enum ENUM_MARKETING_SEND_PROCESS {

@@ -33,9 +33,11 @@ export const MARKETING_SEND_TASK_PREFIX = 'marketing-send-';
 export const MARKETING_SEND_PAGE_SIZE = 500;
 
 /**
- * Offers one page (Account) sends per minute: a big send is spread out
- * instead of bursting from the page at once, which Meta and Zalo can read
- * as spam. Each page has its own pace.
+ * Offers a page (Account) gets per minute within one send: the send's
+ * offers on each page are scheduled in minute buckets of this many, so a
+ * big send is spread out rather than all at its start. The count is per
+ * send: two sends started together on one page each get this many. Within
+ * a bucket the queue's own dispatch limit spaces the tasks.
  */
 export const MARKETING_SEND_PER_ACCOUNT_PER_MINUTE = 30;
 

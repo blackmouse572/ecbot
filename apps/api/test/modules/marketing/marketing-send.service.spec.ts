@@ -286,6 +286,43 @@ describe('MarketingSendService', () => {
             expect(at.get('m-other')).toBe(now.getTime());
         });
 
+        it('does not pace past closing: the rest is skipped, not sent late', async () => {
+            // Now is 10:00 shop time and the shop closes at 10:01.
+            settings.rules.mockResolvedValue({
+                maxPer30Days: 3,
+                restAfter: 3,
+                restDays: 30,
+                sendFrom: '09:00',
+                sendTo: '10:01',
+            });
+            const ids = Array.from({ length: 31 }, (_, i) => `c${i}`);
+            audience.reached.mockResolvedValue({ ids, total: 31 });
+            conversations.lastInboundByCustomerChannel.mockResolvedValue(
+                ids.map(id => ({
+                    customerId: id,
+                    channel: A.FACEBOOK_PAGE,
+                    conversationId: `conv-${id}`,
+                    accountId: 'page-1',
+                    lastInboundAt: ago(1),
+                }))
+            );
+            ledger.plan.mockImplementation(async (_w, _s, rows) =>
+                rows.map((r: any) => ({
+                    id: `m-${r.customerId}`,
+                    customerId: r.customerId,
+                    sendDay: r.sendDay,
+                }))
+            );
+
+            await service.send('ws1', input, undefined, now);
+
+            expect(tasks.enqueue).toHaveBeenCalledTimes(30);
+            expect(ledger.finish).toHaveBeenCalledWith('m-c30', {
+                status: S.SKIPPED,
+                skipReason: R.SEND_HOURS_ENDED,
+            });
+        });
+
         it('fails a row whose task could not be created, freeing the day', async () => {
             tasks.enqueue.mockRejectedValue(new Error('queue down'));
 

@@ -44,7 +44,12 @@ describe('E2E — marketing sends', () => {
     const ids: Record<string, string> = {};
     const conversationOf: Record<string, string> = {};
     const senderOf: Record<string, string> = {};
-    let addCustomer: (name: string, lastInboundHoursAgo?: number) => void;
+    let addCustomer: (
+        name: string,
+        lastInboundHoursAgo?: number,
+        onSecondPage?: boolean
+    ) => void;
+    let firstPageId: string;
     let flush: () => Promise<void>;
     const hour = 3_600_000;
     const ago = (h: number) => new Date(Date.now() - h * hour);
@@ -108,6 +113,15 @@ describe('E2E — marketing sends', () => {
             slug: `lumi-${suffix}`,
             accessToken: 'token',
         });
+        const secondPage = em.create(AccountEntity, {
+            workspace,
+            type: A.FACEBOOK_PAGE,
+            externalId: `page2-${suffix}`,
+            name: 'Lumi Outlet',
+            slug: `lumi-outlet-${suffix}`,
+            accessToken: 'token',
+        });
+        firstPageId = account.id;
         const chatbot = em.create(ChatbotEntity, {
             workspace,
             name: 'Lumi',
@@ -116,7 +130,11 @@ describe('E2E — marketing sends', () => {
             modelTextName: 'deepseek-chat',
         } as Partial<ChatbotEntity> as ChatbotEntity);
 
-        const customer = (name: string, lastInboundHoursAgo?: number) => {
+        const customer = (
+            name: string,
+            lastInboundHoursAgo?: number,
+            onSecondPage = false
+        ) => {
             const c = em.create(CustomerEntity, {
                 workspace,
                 name,
@@ -135,7 +153,7 @@ describe('E2E — marketing sends', () => {
             if (lastInboundHoursAgo !== undefined) {
                 const conversation = em.create(ConversationEntity, {
                     chatbot,
-                    account,
+                    account: onSecondPage ? secondPage : account,
                     contactPoint,
                     senderId: `${name}-${suffix}`,
                 } as Partial<ConversationEntity> as ConversationEntity);
@@ -282,29 +300,34 @@ describe('E2E — marketing sends', () => {
     it('stops the rest of a send on a page the platform blocked', async () => {
         addCustomer('Phúc', 1);
         addCustomer('Vy', 1);
+        // On another page of the shop, which is not blocked.
+        addCustomer('Quân', 1, true);
         await flush();
         enqueue.mockClear();
         sendMessage.mockClear();
-        sendMessage.mockRejectedValue(
-            new HttpException(
+        sendMessage.mockImplementation(async (account: AccountEntity) => {
+            if (account.id !== firstPageId) return { externalId: 'mid.ok' };
+            throw new HttpException(
                 {
                     upstreamStatus: 400,
                     platformError: { error: { code: 2022 } },
                     message: 'x',
                 },
                 HttpStatus.BAD_GATEWAY
-            )
-        );
+            );
+        });
 
         const send = await inRequest(() =>
             sends().send(workspaceId, { ...offer, text: 'Flash sale 12h' })
         );
-        expect(send.queued).toBe(2);
+        expect(send.queued).toBe(3);
         for (const [, , payload] of enqueue.mock.calls) {
             await inRequest(() => sends().deliver(payload.messageId as string));
         }
 
-        expect(sendMessage).toHaveBeenCalledTimes(1);
+        // One try on the blocked page, one send on the other page.
+        expect(sendMessage).toHaveBeenCalledTimes(2);
+        expect((await ledger('Quân')).map(r => r.status)).toEqual([M.SENT]);
         const rows = [...(await ledger('Phúc')), ...(await ledger('Vy'))];
         expect(rows.map(r => [r.status, r.skipReason ?? null]).sort()).toEqual(
             [

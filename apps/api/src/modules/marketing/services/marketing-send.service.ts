@@ -38,7 +38,10 @@ import { MarketingMessageEntity } from '../repository/entities/marketing-message
 import { MarketingMessageRepository } from '../repository/repositories/marketing-message.repository';
 import { MarketingSendRepository } from '../repository/repositories/marketing-send.repository';
 import { marketingRoute } from '../utils/marketing-route.util';
-import { marketingSendAt } from '../utils/marketing-send-time.util';
+import {
+    marketingSendAt,
+    marketingSendEnd,
+} from '../utils/marketing-send-time.util';
 import { MarketingAudienceService } from './marketing-audience.service';
 import { MarketingSettingsService } from './marketing-settings.service';
 
@@ -132,8 +135,10 @@ export class MarketingSendService {
             send.id,
             rows
         );
-        // Each page sends at its own pace from sendAt; the free window is
-        // checked again when each offer goes out.
+        // Each page sends at its own pace from sendAt, inside the shop's
+        // hours that day; the free window is checked again when each offer
+        // goes out.
+        const closesAt = marketingSendEnd(sendAt, this.zone(), rules.sendTo);
         const accountOf = new Map(
             [...inbound.values()]
                 .flat()
@@ -157,9 +162,18 @@ export class MarketingSendService {
                 at: new Date(sendAt.getTime() + minutes * 60_000),
             };
         });
-        for (let i = 0; i < paced.length; i += MARKETING_SEND_ENQUEUE_BATCH) {
+        // Past closing, the offer is not sent: the customer stays free for
+        // another send on a later day.
+        for (const row of paced.filter(r => r.at >= closesAt)) {
+            await this.marketingMessageRepository.finish(row.id, {
+                status: S.SKIPPED,
+                skipReason: ENUM_MARKETING_SKIP_REASON.SEND_HOURS_ENDED,
+            });
+        }
+        const inHours = paced.filter(r => r.at < closesAt);
+        for (let i = 0; i < inHours.length; i += MARKETING_SEND_ENQUEUE_BATCH) {
             await Promise.all(
-                paced
+                inHours
                     .slice(i, i + MARKETING_SEND_ENQUEUE_BATCH)
                     .map(row => this.enqueue(row.id, row.at))
             );
