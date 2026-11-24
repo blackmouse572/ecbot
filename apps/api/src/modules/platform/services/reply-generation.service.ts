@@ -36,8 +36,10 @@ import { ReplyOutcome } from '../interfaces/reply-outcome.interface';
 export interface ReplyInput {
     conversationId: string;
     senderId: string;
-    customerId: string;
-    contactPointId: string;
+    /** Null for an anonymous channel sender: no Customer yet (see
+     *  ANONYMOUS_CHANNELS). apps/ai takes `customer_id: None`. */
+    customerId?: string | null;
+    contactPointId?: string | null;
     texts: string[];
     /** The saved rows of `texts`, in order (see ITurnBurst). */
     messageIds?: string[];
