@@ -1,4 +1,1 @@
-export {
-  CustomerFollowupsSection,
-  FollowupsSection,
-} from "./followups-section";
+export { FollowupsSection } from "./followups-section";

@@ -4,6 +4,7 @@ import { downloadJson } from "@/utils";
 import { EllipsisHorizontal } from "@medusajs/icons";
 import { DropdownMenu, IconButton, toast, usePrompt } from "@medusajs/ui";
 import { Can } from "@repo/auth";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { CUSTOMER_DATA_SUBJECT } from "../../../constants";
 
@@ -11,10 +12,13 @@ export function CustomerActions({
   customerId,
   customerName,
   onErased,
+  children,
 }: {
   customerId: string;
   customerName?: string | null;
   onErased?: () => void;
+  // Page actions that fold into this menu on small screens.
+  children?: ReactNode;
 }) {
   const { t } = useTranslation();
   const prompt = usePrompt();
@@ -90,6 +94,7 @@ export function CustomerActions({
         </IconButton>
       </DropdownMenu.Trigger>
       <DropdownMenu.Content>
+        {children}
         <DropdownMenu.Item onClick={handleUnmerge} disabled={unmerge.isPending}>
           {t("conversations.customer.panel.unmerge.action")}
         </DropdownMenu.Item>

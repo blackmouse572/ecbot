@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import {
   useCancelFollowup,
   useConversationFollowups,
-  useCustomerFollowups,
   type FollowupListResponseDto,
 } from "@/hooks/api/followups";
 import { ListSkeleton } from "@repo/ui/common-components";
@@ -16,43 +15,9 @@ interface Props {
 }
 
 export function FollowupsSection({ conversationId, onViewMessage }: Props) {
-  const query = useConversationFollowups(conversationId);
-
-  return (
-    <FollowupList
-      {...query}
-      onViewMessage={(followup) =>
-        followup.triggerMessageId && onViewMessage?.(followup.triggerMessageId)
-      }
-    />
-  );
-}
-
-/** The customer page: reminders still to send, each opening its conversation. */
-export function CustomerFollowupsSection({
-  customerId,
-  onViewMessage,
-}: {
-  customerId: string;
-  onViewMessage: (followup: FollowupListResponseDto) => void;
-}) {
-  const query = useCustomerFollowups(customerId);
-
-  return <FollowupList {...query} onViewMessage={onViewMessage} />;
-}
-
-function FollowupList({
-  followups,
-  isPending,
-  isError,
-  onViewMessage,
-}: {
-  followups: FollowupListResponseDto[];
-  isPending: boolean;
-  isError: boolean;
-  onViewMessage: (followup: FollowupListResponseDto) => void;
-}) {
   const { t } = useTranslation();
+  const { followups, isPending, isError } =
+    useConversationFollowups(conversationId);
   const cancel = useCancelFollowup();
 
   if (isPending)
@@ -83,7 +48,7 @@ function FollowupList({
         <FollowupItem
           key={followup.followupId}
           followup={followup}
-          onViewMessage={() => onViewMessage(followup)}
+          onViewMessage={onViewMessage}
           onCancel={() => cancel.mutate(followup.followupId)}
           isCancelling={cancel.isPending}
         />
@@ -99,7 +64,7 @@ function FollowupItem({
   isCancelling,
 }: {
   followup: FollowupListResponseDto;
-  onViewMessage: () => void;
+  onViewMessage?: (messageId: string) => void;
   onCancel: () => void;
   isCancelling: boolean;
 }) {
@@ -119,7 +84,10 @@ function FollowupItem({
           variant="transparent"
           size="small"
           disabled={!followup.triggerMessageId}
-          onClick={onViewMessage}
+          onClick={() =>
+            followup.triggerMessageId &&
+            onViewMessage?.(followup.triggerMessageId)
+          }
         >
           {"→ "}
           {t("conversations.customer.panel.followups.viewMessage")}

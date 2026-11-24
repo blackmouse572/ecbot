@@ -2506,7 +2506,8 @@
           "windowOpen": "Còn {{time}}",
           "windowClosed": "Hết hạn nhắn",
           "windowUnlimited": "Không giới hạn",
-          "lastInbound": "Nhắn {{time}}"
+          "lastInbound": "Nhắn {{time}}",
+          "count_other": "{{count}} kênh"
         },
         "conversations": {
           "title": "Cuộc trò chuyện",
@@ -2759,12 +2760,47 @@
       "unnamed": "Khách chưa có tên",
       "since": "Khách từ {{date}}",
       "openConversation": "Mở cuộc trò chuyện",
-      "followups": "Nhắc hẹn sắp gửi",
       "profileSummary": "Tóm tắt từ AI",
       "stats": {
-        "conversations": "Cuộc trò chuyện",
         "spent": "Đã chi",
-        "lastActive": "Nhắn gần nhất"
+        "lastActive": "Nhắn gần nhất",
+        "spentHint_other": "{{count}} đơn đã xác nhận",
+        "lastOrder": "Mua gần nhất",
+        "noOrders": "Chưa có đơn",
+        "windowOpen": "Còn nhắn miễn phí {{time}}",
+        "windowClosed": "Hết hạn nhắn miễn phí",
+        "consent": "Nhận ưu đãi"
+      },
+      "addOrder": "Thêm đơn",
+      "cameFrom": "Đến từ",
+      "tabs": {
+        "overview": "Tổng quan",
+        "conversations": "Hội thoại",
+        "orders": "Đơn hàng",
+        "marketing": "Tiếp thị"
+      },
+      "upcoming": {
+        "title": "Sắp tới",
+        "count_other": "{{count}} việc",
+        "followup": "Nhắc lại {{date}}",
+        "cancel": "Hủy",
+        "paused": "Tạm dừng gợi ý nhóm {{group}} đến {{date}}",
+        "pausedHint": "Khách nói \"{{reason}}\", ưu đãi nhóm hàng khác vẫn gửi được",
+        "resume": "Bỏ tạm dừng"
+      },
+      "activity": {
+        "title": "Hoạt động",
+        "filters": {
+          "all": "Tất cả",
+          "message": "Tin nhắn",
+          "order": "Đơn hàng",
+          "marketing": "Tiếp thị"
+        },
+        "firstMessage": "Tin nhắn đầu tiên",
+        "lastMessage": "Tin nhắn gần nhất",
+        "order": "Đơn {{code}} · {{total}} · {{status}}",
+        "more": "Xem thêm",
+        "empty": "Chưa có hoạt động nào"
       }
     }
   },

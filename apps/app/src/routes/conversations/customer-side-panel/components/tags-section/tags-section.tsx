@@ -30,6 +30,15 @@ export function TagsSection({ customerId }: { customerId: string }) {
   );
 
   const isBusy = apply.isPending || remove.isPending;
+  const picker = (
+    <CustomerTagPicker
+      tags={catalog}
+      appliedTagIds={appliedTagIds}
+      onApply={(tagId) => apply.mutate(tagId)}
+      onRemove={(tagId) => remove.mutate(tagId)}
+      disabled={isBusy}
+    />
+  );
 
   return (
     <div className="flex flex-col gap-y-2">
@@ -45,7 +54,7 @@ export function TagsSection({ customerId }: { customerId: string }) {
           icon={<IconTag />}
         />
       ) : (
-        <ul className="flex flex-wrap gap-1.5">
+        <ul className="flex flex-wrap items-center gap-1.5">
           {assignments.map((assignment) => (
             <TagChip
               key={assignment.id}
@@ -57,18 +66,12 @@ export function TagsSection({ customerId }: { customerId: string }) {
               disabled={isBusy}
             />
           ))}
+          {/* The add button sits in the row with the tags it adds to. */}
+          <li>{picker}</li>
         </ul>
       )}
 
-      <div>
-        <CustomerTagPicker
-          tags={catalog}
-          appliedTagIds={appliedTagIds}
-          onApply={(tagId) => apply.mutate(tagId)}
-          onRemove={(tagId) => remove.mutate(tagId)}
-          disabled={isBusy}
-        />
-      </div>
+      {(isError || assignments.length === 0) && <div>{picker}</div>}
     </div>
   );
 }

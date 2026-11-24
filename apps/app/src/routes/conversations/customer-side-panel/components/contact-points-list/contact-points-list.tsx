@@ -1,4 +1,5 @@
 import type { ContactPointGetResponseDto } from "@/hooks/api/contact-points";
+import { useFreeWindowLeft } from "@/components/customer-marketing";
 import { channelOf } from "@/components/platform-icon/channel-catalog";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import { useConversations } from "@/hooks/api/conversations";
@@ -20,9 +21,6 @@ type Props = {
 };
 
 const KEY = "conversations.customer.panel.contactPoints";
-const WINDOW_KEY = "conversations.customer.panel.marketing.freeWindow";
-const HOUR = 3_600_000;
-const MINUTE = 60_000;
 
 /**
  * One row per channel the customer wrote on: who they are there, how long
@@ -39,6 +37,7 @@ export const ContactPointsList: FC<Props> = ({ customerId, contactPoints }) => {
     orderDirection: "DESC",
   });
   const { marketing } = useCustomerMarketing(customerId);
+  const windowLeft = useFreeWindowLeft();
   const now = Date.now();
 
   if (contactPoints.length === 0) {
@@ -53,16 +52,11 @@ export const ContactPointsList: FC<Props> = ({ customerId, contactPoints }) => {
   }
 
   const windowStatus = (openUntil: string | null | undefined) => {
-    if (!openUntil) return { text: t(`${KEY}.windowUnlimited`), open: true };
-    const left = new Date(openUntil).getTime() - now;
+    const time = windowLeft(openUntil, now);
 
-    if (left <= 0) return { text: t(`${KEY}.windowClosed`), open: false };
-    const time =
-      left >= HOUR
-        ? t(`${WINDOW_KEY}.hours`, { count: Math.floor(left / HOUR) })
-        : t(`${WINDOW_KEY}.minutes`, {
-            count: Math.max(1, Math.floor(left / MINUTE)),
-          });
+    if (time === undefined)
+      return { text: t(`${KEY}.windowUnlimited`), open: true };
+    if (time === null) return { text: t(`${KEY}.windowClosed`), open: false };
 
     return { text: t(`${KEY}.windowOpen`, { time }), open: true };
   };

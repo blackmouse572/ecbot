@@ -3,6 +3,7 @@ import {
   customerMarketingWorkspaceControllerGetV1,
   customerMarketingWorkspaceControllerListEventsV1,
   customerMarketingWorkspaceControllerUpdateV1,
+  customerProductReactionWorkspaceControllerRemoveV1,
   type CustomerMarketingStateGetResponseDto,
   type CustomerMarketingStateUpdateRequestDto,
   type CustomerMarketingSummaryResponseDto,
@@ -110,6 +111,26 @@ export const useUpdateCustomerMarketing = (customerId: string) => {
       });
       // List rows carry the labels too.
       queryClient.invalidateQueries({ queryKey: customerQueryKeys.lists() });
+    },
+  });
+};
+
+/** Ends a product group pause early, so its offers may go out again. */
+export const useRemoveProductReaction = (customerId: string) => {
+  const { workspace } = useWorkspace();
+  const slug = workspace?.slug;
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (productGroupId: string) =>
+      customerProductReactionWorkspaceControllerRemoveV1({
+        path: { workspace: slug!, id: customerId, productGroupId },
+        throwOnError: true,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...customerMarketingQueryKeys.details(), customerId],
+      });
     },
   });
 };
