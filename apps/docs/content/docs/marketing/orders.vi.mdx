@@ -12,6 +12,17 @@ faq:
 
 Đơn hàng cho biết mỗi khách mua gì, lúc nào. Đơn đã xác nhận đưa khách sang **Đã mua 1 lần** hoặc **Mua lại**, còn nhóm hàng giúp Ecbot biết khi nào khách sắp dùng hết. Mở **Đơn hàng** ở thanh bên.
 
+<Screenshot
+  name="orders"
+  alt="Danh sách Đơn hàng với các đơn từ chat đang chờ xác nhận"
+>
+  <Mark id="pending">
+    Đơn bot ghi trong chat nằm ở đây cho tới khi bạn xác nhận.
+  </Mark>
+  <Mark id="add">**Thêm đơn** để ghi lại đơn đặt ở nơi khác.</Mark>
+  <Mark id="import">**Nhập file** để đưa đơn vào từ file CSV.</Mark>
+</Screenshot>
+
 ## Xác nhận đơn từ chat
 
 Khi khách đặt hàng trong chat, bot ghi đơn ở trạng thái **Chờ xác nhận**. Mở đơn, kiểm tra số lượng và giá, rồi bấm **Xác nhận đơn**. Đơn chưa xác nhận hoặc đã huỷ không được tính là đã mua.
@@ -24,5 +35,15 @@ Khi khách đặt hàng trong chat, bot ghi đơn ở trạng thái **Chờ xác
 ## Nhóm hàng
 
 Mở thẻ **Nhóm hàng**. Mỗi nhóm có tên, ví dụ "Kem chống nắng", và **Chu kỳ mua lại**: số ngày khách thường dùng hết. Sản phẩm có tên chứa tên nhóm sẽ tự vào nhóm khi bot ghi đơn.
+
+<Screenshot
+  name="product-groups"
+  alt="Thẻ Nhóm hàng với chu kỳ mua lại bạn đặt và chu kỳ Ecbot học được"
+>
+  <Mark id="cycle">
+    Chu kỳ đang dùng, chu kỳ bạn đặt, và chu kỳ Ecbot học được từ đơn.
+  </Mark>
+  <Mark id="create">**Tạo nhóm hàng** để thêm nhóm mới.</Mark>
+</Screenshot>
 
 Ecbot bắt đầu với chu kỳ bạn đặt. Khi nhóm có từ 5 lần mua lại trở lên, Ecbot học chu kỳ từ các đơn đã xác nhận, và bảng hiện cả hai số. Tổng quan tiếp thị dùng chu kỳ này để đếm khách sắp dùng hết hàng, xem [Tổng quan tiếp thị](/docs/marketing).

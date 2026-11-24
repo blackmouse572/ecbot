@@ -22,6 +22,8 @@ Ecbot gắn cho mỗi khách ba nhãn tiếp thị: **giai đoạn** cho biết 
 | **Đã mua 1 lần** | Đơn đầu tiên được xác nhận. |
 | **Mua lại**      | Đơn thứ hai được xác nhận.  |
 
+<StageJourneyDiagram />
+
 Khách 120 ngày không nhắn và không đặt đơn sẽ hiện **Lâu không nhắn**. Giai đoạn cũ vẫn giữ bên dưới, rê chuột lên nhãn để xem.
 
 Ecbot đọc từng cuộc trò chuyện và chỉ đưa khách lên giai đoạn sau. Đơn chỉ được tính khi bạn xác nhận, xem [Đơn hàng và nhóm hàng](/docs/marketing/orders).
@@ -45,8 +47,32 @@ Khi khách nói "để sau" về một sản phẩm, Ecbot tạm hoãn ưu đãi
 
 Mở một cuộc trò chuyện và tìm mục **Tiếp thị** trong khung thông tin khách. Mục này hiện giai đoạn, các nhóm hàng đang tạm hoãn, trạng thái nhận ưu đãi, thời gian nhắn miễn phí còn lại trên từng kênh, và các lần đổi nhãn gần nhất.
 
+<Screenshot
+  name="marketing-panel"
+  alt="Mục Tiếp thị trong khung thông tin khách của một cuộc trò chuyện"
+>
+  <Mark id="edit">
+    **Sửa nhãn** để đổi giai đoạn, nhận ưu đãi hoặc Khó chịu.
+  </Mark>
+  <Mark id="stage">Giai đoạn, kèm tin nhắn đã gắn nó, lúc nào và ai gắn.</Mark>
+  <Mark id="reaction">
+    Nhóm hàng khách muốn để sau, và tạm hoãn đến ngày nào.
+  </Mark>
+</Screenshot>
+
 - **Sửa nhãn** đổi giai đoạn, nhận ưu đãi hoặc Khó chịu. Bắt buộc nhập lý do, lý do hiện dưới nhãn và trong dòng thời gian.
 - **Xem tất cả** mở dòng thời gian tiếp thị: mỗi lần đổi nhãn, ai đổi (bot, Ecbot, thành viên hay ứng dụng kết nối) và vì sao, mới nhất trước.
+
+<Screenshot name="marketing-edit" alt="Khung Sửa nhãn tiếp thị">
+  <Mark id="stage">Chọn bất kỳ giai đoạn nào, kể cả giai đoạn trước.</Mark>
+  <Mark id="permission">
+    Chọn shop có được gửi ưu đãi không, và đến ngày nào nếu Tạm ngưng.
+  </Mark>
+  <Mark id="hostile">Bật hoặc tắt Khó chịu. Chỉ nhân viên tắt được.</Mark>
+  <Mark id="reason">
+    Bắt buộc. Lý do hiện dưới nhãn và trong dòng thời gian.
+  </Mark>
+</Screenshot>
 
 ## Lọc theo giai đoạn
 

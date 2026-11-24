@@ -16,6 +16,22 @@ Tổng quan tiếp thị là trang đầu tiên trong nhóm **Tiếp thị** ở
 
 Mở trang mỗi tuần một lần để quyết định nhắn cho ai tiếp theo. Mỗi con số trên trang đều mở danh sách khách đã lọc sẵn, nên bạn đi từ con số tới đúng những khách đó chỉ với một cú bấm.
 
+<Screenshot
+  name="marketing-todos"
+  alt="Trang Tổng quan tiếp thị với danh sách Việc nên làm tuần này"
+>
+  <Mark id="range">
+    Chọn khoảng ngày. Khách chuyển giai đoạn và độ khoẻ danh sách được so với
+    khoảng trước đó.
+  </Mark>
+  <Mark id="total">
+    Số khách nên nhắn tuần này, và số khách Ecbot đã bỏ ra.
+  </Mark>
+  <Mark id="rows">
+    Mỗi giai đoạn một dòng: nên làm gì, và áp dụng cho bao nhiêu khách.
+  </Mark>
+</Screenshot>
+
 ## Việc nên làm tuần này
 
 Mỗi giai đoạn một dòng, cho biết bao nhiêu khách nên nhắn và vì sao:
@@ -31,9 +47,25 @@ Mỗi giai đoạn một dòng, cho biết bao nhiêu khách nên nhắn và vì
 
 Ecbot bỏ ra khách đã dừng nhận tin, đang tạm ngưng hoặc đang khó chịu, và ghi rõ đã bỏ bao nhiêu khách.
 
+<OfferCheckDiagram />
+
 ## Khách đang ở giai đoạn nào
 
 Biểu đồ phễu cho biết bao nhiêu khách đã đi tới từng giai đoạn, chia theo kênh khách nhắn đầu tiên. Bên dưới, mỗi giai đoạn có một thẻ với số khách và tỉ lệ trên tổng số khách. Bấm một thẻ để xem danh sách khách.
+
+<Screenshot
+  name="marketing-funnel"
+  alt="Biểu đồ phễu theo giai đoạn chia theo kênh, mỗi giai đoạn một thẻ"
+>
+  <Mark id="funnel">
+    Mỗi màu là một kênh. Phần giảm dưới mỗi giai đoạn cho biết bao nhiêu khách
+    dừng lại ở đó.
+  </Mark>
+  <Mark id="stages">
+    Mỗi thẻ cho biết số khách, mức thay đổi so với khoảng trước, và tỉ lệ trên
+    tổng số khách.
+  </Mark>
+</Screenshot>
 
 ## Khách chuyển giai đoạn
 
@@ -45,5 +77,18 @@ Bao nhiêu khách chuyển từ giai đoạn này sang giai đoạn khác trong 
 - **Đang tạm ngưng**: khách sẽ tự nhận tin lại khi hết hạn tạm ngưng.
 
 Số khách dừng nhận tin tăng là tín hiệu shop đang nhắn quá nhiều.
+
+<Screenshot
+  name="marketing-moves"
+  alt="Khách chuyển giai đoạn trong 7 ngày qua và các thẻ độ khoẻ danh sách"
+>
+  <Mark id="moves">
+    Bao nhiêu khách chuyển giữa hai giai đoạn trong khoảng ngày.
+  </Mark>
+  <Mark id="view">**Xem khách** mở danh sách khách ở giai đoạn mới.</Mark>
+  <Mark id="health">
+    Dừng nhận tin và Đang tạm ngưng cho biết shop có đang nhắn quá nhiều không.
+  </Mark>
+</Screenshot>
 
 Đọc [Giai đoạn khách và nhận ưu đãi](/docs/marketing/stages) để biết mỗi giai đoạn được gắn thế nào.

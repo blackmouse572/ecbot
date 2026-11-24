@@ -22,6 +22,8 @@ Ecbot gives every customer three marketing labels: a **stage** that shows how fa
 | **Bought once**  | Their first order is confirmed.    |
 | **Repeat buyer** | Their second confirmed order.      |
 
+<StageJourneyDiagram />
+
 A customer with no message and no order for 120 days also shows **Inactive**. Their stage stays underneath, and hovering the label shows it.
 
 Ecbot reads each conversation and only moves a customer forward. Orders count once you confirm them, see [Orders and product groups](/docs/marketing/orders).
@@ -45,8 +47,34 @@ When a customer says "later" about a product, Ecbot pauses offers for that produ
 
 Open a conversation and find **Marketing** in the customer panel. It shows the stage, any product group pauses, the offers setting, how long the free messaging window has left on each channel, and the latest label changes.
 
+<Screenshot
+  name="marketing-panel"
+  alt="The Marketing section in the customer panel of a conversation"
+>
+  <Mark id="edit">**Edit labels** changes the stage, offers or Upset.</Mark>
+  <Mark id="stage">
+    The stage, with the message that set it, when, and who.
+  </Mark>
+  <Mark id="reaction">
+    A product group the customer asked to hear about later, and until when.
+  </Mark>
+</Screenshot>
+
 - **Edit labels** changes the stage, offers or Upset. A reason is required, and it shows under the label and in the timeline.
 - **View all** opens the marketing timeline: every change, who made it (the bot, Ecbot, a team member or a connected app) and why, newest first.
+
+<Screenshot name="marketing-edit" alt="The Edit marketing labels drawer">
+  <Mark id="stage">Pick any stage, earlier ones too.</Mark>
+  <Mark id="permission">
+    Choose whether the shop may send offers, and until when for Paused.
+  </Mark>
+  <Mark id="hostile">
+    Turn Upset on or off. Only your staff can turn it off.
+  </Mark>
+  <Mark id="reason">
+    Required. The reason shows under the label and in the timeline.
+  </Mark>
+</Screenshot>
 
 ## Filter by stage
 

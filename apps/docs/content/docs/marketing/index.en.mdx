@@ -16,6 +16,23 @@ The Marketing overview is the first page of the **Marketing** group in the app's
 
 Open it once a week to decide who to message next. Every number on the page opens the customer list already filtered to those customers, so you can go from a count to the people behind it in one click.
 
+<Screenshot
+  name="marketing-todos"
+  alt="The Marketing overview with the To do this week list"
+>
+  <Mark id="range">
+    Pick the date range. Stage moves and list health compare it with the days
+    before.
+  </Mark>
+  <Mark id="total">
+    How many customers are worth a message this week, and how many Ecbot left
+    out.
+  </Mark>
+  <Mark id="rows">
+    One row per stage: what to do, and how many customers it applies to.
+  </Mark>
+</Screenshot>
+
 ## To do this week
 
 One row per stage, with how many customers are worth a message and why:
@@ -31,9 +48,25 @@ One row per stage, with how many customers are worth a message and why:
 
 Ecbot leaves out customers who opted out, are paused or are upset, and says how many it left out.
 
+<OfferCheckDiagram />
+
 ## Which stage customers are at
 
 The funnel shows how many customers reached each stage, split by the channel they first wrote from. Below it, one card per stage shows the count and its share of all customers. Click a card to see those customers.
+
+<Screenshot
+  name="marketing-funnel"
+  alt="The stage funnel split by channel, with one card per stage"
+>
+  <Mark id="funnel">
+    Each colour is a channel. The drop under each stage shows how many customers
+    stopped there.
+  </Mark>
+  <Mark id="stages">
+    Each card shows the count, the change against the previous range, and its
+    share of all customers.
+  </Mark>
+</Screenshot>
 
 ## Stage moves
 
@@ -45,5 +78,20 @@ How many customers moved from one stage to another in the date range, such as As
 - **Paused**: customers who receive offers again when their pause ends.
 
 A rise in opt-outs is a sign the shop is messaging too much.
+
+<Screenshot
+  name="marketing-moves"
+  alt="Stage moves in the last 7 days and the list health cards"
+>
+  <Mark id="moves">
+    How many customers moved between two stages in the range.
+  </Mark>
+  <Mark id="view">
+    **View customers** opens the customer list at the new stage.
+  </Mark>
+  <Mark id="health">
+    Opted out and Paused tell you whether the shop messages too much.
+  </Mark>
+</Screenshot>
 
 Read [Customer stages and offers](/docs/marketing/stages) for how each stage is set.

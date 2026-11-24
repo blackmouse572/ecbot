@@ -547,6 +547,58 @@
       }
     }
   },
+  "customer-sources": {
+    "en": {
+      "src": "/_docs/screenshots/en/customer-sources.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "create": {
+          "x": 90.03,
+          "y": 8.56,
+          "w": 7.74,
+          "h": 4
+        },
+        "stats": {
+          "x": 40.27,
+          "y": 22.87,
+          "w": 39.8,
+          "h": 5.78
+        },
+        "share": {
+          "x": 89.65,
+          "y": 29.09,
+          "w": 5.63,
+          "h": 4
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/customer-sources.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "create": {
+          "x": 89.74,
+          "y": 8.56,
+          "w": 8.04,
+          "h": 4
+        },
+        "stats": {
+          "x": 40.34,
+          "y": 22.87,
+          "w": 38.59,
+          "h": 5.78
+        },
+        "share": {
+          "x": 88.95,
+          "y": 29.09,
+          "w": 6.33,
+          "h": 4
+        }
+      }
+    }
+  },
   "customer-suggestions": {
     "en": {
       "src": "/_docs/screenshots/en/customer-suggestions.png",
@@ -715,6 +767,358 @@
           "y": 55.29,
           "w": 37.36,
           "h": 5.33
+        }
+      }
+    }
+  },
+  "marketing-edit": {
+    "en": {
+      "src": "/_docs/screenshots/en/marketing-edit.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "stage": {
+          "x": 62.01,
+          "y": 14.09,
+          "w": 35.97,
+          "h": 3.11
+        },
+        "permission": {
+          "x": 62.01,
+          "y": 25.73,
+          "w": 35.97,
+          "h": 3.11
+        },
+        "hostile": {
+          "x": 65.07,
+          "y": 62.09,
+          "w": 32.42,
+          "h": 5.42
+        },
+        "reason": {
+          "x": 62.01,
+          "y": 68.4,
+          "w": 35.97,
+          "h": 3.11
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/marketing-edit.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "stage": {
+          "x": 62.01,
+          "y": 14.09,
+          "w": 35.97,
+          "h": 3.11
+        },
+        "permission": {
+          "x": 62.01,
+          "y": 28.05,
+          "w": 35.97,
+          "h": 3.11
+        },
+        "hostile": {
+          "x": 65.07,
+          "y": 64.4,
+          "w": 31.32,
+          "h": 5.42
+        },
+        "reason": {
+          "x": 62.01,
+          "y": 70.71,
+          "w": 35.97,
+          "h": 3.11
+        }
+      }
+    }
+  },
+  "marketing-funnel": {
+    "en": {
+      "src": "/_docs/screenshots/en/marketing-funnel.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "funnel": {
+          "x": 15.97,
+          "y": 3.87,
+          "w": 83.33,
+          "h": 48.53
+        },
+        "stages": {
+          "x": 15.69,
+          "y": 52.84,
+          "w": 83.89,
+          "h": 14.67
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/marketing-funnel.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "funnel": {
+          "x": 15.97,
+          "y": 3.87,
+          "w": 83.33,
+          "h": 48.53
+        },
+        "stages": {
+          "x": 15.69,
+          "y": 52.84,
+          "w": 83.89,
+          "h": 12.53
+        }
+      }
+    }
+  },
+  "marketing-moves": {
+    "en": {
+      "src": "/_docs/screenshots/en/marketing-moves.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "moves": {
+          "x": 17.36,
+          "y": 51.18,
+          "w": 80.56,
+          "h": 4
+        },
+        "view": {
+          "x": 89.18,
+          "y": 57.29,
+          "w": 8.6,
+          "h": 4
+        },
+        "health": {
+          "x": 15.83,
+          "y": 80.73,
+          "w": 83.61,
+          "h": 18.4
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/marketing-moves.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "moves": {
+          "x": 17.36,
+          "y": 51.15,
+          "w": 80.56,
+          "h": 4
+        },
+        "view": {
+          "x": 91.31,
+          "y": 57.27,
+          "w": 6.47,
+          "h": 4
+        },
+        "health": {
+          "x": 15.83,
+          "y": 80.71,
+          "w": 83.61,
+          "h": 18.4
+        }
+      }
+    }
+  },
+  "marketing-panel": {
+    "en": {
+      "src": "/_docs/screenshots/en/marketing-panel.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "edit": {
+          "x": 93.08,
+          "y": 5,
+          "w": 6.09,
+          "h": 4
+        },
+        "stage": {
+          "x": 83.05,
+          "y": 9.66,
+          "w": 15.98,
+          "h": 13.98
+        },
+        "reaction": {
+          "x": 83.05,
+          "y": 23.2,
+          "w": 15.98,
+          "h": 19.89
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/marketing-panel.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "edit": {
+          "x": 93.45,
+          "y": 5,
+          "w": 5.72,
+          "h": 4
+        },
+        "stage": {
+          "x": 83.05,
+          "y": 9.66,
+          "w": 15.98,
+          "h": 13.98
+        },
+        "reaction": {
+          "x": 83.05,
+          "y": 23.2,
+          "w": 15.98,
+          "h": 19.89
+        }
+      }
+    }
+  },
+  "marketing-todos": {
+    "en": {
+      "src": "/_docs/screenshots/en/marketing-todos.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "range": {
+          "x": 86.11,
+          "y": 9.71,
+          "w": 11.67,
+          "h": 4
+        },
+        "total": {
+          "x": 83.8,
+          "y": 18.87,
+          "w": 13.97,
+          "h": 6.22
+        },
+        "rows": {
+          "x": 16.11,
+          "y": 26.53,
+          "w": 83.06,
+          "h": 51.22
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/marketing-todos.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "range": {
+          "x": 86.11,
+          "y": 9.71,
+          "w": 11.67,
+          "h": 4
+        },
+        "total": {
+          "x": 17.5,
+          "y": 19.04,
+          "w": 49.26,
+          "h": 5.87
+        },
+        "rows": {
+          "x": 16.11,
+          "y": 26.53,
+          "w": 83.06,
+          "h": 51.22
+        }
+      }
+    }
+  },
+  "orders": {
+    "en": {
+      "src": "/_docs/screenshots/en/orders.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "pending": {
+          "x": 19.1,
+          "y": 22.71,
+          "w": 48.9,
+          "h": 3.2
+        },
+        "add": {
+          "x": 90.35,
+          "y": 8.56,
+          "w": 7.43,
+          "h": 4
+        },
+        "import": {
+          "x": 82.83,
+          "y": 8.56,
+          "w": 7.52,
+          "h": 4
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/orders.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "pending": {
+          "x": 19.1,
+          "y": 22.71,
+          "w": 39.78,
+          "h": 3.2
+        },
+        "add": {
+          "x": 90.3,
+          "y": 8.56,
+          "w": 7.48,
+          "h": 4
+        },
+        "import": {
+          "x": 83.31,
+          "y": 8.56,
+          "w": 6.99,
+          "h": 4
+        }
+      }
+    }
+  },
+  "product-groups": {
+    "en": {
+      "src": "/_docs/screenshots/en/product-groups.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "cycle": {
+          "x": 28.72,
+          "y": 27.98,
+          "w": 41.6,
+          "h": 5.78
+        },
+        "create": {
+          "x": 85.39,
+          "y": 8.56,
+          "w": 12.38,
+          "h": 4
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/product-groups.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "cycle": {
+          "x": 29.12,
+          "y": 27.98,
+          "w": 40.65,
+          "h": 5.78
+        },
+        "create": {
+          "x": 88,
+          "y": 8.56,
+          "w": 9.78,
+          "h": 4
         }
       }
     }

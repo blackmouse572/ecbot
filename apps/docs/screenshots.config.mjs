@@ -31,6 +31,15 @@ async function navigate(page, suffix) {
   );
 }
 
+// Scrolls the heading that matches to the top of the view.
+async function scrollToStart(page, name) {
+  await page
+    .getByRole("heading", { name })
+    .first()
+    .evaluate((el) => el.scrollIntoView({ block: "start" }));
+  await page.waitForTimeout(500);
+}
+
 /** @type {Shot[]} */
 export const shots = [
   {
@@ -898,6 +907,210 @@ export const shots = [
         target: "main >> text=/^(Ecbot app|Ứng dụng Ecbot)$/",
         up: 2,
         pad: 2,
+      },
+    ],
+  },
+  {
+    name: "marketing-todos",
+    path: "/:ws/marketing",
+    marks: [
+      {
+        id: "range",
+        target: "role=combobox[name=/^(Date range|Khoảng ngày)$/]",
+        pad: 4,
+      },
+      {
+        id: "total",
+        target: "text=/(customers to message|khách nên nhắn)/",
+        up: 1,
+        pad: 4,
+      },
+      {
+        id: "rows",
+        target: "[data-testid=todo-NEW]",
+        to: "[data-testid=todo-WIN_BACK]",
+      },
+    ],
+  },
+  {
+    name: "marketing-funnel",
+    path: "/:ws/marketing",
+    setup: async (page) => {
+      await scrollToStart(
+        page,
+        /^(Which stage customers are at|Khách đang ở giai đoạn nào)$/,
+      );
+    },
+    marks: [
+      {
+        id: "funnel",
+        target:
+          "role=heading[name=/^(Which stage customers are at|Khách đang ở giai đoạn nào)$/]",
+        up: 2,
+        pad: 2,
+      },
+      {
+        id: "stages",
+        target: "main a >> text=/^(New|Mới biết)$/",
+        up: 3,
+        to: "main >> text=/^(Inactive|Lâu không nhắn)$/ >> nth=-1",
+        pad: 6,
+      },
+    ],
+  },
+  {
+    name: "marketing-moves",
+    path: "/:ws/marketing",
+    setup: async (page) => {
+      await scrollToStart(page, /^(Stage moves|Khách chuyển giai đoạn)/);
+    },
+    marks: [
+      {
+        id: "moves",
+        target: "role=heading[name=/^(Stage moves|Khách chuyển giai đoạn)/]",
+        pad: 6,
+      },
+      {
+        id: "view",
+        target: "role=link[name=/^(View customers|Xem khách)$/] >> nth=0",
+        pad: 4,
+      },
+      {
+        id: "health",
+        target:
+          "role=heading[name=/^(Is the list healthy|Danh sách có khoẻ không)$/]",
+        up: 2,
+        pad: 4,
+      },
+    ],
+  },
+  {
+    name: "marketing-panel",
+    path: "/:ws/conversations/conv1",
+    setup: async (page) => {
+      await scrollToStart(page, /^(Marketing|Tiếp thị)$/);
+    },
+    marks: [
+      {
+        id: "edit",
+        target: "role=button[name=/^(Edit labels|Sửa nhãn)$/]",
+        pad: 4,
+      },
+      {
+        id: "stage",
+        target: "text=/^(Stage|Giai đoạn)$/ >> nth=-1",
+        up: 1,
+        pad: 2,
+      },
+      {
+        id: "reaction",
+        target: "text=/^(Product groups|Với nhóm hàng)$/",
+        up: 1,
+        pad: 2,
+      },
+    ],
+  },
+  {
+    name: "marketing-edit",
+    path: "/:ws/conversations/conv1",
+    setup: async (page) => {
+      await page
+        .getByRole("button", { name: /^(Edit labels|Sửa nhãn)$/ })
+        .click();
+      await page.waitForTimeout(800);
+    },
+    marks: [
+      {
+        id: "stage",
+        target: "role=dialog >> text=/^(Stage|Giai đoạn)$/",
+        up: 1,
+        pad: 4,
+      },
+      {
+        id: "permission",
+        target: "role=dialog >> text=/^(Offers|Nhận ưu đãi)$/",
+        up: 1,
+        pad: 4,
+      },
+      {
+        id: "hostile",
+        target: "role=dialog >> text=/^(Customer is upset|Khách khó chịu)$/",
+        up: 2,
+        pad: 4,
+      },
+      {
+        id: "reason",
+        target: "role=dialog >> text=/^(Reason|Lý do)$/",
+        up: 1,
+        pad: 4,
+      },
+    ],
+  },
+  {
+    name: "customer-sources",
+    path: "/:ws/sources",
+    marks: [
+      {
+        id: "create",
+        target: "main >> text=/^(Create link|Tạo liên kết)$/ >> nth=0",
+        pad: 4,
+      },
+      {
+        id: "stats",
+        target: "role=columnheader[name=/^(New customers|Khách mới)$/]",
+        to: "role=columnheader[name=/^(Close rate|Tỉ lệ chốt)$/]",
+        pad: 2,
+      },
+      {
+        id: "share",
+        target: "role=button[name=/^(Share|Chia sẻ)$/] >> nth=0",
+        pad: 4,
+      },
+    ],
+  },
+  {
+    name: "orders",
+    path: "/:ws/orders",
+    marks: [
+      {
+        id: "pending",
+        target: "text=/(awaiting confirmation|đang chờ xác nhận)/",
+        up: 1,
+        pad: 4,
+      },
+      {
+        id: "add",
+        target: "main >> text=/^(Add order|Thêm đơn)$/ >> nth=0",
+        pad: 4,
+      },
+      {
+        id: "import",
+        target: "main >> text=/^(Import file|Nhập file)$/ >> nth=0",
+        pad: 4,
+      },
+    ],
+  },
+  {
+    name: "product-groups",
+    path: "/:ws/orders",
+    setup: async (page) => {
+      await page
+        .getByRole("tab", { name: /^(Product groups|Nhóm hàng)$/ })
+        .click();
+      await page.waitForTimeout(1000);
+    },
+    marks: [
+      {
+        id: "cycle",
+        target: "role=columnheader[name=/^(Cycle in use|Chu kỳ đang dùng)$/]",
+        to: "role=columnheader[name=/^(Ecbot learned|Ecbot học được)$/]",
+        pad: 2,
+      },
+      {
+        id: "create",
+        target:
+          "main >> text=/^(Create product group|Tạo nhóm hàng)$/ >> nth=0",
+        pad: 4,
       },
     ],
   },
