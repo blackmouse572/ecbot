@@ -25,6 +25,8 @@ type Props = {
   customerName?: string | null;
   conversationId?: string;
   onViewMessage?: (messageId: string) => void;
+  // The customer page lists these changes in its own Hoạt động card.
+  showTimeline?: boolean;
 };
 
 const KEY = "conversations.customer.panel.marketing";
@@ -35,6 +37,7 @@ export const MarketingSection: FC<Props> = ({
   customerName,
   conversationId,
   onViewMessage,
+  showTimeline = true,
 }) => {
   const { t } = useTranslation();
   const { flags } = useFeatureFlags();
@@ -117,44 +120,46 @@ export const MarketingSection: FC<Props> = ({
             </div>
           )}
 
-          <div className="flex flex-col gap-y-2">
-            <div className="flex items-center justify-between">
-              <Text size="small" weight="plus">
-                {t(`${KEY}.timeline.title`)}
-              </Text>
-              {timeline.events.length > 0 && (
-                <Button
-                  size="small"
-                  variant="transparent"
-                  className="text-ui-fg-interactive"
-                  onClick={() => setTimelineOpen(true)}
-                >
-                  {t(`${KEY}.timeline.viewAll`)}
-                </Button>
+          {showTimeline && (
+            <div className="flex flex-col gap-y-2">
+              <div className="flex items-center justify-between">
+                <Text size="small" weight="plus">
+                  {t(`${KEY}.timeline.title`)}
+                </Text>
+                {timeline.events.length > 0 && (
+                  <Button
+                    size="small"
+                    variant="transparent"
+                    className="text-ui-fg-interactive"
+                    onClick={() => setTimelineOpen(true)}
+                  >
+                    {t(`${KEY}.timeline.viewAll`)}
+                  </Button>
+                )}
+              </div>
+              {timeline.isPending ? (
+                <Skeleton className="h-12 w-full" />
+              ) : timeline.isError ? (
+                <Text size="small" className="text-ui-fg-error">
+                  {t("general.loadFailed")}
+                </Text>
+              ) : timeline.events.length === 0 ? (
+                <Text size="small" className="text-ui-fg-muted">
+                  {t(`${KEY}.timeline.empty`)}
+                </Text>
+              ) : (
+                <ul className={EVENT_LIST_CLASS}>
+                  {timeline.events.slice(0, LATEST_EVENT_COUNT).map((event) => (
+                    <MarketingEventItem
+                      key={event.id}
+                      event={event}
+                      onViewMessage={viewMessageFor(event)}
+                    />
+                  ))}
+                </ul>
               )}
             </div>
-            {timeline.isPending ? (
-              <Skeleton className="h-12 w-full" />
-            ) : timeline.isError ? (
-              <Text size="small" className="text-ui-fg-error">
-                {t("general.loadFailed")}
-              </Text>
-            ) : timeline.events.length === 0 ? (
-              <Text size="small" className="text-ui-fg-muted">
-                {t(`${KEY}.timeline.empty`)}
-              </Text>
-            ) : (
-              <ul className={EVENT_LIST_CLASS}>
-                {timeline.events.slice(0, LATEST_EVENT_COUNT).map((event) => (
-                  <MarketingEventItem
-                    key={event.id}
-                    event={event}
-                    onViewMessage={viewMessageFor(event)}
-                  />
-                ))}
-              </ul>
-            )}
-          </div>
+          )}
 
           <MarketingEditDrawer
             customerId={customerId}

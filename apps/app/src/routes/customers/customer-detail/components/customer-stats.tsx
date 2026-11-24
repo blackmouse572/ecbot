@@ -91,8 +91,8 @@ export const CustomerStats: FC<{ customerId: string }> = ({ customerId }) => {
             value={
               lastOrder
                 ? new Intl.DateTimeFormat(i18n.language, {
-                    day: "2-digit",
-                    month: "2-digit",
+                    day: "numeric",
+                    month: "numeric",
                   }).format(new Date(lastOrder.orderedAt))
                 : "–"
             }

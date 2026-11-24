@@ -20,9 +20,16 @@ const KEY = "customers.detail.upcoming";
 export const CustomerUpcoming: FC<{ customerId: string }> = ({
   customerId,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const ability = useAbility();
   const formatDate = useMarketingDate();
+  // A pause ends on a day, read as UTC so it never shifts.
+  const formatDay = (value: string) =>
+    new Intl.DateTimeFormat(i18n.language, {
+      day: "numeric",
+      month: "numeric",
+      timeZone: "UTC",
+    }).format(new Date(value));
   const { followups } = useCustomerFollowups(
     ability.can("read", "CONVERSATION") ? customerId : "",
   );
@@ -72,7 +79,7 @@ export const CustomerUpcoming: FC<{ customerId: string }> = ({
             icon={<PauseSolid />}
             title={t(`${KEY}.paused`, {
               group: reaction.productGroupName,
-              date: formatDate(reaction.until),
+              date: formatDay(reaction.until),
             })}
             hint={
               reaction.reason

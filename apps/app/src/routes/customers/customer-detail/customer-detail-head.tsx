@@ -61,7 +61,7 @@ export const CustomerDetailHead: FC<Props> = ({
 
   return (
     <Container className="flex flex-col gap-y-4 px-6 pb-3 pt-4">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 items-center gap-x-3">
           <Avatar
             size="large"
@@ -85,13 +85,16 @@ export const CustomerDetailHead: FC<Props> = ({
               className="text-ui-fg-subtle flex flex-wrap items-center gap-x-1.5"
             >
               {channels.map((platform) => (
-                <span key={platform} className="flex items-center gap-x-1">
+                <span
+                  key={platform}
+                  className="flex items-center gap-x-1 whitespace-nowrap"
+                >
                   <PlatformIcon type={platform as A} size={14} />
                   {channelOf(platform as A).label}
                 </span>
               ))}
               {channels.length > 0 && <span aria-hidden>·</span>}
-              <span>
+              <span className="whitespace-nowrap">
                 {t("customers.detail.since", {
                   date: getFullDate(new Date(customer.createdAt)),
                 })}
@@ -99,7 +102,7 @@ export const CustomerDetailHead: FC<Props> = ({
               {source && (
                 <>
                   <span aria-hidden>·</span>
-                  <span>
+                  <span className="whitespace-nowrap">
                     {t("customers.detail.cameFrom")}{" "}
                     <Link
                       to={`/${workspaceSlug}/${ROUTES.CustomerSources}/${source.sourceId}`}

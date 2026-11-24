@@ -64,7 +64,9 @@ describe("CustomerUpcoming", () => {
     expect(
       screen.getByText("Customer will decide at the weekend"),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Offers for Serum paused until/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Offers for Serum paused until/),
+    ).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
     expect(state.cancel).toHaveBeenCalledWith("f-1");

@@ -62,7 +62,7 @@ export const ContactPointsList: FC<Props> = ({ customerId, contactPoints }) => {
   };
 
   return (
-    <ul className="flex flex-col">
+    <ul className="@container flex flex-col">
       {contactPoints.map((cp) => {
         const conversation = conversations.find(
           (c) => c.senderId === cp.externalSenderId,
@@ -80,7 +80,7 @@ export const ContactPointsList: FC<Props> = ({ customerId, contactPoints }) => {
 
         const content = (
           <>
-            <div className="relative shrink-0">
+            <div className="relative row-span-2 @[20rem]:row-span-1">
               <Avatar
                 variant="rounded"
                 size="small"
@@ -93,7 +93,7 @@ export const ContactPointsList: FC<Props> = ({ customerId, contactPoints }) => {
                 className="ring-ui-bg-base absolute -bottom-0.5 -right-0.5 ring-2"
               />
             </div>
-            <div className="flex min-w-0 flex-1 flex-col">
+            <div className="flex min-w-0 flex-col">
               <Text size="small" weight="plus" className="truncate">
                 {name}
               </Text>
@@ -102,7 +102,8 @@ export const ContactPointsList: FC<Props> = ({ customerId, contactPoints }) => {
               </Text>
             </div>
             {window && status && (
-              <div className="flex shrink-0 flex-col items-end">
+              // Under the channel in the narrow panel, on the right in the page.
+              <div className="col-start-2 flex flex-wrap gap-x-1.5 @[20rem]:col-start-3 @[20rem]:row-start-1 @[20rem]:flex-col @[20rem]:items-end">
                 <Text
                   size="xsmall"
                   weight="plus"
@@ -124,11 +125,12 @@ export const ContactPointsList: FC<Props> = ({ customerId, contactPoints }) => {
               </div>
             )}
             {conversation && (
-              <ChevronRight className="text-ui-fg-muted shrink-0" />
+              <ChevronRight className="text-ui-fg-muted col-start-4 row-span-2 row-start-1 @[20rem]:row-span-1" />
             )}
           </>
         );
-        const rowClass = "flex items-center gap-x-3 rounded-md px-2 py-2";
+        const rowClass =
+          "grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-3 rounded-md px-2 py-2";
 
         return (
           <li key={cp.id}>

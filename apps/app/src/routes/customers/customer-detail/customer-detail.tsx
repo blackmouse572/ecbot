@@ -98,9 +98,13 @@ export function CustomerDetail() {
             navigate(`/${workspaceSlug}/${ROUTES.Customers}`, { replace: true })
           }
         >
-          <Tabs.List>
+          <Tabs.List className="overflow-x-auto">
             {tabs.map((value) => (
-              <Tabs.Trigger key={value} value={value}>
+              <Tabs.Trigger
+                key={value}
+                value={value}
+                className="whitespace-nowrap"
+              >
                 {t(`customers.detail.tabs.${value}`)}
                 {!!counts[value] && (
                   <span className="text-ui-fg-muted ml-1.5 tabular-nums">
@@ -221,6 +225,7 @@ export function CustomerDetail() {
                 <MarketingSection
                   customerId={customerId}
                   customerName={customer.name}
+                  showTimeline={false}
                 />
               </div>
             </Container>
