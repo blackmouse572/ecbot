@@ -14,7 +14,10 @@ import {
 } from '../constants/marketing-send.constant';
 import { MarketingSettingsUpdateRequestDto } from '../dtos/request/marketing-settings.update.request.dto';
 import { MarketingSettingsGetResponseDto } from '../dtos/response/marketing-settings.get.response.dto';
-import { IMarketingSendRules } from '../interfaces/marketing-send.interface';
+import {
+    IMarketingSendRules,
+    IMarketingStopReply,
+} from '../interfaces/marketing-send.interface';
 import { MarketingSettingsEntity } from '../repository/entities/marketing-settings.entity';
 import { MarketingSettingsRepository } from '../repository/repositories/marketing-settings.repository';
 
@@ -123,9 +126,7 @@ export class MarketingSettingsService {
      * The opt-out confirmation: whether the shop sends one, and its own text
      * (null for the built-in one).
      */
-    async stopReply(
-        workspaceId: string
-    ): Promise<{ enabled: boolean; text: string | null }> {
+    async stopReply(workspaceId: string): Promise<IMarketingStopReply> {
         const saved = await this.find(workspaceId);
         return {
             enabled: saved?.stopReplyEnabled ?? true,

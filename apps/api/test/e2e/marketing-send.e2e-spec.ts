@@ -546,6 +546,18 @@ describe('E2E — marketing sends', () => {
             .set(...auth())
             .send({ preset: 'ASKED_PRICE', language: 'fr' });
         expect(bad.status).toBe(422);
+
+        // The audience checks of a send: neither, or both, is a 400.
+        for (const body of [
+            {},
+            { preset: 'NEW', conditions: offer.audience.conditions },
+        ]) {
+            const refused = await http(ctx.app)
+                .post(url('/draft'))
+                .set(...auth())
+                .send(body);
+            expect(refused.status).toBe(400);
+        }
         write.mockRestore();
     });
 });

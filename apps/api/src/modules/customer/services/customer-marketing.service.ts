@@ -61,6 +61,7 @@ import { customerMarketingFirstSource } from '../utils/customer-marketing-first-
 import { customerMarketingFreeWindows } from '../utils/customer-marketing-free-window.util';
 import { MarketingSendService } from '@app/modules/marketing/services/marketing-send.service';
 import { MarketingSettingsService } from '@app/modules/marketing/services/marketing-settings.service';
+import { IMarketingStopReply } from '@app/modules/marketing/interfaces/marketing-send.interface';
 import { optOutReplyText } from '../utils/customer-marketing-opt-out.util';
 
 const DAY_MS = 86_400_000;
@@ -99,7 +100,7 @@ export class CustomerMarketingService {
         workspaceId: string,
         chatbot: { primaryLanguage?: string | null }
     ): Promise<string | null> {
-        const reply = await this.marketingSettings
+        const reply: IMarketingStopReply = await this.marketingSettings
             .stopReply(workspaceId)
             .catch(() => ({ enabled: true, text: null }));
         if (!reply.enabled) return null;

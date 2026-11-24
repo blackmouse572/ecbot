@@ -16,9 +16,10 @@ import {
     ENUM_AI_USAGE_SOURCE,
 } from 'src/app/ai-usage-meter.interface';
 import { MARKETING_SEND_MAX_TEXT_LENGTH } from '../constants/marketing-send.constant';
+import { MarketingSendDraftRequestDto } from '../dtos/request/marketing-send.draft.request.dto';
 import { MarketingSendDraftResponseDto } from '../dtos/response/marketing-send.draft.response.dto';
-import { IMarketingDraftInput } from '../interfaces/marketing-draft.interface';
 import { marketingDraftPrompt } from '../utils/marketing-draft-prompt.util';
+import { MarketingAudienceService } from './marketing-audience.service';
 
 /** "AI soạn giúp" (#506): drafts a send's text, metered as the shop's tokens. */
 @Injectable()
@@ -27,6 +28,7 @@ export class MarketingDraftService {
 
     constructor(
         private readonly ai: AiDecisionService,
+        private readonly audienceService: MarketingAudienceService,
         @Optional()
         @Inject(AI_USAGE_METER)
         private readonly meter?: AiUsageMeter
@@ -35,8 +37,12 @@ export class MarketingDraftService {
     async draft(
         workspaceId: string,
         shopName: string,
-        input: IMarketingDraftInput
+        dto: MarketingSendDraftRequestDto
     ): Promise<MarketingSendDraftResponseDto> {
+        // The same audience checks as a send (400 otherwise), before any token
+        // is spent. Conditions get the general angle: only a stage has its own.
+        const audience = this.audienceService.toAudience(dto);
+        const preset = 'preset' in audience ? audience.preset : undefined;
         // No meter is the public build: allowed, and nothing recorded below.
         const budget = (await this.meter?.check(workspaceId)) ?? {
             allowed: true,
@@ -49,7 +55,12 @@ export class MarketingDraftService {
             });
         }
 
-        const { instructions, state } = marketingDraftPrompt(shopName, input);
+        const { instructions, state } = marketingDraftPrompt(shopName, {
+            preset,
+            offer: dto.offer,
+            previous: dto.previous,
+            language: dto.language,
+        });
         const written = await this.ai
             .write(instructions, state)
             .catch((err: unknown) => {

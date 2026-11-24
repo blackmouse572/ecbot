@@ -1,4 +1,5 @@
 import {
+    BadRequestException,
     ServiceUnavailableException,
     UnprocessableEntityException,
 } from '@nestjs/common';
@@ -19,8 +20,25 @@ function makeService(
         check: jest.fn(async () => budget),
         record: jest.fn(async () => undefined),
     };
+    const audience = {
+        toAudience: jest.fn(
+            (dto: { preset?: string; conditions?: unknown[] }) => {
+                if (dto.preset) return { preset: dto.preset };
+                if (!dto.conditions?.length) {
+                    throw new BadRequestException(
+                        'marketingAudience.error.presetOrConditions'
+                    );
+                }
+                return { match: 'ALL', conditions: dto.conditions };
+            }
+        ),
+    };
     return {
-        service: new MarketingDraftService(ai as any, meter as any),
+        service: new MarketingDraftService(
+            ai as any,
+            audience as any,
+            meter as any
+        ),
         ai,
         meter,
     };
@@ -60,7 +78,9 @@ describe('MarketingDraftService', () => {
     it('asks for a different text than the last one, in the language asked', async () => {
         const { service, ai } = makeService('Hi {name}, we miss you.');
         await service.draft('ws1', 'Lumi', {
-            conditions: [],
+            conditions: [
+                { field: 'CHANNEL', operator: 'IN', values: ['ZALO_PAGE'] },
+            ] as any,
             previous: 'Hi {name}, come back soon.',
             language: 'en',
         });
@@ -71,6 +91,15 @@ describe('MarketingDraftService', () => {
         expect(instructions).toContain('English');
         expect(instructions).toContain('Hi {name}, come back soon.');
         expect(state).toContain('Offer: none');
+    });
+
+    it('checks the audience as a send does, before spending tokens', async () => {
+        const { service, ai, meter } = makeService('x');
+        await expect(service.draft('ws1', 'Lumi', {})).rejects.toBeInstanceOf(
+            BadRequestException
+        );
+        expect(meter.check).not.toHaveBeenCalled();
+        expect(ai.write).not.toHaveBeenCalled();
     });
 
     it('replaces dashes with commas', async () => {
