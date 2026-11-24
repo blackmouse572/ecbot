@@ -82,4 +82,11 @@ export class MessageEntity extends DatabaseEntityBase {
 
     @Enum({ items: () => ENUM_MESSAGE_STATUS, nullable: true })
     status?: ENUM_MESSAGE_STATUS;
+
+    /**
+     * History imported by reconciliation, never answered (ADR-0009). Excluded
+     * from the unanswered-message sweep: the bot was never expected to reply.
+     */
+    @Property({ type: 'boolean', default: false })
+    replayed: boolean = false;
 }

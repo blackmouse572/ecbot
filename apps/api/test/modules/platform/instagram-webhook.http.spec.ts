@@ -17,6 +17,7 @@ import { InboundInboxService } from '../../../src/modules/platform/services/inbo
 import { MessageProcessorService } from '../../../src/modules/platform/services/message-processor.service';
 import { PlatformAdapterRegistry } from '../../../src/modules/platform/services/platform-adapter.registry';
 import { ReplyGenerationService } from '../../../src/modules/platform/services/reply-generation.service';
+import { ReplyMissedAlertService } from '../../../src/modules/platform/services/reply-missed-alert.service';
 
 // Boots the real webhook controller, registry and Instagram adapter, and hits
 // `/v1/webhooks/instagram` over HTTP the way Meta does.
@@ -152,6 +153,10 @@ describe('Instagram webhook through the edge queue consumer', () => {
                 PlatformAdapterRegistry,
                 { provide: MessageProcessorService, useValue: processor },
                 { provide: ReplyGenerationService, useValue: {} },
+                {
+                    provide: ReplyMissedAlertService,
+                    useValue: { reportTurnMiss: jest.fn() },
+                },
                 {
                     provide: PLATFORM_ADAPTER,
                     useFactory: () => [

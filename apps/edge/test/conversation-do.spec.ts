@@ -119,7 +119,7 @@ describe("ConversationDebounceDO", () => {
       "fetch",
       vi.fn(async () => new Response("Request Timeout", { status: 408 })),
     );
-    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const state = mkState();
     await state.storage.put("texts", ["hi"]);
     await state.storage.put("meta", {
@@ -129,10 +129,15 @@ describe("ConversationDebounceDO", () => {
       contactPointId: "cp",
     });
     await new ConversationDebounceDO(state as any).alarm();
-    expect(error).toHaveBeenCalledWith(
-      "[reply] conversation c -> 408: Request Timeout",
-    );
-    error.mockRestore();
+    expect(warn).toHaveBeenCalledOnce();
+    expect(JSON.parse(warn.mock.calls[0][0] as string)).toMatchObject({
+      event: "reply.missed",
+      source: "edge",
+      conversationId: "c",
+      status: 408,
+      reason: "Request Timeout",
+    });
+    warn.mockRestore();
   });
 
   it("logs, rather than throws, when /poc/reply cannot be reached", async () => {
@@ -142,7 +147,7 @@ describe("ConversationDebounceDO", () => {
         throw new Error("network down");
       }),
     );
-    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const state = mkState();
     await state.storage.put("texts", ["hi"]);
     await state.storage.put("meta", {
@@ -154,10 +159,14 @@ describe("ConversationDebounceDO", () => {
     await expect(
       new ConversationDebounceDO(state as any).alarm(),
     ).resolves.toBeUndefined();
-    expect(error).toHaveBeenCalledWith(
-      "[reply] conversation c threw (network down)",
-    );
-    error.mockRestore();
+    expect(warn).toHaveBeenCalledOnce();
+    expect(JSON.parse(warn.mock.calls[0][0] as string)).toMatchObject({
+      event: "reply.missed",
+      source: "edge",
+      conversationId: "c",
+      reason: "network down",
+    });
+    warn.mockRestore();
   });
 
   // The inbound post has a time limit; the reply post had none, so a hung

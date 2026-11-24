@@ -1,15 +1,22 @@
 import { MessageDebounceService } from '../../../src/modules/platform/services/message-debounce.service';
 import { MESSAGE_DEBOUNCE_MS } from '../../../src/modules/platform/constants/message-debounce.constant';
+import { ReplyGenerationService } from '../../../src/modules/platform/services/reply-generation.service';
+import { ReplyMissedAlertService } from '../../../src/modules/platform/services/reply-missed-alert.service';
 
 describe('MessageDebounceService (in-process)', () => {
     const replyGeneration = { run: jest.fn().mockResolvedValue(undefined) };
+    const replyMisses = { reportTurnMiss: jest.fn() };
 
     let service: MessageDebounceService;
 
     beforeEach(() => {
         jest.useFakeTimers();
         jest.clearAllMocks();
-        service = new MessageDebounceService(replyGeneration as any);
+        replyMisses.reportTurnMiss.mockResolvedValue(undefined);
+        service = new MessageDebounceService(
+            replyGeneration as unknown as ReplyGenerationService,
+            replyMisses as unknown as ReplyMissedAlertService
+        );
     });
 
     afterEach(() => {
@@ -114,6 +121,42 @@ describe('MessageDebounceService (in-process)', () => {
         await expect(
             jest.advanceTimersByTimeAsync(MESSAGE_DEBOUNCE_MS)
         ).resolves.toBeUndefined();
+    });
+
+    it('reports a failed turn as a miss, with the reason and the burst ids', async () => {
+        replyGeneration.run.mockResolvedValueOnce({
+            status: 'failed',
+            reason: 'not_delivered',
+        });
+
+        await service.schedule(
+            'conv-1',
+            'sender-1',
+            'cust-1',
+            'cp-1',
+            'hi',
+            'm-1'
+        );
+        await jest.advanceTimersByTimeAsync(MESSAGE_DEBOUNCE_MS);
+
+        expect(replyMisses.reportTurnMiss).toHaveBeenCalledWith({
+            source: 'turn',
+            conversationId: 'conv-1',
+            reason: 'not_delivered',
+            messageIds: ['m-1'],
+        });
+    });
+
+    it('does not report a skipped turn — the silence was deliberate', async () => {
+        replyGeneration.run.mockResolvedValueOnce({
+            status: 'skipped',
+            reason: 'superseded',
+        });
+
+        await service.schedule('conv-1', 'sender-1', 'cust-1', 'cp-1', 'hi');
+        await jest.advanceTimersByTimeAsync(MESSAGE_DEBOUNCE_MS);
+
+        expect(replyMisses.reportTurnMiss).not.toHaveBeenCalled();
     });
 
     describe('while a reply runs', () => {

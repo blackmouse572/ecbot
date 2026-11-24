@@ -136,7 +136,10 @@ describe('MessageProcessorService — replayed history', () => {
             expect(messageRepository.upsertByExternalId).toHaveBeenCalledWith(
                 'conv-1',
                 'm_1',
-                expect.objectContaining({ text: 'is this still available?' })
+                expect.objectContaining({
+                    text: 'is this still available?',
+                    replayed: true,
+                })
             );
             expect(conversationService.touchLastMessage).toHaveBeenCalled();
         });
@@ -191,6 +194,16 @@ describe('MessageProcessorService — replayed history', () => {
             await processor.process(live);
 
             expect(messageDebounceService.schedule).toHaveBeenCalledTimes(1);
+        });
+
+        it('stores the message as not replayed, so the miss sweep can flag it', async () => {
+            await processor.process(live);
+
+            expect(messageRepository.upsertByExternalId).toHaveBeenCalledWith(
+                'conv-1',
+                'm_1',
+                expect.objectContaining({ replayed: false })
+            );
         });
 
         it('reopens the conversation if staff resolved it', async () => {

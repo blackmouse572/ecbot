@@ -308,6 +308,7 @@ export class MessageProcessorService implements OnModuleInit {
                       ),
                       raw: event.raw,
                       dateSent: event.timestamp,
+                      replayed: event.replayed ?? false,
                   }
               )
             : undefined;

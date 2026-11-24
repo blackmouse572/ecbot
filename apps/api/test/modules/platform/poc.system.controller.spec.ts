@@ -14,6 +14,7 @@ import {
 import { PlatformAdapterRegistry } from '../../../src/modules/platform/services/platform-adapter.registry';
 import { MessageProcessorService } from '../../../src/modules/platform/services/message-processor.service';
 import { ReplyGenerationService } from '../../../src/modules/platform/services/reply-generation.service';
+import { ReplyMissedAlertService } from '../../../src/modules/platform/services/reply-missed-alert.service';
 
 describe('PocSystemController.inbound', () => {
     let controller: PocSystemController;
@@ -21,6 +22,7 @@ describe('PocSystemController.inbound', () => {
     const verifySignature = jest.fn();
     const process = jest.fn();
     const run = jest.fn();
+    const reportTurnMiss = jest.fn();
     const registry = {
         get: jest.fn(() => ({ parse, verifySignature })),
         has: jest.fn(() => true),
@@ -31,6 +33,7 @@ describe('PocSystemController.inbound', () => {
         verifySignature.mockReset();
         process.mockReset();
         run.mockReset().mockResolvedValue({ status: 'delivered' });
+        reportTurnMiss.mockReset().mockResolvedValue(undefined);
         registry.get.mockClear();
         registry.has.mockClear();
         const module: TestingModule = await Test.createTestingModule({
@@ -39,6 +42,10 @@ describe('PocSystemController.inbound', () => {
                 { provide: PlatformAdapterRegistry, useValue: registry },
                 { provide: MessageProcessorService, useValue: { process } },
                 { provide: ReplyGenerationService, useValue: { run } },
+                {
+                    provide: ReplyMissedAlertService,
+                    useValue: { reportTurnMiss },
+                },
             ],
         }).compile();
         controller = module.get(PocSystemController);
@@ -144,12 +151,36 @@ describe('PocSystemController.inbound', () => {
             customerId: 'cu',
             contactPointId: 'cp',
             texts: ['a'],
+            messageIds: ['m-1', 'm-2'],
         });
 
         await expect(reply).rejects.toBeInstanceOf(BadGatewayException);
         await expect(reply).rejects.toMatchObject({
             response: { data: { reason: 'stream_failed' } },
         });
+        expect(reportTurnMiss).toHaveBeenCalledWith({
+            source: 'poc-reply',
+            conversationId: 'c',
+            reason: 'stream_failed',
+            messageIds: ['m-1', 'm-2'],
+        });
+    });
+
+    it('does not report a miss for a skipped reply — the silence was deliberate', async () => {
+        run.mockResolvedValueOnce({
+            status: 'skipped',
+            reason: 'bot_disabled',
+        });
+
+        await controller.reply({
+            conversationId: 'c',
+            senderId: 's',
+            customerId: 'cu',
+            contactPointId: 'cp',
+            texts: ['a'],
+        });
+
+        expect(reportTurnMiss).not.toHaveBeenCalled();
     });
 
     it('answers 200 with the outcome for a delivered or skipped reply', async () => {
