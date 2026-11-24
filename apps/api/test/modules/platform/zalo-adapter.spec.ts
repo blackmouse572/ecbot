@@ -179,6 +179,25 @@ describe('ZaloPlatformAdapter.parse', () => {
         ]);
     });
 
+    it('reads a tapped quick reply back as an action', () => {
+        const a = makeAdapter();
+        const [e] = a.parse(
+            wrap({
+                event_name: 'user_send_text',
+                sender: { id: 'S' },
+                message: {
+                    msg_id: 'm9',
+                    text: 'ecbot_action:{"id":"marketing.stop","value":"dừng"}',
+                },
+            })
+        );
+        expect(e).toMatchObject({
+            kind: 'message',
+            text: 'dừng',
+            action: { id: 'marketing.stop', value: 'dừng' },
+        });
+    });
+
     it('classifies oa_send_text as echo', () => {
         const a = makeAdapter();
         const [e] = a.parse(
@@ -253,6 +272,40 @@ describe('ZaloPlatformAdapter.doSend', () => {
                     'Content-Type': 'application/json',
                 },
             }
+        );
+    });
+
+    it('sends quick replies as hidden query buttons, at most 5', async () => {
+        const post = jest.fn().mockResolvedValue({
+            data: { error: 0, data: { message_id: 'zm3' } },
+        });
+        const a = makeAdapter({ axiosRef: { post } });
+
+        await a.sendMessage(account, 'S', {
+            content: { kind: 'text', text: 'Mẫu mới về' },
+            fallbackText: 'Mẫu mới về',
+            quickReplies: [
+                {
+                    id: 'marketing.stop',
+                    label: 'Không nhận nữa',
+                    value: 'dừng',
+                },
+                ...[1, 2, 3, 4, 5].map(n => ({ id: `q${n}`, label: `Q${n}` })),
+            ],
+        });
+
+        const message = post.mock.calls[0][1].message;
+        expect(message.text).toBe('Mẫu mới về');
+        expect(message.attachment.type).toBe('template');
+        expect(message.attachment.payload.buttons).toHaveLength(5);
+        expect(message.attachment.payload.buttons[0]).toEqual({
+            title: 'Không nhận nữa',
+            type: 'oa.query.hide',
+            payload: 'ecbot_action:{"id":"marketing.stop","value":"dừng"}',
+        });
+        // No value: the label is what the customer "said".
+        expect(message.attachment.payload.buttons[1].payload).toBe(
+            'ecbot_action:{"id":"q1","value":"Q1"}'
         );
     });
 

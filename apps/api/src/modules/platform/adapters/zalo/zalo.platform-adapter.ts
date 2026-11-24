@@ -13,6 +13,8 @@ import { readCappedBody } from '@app/common/utils/read-capped-body.util';
 import { MEDIA_FETCH_TIMEOUT_MS } from '../../constants/media.constant';
 import {
     AdapterCapabilities,
+    decodeActionPayload,
+    encodeActionPayload,
     MediaContent,
     OutboundMessage,
 } from '../../interfaces/message-model';
@@ -42,14 +44,21 @@ const UPLOAD_FILE_URL = 'https://openapi.zalo.me/v2.0/oa/upload/file';
 const IMAGE_MAX_BYTES = 1_000_000;
 const FILE_MAX_BYTES = 5_000_000;
 const MESSAGE_LIMIT = 2000;
+// A message carries at most 5 template buttons.
+const MAX_BUTTONS = 5;
+// A quick reply is an `oa.query.hide` button: tapping it sends its payload
+// back as the customer's text (hidden in their chat), so the payload is
+// prefixed to tell it from typed text. With no value the label stands in,
+// as the tapped text does on Messenger.
+const ACTION_PREFIX = 'ecbot_action:';
 // Reject webhooks whose (signed) timestamp is older than this — replay guard.
 const WEBHOOK_MAX_AGE_MS = 5 * 60 * 1000;
 
 @Injectable()
 export class ZaloPlatformAdapter extends PlatformAdapter {
     readonly type = ENUM_ACCOUNT_TYPE.ZALO_PAGE;
-    // Text, images and PDFs outbound. Cards, buttons and stickers are a
-    // tracked follow-up, so degrade() collapses them to plain text.
+    // Text with quick replies, images and PDFs outbound. Cards, buttons and
+    // stickers are a tracked follow-up, so degrade() collapses them to text.
     // Photos up to 1 MB (JPG, PNG) and PDFs up to 5 MB, as for the agent.
     private static readonly MEDIA_LIMITS = {
         image: {
@@ -61,7 +70,7 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
     readonly capabilities: AdapterCapabilities = {
         cards: false,
         buttons: false,
-        quickReplies: false,
+        quickReplies: true,
         media: true,
         editMessage: false,
         deleteMessage: false,
@@ -196,6 +205,11 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
         else if (eventName.startsWith('user_send')) kind = 'message';
 
         const attachments = this.mapAttachments(payload.message?.attachments);
+        const typed = payload.message?.text;
+        const action =
+            kind === 'message' && typed?.startsWith(ACTION_PREFIX)
+                ? decodeActionPayload(typed.slice(ACTION_PREFIX.length))
+                : undefined;
         const reactedMessageId =
             payload.reaction?.r_msg_id ?? payload.message?.msg_id;
 
@@ -208,7 +222,8 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
                 kind === 'reaction'
                     ? reactedMessageId
                     : payload.message?.msg_id,
-            text: payload.message?.text,
+            text: action ? action.value : typed,
+            action,
             timestamp: this.toDate(payload.timestamp),
             raw: payload,
             attachments,
@@ -348,7 +363,19 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
             c.kind === 'media' ? await this.uploadFile(account, c) : null;
         if (token) return { attachment: { type: 'file', payload: { token } } };
         const text = c.kind === 'text' ? c.text : msg.fallbackText;
-        return { text: this.truncate(text) };
+        const buttons = (msg.quickReplies ?? [])
+            .slice(0, MAX_BUTTONS)
+            .map(q => ({
+                title: q.label,
+                type: 'oa.query.hide',
+                payload: `${ACTION_PREFIX}${encodeActionPayload(q.id, q.value ?? q.label)}`,
+            }));
+        return {
+            text: this.truncate(text),
+            ...(buttons.length && {
+                attachment: { type: 'template', payload: { buttons } },
+            }),
+        };
     }
 
     /**
