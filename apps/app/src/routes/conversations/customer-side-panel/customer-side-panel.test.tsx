@@ -205,6 +205,12 @@ describe("CustomerSidePanel", () => {
     expect(
       screen.queryByRole("link", { name: "customers.detail.open" }),
     ).not.toBeInTheDocument();
+    // The ⋯ menu holds erase, so it must not act on a customer that does not exist.
+    expect(
+      screen.queryByRole("button", {
+        name: "conversations.customer.panel.actions.more",
+      }),
+    ).not.toBeInTheDocument();
     // What belongs to the conversation still works.
     expect(screen.getByText("timezone-section")).toBeInTheDocument();
   });

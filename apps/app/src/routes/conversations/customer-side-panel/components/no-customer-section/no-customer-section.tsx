@@ -19,11 +19,10 @@ export const NoCustomerSection: FC<{ conversationId?: string }> = ({
 }) => {
   const { t } = useTranslation();
   const { conversation } = useConversation(conversationId);
-  const account = conversation?.account as
-    { type?: string; name?: string } | undefined;
-  const name = conversation ? senderLabel(conversation as A, t) : null;
+  const account = conversation?.account;
+  const name = conversation ? senderLabel(conversation, t) : null;
   const channel = [
-    account?.type && channelOf(account.type as A).label,
+    account?.type && channelOf(account.type).label,
     account?.name,
   ]
     .filter(Boolean)
@@ -59,7 +58,7 @@ export const NoCustomerSection: FC<{ conversationId?: string }> = ({
                 fallback={(name ?? "?").slice(0, 1).toUpperCase()}
               />
               <PlatformIcon
-                type={account?.type as A}
+                type={account?.type}
                 size={14}
                 className="ring-ui-bg-base absolute -bottom-0.5 -right-0.5 rounded-full ring-2"
               />
