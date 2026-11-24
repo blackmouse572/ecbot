@@ -29,6 +29,7 @@ import { OrderEntity } from '@app/modules/order/repository/entities/order.entity
 import { PlatformAdapterRegistry } from '@app/modules/platform/services/platform-adapter.registry';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
+import { HttpException, HttpStatus } from '@nestjs/common';
 import { bootstrapE2E, E2EContext } from './utils/app.setup';
 import { login, SEED_USERS } from './utils/auth.helper';
 import { createWorkspace } from './utils/workspace.helper';
@@ -43,6 +44,8 @@ describe('E2E — marketing sends', () => {
     const ids: Record<string, string> = {};
     const conversationOf: Record<string, string> = {};
     const senderOf: Record<string, string> = {};
+    let addCustomer: (name: string, lastInboundHoursAgo?: number) => void;
+    let flush: () => Promise<void>;
     const hour = 3_600_000;
     const ago = (h: number) => new Date(Date.now() - h * hour);
     const enqueue = jest.spyOn(CloudTasksQueueClient.prototype, 'enqueue');
@@ -149,6 +152,8 @@ describe('E2E — marketing sends', () => {
             }
             ids[name] = c.id;
         };
+        addCustomer = customer;
+        flush = () => em.flush();
         customer('Lan', 2);
         customer('Tú', 1);
         // Messenger's 24 hours ran out.
@@ -271,6 +276,41 @@ describe('E2E — marketing sends', () => {
                 ordered: 1,
                 revenue: 350_000,
             }
+        );
+    });
+
+    it('stops the rest of a send on a page the platform blocked', async () => {
+        addCustomer('Phúc', 1);
+        addCustomer('Vy', 1);
+        await flush();
+        enqueue.mockClear();
+        sendMessage.mockClear();
+        sendMessage.mockRejectedValue(
+            new HttpException(
+                {
+                    upstreamStatus: 400,
+                    platformError: { error: { code: 2022 } },
+                    message: 'x',
+                },
+                HttpStatus.BAD_GATEWAY
+            )
+        );
+
+        const send = await inRequest(() =>
+            sends().send(workspaceId, { ...offer, text: 'Flash sale 12h' })
+        );
+        expect(send.queued).toBe(2);
+        for (const [, , payload] of enqueue.mock.calls) {
+            await inRequest(() => sends().deliver(payload.messageId as string));
+        }
+
+        expect(sendMessage).toHaveBeenCalledTimes(1);
+        const rows = [...(await ledger('Phúc')), ...(await ledger('Vy'))];
+        expect(rows.map(r => [r.status, r.skipReason ?? null]).sort()).toEqual(
+            [
+                [M.FAILED, null],
+                [M.SKIPPED, R.ACCOUNT_BLOCKED],
+            ].sort()
         );
     });
 });

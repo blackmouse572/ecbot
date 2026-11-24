@@ -32,6 +32,13 @@ export const MARKETING_SEND_TASK_PREFIX = 'marketing-send-';
 /** Reached customers are read in pages of this many when a send starts. */
 export const MARKETING_SEND_PAGE_SIZE = 500;
 
+/**
+ * Offers one page (Account) sends per minute: a big send is spread out
+ * instead of bursting from the page at once, which Meta and Zalo can read
+ * as spam. Each page has its own pace.
+ */
+export const MARKETING_SEND_PER_ACCOUNT_PER_MINUTE = 30;
+
 /** Tasks created at once when a send starts. */
 export const MARKETING_SEND_ENQUEUE_BATCH = 20;
 

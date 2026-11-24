@@ -14,6 +14,8 @@ export enum ENUM_MARKETING_SKIP_REASON {
     WINDOW_CLOSED = 'WINDOW_CLOSED',
     /** The customer opted out between planning and sending. */
     OPTED_OUT = 'OPTED_OUT',
+    /** The platform blocked the page from sending, so the rest of the send stopped. */
+    ACCOUNT_BLOCKED = 'ACCOUNT_BLOCKED',
 }
 
 export enum ENUM_MARKETING_SEND_PROCESS {

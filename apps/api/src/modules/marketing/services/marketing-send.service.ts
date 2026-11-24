@@ -4,8 +4,10 @@ import { ENUM_MESSAGE_AUTHOR } from '@app/modules/conversation/enums/message.enu
 import { ConversationEntity } from '@app/modules/conversation/repository/entities/conversation.entity';
 import { ConversationRepository } from '@app/modules/conversation/repository/repositories/conversation.repository';
 import { MessageRepository } from '@app/modules/conversation/repository/repositories/message.repository';
+import { ENUM_SEND_FAILURE } from '@app/modules/platform/constants/channel-health.constant';
 import { OutboundMessage } from '@app/modules/platform/interfaces/message-model';
 import { PlatformAdapterRegistry } from '@app/modules/platform/services/platform-adapter.registry';
+import { classifySendError } from '@app/modules/platform/utils/send-failure.util';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 import { Injectable, Logger } from '@nestjs/common';
@@ -15,6 +17,7 @@ import { randomUUID } from 'crypto';
 import {
     MARKETING_SEND_ENQUEUE_BATCH,
     MARKETING_SEND_PAGE_SIZE,
+    MARKETING_SEND_PER_ACCOUNT_PER_MINUTE,
     MARKETING_SEND_QUEUE,
     MARKETING_SEND_TASK_PREFIX,
     MARKETING_STOP_ACTION_ID,
@@ -129,11 +132,36 @@ export class MarketingSendService {
             send.id,
             rows
         );
-        for (let i = 0; i < queued.length; i += MARKETING_SEND_ENQUEUE_BATCH) {
+        // Each page sends at its own pace from sendAt; the free window is
+        // checked again when each offer goes out.
+        const accountOf = new Map(
+            [...inbound.values()]
+                .flat()
+                .map(r => [r.conversationId, r.accountId])
+        );
+        const conversationOf = new Map(
+            rows.map(r => [r.customerId, r.conversationId])
+        );
+        const perAccount = new Map<string, number>();
+        const paced = queued.map(row => {
+            const conversationId = conversationOf.get(row.customerId);
+            const account =
+                (conversationId && accountOf.get(conversationId)) ?? '';
+            const n = perAccount.get(account) ?? 0;
+            perAccount.set(account, n + 1);
+            const minutes = Math.floor(
+                n / MARKETING_SEND_PER_ACCOUNT_PER_MINUTE
+            );
+            return {
+                id: row.id,
+                at: new Date(sendAt.getTime() + minutes * 60_000),
+            };
+        });
+        for (let i = 0; i < paced.length; i += MARKETING_SEND_ENQUEUE_BATCH) {
             await Promise.all(
-                queued
+                paced
                     .slice(i, i + MARKETING_SEND_ENQUEUE_BATCH)
-                    .map(row => this.enqueue(row.id, sendAt))
+                    .map(row => this.enqueue(row.id, row.at))
             );
         }
 
@@ -169,6 +197,16 @@ export class MarketingSendService {
                 `marketing message ${row.id} failed: ${error instanceof Error ? error.message : String(error)}`
             );
             await this.finish(row, { status: S.FAILED });
+            // Every other offer from this page would fail too, and keep
+            // trying could deepen the block.
+            if (
+                classifySendError(error) === ENUM_SEND_FAILURE.ACCOUNT_BLOCKED
+            ) {
+                await this.marketingMessageRepository.skipQueuedOnAccount(
+                    row.send.id,
+                    conversation.account.id
+                );
+            }
             return;
         }
         await this.finish(row, { status: S.SENT, sentAt: new Date() });

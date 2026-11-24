@@ -218,6 +218,7 @@ export class ConversationRepository extends DatabaseRepository<ConversationEntit
             customerId: string;
             channel: ENUM_ACCOUNT_TYPE;
             conversationId: string;
+            accountId: string;
             lastInboundAt: Date;
         }[]
     > {
@@ -226,12 +227,13 @@ export class ConversationRepository extends DatabaseRepository<ConversationEntit
             customer_id: string;
             channel: ENUM_ACCOUNT_TYPE;
             conversation_id: string;
+            account_id: string;
             last_inbound_at: Date;
         }[] = await this.em.getConnection().execute(
             `
             SELECT DISTINCT ON (cp.customer_id, a.type)
                 cp.customer_id, a.type AS channel, conv.id AS conversation_id,
-                m.date_sent AS last_inbound_at
+                conv.account_id, m.date_sent AS last_inbound_at
             FROM messages m
             JOIN conversations conv ON conv.id = m.conversation_id
             JOIN contact_points cp ON cp.id = conv.contact_point_id
@@ -249,6 +251,7 @@ export class ConversationRepository extends DatabaseRepository<ConversationEntit
             customerId: row.customer_id,
             channel: row.channel,
             conversationId: row.conversation_id,
+            accountId: row.account_id,
             lastInboundAt: new Date(row.last_inbound_at),
         }));
     }

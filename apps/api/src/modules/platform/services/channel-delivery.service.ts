@@ -105,6 +105,15 @@ export class ChannelDeliveryService implements ISendGuard, OnModuleInit {
                 );
                 return;
             }
+            // A blocked account fails every send: no need to wait for three.
+            if (kind === ENUM_SEND_FAILURE.ACCOUNT_BLOCKED) {
+                await this.alerts.open(
+                    account,
+                    ENUM_CHANNEL_ALERT.SEND_FAILING,
+                    err
+                );
+                return;
+            }
             const belowThreshold = await this.rateLimit.claim(
                 this.failKey(account),
                 CHANNEL_FAILURE_THRESHOLD - 1,
