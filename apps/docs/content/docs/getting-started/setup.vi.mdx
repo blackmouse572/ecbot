@@ -1,37 +1,40 @@
 ---
-title: Thiết lập cho shop
-description: Tạo tài khoản và không gian làm việc Ecbot, dựng agent đầu tiên bằng trình tạo agent và chạy thử trước khi khách thật nhắn tin.
+title: Tạo agent đầu tiên
+description: Tạo không gian làm việc Ecbot, mô tả việc kinh doanh trong trình tạo agent, thêm kiến thức, chạy thử và kết nối kênh đầu tiên.
 faq:
-  - q: Thiết lập mất bao lâu?
-    a: Phần lớn shop hoàn thành agent đầu tiên trong 15 đến 20 phút. Trình tạo agent hỏi từng câu một và tự điền những gì nó hiểu được từ phần mô tả của bạn.
+  - q: Tôi có phải trả lời hết các câu hỏi của trình tạo agent không?
+    a: Không. Chỉ phần cơ bản là bắt buộc. Các câu còn lại đã có sẵn giá trị mặc định theo ngành của bạn, nên bạn có thể kích hoạt agent trước và quay lại sau.
   - q: Tôi có thể thử agent trước khi khách dùng không?
     a: Có. Mỗi agent có khung chat thử ngay trên trang của nó. Tin nhắn gửi ở đó không đi ra kênh nào, nên bạn có thể thử giá, chính sách và các câu hỏi khó một cách an toàn.
+  - q: Nên kết nối kênh nào trước?
+    a: Kênh mà khách nhắn cho bạn nhiều nhất, thường là Facebook Page hoặc Zalo OA. Bạn có thể thêm kênh khác cho cùng agent sau.
   - q: Nhân viên của tôi có dùng chung không gian làm việc được không?
     a: Được. Bạn mời nhân viên trong Cài đặt workspace, mục Đội ngũ. Mỗi người đăng nhập bằng tài khoản riêng. Xem trang Đội ngũ và lời mời.
 ---
 
-Để bắt đầu với Ecbot, bạn tạo tài khoản, tạo một không gian làm việc cho shop, rồi dựng agent bằng trình tạo agent. Cả quá trình mất khoảng 15 phút, và bạn có thể chat thử với agent trước khi kết nối nó với Messenger, Zalo, Telegram, WhatsApp hay website.
+Trang này đưa bạn từ tài khoản mới đến một agent trả lời khách. Bạn mô tả việc kinh doanh, đưa thông tin cho agent, chat thử riêng và kết nối một kênh. Bạn không cần kỹ năng, công cụ hay lập trình cho phần này, và dừng ở cuối trang là bạn đã có agent chạy được.
+
+## Bạn cần chuẩn bị
+
+- Một địa chỉ email để tạo tài khoản Ecbot.
+- Thông tin của shop: bảng giá, giờ mở cửa, chính sách và những câu khách hay hỏi. Tệp, trang web hay ghi chú đơn giản đều được.
+- Quyền quản trị kênh bạn sẽ kết nối, ví dụ Facebook Page hoặc Zalo OA bạn quản lý, hoặc website mà bạn dán được một đoạn mã ngắn.
+
+## Thiết lập agent
 
 <Steps>
 <Step>
 
-### Tạo tài khoản
+### Tạo tài khoản và không gian làm việc
 
-Đăng ký bằng email và mật khẩu, sau đó nhập mã 6 số mà chúng tôi gửi qua email.
-
-</Step>
-<Step>
-
-### Tạo không gian làm việc
-
-Đặt tên không gian làm việc theo tên shop. Mỗi shop hoặc mỗi khách hàng có một không gian riêng, với agent, tài liệu và nhân viên riêng. Muốn mời nhân viên sau, xem [Đội ngũ và lời mời](/docs/workspace/team).
+Đăng ký bằng email và mật khẩu, sau đó nhập mã 6 số mà chúng tôi gửi qua email. Ở màn hình **Chào mừng đến với Ecbot**, nhập tên cửa hàng và bạn kinh doanh gì, rồi chọn **Tạo agent đầu tiên**. Bước này tạo không gian làm việc của bạn: nơi chứa agent, tài liệu và nhân viên. Muốn mời nhân viên sau, xem [Đội ngũ và lời mời](/docs/workspace/team).
 
 </Step>
 <Step>
 
-### Dựng agent đầu tiên
+### Mô tả việc kinh doanh
 
-Mở **Trợ lý AI** ở thanh bên và tạo agent mới. Trình tạo agent sẽ mở ra:
+Trình tạo agent sẽ mở ra:
 
 <Screenshot
   name="builder-start"
@@ -44,21 +47,38 @@ Mở **Trợ lý AI** ở thanh bên và tạo agent mới. Trình tạo agent s
   <Mark id="templates">Hoặc bắt đầu từ một mẫu có sẵn theo ngành của bạn.</Mark>
 </Screenshot>
 
-Xem trang [Trình tạo agent](/docs/agents) để hiểu từng câu hỏi.
+Viết shop bán gì, ở đâu và bạn muốn agent lo việc gì, như khi dặn một nhân viên mới. Sau đó trình tạo agent hỏi từng câu một và tự điền những câu trả lời nó đọc được từ phần mô tả. Hãy xem lại và sửa chỗ nào chưa đúng. Xem trang [Trình tạo agent](/docs/agents) để hiểu từng câu hỏi.
 
 </Step>
 <Step>
 
-### Thêm kiến thức cho agent
+### Đưa thông tin của shop cho agent
 
-Thêm bảng giá, chính sách và câu hỏi thường gặp vào [cơ sở kiến thức](/docs/agents/knowledge-base), rồi liên kết chúng với agent.
+Thêm bảng giá, chính sách và câu hỏi thường gặp vào [cơ sở kiến thức](/docs/agents/knowledge-base), rồi liên kết chúng với agent. Những thông tin ngắn như phí giao hàng cũng có thể điền ở các câu hỏi tùy chọn của trình tạo agent.
 
 </Step>
 <Step>
 
-### Chat thử, rồi kết nối kênh
+### Chat thử
 
-Hỏi khung chat thử những câu khách hay hỏi nhất. Khi câu trả lời đã ổn, hãy [kết nối một kênh](/docs/channels).
+Khung **Chat thử** nằm cạnh trình tạo agent và trên trang của agent. Hỏi agent những câu khách hay hỏi nhất. Tin nhắn ở đây không đến khách nào. Nếu agent trả lời sai, bổ sung thông tin còn thiếu rồi hỏi lại. Trang [Chạy thử và đưa agent vào hoạt động](/docs/getting-started/launch) có danh sách câu hỏi nên thử.
+
+</Step>
+<Step>
+
+### Kết nối một kênh và kích hoạt
+
+Bắt đầu với kênh mà khách nhắn cho bạn nhiều nhất. Bạn kết nối ngay ở bước chọn kênh của trình tạo agent, hoặc sau đó ở mục **Kênh** trên thanh bên. Sau đó kiểm tra agent đã được gắn vào tài khoản kênh đó và đã bật. Xem trang [Kênh](/docs/channels) để biết các bước cho từng nền tảng.
 
 </Step>
 </Steps>
+
+## Agent đã hoạt động
+
+Agent giờ trả lời khách trên kênh đó dựa trên thông tin của shop. Cuộc trò chuyện mới hiện trong mục **Hội thoại**, và agent chuyển cho nhân viên khi khách muốn gặp người thật. Thẻ **Đưa agent vào hoạt động** trên trang tổng quan đánh dấu từng bước khi bạn làm xong.
+
+## Bước tiếp theo
+
+- [Chạy thử và đưa agent vào hoạt động](/docs/getting-started/launch): danh sách cần kiểm tra trước và sau khi agent hoạt động.
+- [Ghi nhận khách tiềm năng](/docs/cookbook/use-cases/capture-lead): kỹ năng đầu tiên, chỉ dùng các hành động có sẵn.
+- [Công cụ](/docs/agents/tools): nối các ứng dụng của bạn để agent kiểm tra đơn hay đặt lịch.
