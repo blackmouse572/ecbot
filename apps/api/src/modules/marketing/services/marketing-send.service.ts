@@ -8,6 +8,8 @@ import { ENUM_SEND_FAILURE } from '@app/modules/platform/constants/channel-healt
 import { OutboundMessage } from '@app/modules/platform/interfaces/message-model';
 import { PlatformAdapterRegistry } from '@app/modules/platform/services/platform-adapter.registry';
 import { classifySendError } from '@app/modules/platform/utils/send-failure.util';
+import { ENUM_FEATURE_FLAG } from '@app/modules/feature-flag/enums/feature-flag.enum';
+import { FeatureFlagService } from '@app/modules/feature-flag/services/feature-flag.service';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
 import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 import { IDatabaseFindAllOptions } from '@app/common/database/interfaces/database.interface';
@@ -88,7 +90,8 @@ export class MarketingSendService {
         private readonly cloudTasksClient: CloudTasksQueueClient,
         private readonly helperDateService: HelperDateService,
         private readonly configService: ConfigService,
-        private readonly moduleRef: ModuleRef
+        private readonly moduleRef: ModuleRef,
+        private readonly featureFlagService: FeatureFlagService
     ) {}
 
     /**
@@ -140,25 +143,47 @@ export class MarketingSendService {
     async runDueAuto(now: Date = new Date()): Promise<void> {
         const today = this.helperDateService.formatToIsoDate(now);
         for (const send of await this.sendRepository.findDueAuto(today)) {
-            const rules = await this.settingsService.rules(send.workspace.id);
-            const opensAt = marketingSendAt(
-                now,
-                this.zone(),
-                rules.sendFrom,
-                rules.sendTo
-            );
-            if (opensAt.getTime() !== now.getTime()) continue;
-            if (!(await this.sendRepository.claimRun(send.id, today))) continue;
             try {
-                await this.run(send, now);
+                await this.runIfDue(send, today, now);
             } catch (error: unknown) {
                 // One shop's failure leaves the others to run; this one
-                // tries again tomorrow.
+                // tries again next hour, or tomorrow once it claimed today.
                 this.logger.warn(
                     `marketing send ${send.id} auto run failed: ${error instanceof Error ? error.message : String(error)}`
                 );
             }
         }
+    }
+
+    /**
+     * Runs an AUTO send when its shop has Tiếp thị on and its send hours
+     * are open. With the flag off it waits unclaimed, so it runs again the
+     * day the flag comes back on.
+     */
+    private async runIfDue(
+        send: MarketingSendEntity,
+        today: string,
+        now: Date
+    ): Promise<void> {
+        const workspaceId = send.workspace.id;
+        if (
+            !(await this.featureFlagService.isEnabled(
+                ENUM_FEATURE_FLAG.MARKETING,
+                workspaceId
+            ))
+        ) {
+            return;
+        }
+        const rules = await this.settingsService.rules(workspaceId);
+        const opensAt = marketingSendAt(
+            now,
+            this.zone(),
+            rules.sendFrom,
+            rules.sendTo
+        );
+        if (opensAt.getTime() !== now.getTime()) return;
+        if (!(await this.sendRepository.claimRun(send.id, today))) return;
+        await this.run(send, now);
     }
 
     /**
@@ -168,13 +193,12 @@ export class MarketingSendService {
      */
     private async run(send: MarketingSendEntity, now: Date): Promise<void> {
         const workspaceId = send.workspace.id;
-        const already =
-            send.mode === ENUM_MARKETING_SEND_MODE.AUTO
-                ? await this.marketingMessageRepository.reachedBy(send.id)
-                : new Set<string>();
-        const customerIds = (
-            await this.reachedIds(workspaceId, send.audience, now)
-        ).filter(id => !already.has(id));
+        const customerIds = await this.reachedIds(
+            workspaceId,
+            send.audience,
+            now,
+            send.mode === ENUM_MARKETING_SEND_MODE.AUTO ? send.id : undefined
+        );
         const rules = await this.settingsService.rules(workspaceId);
         const sendAt = marketingSendAt(
             now,
@@ -480,7 +504,8 @@ export class MarketingSendService {
     private async reachedIds(
         workspaceId: string,
         audience: IMarketingAudience,
-        now: Date
+        now: Date,
+        notReachedBy?: string
     ): Promise<string[]> {
         // Read every page before writing a row: a queued row counts as
         // today's offer, so later pages would shift under the offset.
@@ -491,7 +516,8 @@ export class MarketingSendService {
                 audience,
                 MARKETING_SEND_PAGE_SIZE,
                 offset,
-                now
+                now,
+                notReachedBy
             );
             ids.push(...page.ids);
             if (page.ids.length < MARKETING_SEND_PAGE_SIZE) return ids;

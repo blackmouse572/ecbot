@@ -399,20 +399,6 @@ export class MarketingMessageRepository extends DatabaseRepository<MarketingMess
         }));
     }
 
-    /** Customers this send already queued or sent to: an AUTO run skips them. */
-    async reachedBy(sendId: string): Promise<Set<string>> {
-        const rows: { customer_id: string }[] = await this.em
-            .getConnection()
-            .execute(
-                `
-            SELECT DISTINCT customer_id FROM marketing_messages
-            WHERE send_id = ?::uuid AND status IN ('${S.QUEUED}', '${S.SENT}')
-            `,
-                [sendId]
-            );
-        return new Set(rows.map(row => row.customer_id));
-    }
-
     /**
      * The product an offer names for this customer: the product group they
      * last asked about, or the one in their last order; `bought` puts the

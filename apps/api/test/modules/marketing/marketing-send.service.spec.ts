@@ -32,7 +32,6 @@ describe('MarketingSendService', () => {
         claim: jest.fn(),
         markReplied: jest.fn(),
         skipQueuedOnAccount: jest.fn(),
-        reachedBy: jest.fn(),
         productFor: jest.fn(),
     };
     const audience = {
@@ -48,6 +47,7 @@ describe('MarketingSendService', () => {
         markOutboundFailed: jest.fn(),
     };
     const tasks = { enqueue: jest.fn() };
+    const flags = { isEnabled: jest.fn() };
     const helperDate = { formatToIsoDate: () => '2026-11-22' };
     const config = { get: () => 'Asia/Ho_Chi_Minh' };
     const messenger = {
@@ -82,7 +82,8 @@ describe('MarketingSendService', () => {
         tasks as any,
         helperDate as any,
         config as any,
-        { get: () => registry } as any
+        { get: () => registry } as any,
+        flags as any
     );
 
     const input = {
@@ -109,7 +110,7 @@ describe('MarketingSendService', () => {
                 ],
             },
         });
-        ledger.reachedBy.mockResolvedValue(new Set());
+        flags.isEnabled.mockResolvedValue(true);
         ledger.productFor.mockResolvedValue(null);
         settings.rules.mockResolvedValue({
             maxPer30Days: 3,
@@ -205,8 +206,15 @@ describe('MarketingSendService', () => {
                 id: 'send1',
                 name: 'Chào khách mới',
             });
-            // A send once never looks up who it already reached.
-            expect(ledger.reachedBy).not.toHaveBeenCalled();
+            // A send once does not leave out who it already reached.
+            expect(audience.reached).toHaveBeenCalledWith(
+                'ws1',
+                input.audience,
+                500,
+                0,
+                now,
+                undefined
+            );
         });
 
         it('waits for the send hours, and needs the window open then', async () => {
@@ -268,7 +276,8 @@ describe('MarketingSendService', () => {
                 input.audience,
                 500,
                 500,
-                now
+                now,
+                undefined
             );
             expect(ledger.plan.mock.calls[0][2]).toHaveLength(501);
             // The inbound lookup is paged the same way.
@@ -401,8 +410,6 @@ describe('MarketingSendService', () => {
         });
 
         it('runs once a day while the send hours are open, for customers it has not reached', async () => {
-            ledger.reachedBy.mockResolvedValue(new Set(['lan']));
-
             await service.runDueAuto(now);
 
             expect(sendRepository.findDueAuto).toHaveBeenCalledWith(
@@ -412,10 +419,49 @@ describe('MarketingSendService', () => {
                 'send1',
                 '2026-11-22'
             );
-            expect(ledger.reachedBy).toHaveBeenCalledWith('send1');
-            expect(
-                ledger.plan.mock.calls[0][2].map((r: any) => r.customerId)
-            ).toEqual(['tu']);
+            // Who this send already reached is left out in the audience query.
+            expect(audience.reached).toHaveBeenCalledWith(
+                'ws1',
+                auto.audience,
+                500,
+                0,
+                now,
+                'send1'
+            );
+            expect(ledger.plan).toHaveBeenCalledWith(
+                'ws1',
+                'send1',
+                expect.any(Array)
+            );
+        });
+
+        it('does not run, or claim the day, while Tiếp thị is off for the shop', async () => {
+            flags.isEnabled.mockResolvedValue(false);
+
+            await service.runDueAuto(now);
+
+            expect(flags.isEnabled).toHaveBeenCalledWith('marketing', 'ws1');
+            expect(sendRepository.claimRun).not.toHaveBeenCalled();
+            expect(ledger.plan).not.toHaveBeenCalled();
+        });
+
+        it("keeps running other shops' sends when one shop's settings cannot be read", async () => {
+            sendRepository.findDueAuto.mockResolvedValue([
+                auto,
+                { ...auto, id: 'send2', workspace: { id: 'ws2' } },
+            ]);
+            const rules = await settings.rules();
+            settings.rules
+                .mockRejectedValueOnce(new Error('db'))
+                .mockResolvedValue(rules);
+
+            await expect(service.runDueAuto(now)).resolves.toBeUndefined();
+
+            expect(sendRepository.claimRun).toHaveBeenCalledTimes(1);
+            expect(sendRepository.claimRun).toHaveBeenCalledWith(
+                'send2',
+                '2026-11-22'
+            );
         });
 
         it('waits for the send hours to open', async () => {
