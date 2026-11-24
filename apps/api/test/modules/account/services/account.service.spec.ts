@@ -1155,3 +1155,39 @@ describe('AccountService - mapList', () => {
         expect(mapped.chatbot).toBeNull();
     });
 });
+describe('AccountService - mapList keeps secrets out', () => {
+    // MikroORM v6 entities have no toObject(), so mapList spreads the
+    // instance: a hidden property is still enumerable there (#601).
+    it('drops the channel config, which holds the API signing secret', () => {
+        const [mapped] = buildService().mapList([
+            {
+                id: 'account-api',
+                name: 'Partner API',
+                type: ENUM_ACCOUNT_TYPE.API_CHANNEL,
+                config: {
+                    callbackUrl: 'https://partner.example.com/cb',
+                    signingSecret: 'v1:v1:iv:tag:ciphertext',
+                },
+            } as any,
+        ]);
+
+        expect(mapped.config).toBeUndefined();
+        expect(JSON.stringify(mapped)).not.toContain('signingSecret');
+    });
+
+    it('drops access and refresh tokens', () => {
+        const [mapped] = buildService().mapList([
+            {
+                id: 'account-fb',
+                name: 'Axios Page',
+                type: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+                accessToken: 'v1:v1:iv:tag:access',
+                refreshToken: 'v1:v1:iv:tag:refresh',
+            } as any,
+        ]);
+
+        expect(mapped.accessToken).toBeUndefined();
+        expect(mapped.refreshToken).toBeUndefined();
+        expect(JSON.stringify(mapped)).not.toContain('v1:v1');
+    });
+});
