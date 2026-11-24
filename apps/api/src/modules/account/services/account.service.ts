@@ -325,6 +325,14 @@ export class AccountService implements IAccountService {
                 cookies: undefined,
                 proxies: undefined,
                 accessToken: undefined,
+                // `config` carries the API channel's envelope-encrypted signing
+                // secret (and the widget's settings). MikroORM's `hidden` only
+                // applies when the entity is serialized through `wrap()`; here
+                // the spread copies the instance's own fields, so a list read
+                // used to hand out every channel's secret. The detail DTO
+                // exposes `callbackUrl` instead.
+                config: undefined,
+                refreshToken: undefined,
                 chatbot:
                     chatbot && typeof chatbot === 'object' && !chatbot.deletedAt
                         ? {
