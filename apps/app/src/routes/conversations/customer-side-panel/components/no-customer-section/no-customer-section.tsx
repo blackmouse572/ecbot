@@ -11,8 +11,8 @@ const KEY = "conversations.customer.panel";
 
 /**
  * The panel for a chat with no customer yet (a website or API visitor who
- * has not left a phone, email or order): the same sections, each saying what
- * fills it, and the channel they wrote on, read from the conversation.
+ * has not left a phone, email or order): the usual sections, empty, and the
+ * channel they wrote on, read from the conversation.
  */
 export const NoCustomerSection: FC<{ conversationId?: string }> = ({
   conversationId,
@@ -31,24 +31,7 @@ export const NoCustomerSection: FC<{ conversationId?: string }> = ({
 
   return (
     <>
-      <div className="px-4 py-4">
-        <div className="shadow-borders-base bg-ui-bg-base flex gap-x-3 rounded-md p-3">
-          <Avatar
-            size="small"
-            fallback={(name ?? "?").slice(0, 1).toUpperCase()}
-          />
-          <div className="flex flex-col gap-y-0.5">
-            <Text size="small" weight="plus">
-              {t(`${KEY}.noCustomer.title`)}
-            </Text>
-            <Text size="xsmall" className="text-ui-fg-subtle">
-              {t(`${KEY}.noCustomer.hint`)}
-            </Text>
-          </div>
-        </div>
-      </div>
-
-      <div className="border-ui-border-base flex flex-col gap-y-2.5 border-t px-4 py-4">
+      <div className="flex flex-col gap-y-2.5 px-4 py-4">
         <Heading level="h3">{t(`${KEY}.details`)}</Heading>
         <DetailRow label={t(`${KEY}.fields.name`)} value={null} />
         <DetailRow label={t(`${KEY}.fields.phone`)} value={null} />

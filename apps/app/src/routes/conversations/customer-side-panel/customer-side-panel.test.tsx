@@ -190,7 +190,7 @@ describe("CustomerSidePanel", () => {
     });
 
     expect(
-      screen.getByText("conversations.customer.panel.noCustomer.title"),
+      screen.getByText("conversations.customer.panel.details"),
     ).toBeInTheDocument();
     expect(
       screen.getByText("conversations.customer.panel.tags.title"),

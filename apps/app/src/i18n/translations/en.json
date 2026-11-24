@@ -2620,8 +2620,6 @@
           }
         },
         "noCustomer": {
-          "title": "No customer profile yet",
-          "hint": "They wrote on a channel that does not share their name. A profile is created once they leave a phone number or email, or place an order.",
           "tags": "Tags can be added once they have a profile.",
           "marketing": "Stage and offer consent start once they have a profile."
         }
