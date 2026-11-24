@@ -9,6 +9,12 @@ export interface ZaloWebhookPayload {
     timestamp?: string;
     sender?: { id: string };
     recipient?: { id: string };
+    // GMF group chat id. UNCONFIRMED for message events: Zalo's GMF lifecycle
+    // webhooks (create_group, user_join_group, add_group_admin, ...) carry it
+    // top-level next to oa_id, and the group-message webhook is assumed to do
+    // the same. No captured group-message payload exists yet; add one as a
+    // fixture in zalo-adapter.spec.ts when one is seen.
+    group_id?: string;
     message?: ZaloWebhookMessage;
     // NOTE (reaction shape UNCONFIRMED): no captured payload or Zalo doc
     // excerpt exists anywhere in this repo for the "user reacts to message"
