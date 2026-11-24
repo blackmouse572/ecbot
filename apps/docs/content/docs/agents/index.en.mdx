@@ -12,8 +12,14 @@ faq:
 
 The agent builder creates an agent from a short description of your business. It asks one question at a time about your shop, how the agent should talk and when it should pass the chat to you, and fills in the answers it can work out from your description. A test chat sits beside the questions so you can try the agent before you turn it on.
 
-<Screenshot name="builder-question" alt="A builder question with an auto-filled answer and the question counter">
-  <Mark id="answer">Answers the builder filled in for you are marked **Auto-filled**. Check them and change anything that is wrong.</Mark>
+<Screenshot
+  name="builder-question"
+  alt="A builder question with an auto-filled answer and the question counter"
+>
+  <Mark id="answer">
+    Answers the builder filled in for you are marked **Auto-filled**. Check them
+    and change anything that is wrong.
+  </Mark>
   <Mark id="progress">The counter shows how many questions are left.</Mark>
   <Mark id="next">**Next** saves the answer and moves on.</Mark>
 </Screenshot>
@@ -29,7 +35,7 @@ Once the basics are answered, the builder offers to **Activate** the agent. Ever
 
 - **Voice**: the greeting, what makes your shop different, words that describe your brand and how formal the agent should sound.
 - **More details**: weekly opening hours, and other facts such as shipping fees, payment methods, returns and warranty. Short facts belong here; long documents belong in the [knowledge base](/docs/agents/knowledge-base).
-- **How it works**: the details the agent collects from a customer who is ready to buy, and when it hands the chat to you. See [Customers and handoff](/docs/customers).
+- **How it works**: the details the agent collects from a customer who is ready to buy, and when it hands the chat to you. See [Customers and conversations](/docs/customers).
 - **Rules**: things the agent must never do, and what it does when it is unsure.
 - **Conversation style**: reply length, emoji, follow-up questions and what to do outside opening hours.
 
@@ -39,10 +45,20 @@ When you describe your business in a few sentences, the builder fills in what it
 
 The agent's page holds everything the agent uses. Link documents, add tools and keep testing from one place:
 
-<Screenshot name="agent-page" alt="The agent page with the knowledge base and tools sections and the test chat">
-  <Mark id="knowledge">**Knowledge Base**: the documents this agent answers from. **Add** links more.</Mark>
-  <Mark id="tools">**Tools**: the systems this agent can use, such as your order API.</Mark>
-  <Mark id="test-chat">**Test Chat**: talk to the agent privately. Nothing here reaches customers.</Mark>
+<Screenshot
+  name="agent-page"
+  alt="The agent page with the knowledge base and tools sections and the test chat"
+>
+  <Mark id="knowledge">
+    **Knowledge Base**: the documents this agent answers from. **Add** links
+    more.
+  </Mark>
+  <Mark id="tools">
+    **Tools**: the systems this agent can use, such as your order API.
+  </Mark>
+  <Mark id="test-chat">
+    **Test Chat**: talk to the agent privately. Nothing here reaches customers.
+  </Mark>
 </Screenshot>
 
 Write facts the way you would tell a new staff member. If your shop has no opening hours (for example, online only), say so, so the agent does not invent them.
@@ -51,11 +67,11 @@ Write facts the way you would tell a new staff member. If your shop has no openi
 
 The **Summary** panel on the agent's page groups the settings you can change after the builder:
 
-| Section | What it controls |
-| --- | --- |
-| **Behavior** | Typing indicator, auto mark as read, primary and fallback language, welcome message, and the fallback message sent when the agent cannot reply. |
-| **AI Model** | The AI provider and model, temperature (how creative replies are, default 1.0) and the maximum reply length. |
-| **Handoff Settings** | Extra handoff keywords (comma separated), how many failed replies in a row pass the chat to your staff (default 3), and the note your staff see in the handoff notification. |
-| **Guardrail Settings** | Turn on guardrails to screen every incoming message, add your own screening rule, and choose whether a blocked message passes the chat to your staff (on by default). |
+| Section                | What it controls                                                                                                                                                             |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Behavior**           | Typing indicator, auto mark as read, primary and fallback language, welcome message, and the fallback message sent when the agent cannot reply.                              |
+| **AI Model**           | The AI provider and model, temperature (how creative replies are, default 1.0) and the maximum reply length.                                                                 |
+| **Handoff Settings**   | Extra handoff keywords (comma separated), how many failed replies in a row pass the chat to your staff (default 3), and the note your staff see in the handoff notification. |
+| **Guardrail Settings** | Turn on guardrails to screen every incoming message, add your own screening rule, and choose whether a blocked message passes the chat to your staff (on by default).        |
 
 The switch at the top of the page turns the agent on or off. The agent's form also has **Follow-up rules**, which tell the agent when to schedule a reminder. See [Follow-ups](/docs/agents/followups).

@@ -1,28 +1,46 @@
 ---
 title: Giới thiệu
-description: Ecbot là một AI agent trả lời khách của bạn trên Messenger, Zalo, Telegram, WhatsApp và website, dựa trên tài liệu và công cụ của chính shop.
+description: Tạo AI agent hiểu việc kinh doanh của bạn, trả lời khách trên Messenger, Zalo và website, và làm việc thay bạn. Không cần biết lập trình.
 faq:
   - q: Ecbot chạy trên những ứng dụng chat nào?
-    a: Facebook Messenger, Zalo, Telegram, WhatsApp, khung chat trên website và kênh REST API. Instagram, Shopee và TikTok Shop đang nằm trong kế hoạch và chưa dùng được.
+    a: Những ứng dụng chat khách của bạn đang dùng, như Facebook Messenger và Zalo, cùng khung chat trên website. Trang Kênh liệt kê mọi kênh và kênh nào dùng được hôm nay.
   - q: Tôi có cần biết lập trình không?
-    a: Không cần. Bạn thiết lập agent bằng cách trả lời các câu hỏi trong trình tạo agent và thêm tài liệu. Chỉ khi muốn nối với hệ thống riêng qua công cụ HTTP thì mới cần đến lập trình.
+    a: Không cần. Bạn thiết lập agent bằng cách mô tả việc kinh doanh trong trình tạo agent và thêm tài liệu. Chỉ khi muốn nối với hệ thống riêng qua công cụ HTTP thì mới cần đến lập trình.
+  - q: Có cần kỹ năng hay công cụ thì agent mới chạy được không?
+    a: Không cần. Agent trả lời dựa trên thông tin của shop đã có ích ngay. Bạn thêm kỹ năng và công cụ sau, khi muốn agent ghi nhận khách tiềm năng, kiểm tra đơn hay đặt lịch.
   - q: Nhân viên có thể vào trả lời thay agent không?
     a: Có. Agent chuyển cuộc trò chuyện cho nhân viên khi khách muốn gặp người thật hoặc khi khớp với quy tắc bạn đặt, và bạn trả lời ngay trên trang quản lý Ecbot.
 ---
 
-Ecbot là AI agent dành cho shop và doanh nghiệp dịch vụ. Bạn thiết lập một lần, sau đó agent trả lời khách trên Facebook Messenger, Zalo, Telegram, WhatsApp và website của bạn. Agent trả lời dựa trên tài liệu của shop, có thể kiểm tra tồn kho hay tạo đơn qua các công cụ bạn kết nối, và chuyển cuộc trò chuyện cho nhân viên khi cần người thật.
+Ecbot cho shop của bạn một AI agent trả lời khách trên Messenger, Zalo, Telegram, WhatsApp, Threads và website. Agent trả lời theo bảng giá, chính sách và câu hỏi thường gặp của shop, có thể ghi nhận khách tiềm năng, kiểm tra đơn, đặt lịch, và chuyển cho nhân viên khi cần. Bạn chỉ cần mô tả việc kinh doanh, không cần lập trình.
 
-## Các phần chính
+## Mới dùng Ecbot?
 
-- **Không gian làm việc**: mỗi shop hoặc mỗi khách hàng có một không gian riêng, chứa agent, tài liệu, công cụ và nhân viên.
-- **Agent**: trợ lý nói chuyện với khách, có tên, giọng điệu, mục tiêu và quy tắc riêng.
-- **Cơ sở kiến thức**: tệp, trang web và ghi chú mà agent dùng để trả lời.
-- **Kênh**: nơi agent trả lời khách (Facebook Page, Zalo OA, bot Telegram, số WhatsApp, khung chat website).
-- **Công cụ và kỹ năng**: công cụ giúp agent đọc hoặc thay đổi dữ liệu ở hệ thống khác, còn kỹ năng là hướng dẫn viết sẵn cho một loại yêu cầu, ví dụ xử lý đơn giao trễ.
+**[Tạo agent đầu tiên](/docs/getting-started/setup)**: tạo không gian làm việc, mô tả việc kinh doanh, đưa thông tin cho agent, chạy thử và kết nối một kênh. Dừng ở đó là bạn đã có agent trả lời khách.
 
-## Bắt đầu từ đâu
+Sau đó dùng trang [Chạy thử và đưa agent vào hoạt động](/docs/getting-started/launch) để kiểm tra câu trả lời trước khi khách thật nhắn tin.
 
-Làm theo trang [Bắt đầu](/docs/getting-started/setup) để tạo không gian làm việc và agent đầu tiên trong khoảng 15 phút. Sau đó thêm tài liệu vào [cơ sở kiến thức](/docs/agents/knowledge-base) và kết nối một [kênh](/docs/channels).
+## Bạn muốn agent làm gì?
+
+- **Trả lời về sản phẩm và chính sách**: thêm bảng giá, câu hỏi thường gặp và chính sách vào [cơ sở kiến thức](/docs/agents/knowledge-base).
+- **Ghi nhận khách tiềm năng cho đội ngũ**: hỏi nhu cầu, lưu thông tin khách và báo cho nhân viên với [Ghi nhận khách tiềm năng](/docs/cookbook/use-cases/capture-lead). Không cần thêm công cụ nào.
+- **Kiểm tra đơn hàng**: tra trạng thái đơn thật với [Kiểm tra đơn](/docs/cookbook/use-cases/check-order). Cần một công cụ HTTP nối với hệ thống đơn hàng.
+- **Đặt lịch hẹn**: tìm giờ trống và đặt lịch với [Đặt lịch](/docs/cookbook/use-cases/book-a-slot). Cần một công cụ lịch.
+- **Chăm sóc các cuộc trò chuyện**: chuyển chat cho nhân viên, giữ hồ sơ khách và gửi lời nhắc với [Khách hàng và cuộc trò chuyện](/docs/customers) và [Nhắc hẹn](/docs/agents/followups).
+
+## Từ câu trả lời đầu tiên đến trợ lý đầy đủ
+
+1. **Agent biết trả lời.** [Trình tạo agent](/docs/agents), [cơ sở kiến thức](/docs/agents/knowledge-base), khung chat thử và một [kênh](/docs/channels).
+2. **Agent biết làm việc.** [Kỹ năng](/docs/agents/skills) dạy agent cách xử lý từng loại yêu cầu, [công cụ](/docs/agents/tools) nối agent với ứng dụng của bạn, và [nhắc hẹn](/docs/agents/followups) kéo khách quay lại.
+3. **Agent giúp vận hành mỗi ngày.** [Hồ sơ khách và chuyển cho nhân viên](/docs/customers), [nhãn khách hàng](/docs/customers/tags) và [đội ngũ](/docs/workspace/team) của bạn.
+
+## Tìm hiểu thêm
+
+- [Cơ sở kiến thức](/docs/agents/knowledge-base): tệp, trang web và ghi chú agent dùng để trả lời.
+- [Kỹ năng](/docs/agents/skills) và [Công cụ](/docs/agents/tools): cách xử lý từng loại yêu cầu, và các ứng dụng agent dùng được.
+- [Kênh](/docs/channels): mọi ứng dụng chat Ecbot kết nối được, và kênh nào dùng được hôm nay.
+- [Ví dụ và công thức](/docs/cookbook): các kỹ năng làm sẵn để sao chép.
+- [Lập trình viên](/docs/dev/mcp): Ecbot MCP Server, cấu hình và tự cài đặt.
 
 ## Giải pháp theo nhu cầu
 
