@@ -53,6 +53,7 @@ export const CustomerListTable = () => {
         pagination
         isLoading={isLoading}
         queryObject={raw}
+        navigateTo={(row) => row.original.id}
         noRecords={{
           title: t("customers.list.emptyTitle"),
           message: t("customers.list.emptyMessage"),

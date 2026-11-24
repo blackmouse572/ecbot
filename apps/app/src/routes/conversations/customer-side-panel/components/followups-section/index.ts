@@ -1,1 +1,4 @@
-export { FollowupsSection } from "./followups-section";
+export {
+  CustomerFollowupsSection,
+  FollowupsSection,
+} from "./followups-section";

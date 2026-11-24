@@ -2470,7 +2470,8 @@
         "conversations": {
           "title": "Conversations",
           "empty": "No conversations yet",
-          "current": "Current"
+          "current": "Current",
+          "emptyHint": "When the customer messages you on a channel, the conversation shows up here."
         },
         "followups": {
           "title": "Followups",
@@ -2720,6 +2721,19 @@
       },
       "firstSource": "First source",
       "source": "Source"
+    },
+    "detail": {
+      "open": "View customer profile",
+      "unnamed": "Unnamed customer",
+      "since": "Customer since {{date}}",
+      "openConversation": "Open conversation",
+      "followups": "Upcoming follow-ups",
+      "profileSummary": "AI summary",
+      "stats": {
+        "conversations": "Conversations",
+        "spent": "Total spent",
+        "lastActive": "Last message"
+      }
     }
   },
   "settings": {

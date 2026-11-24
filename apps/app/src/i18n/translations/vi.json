@@ -2507,7 +2507,8 @@
         "conversations": {
           "title": "Cuộc trò chuyện",
           "empty": "Chưa có cuộc trò chuyện",
-          "current": "Đang xem"
+          "current": "Đang xem",
+          "emptyHint": "Khi khách nhắn tới trên một kênh, cuộc trò chuyện sẽ hiện ở đây."
         },
         "followups": {
           "title": "Nhắc hẹn",
@@ -2753,6 +2754,19 @@
       },
       "firstSource": "Nguồn đầu tiên",
       "source": "Nguồn"
+    },
+    "detail": {
+      "open": "Xem hồ sơ khách",
+      "unnamed": "Khách chưa có tên",
+      "since": "Khách từ {{date}}",
+      "openConversation": "Mở cuộc trò chuyện",
+      "followups": "Nhắc hẹn sắp gửi",
+      "profileSummary": "Tóm tắt từ AI",
+      "stats": {
+        "conversations": "Cuộc trò chuyện",
+        "spent": "Đã chi",
+        "lastActive": "Nhắn gần nhất"
+      }
     }
   },
   "settings": {

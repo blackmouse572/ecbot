@@ -132,6 +132,9 @@ export class FollowupRepository extends DatabaseRepository<FollowupEntity> {
 
         const conversation: FilterQuery<ConversationEntity> = {
             ...(filter.conversationId ? { id: filter.conversationId } : {}),
+            ...(filter.customerId
+                ? { contactPoint: { customer: filter.customerId } }
+                : {}),
             ...(filter.search
                 ? { senderName: { $ilike: `%${filter.search}%` } }
                 : {}),

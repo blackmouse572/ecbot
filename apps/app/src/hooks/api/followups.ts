@@ -24,6 +24,8 @@ export const followupQueryKeys = {
     [FOLLOWUP_QUERY_KEY, "list", { query }] as const,
   byConversation: (conversationId: string) =>
     [FOLLOWUP_QUERY_KEY, "byConversation", conversationId] as const,
+  byCustomer: (customerId: string) =>
+    [FOLLOWUP_QUERY_KEY, "byCustomer", customerId] as const,
 };
 
 export const useFollowups = (query?: FollowupListQuery) => {
@@ -54,6 +56,21 @@ export const useConversationFollowups = (conversationId: string) => {
         path: { workspace: workspace!.slug },
       }).then((r) => r.data),
     enabled: !!workspace?.slug && !!conversationId,
+  });
+  return { ...rest, followups: data?.data ?? [] };
+};
+
+/** Reminders still to send, across every conversation of the customer. */
+export const useCustomerFollowups = (customerId: string) => {
+  const { workspace } = useWorkspace();
+  const { data, ...rest } = useQuery({
+    queryKey: followupQueryKeys.byCustomer(customerId),
+    queryFn: () =>
+      followupWorkspaceControllerListV1({
+        query: { customer: customerId, status: "SCHEDULED", perPage: 100 },
+        path: { workspace: workspace!.slug },
+      }).then((r) => r.data),
+    enabled: !!workspace?.slug && !!customerId,
   });
   return { ...rest, followups: data?.data ?? [] };
 };
