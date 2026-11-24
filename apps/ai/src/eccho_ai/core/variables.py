@@ -121,7 +121,7 @@ class _AppVars(BaseSettings):
     CLASSIFIER_MODEL: str = "google/gemini-2.5-flash"
     CUSTOMER_CLASSIFIER_TEMPERATURE: float = 0.1
     # OpenRouter model that answers agent-builder decisions (System One-shaped).
-    DECISION_MODEL: str = "google/gemini-2.5-flash"
+    DECISION_MODEL: str = "~typesafe/jev-latest"
     # OpenRouter model that drafts short shop messages (/decision/write, #506).
     WRITE_MODEL: str = "google/gemini-2.5-flash"
     # Describes inbound customer images (must accept image input).
