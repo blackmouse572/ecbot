@@ -431,6 +431,23 @@ describe('MarketingSendService', () => {
             });
         });
 
+        it('keeps the stop line next to the Zalo button, which only Zalo mobile shows', async () => {
+            ledger.findQueued.mockResolvedValue(row(A.ZALO_PAGE));
+            inbound(A.ZALO_PAGE, 30);
+            zalo.capabilities.quickReplies = true;
+
+            await service.deliver('m1', now);
+            zalo.capabilities.quickReplies = false;
+
+            const [, , outbound] = zalo.sendMessage.mock.calls[0];
+            expect(outbound.content.text).toBe(
+                'Mẫu mới về\n\nNhắn "dừng" nếu bạn không muốn nhận tin ưu đãi nữa.'
+            );
+            expect(outbound.quickReplies).toEqual([
+                expect.objectContaining({ id: 'marketing.stop' }),
+            ]);
+        });
+
         it('lets only the run that claims the row send it', async () => {
             ledger.findQueued.mockResolvedValue(row());
             inbound();
