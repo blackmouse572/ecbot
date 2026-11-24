@@ -2,6 +2,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import { ENUM_ACCOUNT_TYPE as A } from 'src/modules/account/enums/account.enum';
 import {
     ENUM_MARKETING_MESSAGE_STATUS as S,
+    ENUM_MARKETING_SEND_MODE as M,
     ENUM_MARKETING_SKIP_REASON as R,
 } from 'src/modules/marketing/enums/marketing-send.enum';
 import { MarketingSendService } from 'src/modules/marketing/services/marketing-send.service';
@@ -17,6 +18,10 @@ describe('MarketingSendService', () => {
             getReference: (_: unknown, id: string) => ({ id }),
         }),
         create: jest.fn(),
+        findDueAuto: jest.fn(),
+        claimRun: jest.fn(),
+        findOne: jest.fn(),
+        save: jest.fn(async (x: unknown) => x),
     };
     const ledger = {
         plan: jest.fn(),
@@ -27,8 +32,14 @@ describe('MarketingSendService', () => {
         claim: jest.fn(),
         markReplied: jest.fn(),
         skipQueuedOnAccount: jest.fn(),
+        reachedBy: jest.fn(),
+        productFor: jest.fn(),
     };
-    const audience = { toAudience: jest.fn(a => a), reached: jest.fn() };
+    const audience = {
+        toAudience: jest.fn(a => a),
+        reached: jest.fn(),
+        preview: jest.fn(),
+    };
     const settings = { rules: jest.fn(), stopKeyword: jest.fn() };
     const conversations = { lastInboundByCustomerChannel: jest.fn() };
     const messages = {
@@ -75,6 +86,8 @@ describe('MarketingSendService', () => {
     );
 
     const input = {
+        name: 'Chào khách mới',
+        mode: M.ONCE,
         audience: { preset: 'NEW' } as any,
         text: 'Mẫu mới về, giảm 20% hôm nay',
     };
@@ -82,7 +95,22 @@ describe('MarketingSendService', () => {
     beforeEach(() => {
         jest.resetAllMocks();
         audience.toAudience.mockImplementation(a => a);
-        sendRepository.create.mockResolvedValue({ id: 'send1' });
+        sendRepository.create.mockImplementation(async (data: object) => ({
+            id: 'send1',
+            ...data,
+        }));
+        sendRepository.save.mockImplementation(async (x: unknown) => x);
+        audience.preview.mockResolvedValue({
+            excluded: {
+                total: 2,
+                reasons: [
+                    { reason: 'STOPPED', count: 0 },
+                    { reason: 'CAPPED', count: 2 },
+                ],
+            },
+        });
+        ledger.reachedBy.mockResolvedValue(new Set());
+        ledger.productFor.mockResolvedValue(null);
         settings.rules.mockResolvedValue({
             maxPer30Days: 3,
             restAfter: 3,
@@ -99,7 +127,7 @@ describe('MarketingSendService', () => {
         zalo.sendMessage.mockResolvedValue({ externalId: 'z.1' });
     });
 
-    describe('send', () => {
+    describe('create', () => {
         beforeEach(() => {
             audience.reached.mockResolvedValue({
                 ids: ['lan', 'minh', 'hoa'],
@@ -127,13 +155,18 @@ describe('MarketingSendService', () => {
         });
 
         it('queues customers on a free channel and keeps why the rest were skipped', async () => {
-            const result = await service.send('ws1', input, 'user1', now);
+            const result = await service.create('ws1', input, 'user1', now);
 
             expect(sendRepository.create).toHaveBeenCalledWith({
                 workspace: { id: 'ws1' },
+                lastRunDay: '2026-11-22',
+                name: 'Chào khách mới',
+                mode: M.ONCE,
                 audience: input.audience,
                 text: input.text,
                 imageUrl: null,
+                // Who matched but was left out, for "Không gửi được".
+                excluded: { CAPPED: 2 },
                 createdBy: { id: 'user1' },
             });
             expect(ledger.plan).toHaveBeenCalledWith('ws1', 'send1', [
@@ -168,7 +201,12 @@ describe('MarketingSendService', () => {
                 { messageId: 'm-lan' },
                 { taskName: 'marketing-send-m-lan', scheduleTime: now }
             );
-            expect(result).toEqual({ id: 'send1', queued: 1 });
+            expect(result).toMatchObject({
+                id: 'send1',
+                name: 'Chào khách mới',
+            });
+            // A send once never looks up who it already reached.
+            expect(ledger.reachedBy).not.toHaveBeenCalled();
         });
 
         it('waits for the send hours, and needs the window open then', async () => {
@@ -192,7 +230,7 @@ describe('MarketingSendService', () => {
                 },
             ]);
 
-            await service.send('ws1', input, undefined, late);
+            await service.create('ws1', input, undefined, late);
 
             expect(
                 ledger.plan.mock.calls[0][2].map((r: any) => [
@@ -222,7 +260,7 @@ describe('MarketingSendService', () => {
             conversations.lastInboundByCustomerChannel.mockResolvedValue([]);
             ledger.plan.mockResolvedValue([]);
 
-            await service.send('ws1', input, undefined, now);
+            await service.create('ws1', input, undefined, now);
 
             expect(audience.reached).toHaveBeenNthCalledWith(
                 2,
@@ -271,7 +309,7 @@ describe('MarketingSendService', () => {
                 }))
             );
 
-            await service.send('ws1', input, undefined, now);
+            await service.create('ws1', input, undefined, now);
 
             const at = new Map(
                 tasks.enqueue.mock.calls.map(c => [
@@ -314,7 +352,7 @@ describe('MarketingSendService', () => {
                 }))
             );
 
-            await service.send('ws1', input, undefined, now);
+            await service.create('ws1', input, undefined, now);
 
             expect(tasks.enqueue).toHaveBeenCalledTimes(30);
             expect(ledger.finish).toHaveBeenCalledWith('m-c30', {
@@ -326,11 +364,133 @@ describe('MarketingSendService', () => {
         it('fails a row whose task could not be created, freeing the day', async () => {
             tasks.enqueue.mockRejectedValue(new Error('queue down'));
 
-            await service.send('ws1', input, undefined, now);
+            await service.create('ws1', input, undefined, now);
 
             expect(ledger.finish).toHaveBeenCalledWith('m-lan', {
                 status: S.FAILED,
             });
+        });
+    });
+
+    describe('auto sends', () => {
+        const auto = {
+            id: 'send1',
+            mode: M.AUTO,
+            active: true,
+            workspace: { id: 'ws1' },
+            audience: { preset: 'ASKED_PRICE' },
+        };
+
+        beforeEach(() => {
+            audience.reached.mockResolvedValue({
+                ids: ['lan', 'tu'],
+                total: 2,
+            });
+            conversations.lastInboundByCustomerChannel.mockResolvedValue([
+                {
+                    customerId: 'tu',
+                    channel: A.FACEBOOK_PAGE,
+                    conversationId: 'conv-tu',
+                    accountId: 'page-1',
+                    lastInboundAt: ago(1),
+                },
+            ]);
+            ledger.plan.mockResolvedValue([]);
+            sendRepository.findDueAuto.mockResolvedValue([auto]);
+            sendRepository.claimRun.mockResolvedValue(true);
+        });
+
+        it('runs once a day while the send hours are open, for customers it has not reached', async () => {
+            ledger.reachedBy.mockResolvedValue(new Set(['lan']));
+
+            await service.runDueAuto(now);
+
+            expect(sendRepository.findDueAuto).toHaveBeenCalledWith(
+                '2026-11-22'
+            );
+            expect(sendRepository.claimRun).toHaveBeenCalledWith(
+                'send1',
+                '2026-11-22'
+            );
+            expect(ledger.reachedBy).toHaveBeenCalledWith('send1');
+            expect(
+                ledger.plan.mock.calls[0][2].map((r: any) => r.customerId)
+            ).toEqual(['tu']);
+        });
+
+        it('waits for the send hours to open', async () => {
+            // 07:00 shop time, before 09:00.
+            await service.runDueAuto(new Date('2026-11-22T00:00:00.000Z'));
+
+            expect(sendRepository.claimRun).not.toHaveBeenCalled();
+            expect(ledger.plan).not.toHaveBeenCalled();
+        });
+
+        it('leaves the day to the instance that claimed it', async () => {
+            sendRepository.claimRun.mockResolvedValue(false);
+
+            await service.runDueAuto(now);
+
+            expect(audience.reached).not.toHaveBeenCalled();
+        });
+
+        it("keeps running the other shops' sends when one fails", async () => {
+            sendRepository.findDueAuto.mockResolvedValue([
+                auto,
+                { ...auto, id: 'send2', workspace: { id: 'ws2' } },
+            ]);
+            audience.reached
+                .mockRejectedValueOnce(new Error('db'))
+                .mockResolvedValue({ ids: ['tu'], total: 1 });
+
+            await expect(service.runDueAuto(now)).resolves.toBeUndefined();
+
+            expect(ledger.plan).toHaveBeenCalledWith(
+                'ws2',
+                'send2',
+                expect.any(Array)
+            );
+        });
+    });
+
+    describe('update', () => {
+        it('turns an AUTO send off', async () => {
+            sendRepository.findOne.mockResolvedValue({
+                id: 'send1',
+                mode: M.AUTO,
+                active: true,
+            });
+
+            const send = await service.update('send1', 'ws1', {
+                active: false,
+            });
+
+            expect(send.active).toBe(false);
+            expect(sendRepository.save).toHaveBeenCalled();
+        });
+
+        it('refuses to turn a send-once on or off', async () => {
+            sendRepository.findOne.mockResolvedValue({
+                id: 'send1',
+                mode: M.ONCE,
+                active: true,
+            });
+
+            await expect(
+                service.update('send1', 'ws1', { active: false })
+            ).rejects.toMatchObject({ status: 400 });
+        });
+
+        it("is a 404 for another workspace's send", async () => {
+            sendRepository.findOne.mockResolvedValue(null);
+
+            await expect(
+                service.update('send1', 'ws1', { name: 'x' })
+            ).rejects.toMatchObject({ status: 404 });
+            expect(sendRepository.findOne).toHaveBeenCalledWith(
+                { id: 'send1', workspace: 'ws1' },
+                { populate: [] }
+            );
         });
     });
 
@@ -342,8 +502,13 @@ describe('MarketingSendService', () => {
             id: 'm1',
             channel,
             workspace: { id: 'ws1' },
-            customer: { id: 'lan' },
-            send: { id: 'send1', text: 'Mẫu mới về', imageUrl },
+            customer: { id: 'lan', name: 'Lan' },
+            send: {
+                id: 'send1',
+                text: 'Mẫu mới về',
+                imageUrl,
+                audience: { preset: 'NEW' },
+            },
             conversation: {
                 id: 'conv-lan',
                 senderId: 'psid-1',
@@ -446,6 +611,62 @@ describe('MarketingSendService', () => {
             expect(outbound.quickReplies).toEqual([
                 expect.objectContaining({ id: 'marketing.stop' }),
             ]);
+        });
+
+        it("fills in the customer's name and product, with the product's photo", async () => {
+            const base = row();
+            ledger.findQueued.mockResolvedValue({
+                ...base,
+                send: {
+                    ...base.send,
+                    text: 'Chào {name}, {product} bạn hỏi vẫn còn hàng',
+                    audience: { preset: 'REPURCHASE' },
+                },
+            });
+            inbound();
+            ledger.productFor.mockResolvedValue({
+                name: 'Serum vitamin C',
+                imageUrl: 'https://cdn/serum.jpg',
+            });
+
+            await service.deliver('m1', now);
+
+            // A bought stage names the product bought first.
+            expect(ledger.productFor).toHaveBeenCalledWith('lan', true);
+            expect(
+                messenger.sendMessage.mock.calls.map(c => c[2].content)
+            ).toEqual([
+                {
+                    kind: 'media',
+                    url: 'https://cdn/serum.jpg',
+                    mediaType: 'image',
+                },
+                {
+                    kind: 'text',
+                    text: 'Chào Lan, Serum vitamin C bạn hỏi vẫn còn hàng',
+                },
+            ]);
+        });
+
+        it('falls back to plain words when the customer has no name or product', async () => {
+            const base = row();
+            ledger.findQueued.mockResolvedValue({
+                ...base,
+                customer: { id: 'lan', name: null },
+                send: {
+                    ...base.send,
+                    text: 'Chào {name}, {product} đang giảm',
+                },
+            });
+            inbound();
+
+            await service.deliver('m1', now);
+
+            expect(ledger.productFor).toHaveBeenCalledWith('lan', false);
+            expect(messenger.sendMessage.mock.calls[0][2].content).toEqual({
+                kind: 'text',
+                text: 'Chào bạn, sản phẩm bạn quan tâm đang giảm',
+            });
         });
 
         it('lets only the run that claims the row send it', async () => {

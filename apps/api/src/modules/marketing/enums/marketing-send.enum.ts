@@ -20,6 +20,24 @@ export enum ENUM_MARKETING_SKIP_REASON {
     SEND_HOURS_ENDED = 'SEND_HOURS_ENDED',
 }
 
+/** Chỉ gửi 1 lần, or Tự gửi mỗi ngày to customers who newly match (#506). */
+export enum ENUM_MARKETING_SEND_MODE {
+    ONCE = 'ONCE',
+    AUTO = 'AUTO',
+}
+
+/** How a customer who replied to an offer stands now, as Đã gửi shows it. */
+export enum ENUM_MARKETING_REPLY_STATUS {
+    /** Ordered within 7 days of the offer. */
+    ORDERED = 'ORDERED',
+    /** Opted out after the offer. */
+    STOPPED = 'STOPPED',
+    /** The conversation is handed to staff ("Chờ bạn"). */
+    WAITING = 'WAITING',
+    /** The bot is answering. */
+    BOT = 'BOT',
+}
+
 export enum ENUM_MARKETING_SEND_PROCESS {
     DELIVER = 'deliver',
 }

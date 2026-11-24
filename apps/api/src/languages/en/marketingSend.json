@@ -1,5 +1,14 @@
 {
     "task": {
-        "processed": "Marketing message handled."
+        "processed": "Marketing message processed."
+    },
+    "create": "Send started.",
+    "list": "Sends loaded.",
+    "get": "Send loaded.",
+    "update": "Send updated.",
+    "replies": "Replies loaded.",
+    "error": {
+        "notFound": "This send was not found.",
+        "notAuto": "Only a send that runs each day can be turned on or off."
     }
 }

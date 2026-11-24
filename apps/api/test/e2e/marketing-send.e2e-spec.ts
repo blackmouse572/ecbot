@@ -16,8 +16,19 @@ import { CustomerMarketingService } from '@app/modules/customer/services/custome
 import { ENUM_MARKETING_AUDIENCE_MATCH } from '@app/modules/marketing/enums/marketing-audience.enum';
 import {
     ENUM_MARKETING_MESSAGE_STATUS as M,
+    ENUM_MARKETING_REPLY_STATUS,
+    ENUM_MARKETING_SEND_MODE as S,
     ENUM_MARKETING_SKIP_REASON as R,
 } from '@app/modules/marketing/enums/marketing-send.enum';
+import { MarketingSendEntity } from '@app/modules/marketing/repository/entities/marketing-send.entity';
+import {
+    ENUM_MARKETING_EVENT_ACTOR,
+    ENUM_MARKETING_EVENT_KIND,
+} from '@app/modules/customer/enums/customer-marketing.enum';
+import { MarketingEventEntity } from '@app/modules/customer/repository/entities/marketing-event.entity';
+import { ProductGroupEntity } from '@app/modules/order/repository/entities/product-group.entity';
+import { http } from './utils/http';
+import { wsBase } from './utils/workspace.helper';
 import { MarketingMessageEntity } from '@app/modules/marketing/repository/entities/marketing-message.entity';
 import { MarketingSettingsEntity } from '@app/modules/marketing/repository/entities/marketing-settings.entity';
 import { MarketingSendService } from '@app/modules/marketing/services/marketing-send.service';
@@ -55,6 +66,11 @@ describe('E2E — marketing sends', () => {
     const ago = (h: number) => new Date(Date.now() - h * hour);
     const enqueue = jest.spyOn(CloudTasksQueueClient.prototype, 'enqueue');
     let sendMessage: jest.SpyInstance;
+    let token: string;
+    let onceId: string;
+    const url = (path: string) =>
+        `${wsBase(ctx.base)}/${workspaceId}/marketing/sends${path}`;
+    const auth = (): [string, string] => ['Authorization', `Bearer ${token}`];
 
     // Services run in a request's context in the app; give them one here.
     const inRequest = <T>(fn: () => Promise<T>): Promise<T> =>
@@ -70,6 +86,8 @@ describe('E2E — marketing sends', () => {
                 { orderBy: { createdAt: 'asc' } }
             );
     const offer = {
+        name: 'Mẫu áo mới',
+        mode: S.ONCE,
         audience: {
             match: ENUM_MARKETING_AUDIENCE_MATCH.ALL,
             conditions: [
@@ -81,7 +99,7 @@ describe('E2E — marketing sends', () => {
 
     beforeAll(async () => {
         ctx = await bootstrapE2E();
-        const token = await login(ctx.app, ctx.base, SEED_USERS.individual);
+        token = await login(ctx.app, ctx.base, SEED_USERS.individual);
         workspaceId = await createWorkspace(
             ctx.app,
             ctx.base,
@@ -189,15 +207,19 @@ describe('E2E — marketing sends', () => {
 
     it('queues one offer a day per customer even when two sends start together', async () => {
         const [first, second] = await Promise.all([
-            inRequest(() => sends().send(workspaceId, offer)),
+            inRequest(() => sends().create(workspaceId, offer)),
             inRequest(() =>
-                sends().send(workspaceId, { ...offer, text: 'Giảm thêm 5%' })
+                sends().create(workspaceId, { ...offer, text: 'Giảm thêm 5%' })
             ),
         ]);
+        onceId = first.id;
+        const [a, b] = await Promise.all(
+            [first, second].map(send => sends().stats(send.id))
+        );
 
         // Lan and Tú are queued once between the two sends.
-        expect(first.queued + second.queued).toBe(2);
-        expect(first.skipped + second.skipped).toBe(4);
+        expect(a.queued + b.queued).toBe(2);
+        expect(a.skipped + b.skipped).toBe(4);
         for (const name of ['Lan', 'Tú']) {
             const rows = await ledger(name);
             expect(rows.filter(r => r.status === M.QUEUED)).toHaveLength(1);
@@ -318,9 +340,9 @@ describe('E2E — marketing sends', () => {
         });
 
         const send = await inRequest(() =>
-            sends().send(workspaceId, { ...offer, text: 'Flash sale 12h' })
+            sends().create(workspaceId, { ...offer, text: 'Flash sale 12h' })
         );
-        expect(send.queued).toBe(3);
+        expect((await sends().stats(send.id)).queued).toBe(3);
         for (const [, , payload] of enqueue.mock.calls) {
             await inRequest(() => sends().deliver(payload.messageId as string));
         }
@@ -335,5 +357,162 @@ describe('E2E — marketing sends', () => {
                 [M.SKIPPED, R.ACCOUNT_BLOCKED],
             ].sort()
         );
+    });
+
+    it('shows Đã gửi over HTTP: results, by channel, not sent, and replies', async () => {
+        const [lan] = (await ledger('Lan')).filter(r => r.status === M.SENT);
+        const em = ctx.app.get(EntityManager).fork();
+        em.create(MessageEntity, {
+            conversation: em.getReference(
+                ConversationEntity,
+                conversationOf['Lan']
+            ),
+            direction: ENUM_MESSAGE_DIRECTION.INBOUND,
+            authorType: ENUM_MESSAGE_AUTHOR.USER,
+            authorId: senderOf['Lan'],
+            text: 'còn size M không shop',
+            dateSent: new Date(lan.sentAt!.getTime() + 60_000),
+        } as Partial<MessageEntity> as MessageEntity);
+        await em.flush();
+
+        const list = await http(ctx.app)
+            .get(url('?mode=ONCE'))
+            .set(...auth());
+        expect(list.status).toBe(200);
+        const row = list.body.data.find((d: any) => d.id === lan.send.id);
+        expect(row).toMatchObject({
+            name: 'Mẫu áo mới',
+            mode: S.ONCE,
+            stats: { sent: 1, replied: 1, ordered: 1 },
+        });
+        expect(row.stats.lastSentAt).toBeTruthy();
+
+        const detail = await http(ctx.app)
+            .get(url(`/${lan.send.id}`))
+            .set(...auth());
+        expect(detail.status).toBe(200);
+        expect(detail.body.data.channels).toEqual([
+            {
+                channel: A.FACEBOOK_PAGE,
+                sent: 1,
+                replied: 1,
+                ordered: 1,
+                optedOut: 0,
+            },
+        ]);
+        expect(detail.body.data.notSent).toEqual(
+            expect.arrayContaining([
+                { reason: R.WINDOW_CLOSED, count: 1 },
+                { reason: R.NO_CHANNEL, count: 1 },
+            ])
+        );
+
+        const replies = await http(ctx.app)
+            .get(url(`/${lan.send.id}/replies`))
+            .set(...auth());
+        expect(replies.status).toBe(200);
+        expect(replies.body._metadata.pagination.total).toBe(1);
+        expect(replies.body.data).toEqual([
+            expect.objectContaining({
+                customerId: ids['Lan'],
+                name: 'Lan',
+                text: 'còn size M không shop',
+                status: ENUM_MARKETING_REPLY_STATUS.ORDERED,
+            }),
+        ]);
+
+        // Only a send that runs each day turns on or off.
+        const patch = await http(ctx.app)
+            .patch(url(`/${lan.send.id}`))
+            .set(...auth())
+            .send({ active: false });
+        expect(patch.status).toBe(400);
+        const other = await http(ctx.app)
+            .get(url('/00000000-0000-4000-8000-000000000000'))
+            .set(...auth());
+        expect(other.status).toBe(404);
+    });
+
+    it('runs an AUTO send each day for new customers, naming their product', async () => {
+        addCustomer('Mai', 1);
+        await flush();
+        const em = ctx.app.get(EntityManager).fork();
+        const workspace = em.getReference(WorkspaceEntity, workspaceId);
+        const serum = em.create(ProductGroupEntity, {
+            workspace,
+            name: 'Serum vitamin C',
+        } as Partial<ProductGroupEntity> as ProductGroupEntity);
+        em.create(MarketingEventEntity, {
+            workspace,
+            customer: em.getReference(CustomerEntity, ids['Mai']),
+            kind: ENUM_MARKETING_EVENT_KIND.INTENT,
+            actor: ENUM_MARKETING_EVENT_ACTOR.CLASSIFIER,
+            newValue: 'ASKED_PRICE',
+            productGroup: serum,
+        } as Partial<MarketingEventEntity> as MarketingEventEntity);
+        await em.flush();
+        enqueue.mockClear();
+        sendMessage.mockReset();
+        sendMessage.mockResolvedValue({ externalId: 'mid.auto' });
+
+        const created = await http(ctx.app)
+            .post(url(''))
+            .set(...auth())
+            .send({
+                ...offer.audience,
+                name: 'Chào khách hỏi giá',
+                mode: S.AUTO,
+                text: 'Chào {name}, {product} bạn hỏi vẫn còn hàng',
+            });
+        expect(created.status).toBe(201);
+        const autoId = created.body.data.id;
+        expect(created.body.data).toMatchObject({
+            mode: S.AUTO,
+            active: true,
+        });
+
+        const mai = (await ledger('Mai')).find(r => r.send.id === autoId);
+        expect(mai?.status).toBe(M.QUEUED);
+        await inRequest(() => sends().deliver(mai!.id));
+        expect(sendMessage.mock.calls[0][2].content).toEqual({
+            kind: 'text',
+            text: 'Chào Mai, Serum vitamin C bạn hỏi vẫn còn hàng',
+        });
+
+        // The next day: only the customer who newly matches is planned.
+        addCustomer('Nga', 1);
+        await flush();
+        await em.nativeUpdate(
+            MarketingSendEntity,
+            { id: autoId },
+            { lastRunDay: '2000-01-01' }
+        );
+        await inRequest(() => sends().runDueAuto());
+        await inRequest(() => sends().runDueAuto());
+        expect((await ledger('Nga')).filter(r => r.send.id === autoId)).toEqual(
+            [expect.objectContaining({ status: M.QUEUED })]
+        );
+        expect(
+            (await ledger('Mai')).filter(r => r.send.id === autoId)
+        ).toHaveLength(1);
+
+        // Tắt tự gửi: the next day's run plans nobody.
+        const off = await http(ctx.app)
+            .patch(url(`/${autoId}`))
+            .set(...auth())
+            .send({ active: false });
+        expect(off.status).toBe(200);
+        expect(off.body.data.active).toBe(false);
+        addCustomer('Khoa', 1);
+        await flush();
+        await em.nativeUpdate(
+            MarketingSendEntity,
+            { id: autoId },
+            { lastRunDay: '2000-01-01' }
+        );
+        await inRequest(() => sends().runDueAuto());
+        expect(
+            (await ledger('Khoa')).filter(r => r.send.id === autoId)
+        ).toHaveLength(0);
     });
 });
