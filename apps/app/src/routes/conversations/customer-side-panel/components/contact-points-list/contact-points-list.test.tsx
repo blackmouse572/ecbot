@@ -81,7 +81,7 @@ describe("ContactPointsList", () => {
     expect(link).toHaveTextContent("Thanh Tâm");
     expect(link).toHaveTextContent("Facebook · Lumi Beauty");
     expect(screen.getByText("6 hours left")).toBeInTheDocument();
-    expect(screen.getByText("Wrote 18 hours ago")).toBeInTheDocument();
+    expect(screen.getByText("Wrote 12/02")).toBeInTheDocument();
   });
 
   it("says when the free window has closed, and shows a row with no conversation as plain text", () => {

@@ -6,7 +6,6 @@ import { useConversations } from "@/hooks/api/conversations";
 import { useCustomerMarketing } from "@/hooks/api/customer-marketing";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes/constants";
-import { formatRelativeTime } from "@/utils/formatters";
 import { ChevronRight } from "@medusajs/icons";
 import { Avatar, Text, clx } from "@medusajs/ui";
 import { NoRecords } from "@repo/ui/common-components";
@@ -27,7 +26,7 @@ const KEY = "conversations.customer.panel.contactPoints";
  * the shop may still message them for free, and a link to that conversation.
  */
 export const ContactPointsList: FC<Props> = ({ customerId, contactPoints }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
   // Same query as the conversations section, so it comes from the cache.
   const { conversations } = useConversations({
@@ -61,95 +60,119 @@ export const ContactPointsList: FC<Props> = ({ customerId, contactPoints }) => {
     return { text: t(`${KEY}.windowOpen`, { time }), open: true };
   };
 
-  return (
-    <ul className="@container flex flex-col">
-      {contactPoints.map((cp) => {
-        const conversation = conversations.find(
-          (c) => c.senderId === cp.externalSenderId,
-        );
-        const window = marketing?.freeWindows.find(
-          (w) => w.channel === cp.platform,
-        );
-        const status = window && windowStatus(window.openUntil);
-        const name = cp.displaySenderName ?? cp.externalSenderId;
-        const accountName = (conversation?.account as A)?.name as
-          string | undefined;
-        const channel = [channelOf(cp.platform as A).label, accountName]
-          .filter(Boolean)
-          .join(" · ");
+  // "14:30" for today, "05/11" before that.
+  const inboundAt = (value: string) => {
+    const date = new Date(value);
+    const pad = (n: number) => String(n).padStart(2, "0");
 
-        const content = (
-          <>
-            <div className="relative row-span-2 @[20rem]:row-span-1">
-              <Avatar
-                variant="rounded"
-                size="small"
-                src={cp.senderAvatar ?? undefined}
-                fallback={name.slice(0, 1).toUpperCase()}
-              />
-              <PlatformIcon
-                type={cp.platform as A}
-                size={14}
-                className="ring-ui-bg-base absolute -bottom-0.5 -right-0.5 ring-2"
-              />
-            </div>
-            <div className="flex min-w-0 flex-col">
-              <Text size="small" weight="plus" className="truncate">
-                {name}
-              </Text>
-              <Text size="xsmall" className="text-ui-fg-subtle truncate">
-                {channel}
-              </Text>
-            </div>
-            {window && status && (
-              // Under the channel in the narrow panel, on the right in the page.
-              <div className="col-start-2 flex flex-wrap gap-x-1.5 @[20rem]:col-start-3 @[20rem]:row-start-1 @[20rem]:flex-col @[20rem]:items-end">
-                <Text
-                  size="xsmall"
-                  weight="plus"
-                  className={
-                    status.open ? "text-ui-tag-green-text" : "text-ui-fg-muted"
-                  }
-                >
-                  {status.text}
+    return date.toDateString() === new Date(now).toDateString()
+      ? `${pad(date.getHours())}:${pad(date.getMinutes())}`
+      : `${pad(date.getDate())}/${pad(date.getMonth() + 1)}`;
+  };
+
+  return (
+    <div className="@container flex flex-col gap-y-2">
+      <ul className="shadow-borders-base divide-ui-border-base flex flex-col divide-y overflow-hidden rounded-md">
+        {contactPoints.map((cp) => {
+          const conversation = conversations.find(
+            (c) => c.senderId === cp.externalSenderId,
+          );
+          const window = marketing?.freeWindows.find(
+            (w) => w.channel === cp.platform,
+          );
+          const status = window && windowStatus(window.openUntil);
+          const name = cp.displaySenderName ?? cp.externalSenderId;
+          const accountName = (conversation?.account as A)?.name as
+            string | undefined;
+          const channel = [channelOf(cp.platform as A).label, accountName]
+            .filter(Boolean)
+            .join(" · ");
+
+          const content = (
+            <>
+              <div className="relative row-span-2 @[20rem]:row-span-1">
+                <Avatar
+                  size="small"
+                  src={cp.senderAvatar ?? undefined}
+                  fallback={name.slice(0, 1).toUpperCase()}
+                />
+                <PlatformIcon
+                  type={cp.platform as A}
+                  size={14}
+                  className="ring-ui-bg-base absolute -bottom-0.5 -right-0.5 rounded-full ring-2"
+                />
+              </div>
+              <div className="flex min-w-0 flex-col">
+                <Text size="small" weight="plus" className="truncate">
+                  {name}
                 </Text>
-                <Text size="xsmall" className="text-ui-fg-muted">
-                  {t(`${KEY}.lastInbound`, {
-                    time: formatRelativeTime(
-                      window.lastInboundAt,
-                      i18n.language,
-                      now,
-                    ),
-                  })}
+                <Text size="xsmall" className="text-ui-fg-subtle truncate">
+                  {channel}
                 </Text>
               </div>
-            )}
-            {conversation && (
-              <ChevronRight className="text-ui-fg-muted col-start-4 row-span-2 row-start-1 @[20rem]:row-span-1" />
-            )}
-          </>
-        );
-        const rowClass =
-          "grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-3 rounded-md px-2 py-2";
+              {window && status && (
+                // Under the channel in the narrow panel, on the right in the page.
+                <div className="col-start-2 flex flex-wrap items-center gap-x-2 @[20rem]:col-start-3 @[20rem]:row-start-1 @[20rem]:flex-col @[20rem]:items-end @[20rem]:gap-y-0.5">
+                  <Text
+                    size="xsmall"
+                    weight="plus"
+                    className={clx(
+                      "inline-flex items-center gap-x-1.5",
+                      status.open
+                        ? "text-ui-tag-green-text"
+                        : "text-ui-fg-muted",
+                    )}
+                  >
+                    <span
+                      aria-hidden
+                      className={clx(
+                        "size-1.5 rounded-full",
+                        status.open
+                          ? "bg-ui-tag-green-icon"
+                          : "bg-ui-border-strong",
+                      )}
+                    />
+                    {status.text}
+                  </Text>
+                  <Text size="xsmall" className="text-ui-fg-muted">
+                    {t(`${KEY}.lastInbound`, {
+                      time: inboundAt(window.lastInboundAt),
+                    })}
+                  </Text>
+                </div>
+              )}
+              {conversation && (
+                <ChevronRight className="text-ui-fg-muted col-start-4 row-span-2 row-start-1 @[20rem]:row-span-1" />
+              )}
+            </>
+          );
+          const rowClass =
+            "grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-2.5 px-3 py-2.5";
 
-        return (
-          <li key={cp.id}>
-            {conversation ? (
-              <Link
-                to={`/${workspaceSlug}/${ROUTES.Conversations}/${conversation.id}`}
-                className={clx(
-                  rowClass,
-                  "hover:bg-ui-bg-base-hover transition-colors",
-                )}
-              >
-                {content}
-              </Link>
-            ) : (
-              <div className={rowClass}>{content}</div>
-            )}
-          </li>
-        );
-      })}
-    </ul>
+          return (
+            <li key={cp.id}>
+              {conversation ? (
+                <Link
+                  to={`/${workspaceSlug}/${ROUTES.Conversations}/${conversation.id}`}
+                  className={clx(
+                    rowClass,
+                    "hover:bg-ui-bg-base-hover transition-colors",
+                  )}
+                >
+                  {content}
+                </Link>
+              ) : (
+                <div className={rowClass}>{content}</div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      {conversations.length > 0 && (
+        <Text size="xsmall" className="text-ui-fg-muted">
+          {t(`${KEY}.openHint`)}
+        </Text>
+      )}
+    </div>
   );
 };

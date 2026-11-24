@@ -52,7 +52,11 @@ export const CustomerDetailHead: FC<Props> = ({
 
   const name = useCustomerDisplayName(customer.id);
   const channels = [...new Set(contactPoints.map((cp) => cp.platform))];
-  const latest = conversations[0];
+  // Both actions need their permission; on a phone they fold into ⋯.
+  const latest = ability.can("read", "CONVERSATION") ? conversations[0] : null;
+  const chatHref = latest
+    ? `/${workspaceSlug}/${ROUTES.Conversations}/${latest.id}`
+    : null;
   const source = flags.customerSources ? marketing?.firstSource : null;
   const addOrderHref =
     flags.orders && ability.can("create", "ORDER")
@@ -61,7 +65,7 @@ export const CustomerDetailHead: FC<Props> = ({
 
   return (
     <Container className="flex flex-col gap-y-4 px-6 pb-3 pt-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-x-3">
           <Avatar
             size="large"
@@ -130,30 +134,43 @@ export const CustomerDetailHead: FC<Props> = ({
               </Link>
             </Button>
           )}
-          {latest && (
-            <Button size="small" variant="primary" asChild>
-              <Link
-                to={`/${workspaceSlug}/${ROUTES.Conversations}/${latest.id}`}
-              >
+          {chatHref && (
+            <Button
+              size="small"
+              variant="primary"
+              className="hidden sm:inline-flex"
+              asChild
+            >
+              <Link to={chatHref}>
                 <ChatBubble />
                 {t("customers.detail.openConversation")}
               </Link>
             </Button>
           )}
-          {/* The ⋯ menu always comes last; on a phone it holds Thêm đơn too. */}
+          {/* The ⋯ menu always comes last; on a phone it holds both actions. */}
           <CustomerActions
             customerId={customer.id}
             customerName={customer.name}
             onErased={onErased}
           >
-            {addOrderHref && (
+            {(chatHref || addOrderHref) && (
               <>
-                <DropdownMenu.Item
-                  className="sm:hidden"
-                  onClick={() => navigate(addOrderHref)}
-                >
-                  {t("customers.detail.addOrder")}
-                </DropdownMenu.Item>
+                {chatHref && (
+                  <DropdownMenu.Item
+                    className="sm:hidden"
+                    onClick={() => navigate(chatHref)}
+                  >
+                    {t("customers.detail.openConversation")}
+                  </DropdownMenu.Item>
+                )}
+                {addOrderHref && (
+                  <DropdownMenu.Item
+                    className="sm:hidden"
+                    onClick={() => navigate(addOrderHref)}
+                  >
+                    {t("customers.detail.addOrder")}
+                  </DropdownMenu.Item>
+                )}
                 <DropdownMenu.Separator className="sm:hidden" />
               </>
             )}

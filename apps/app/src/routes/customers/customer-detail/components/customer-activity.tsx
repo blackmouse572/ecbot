@@ -91,7 +91,7 @@ export const CustomerActivity: FC<{
           {t(`${KEY}.empty`)}
         </Text>
       ) : (
-        <ul className="flex flex-col gap-y-4">
+        <ul className="flex flex-col">
           {items.slice(0, shown).map((item) => (
             <ActivityRow key={`${item.kind}:${item.id}`} item={item} />
           ))}

@@ -8,11 +8,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // The customer page: a header with the next steps and tabs, the overview
 // cards on the left, and the conversation panel's blocks on the right.
 
-const state = vi.hoisted(() => ({ customer: {} as Record<string, unknown> }));
+const state = vi.hoisted(() => ({
+  customer: {} as Record<string, unknown>,
+  denied: [] as string[],
+}));
 
 vi.mock("@repo/auth", () => ({
   Can: ({ children }: { children: unknown }) => children,
-  useAbility: () => ({ can: () => true }),
+  useAbility: () => ({
+    can: (_action: string, subject: string) => !state.denied.includes(subject),
+  }),
 }));
 vi.mock("@/hooks/use-workspace-params", () => ({
   useWorkspaceParams: () => ({ workspaceSlug: "lumi" }),
@@ -131,6 +136,7 @@ const renderPage = () =>
 
 describe("CustomerDetail", () => {
   beforeEach(() => {
+    state.denied = [];
     state.customer = {
       id: "c-1",
       name: "Võ Thanh Tâm",
@@ -152,13 +158,23 @@ describe("CustomerDetail", () => {
       "href",
       "/lumi/sources/src-1",
     );
-    expect(
-      screen.getByRole("link", { name: /Open conversation/ }),
-    ).toHaveAttribute("href", "/lumi/conversations/conv-new");
+    expect(screen.getByRole("link", { name: /^Chat$/ })).toHaveAttribute(
+      "href",
+      "/lumi/conversations/conv-new",
+    );
     expect(screen.getByRole("link", { name: /Add order/ })).toHaveAttribute(
       "href",
       "/lumi/orders/create?customer=c-1",
     );
+  });
+
+  it("leaves out Chat for someone who cannot read conversations", () => {
+    state.denied = ["CONVERSATION"];
+    renderPage();
+
+    expect(
+      screen.queryByRole("link", { name: /^Chat$/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("opens on the overview and switches tabs, with counts", async () => {

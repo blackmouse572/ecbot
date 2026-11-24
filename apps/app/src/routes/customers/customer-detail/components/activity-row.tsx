@@ -110,9 +110,16 @@ const Row: FC<{
   title: ReactNode;
   meta: (string | null | undefined)[];
 }> = ({ tone, icon, title, meta }) => (
-  <li className="flex gap-x-3">
-    <ToneIcon tone={tone}>{icon}</ToneIcon>
-    <div className="flex min-w-0 flex-col gap-y-0.5 pt-0.5">
+  <li className="group flex gap-x-3">
+    {/* The rail: each icon joins the next with a line, the last ends it. */}
+    <div className="flex flex-none flex-col items-center">
+      <ToneIcon tone={tone}>{icon}</ToneIcon>
+      <span
+        aria-hidden
+        className="bg-ui-border-base mt-1 w-px flex-1 group-last:hidden"
+      />
+    </div>
+    <div className="flex min-w-0 flex-col gap-y-0.5 pb-4 pt-0.5 group-last:pb-0">
       <Text size="small" weight="plus">
         {title}
       </Text>

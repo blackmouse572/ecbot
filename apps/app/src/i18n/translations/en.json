@@ -2471,7 +2471,8 @@
           "windowUnlimited": "No time limit",
           "lastInbound": "Wrote {{time}}",
           "count_one": "{{count}} channel",
-          "count_other": "{{count}} channels"
+          "count_other": "{{count}} channels",
+          "openHint": "Tap a channel to open its conversation."
         },
         "conversations": {
           "title": "Conversations",
@@ -2727,7 +2728,7 @@
       "open": "View customer profile",
       "unnamed": "Unnamed customer",
       "since": "Customer since {{date}}",
-      "openConversation": "Open conversation",
+      "openConversation": "Chat",
       "profileSummary": "AI summary",
       "stats": {
         "spent": "Spent",
