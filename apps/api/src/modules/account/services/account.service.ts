@@ -420,7 +420,7 @@ export class AccountService implements IAccountService {
     /** Keyed on `externalId`, so re-linking refreshes the existing row. */
     private async upsertLinkedAccount(
         profile: IOAuthTokenResult,
-        platform: ENUM_ACCOUNT_TYPE,
+        channelType: ENUM_ACCOUNT_TYPE,
         workspaceId: string,
         actor: string
     ): Promise<AccountEntity> {
@@ -438,7 +438,7 @@ export class AccountService implements IAccountService {
                 slug: slugify(profile.name + profile.externalId),
                 avatar: profile.avatar,
                 link: profile.link,
-                type: platform,
+                type: channelType,
                 status: ENUM_ACCOUNT_STATUS.ACTIVE,
             },
             actor
@@ -453,7 +453,7 @@ export class AccountService implements IAccountService {
      */
     private async upsertSiblingAccounts(
         siblings: IOAuthTokenResult[],
-        platform: ENUM_ACCOUNT_TYPE,
+        channelType: ENUM_ACCOUNT_TYPE,
         workspaceId: string,
         actor: string
     ): Promise<AccountEntity[]> {
@@ -465,7 +465,7 @@ export class AccountService implements IAccountService {
             linked.push(
                 await this.upsertLinkedAccount(
                     sibling,
-                    platform,
+                    channelType,
                     workspaceId,
                     actor
                 )
