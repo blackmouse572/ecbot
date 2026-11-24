@@ -123,7 +123,7 @@ class _AppVars(BaseSettings):
     # OpenRouter model that answers agent-builder decisions (System One-shaped).
     DECISION_MODEL: str = "~typesafe/jev-latest"
     # OpenRouter model that drafts short shop messages (/decision/write, #506).
-    WRITE_MODEL: str = "google/gemini-2.5-flash"
+    WRITE_MODEL: str = "~deepseek/deepseek-v4-flash-latest"
     # Describes inbound customer images (must accept image input).
     VISION_MODEL: str = "google/gemini-2.5-flash"
     # Images one burst can have described (a Telegram album or Messenger
