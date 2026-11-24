@@ -9,6 +9,8 @@ export interface ZaloWebhookPayload {
     timestamp?: string;
     sender?: { id: string };
     recipient?: { id: string };
+    /** On `follow` / `unfollow`, which carry no sender. */
+    follower?: { id: string };
     // GMF group chat id. UNCONFIRMED for message events: Zalo's GMF lifecycle
     // webhooks (create_group, user_join_group, add_group_admin, ...) carry it
     // top-level next to oa_id, and the group-message webhook is assumed to do

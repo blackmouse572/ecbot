@@ -188,7 +188,11 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
         } catch {
             return [];
         }
-        if (!payload || typeof payload !== 'object' || !payload.sender?.id) {
+        if (
+            !payload ||
+            typeof payload !== 'object' ||
+            !(payload.sender?.id ?? payload.follower?.id)
+        ) {
             return [];
         }
         // GMF group chat events share this webhook URL. Group replies go
@@ -214,6 +218,10 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
         // message" event; verify against a captured payload.
         else if (eventName === 'user_react_message') kind = 'reaction';
         else if (eventName.startsWith('user_send')) kind = 'message';
+        else if (eventName === 'follow' || eventName === 'unfollow') {
+            kind = eventName;
+        }
+        const senderId = payload.sender?.id ?? payload.follower?.id ?? '';
 
         const attachments = this.mapAttachments(payload.message?.attachments);
         const typed = payload.message?.text;
@@ -224,12 +232,16 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
         return {
             kind,
             accountKey: payload.recipient?.id ?? payload.oa_id ?? '',
-            senderId: payload.sender.id,
+            senderId,
             recipientId: payload.recipient?.id ?? '',
+            // A follow has no message id: key it by who and when, so a
+            // redelivery is still deduped.
             externalMessageId:
                 kind === 'reaction'
                     ? reactedMessageId
-                    : payload.message?.msg_id,
+                    : kind === 'follow' || kind === 'unfollow'
+                      ? `${kind}:${senderId}:${payload.timestamp}`
+                      : payload.message?.msg_id,
             text: action?.value ?? typed,
             action,
             timestamp: this.toDate(payload.timestamp),

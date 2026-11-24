@@ -3828,7 +3828,9 @@
       "reactionSet": "Paused a product group until {{date}}",
       "reactionEnded": "Product group pause ended",
       "intent": "Product group interest: {{to}}",
-      "source": "Came through a source link"
+      "source": "Came through a source link",
+      "followOn": "Followed the Zalo OA",
+      "followOff": "Unfollowed the Zalo OA"
     },
     "viewMessage": "View message",
     "firstSource": {
