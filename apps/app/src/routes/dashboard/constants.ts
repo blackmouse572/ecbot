@@ -42,9 +42,8 @@ export const GETTING_STARTED_STEPS = [
  * read every subject it counts. */
 export const ANALYTICS_TABS = [
   { value: "conversion", subjects: ["CUSTOMER"] },
-  // Conversations are gated on CHATBOT, like the conversations page:
-  // CONVERSATION is not a subject a workspace role can be granted.
-  { value: "marketing", subjects: ["CUSTOMER", "CHATBOT"] },
+  // Conversations are gated on CONVERSATION, like the conversations page.
+  { value: "marketing", subjects: ["CUSTOMER", "CONVERSATION"] },
   { value: "bot", subjects: ["CHATBOT"] },
   { value: "customers", subjects: ["CUSTOMER"] },
 ] as const;

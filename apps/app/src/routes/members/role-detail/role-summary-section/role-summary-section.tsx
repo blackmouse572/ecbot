@@ -2,6 +2,7 @@ import { Container, Divider, Heading, StatusBadge } from "@medusajs/ui";
 import type { RoleGetResponseDto } from "@repo/client";
 import { Section, SectionRow } from "@repo/ui/common-components";
 import { useTranslation } from "react-i18next";
+import { useRoleLabel } from "../../hooks/use-role-label";
 
 type RoleSummarySectionProps = {
   role: RoleGetResponseDto;
@@ -9,6 +10,7 @@ type RoleSummarySectionProps = {
 
 export const RoleSummarySection = ({ role }: RoleSummarySectionProps) => {
   const { t, i18n } = useTranslation();
+  const { label, description } = useRoleLabel()(role);
 
   return (
     <Container className="p-0">
@@ -17,12 +19,9 @@ export const RoleSummarySection = ({ role }: RoleSummarySectionProps) => {
       </div>
       <Divider variant="dashed" />
       <Section variant="spaced">
-        <SectionRow title={t("fields.name")} value={role.name} />
-        {role.description && (
-          <SectionRow
-            title={t("fields.description")}
-            value={role.description}
-          />
+        <SectionRow title={t("fields.name")} value={label} />
+        {description && (
+          <SectionRow title={t("fields.description")} value={description} />
         )}
         <SectionRow
           title={t("fields.status")}

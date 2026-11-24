@@ -45,6 +45,24 @@ describe("member cells", () => {
     expect(screen.getByText("Quản trị viên")).toBeInTheDocument();
   });
 
+  // Marketing and Developer read the same in both languages, so only Manager
+  // and Sales prove the translation.
+  it("translates the built-in Manager and Sales roles", async () => {
+    await i18n.changeLanguage("vi");
+    render(
+      <>
+        {["Manager", "Sales"].map((name) => (
+          <MembersRoleCell
+            key={name}
+            memberRole={{ name, type: "WORKSPACE_MEMBER" }}
+          />
+        ))}
+      </>,
+    );
+    expect(screen.getByText("Quản lý")).toBeInTheDocument();
+    expect(screen.getByText("Bán hàng")).toBeInTheDocument();
+  });
+
   it("does not repeat the owner label next to the name (the role column shows it)", () => {
     render(
       <MembersNameCell

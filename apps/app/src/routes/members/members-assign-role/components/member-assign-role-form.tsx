@@ -2,6 +2,7 @@ import { RouteDrawer, useRouteModal } from "@/components/modals";
 import { KeyboundForm } from "@/components/utils/keybound-form";
 import { useAssignRoleWorkspaceMember } from "@/hooks/api";
 import { useWorkspaceRoles } from "@/hooks/api/workspace-roles";
+import { useRoleLabel } from "@/routes/members/hooks/use-role-label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Popover } from "@medusajs/ui";
 import type { WorkspaceMemberGetResponseDto } from "@repo/client";
@@ -33,6 +34,7 @@ type AssignRoleFormData = zod.infer<typeof AssignRoleSchema>;
 export function MembersAssignRoleForm({ item }: MembersAssignRoleFormProps) {
   const { t } = useTranslation();
   const { handleSuccess } = useRouteModal();
+  const roleLabel = useRoleLabel();
   const [search, setSearch] = useState("");
   const [debounceSearch] = useDebounceValue(search, 300);
 
@@ -60,10 +62,15 @@ export function MembersAssignRoleForm({ item }: MembersAssignRoleFormProps) {
     }
   });
 
-  const filteredRoles =
-    roles?.filter((role) =>
-      role.name.toLowerCase().includes(debounceSearch.toLowerCase()),
-    ) || [];
+  const filteredRoles = (roles ?? [])
+    .map((role) => {
+      const { label, description } = roleLabel(role);
+      return { ...role, label, description };
+    })
+    .filter((role) =>
+      role.label.toLowerCase().includes(debounceSearch.toLowerCase()),
+    );
+  const selected = roles?.find((role) => role.id === selectedRole);
 
   return (
     <RouteDrawer.Form form={form}>
@@ -87,8 +94,9 @@ export function MembersAssignRoleForm({ item }: MembersAssignRoleFormProps) {
                             className="w-full justify-start"
                             variant="secondary"
                           >
-                            {roles?.find((role) => role.id === selectedRole)
-                              ?.name || t("members.assignRole.selectRole")}
+                            {selected
+                              ? roleLabel(selected).label
+                              : t("members.assignRole.selectRole")}
                           </Button>
                         </Popover.Trigger>
                         <Popover.Content>
@@ -119,7 +127,14 @@ export function MembersAssignRoleForm({ item }: MembersAssignRoleFormProps) {
                                       }
                                     >
                                       <div className="flex items-center justify-between w-full">
-                                        <span>{role.name}</span>
+                                        <span className="flex flex-col">
+                                          <span>{role.label}</span>
+                                          {role.description && (
+                                            <span className="txt-compact-xsmall text-ui-fg-subtle">
+                                              {role.description}
+                                            </span>
+                                          )}
+                                        </span>
                                         {selectedRole === role.id && (
                                           <span className="text-ui-fg-interactive">
                                             ✓

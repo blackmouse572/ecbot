@@ -22,7 +22,7 @@ describe("useAnalyticsTabs", () => {
   });
 
   it("shows every tab to a member who can read everything", () => {
-    expect(tabsFor("CUSTOMER", "CHATBOT")).toEqual([
+    expect(tabsFor("CUSTOMER", "CONVERSATION", "CHATBOT")).toEqual([
       "conversion",
       "marketing",
       "bot",
@@ -32,8 +32,13 @@ describe("useAnalyticsTabs", () => {
 
   it("hides tabs whose numbers the member cannot open", () => {
     expect(tabsFor("CHATBOT")).toEqual(["bot"]);
-    // Satisfaction needs both customers and chatbots.
+    // Marketing needs both customers and conversations, not agents.
     expect(tabsFor("CUSTOMER")).toEqual(["conversion", "customers"]);
+    expect(tabsFor("CUSTOMER", "CONVERSATION")).toEqual([
+      "conversion",
+      "marketing",
+      "customers",
+    ]);
   });
 
   it("shows nothing without any read permission", () => {

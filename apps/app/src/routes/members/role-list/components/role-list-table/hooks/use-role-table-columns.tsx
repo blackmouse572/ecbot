@@ -3,18 +3,33 @@ import type { RoleListResponseDto } from "@repo/client";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useRoleLabel } from "@/routes/members/hooks/use-role-label";
 import { RoleTypeCell } from "../role-type-cell";
 
 const columnHelper = createColumnHelper<RoleListResponseDto>();
 
 export const useRoleTableColumns = () => {
   const { t, i18n } = useTranslation();
+  const roleLabel = useRoleLabel();
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("name", {
         header: t("fields.name"),
-        cell: ({ getValue }) => getValue(),
+        cell: ({ row }) => {
+          const { label, description } = roleLabel(row.original);
+
+          return (
+            <span className="flex min-w-72 max-w-md flex-col py-2">
+              <span>{label}</span>
+              {description && (
+                <span className="txt-compact-xsmall text-ui-fg-subtle whitespace-normal">
+                  {description}
+                </span>
+              )}
+            </span>
+          );
+        },
       }),
 
       columnHelper.accessor("type", {
@@ -52,7 +67,7 @@ export const useRoleTableColumns = () => {
         },
       }),
     ],
-    [t, i18n.language],
+    [t, i18n.language, roleLabel],
   );
 
   return columns;

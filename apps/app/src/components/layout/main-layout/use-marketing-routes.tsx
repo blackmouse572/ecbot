@@ -21,7 +21,7 @@ export const useMarketingRoutes = (): Omit<INavItem, "pathname">[] => {
       icon: <ChartBar />,
       ability: {
         action: "read",
-        subject: "CUSTOMER",
+        subject: "MARKETING",
       },
     });
   }
@@ -31,8 +31,8 @@ export const useMarketingRoutes = (): Omit<INavItem, "pathname">[] => {
       to: `${baseUrl}/${ROUTES.CustomerSources}`,
       icon: <Link />,
       ability: {
-        action: "manage",
-        subject: "CUSTOMER",
+        action: "read",
+        subject: "MARKETING",
       },
     });
   }

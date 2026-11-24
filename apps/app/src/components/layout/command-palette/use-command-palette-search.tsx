@@ -36,7 +36,7 @@ export const useCommandPaletteSearch = (query: string) => {
   const base = `/${workspaceSlug}`;
 
   const canAgents = can({ action: "manage", subject: "CHATBOT" });
-  const canCustomers = can({ action: "manage", subject: "CUSTOMER" });
+  const canCustomers = can({ action: "read", subject: "CUSTOMER" });
   const canKnowledge = can({ action: "manage", subject: "KNOWLEDGE_BASE" });
   const canSkills = can({ action: "read", subject: "SKILL" });
   const canTools = can({ action: "manage", subject: "TOOL" });

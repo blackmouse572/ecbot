@@ -1539,7 +1539,7 @@
       "empty": "Invitations you send from the Members page wait here until they are accepted.",
       "emptyTitle": "No pending invitations",
       "noReadPermission": "You can't view invitations in this workspace. Ask the workspace owner.",
-      "defaultRole": "Member (default)",
+      "defaultRole": "Sales (default)",
       "status": {
         "PENDING": "Pending",
         "ACCEPTED": "Accepted",
@@ -1574,7 +1574,10 @@
       "customerData": "Customer data",
       "member": "Team",
       "clientCredential": "API keys",
-      "workspace": "Workspace settings"
+      "workspace": "Workspace settings",
+      "conversation": "Conversations",
+      "order": "Orders",
+      "marketing": "Marketing"
     },
     "title": "Roles",
     "description": "Manage roles and permissions for members",
@@ -1631,6 +1634,24 @@
       "none": "No access",
       "view": "View",
       "full": "Full access"
+    },
+    "builtIn": {
+      "manager": {
+        "name": "Manager",
+        "description": "Runs the workspace day to day. Everything except channels, roles, invitations and billing."
+      },
+      "sales": {
+        "name": "Sales",
+        "description": "Chats with customers, keeps customer details and takes orders."
+      },
+      "marketing": {
+        "name": "Marketing",
+        "description": "Runs marketing: overview, audiences, sends and customer sources. Views conversations, customers and orders."
+      },
+      "developer": {
+        "name": "Developer",
+        "description": "Builds agents, knowledge, tools, skills and API keys. Views conversations and customers to check replies."
+      }
     }
   },
   "profile": {
