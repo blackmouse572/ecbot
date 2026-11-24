@@ -82,11 +82,13 @@ export function CustomerDetail() {
   const tabs = CUSTOMER_DETAIL_TABS.filter(
     (value) => value !== "orders" || showOrders,
   );
+  // A link to a tab they cannot see lands on the overview.
+  const current = tabs.includes(tab) ? tab : "overview";
 
   return (
     <SingleColumnPage>
       <Tabs
-        value={tab}
+        value={current}
         onValueChange={openTab}
         className="flex flex-col gap-y-3"
       >

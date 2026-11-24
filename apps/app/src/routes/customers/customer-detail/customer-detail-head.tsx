@@ -22,7 +22,7 @@ import {
 import { useAbility } from "@repo/auth";
 import type { FC, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCustomerDisplayName } from "./use-customer-display-name";
 
 type Props = {
@@ -44,6 +44,7 @@ export const CustomerDetailHead: FC<Props> = ({
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { flags } = useFeatureFlags();
   const ability = useAbility();
   const { getFullDate } = useDate();
@@ -58,9 +59,11 @@ export const CustomerDetailHead: FC<Props> = ({
     ? `/${workspaceSlug}/${ROUTES.Conversations}/${latest.id}`
     : null;
   const source = flags.customerSources ? marketing?.firstSource : null;
+  // The order form returns here when it closes.
+  const from = `${location.pathname}${location.search}`;
   const addOrderHref =
     flags.orders && ability.can("create", "ORDER")
-      ? `/${workspaceSlug}/orders/create?customer=${customer.id}`
+      ? `/${workspaceSlug}/${ROUTES.Orders}/create?customer=${customer.id}`
       : null;
 
   return (
@@ -128,7 +131,7 @@ export const CustomerDetailHead: FC<Props> = ({
               className="hidden sm:inline-flex"
               asChild
             >
-              <Link to={addOrderHref}>
+              <Link to={addOrderHref} state={{ from }}>
                 <Plus />
                 {t("customers.detail.addOrder")}
               </Link>
@@ -166,7 +169,7 @@ export const CustomerDetailHead: FC<Props> = ({
                 {addOrderHref && (
                   <DropdownMenu.Item
                     className="sm:hidden"
-                    onClick={() => navigate(addOrderHref)}
+                    onClick={() => navigate(addOrderHref, { state: { from } })}
                   >
                     {t("customers.detail.addOrder")}
                   </DropdownMenu.Item>

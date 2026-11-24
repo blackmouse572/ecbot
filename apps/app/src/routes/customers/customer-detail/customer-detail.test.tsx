@@ -120,10 +120,10 @@ vi.mock(
 
 import { CustomerDetail } from "./customer-detail";
 
-const renderPage = () =>
+const renderPage = (url = "/lumi/customers/c-1") =>
   render(
     <TooltipProvider>
-      <MemoryRouter initialEntries={["/lumi/customers/c-1"]}>
+      <MemoryRouter initialEntries={[url]}>
         <Routes>
           <Route
             path="/:workspaceSlug/customers/:customerId"
@@ -193,6 +193,20 @@ describe("CustomerDetail", () => {
 
     await userEvent.click(screen.getByRole("tab", { name: "Marketing" }));
     expect(screen.getByText("activity:marketing")).toBeInTheDocument();
+  });
+
+  it("opens the overview when ?tab=orders names a tab they cannot see", () => {
+    state.denied = ["ORDER"];
+    renderPage("/lumi/customers/c-1?tab=orders");
+
+    expect(
+      screen.queryByRole("tab", { name: /Orders/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Overview/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByText("stats")).toBeInTheDocument();
   });
 
   it("shows who they are as text, with the form one click away", async () => {

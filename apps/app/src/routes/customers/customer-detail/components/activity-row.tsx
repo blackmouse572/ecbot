@@ -16,6 +16,7 @@ import {
   Link as LinkIcon,
   PauseSolid,
   ShoppingBag,
+  UserMini,
 } from "@medusajs/icons";
 import { Text } from "@medusajs/ui";
 import type { FC, ReactNode } from "react";
@@ -37,6 +38,7 @@ const EVENT_LOOK: Record<
   HOSTILE: { tone: "red", icon: <ExclamationCircle /> },
   REACTION: { tone: "red", icon: <PauseSolid /> },
   SOURCE: { tone: "grey", icon: <LinkIcon /> },
+  FOLLOW: { tone: "blue", icon: <UserMini /> },
 };
 
 /** One line of the Hoạt động timeline, coloured by what kind of thing happened. */
@@ -76,7 +78,7 @@ export const ActivityRow: FC<{ item: CustomerActivityItem }> = ({ item }) => {
         icon={<ShoppingBag />}
         title={
           <Link
-            to={`/${workspaceSlug}/orders/${order.id}`}
+            to={`/${workspaceSlug}/${ROUTES.Orders}/${order.id}`}
             className="hover:text-ui-fg-interactive transition-colors"
           >
             {t(`${KEY}.order`, {
