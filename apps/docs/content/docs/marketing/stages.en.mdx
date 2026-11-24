@@ -1,0 +1,134 @@
+---
+title: Customer stages and offers
+description: Ecbot labels each customer with a stage, a product group pause and an offers setting, so you only message people who want to hear from you.
+faq:
+  - q: Can the bot move a customer back to an earlier stage?
+    a: No. The bot only moves a customer forward. Your staff can pick any stage, earlier ones too, in Edit labels.
+  - q: What happens when a customer sends "stop"?
+    a: Offers change to Stopped for good and the bot confirms in one line. The customer can still message the shop any time.
+  - q: Is Win-back a stage?
+    a: No. Win-back is a row on the Marketing overview for buyers who went quiet 31 to 90 days. Their stage stays Bought once or Repeat buyer.
+  - q: Who can turn off Upset?
+    a: Only your staff, in Edit labels. The bot never turns it off.
+---
+
+Ecbot gives every customer three marketing labels: a **stage** that shows how far they are in buying, a **pause** on product groups they asked to hear about later, and an **offers** setting that says whether the shop may send them offers. Ecbot sets them from the conversation, and your staff can change them.
+
+## Three things Ecbot knows about a customer
+
+The three labels answer different questions and change on their own. A customer can be a Repeat buyer, have Sunscreen paused, and have agreed to offers, all at once.
+
+<FlowDiagram
+  title="Three separate labels on every customer"
+  steps={[
+    { name: "Stage", hint: ["Where are they", "in buying?"] },
+    { name: "Product pauses", hint: ["Which products", "not right now?"] },
+    { name: "Offers", hint: ["May the shop", "send offers?"] },
+  ]}
+  caption="Stage: New to Repeat buyer. Pauses: per product group, 60 days by default. Offers: Not agreed yet, Agreed, Paused or Stopped for good."
+/>
+
+## Stages
+
+| Stage            | How a customer gets there          |
+| ---------------- | ---------------------------------- |
+| **New**          | Their first message to the shop.   |
+| **Interested**   | They asked about a product.        |
+| **Asked price**  | They asked the price of a product. |
+| **Bought once**  | Their first order is confirmed.    |
+| **Repeat buyer** | Their second confirmed order.      |
+
+<StageJourneyDiagram />
+
+A customer with no message and no order for 120 days also shows **Inactive**. Their stage stays underneath, and hovering the label shows it.
+
+### Stages and To do rows
+
+A **stage** is where a customer is in buying, and every customer has exactly one. A **To do row** on the [Marketing overview](/docs/marketing) is a group of customers worth a message this week, picked by rules such as "asked the price in the last 7 days". Most rows are named after a stage, but a row only holds the customers at that stage who are worth a message now.
+
+| Term         | What it is                                                        | Where you see it                     |
+| ------------ | ----------------------------------------------------------------- | ------------------------------------ |
+| **Win-back** | A To do row: customers who bought, then went quiet 31 to 90 days. | Marketing overview                   |
+| **Inactive** | A label: no message and no order for 120 days.                    | Customer panel, customer list filter |
+
+So a customer who went quiet 40 days ago shows up in Win-back but is not Inactive yet, and a customer quiet for 150 days is Inactive but past the Win-back window.
+
+Ecbot reads each conversation and only moves a customer forward. Orders count once you confirm them, see [Orders and product groups](/docs/marketing/orders).
+
+## Product group pauses
+
+When a customer says "later" about a product, Ecbot pauses offers for that product group, by default for 60 days. Offers for other product groups can still go out.
+
+## Offers
+
+Offers is the customer's permission to receive promotions from the shop. It only covers messages the shop starts. When a customer writes first, the agent always answers, whatever the offers setting.
+
+| Setting              | What it means                                                            |
+| -------------------- | ------------------------------------------------------------------------ |
+| **Not agreed yet**   | The bot asks the customer once, right after a purchase or a compliment.  |
+| **Agreed**           | Offers may be sent, within each channel's free messaging window.         |
+| **Paused**           | No offers until a date, then back to Agreed.                             |
+| **Stopped for good** | Never send offers. A customer who sends "stop" or "dừng" lands here too. |
+
+### How a customer agrees, pauses or stops
+
+The agent asks once, at a good moment, and records the answer:
+
+> **Customer**: The sunscreen works great, thanks!
+>
+> **Agent**: So glad to hear it! Can we message you when there is an offer on sunscreen?
+>
+> **Customer**: Sure.
+
+Offers change to **Agreed**. If the customer says "not now", offers change to **Paused** for 30 days. If they say no, offers change to **Stopped for good**, and the agent never asks again. A customer who opens a [tracked link](/docs/marketing/sources) that promises an offer counts as Agreed.
+
+Later, the customer can send "stop" or "dừng" at any time. Offers change to Stopped for good, and the agent confirms in one line.
+
+### Messaging windows
+
+Each chat app only lets a shop message a customer freely for a while after the customer's last message, for example 24 hours on Messenger. Offers can only go out inside that window. The customer panel shows how long the window has left on each channel.
+
+## Upset
+
+<Callout type="warn" title="Upset stops all offers">
+  When a customer is rude or angry, Ecbot marks them **Upset**. Ecbot then sends
+  no offers and stops asking, and only your staff can turn Upset off. Read the
+  conversation and sort out the problem before you turn it off.
+</Callout>
+
+## See and change labels
+
+Open a conversation and find **Marketing** in the customer panel. It shows the stage, any product group pauses, the offers setting, how long the free messaging window has left on each channel, and the latest label changes.
+
+<Screenshot
+  name="marketing-panel"
+  alt="The Marketing section in the customer panel of a conversation"
+>
+  <Mark id="edit">**Edit labels** changes the stage, offers or Upset.</Mark>
+  <Mark id="stage">
+    The stage, with the message that set it, when, and who.
+  </Mark>
+  <Mark id="reaction">
+    A product group the customer asked to hear about later, and until when.
+  </Mark>
+</Screenshot>
+
+- **Edit labels** changes the stage, offers or Upset. A reason is required, and it shows under the label and in the timeline.
+- **View all** opens the marketing timeline: every change, who made it (Bot, Classifier, Team member, Connected app or Automatic) and why, newest first.
+
+<Screenshot name="marketing-edit" alt="The Edit marketing labels drawer">
+  <Mark id="stage">Pick any stage, earlier ones too.</Mark>
+  <Mark id="permission">
+    Choose whether the shop may send offers, and until when for Paused.
+  </Mark>
+  <Mark id="hostile">
+    Turn Upset on or off. Only your staff can turn it off.
+  </Mark>
+  <Mark id="reason">
+    Required. The reason shows under the label and in the timeline.
+  </Mark>
+</Screenshot>
+
+## Filter by stage
+
+In **Customers**, filter the list by **Stage**, **Offers** or **Inactive**. In **Conversations**, filter by stage to find chats with customers who asked the price but did not buy.

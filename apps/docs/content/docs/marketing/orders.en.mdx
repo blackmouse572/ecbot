@@ -1,0 +1,116 @@
+---
+title: Orders and product groups
+description: Confirm the orders the bot notes in chat, add orders from elsewhere, and group products so Ecbot knows when a customer needs to buy again.
+faq:
+  - q: Does an order the bot notes in chat count as a purchase?
+    a: Not until you confirm it. Check the quantities and prices, then press Confirm order.
+  - q: Can I add orders customers placed by phone or on Shopee?
+    a: Yes. Use Add order for one order, or Import file to bring in a CSV from Excel, Google Sheets or a marketplace.
+  - q: How does Ecbot learn a repurchase cycle?
+    a: From the days between two purchases in the same group by one customer, taking the middle value once there are 5 or more repurchases. Until then it uses the number you set.
+---
+
+Orders show what each customer bought and when. A confirmed order moves the customer to **Bought once** or **Repeat buyer**, and product groups tell Ecbot when a customer is about to run out. Open **Orders** in the sidebar.
+
+<Screenshot
+  name="orders"
+  alt="The Orders list with orders from chat awaiting confirmation"
+>
+  <Mark id="pending">
+    Orders the bot noted in chat wait here until you confirm them.
+  </Mark>
+  <Mark id="add">**Add order** notes an order placed elsewhere.</Mark>
+  <Mark id="import">**Import file** brings in orders from a CSV.</Mark>
+</Screenshot>
+
+## Confirm orders from chat
+
+<Callout type="warn" title="Confirm orders to keep Marketing right">
+  Orders the bot notes in chat stay **Awaiting confirmation** until your staff
+  check them. Only confirmed orders move customers to Bought once or Repeat
+  buyer, count for Customer sources, and teach Ecbot repurchase cycles.
+</Callout>
+
+When a customer orders in chat, the bot notes the order as **Awaiting confirmation**. Open it, check the quantities and prices, then click **Confirm order**. An unconfirmed or cancelled order does not count as a purchase.
+
+## Add orders from elsewhere
+
+- **Add order** notes an order placed by phone, on Shopee or in store. Find the customer by name or phone, add the items and their product groups, and pick the order date.
+- **Import file** brings in many orders at once, see the next section.
+
+## Import your existing orders
+
+If the shop sold before Ecbot, import past orders so Ecbot knows who already bought and when.
+
+<Steps>
+<Step>
+
+### Get your orders into a CSV
+
+Export from Excel, Google Sheets or your marketplace dashboard as CSV, with the column names on the first row. Each row is one product in an order. In **Import file**, download the **Import template** to see a sample with 3 orders.
+
+</Step>
+<Step>
+
+### Check the columns
+
+| Column                              | Needed?      | Notes                                                                                                                   |
+| ----------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| **Customer phone**                  | Yes          | Matches the order to a customer. A new phone number creates a customer.                                                 |
+| **Product name** or **Order total** | At least one | A row with neither is skipped.                                                                                          |
+| **Order code**                      | Recommended  | Rows with the same code become one order. A code already in Ecbot is skipped, so importing the same file twice is safe. |
+| **Order date**                      | Recommended  | Day first, such as 01/11/2026 or 01/11/2026 14:30.                                                                      |
+| **Product group**                   | Recommended  | A group name Ecbot does not have yet creates the group.                                                                 |
+| **Status**                          | Optional     | Without it, every order counts as confirmed. Cancelled orders are skipped.                                              |
+
+Customer name, quantity and unit price are read too.
+
+</Step>
+<Step>
+
+### Match the columns and check the preview
+
+Upload the file. Ecbot guesses which column is which, and you only check the match. Before anything is saved, Ecbot shows how many orders, new customers and new product groups it will add, and which rows it cannot read and why.
+
+</Step>
+<Step>
+
+### Import, then check a few customers
+
+Click **Import**. Open two or three customers you know and check their orders and stage. Confirmed orders now count toward each product group's repurchase cycle.
+
+</Step>
+</Steps>
+
+## Product groups
+
+Open the **Product groups** tab. Each group has a name, such as "Sunscreen", and a **Repurchase cycle**: how many days customers usually take to run out. Products whose name contains the group name join the group when the bot notes an order.
+
+Group products that run out at about the same pace. For example (sample numbers, not Ecbot defaults):
+
+| Product           | Product group | Repurchase cycle |
+| ----------------- | ------------- | ---------------- |
+| Sunscreen SPF 50  | Sunscreen     | 60 days          |
+| Sunscreen SPF 30  | Sunscreen     | 60 days          |
+| Facial cleanser   | Cleanser      | 45 days          |
+| Night moisturizer | Moisturizer   | 90 days          |
+
+Keep products with very different paces in separate groups, or reminders go out too early or too late.
+
+<Screenshot
+  name="product-groups"
+  alt="The Product groups tab with the repurchase cycle you set and the one Ecbot learned"
+>
+  <Mark id="cycle">
+    The cycle in use, the one you set, and the one Ecbot learned from orders.
+  </Mark>
+  <Mark id="create">**Create product group** adds a group.</Mark>
+</Screenshot>
+
+### How Ecbot learns a cycle
+
+- **Before there is enough history**, Ecbot uses the cycle you set.
+- **Once a group has 5 or more repurchases** (the same customer buying from the group again), Ecbot learns the cycle from your confirmed orders: it takes the middle value of the days between purchases.
+- The table shows the cycle in use, the one you set and the one Ecbot learned, so you can compare them.
+
+The Marketing overview uses the cycle to count customers who are about to run out, see [Marketing overview](/docs/marketing).
