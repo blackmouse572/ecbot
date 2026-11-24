@@ -16,12 +16,14 @@ export default async function Layout({
     agent: "Agent",
     marketing: lang === "vi" ? "Tiếp thị" : "Marketing",
   });
+  const base = baseOptions(lang);
   return (
     <DocsLayout
       tree={tree}
       tabs={tabsOf(tree)}
       tabMode="navbar"
-      {...baseOptions(lang)}
+      {...base}
+      nav={{ ...base.nav, mode: "top" }}
     >
       {children}
     </DocsLayout>
