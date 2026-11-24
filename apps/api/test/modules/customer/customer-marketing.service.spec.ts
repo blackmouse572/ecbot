@@ -417,15 +417,12 @@ describe('CustomerMarketingService', () => {
             const { service, states, events } = makeHarness({ c1: 'w1' });
             await service.recordFollow('c1', 'w1', true);
             await service.recordFollow('c1', 'w1', false);
-            expect(
-                events
-                    .filter(e => e.kind === KIND.FOLLOW)
-                    .map(e => [e.actor, e.newValue])
-            ).toEqual([
-                [ACTOR.RULE, 'true'],
-                [ACTOR.RULE, 'false'],
+            // Only the follows: no state, so no made-up "first message".
+            expect(events.map(e => [e.kind, e.actor, e.newValue])).toEqual([
+                [KIND.FOLLOW, ACTOR.RULE, 'true'],
+                [KIND.FOLLOW, ACTOR.RULE, 'false'],
             ]);
-            expect(states.get('c1')?.permission).toBe(PERMISSION.PENDING);
+            expect(states.has('c1')).toBe(false);
         });
     });
 
