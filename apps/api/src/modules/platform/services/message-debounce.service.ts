@@ -7,8 +7,8 @@ interface PendingBurst {
      *  without an external id has none). */
     entries: { text: string; messageId?: string }[];
     senderId: string;
-    customerId: string;
-    contactPointId: string;
+    customerId: string | null;
+    contactPointId?: string | null;
     timer?: NodeJS.Timeout;
 }
 
@@ -44,8 +44,8 @@ export class MessageDebounceService implements OnModuleDestroy {
     async schedule(
         conversationId: string,
         senderId: string,
-        customerId: string,
-        contactPointId: string,
+        customerId: string | null,
+        contactPointId: string | null | undefined,
         text: string,
         messageId?: string
     ): Promise<void> {

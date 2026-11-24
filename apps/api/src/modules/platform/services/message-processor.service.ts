@@ -534,8 +534,9 @@ export class MessageProcessorService implements OnModuleInit {
     private async handOffToEdgeDebounce(job: {
         conversationId: string;
         senderId: string;
-        customerId: string;
-        contactPointId: string;
+        /** Null for an anonymous channel sender. */
+        customerId: string | null;
+        contactPointId?: string | null;
         text: string;
         messageId?: string;
     }): Promise<boolean> {

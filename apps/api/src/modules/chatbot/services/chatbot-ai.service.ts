@@ -37,8 +37,9 @@ interface AIChatStreamParams {
     tools?: ToolSpec[];
     max_tool_iterations?: number;
     conversation_id?: string;
-    customer_id?: string;
-    contact_point_id?: string;
+    /** Null on an anonymous channel sender; apps/ai accepts None. */
+    customer_id?: string | null;
+    contact_point_id?: string | null;
     /** The messages before `history`, summarized. */
     summary?: string;
     history?: AIChatHistoryMessage[];
