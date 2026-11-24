@@ -1155,9 +1155,10 @@ describe('AccountService - mapList', () => {
         expect(mapped.chatbot).toBeNull();
     });
 });
+
 describe('AccountService - mapList keeps secrets out', () => {
     // MikroORM v6 entities have no toObject(), so mapList spreads the
-    // instance: a hidden property is still enumerable there (#601).
+    // instance: a hidden property is still enumerable there (#615).
     it('drops the channel config, which holds the API signing secret', () => {
         const [mapped] = buildService().mapList([
             {
@@ -1170,9 +1171,10 @@ describe('AccountService - mapList keeps secrets out', () => {
                 },
             } as any,
         ]);
+        const view = mapped as any;
 
-        expect(mapped.config).toBeUndefined();
-        expect(JSON.stringify(mapped)).not.toContain('signingSecret');
+        expect(view.config).toBeUndefined();
+        expect(JSON.stringify(view)).not.toContain('signingSecret');
     });
 
     it('drops access and refresh tokens', () => {
@@ -1185,9 +1187,10 @@ describe('AccountService - mapList keeps secrets out', () => {
                 refreshToken: 'v1:v1:iv:tag:refresh',
             } as any,
         ]);
+        const view = mapped as any;
 
-        expect(mapped.accessToken).toBeUndefined();
-        expect(mapped.refreshToken).toBeUndefined();
-        expect(JSON.stringify(mapped)).not.toContain('v1:v1');
+        expect(view.accessToken).toBeUndefined();
+        expect(view.refreshToken).toBeUndefined();
+        expect(JSON.stringify(view)).not.toContain('v1:v1');
     });
 });
