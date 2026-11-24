@@ -357,12 +357,16 @@ export class MarketingSendService {
         }
         // Where the customer can tap "Không nhận nữa", the tap sends the
         // stop keyword; elsewhere the last line says which word to send.
+        // Zalo shows buttons only on mobile, so its message keeps the line.
         const tap = adapter.capabilities.quickReplies;
         const hint = (
             MARKETING_STOP_HINT[language] ??
             MARKETING_STOP_HINT[DEFAULT_LANGUAGE]
         )(keyword);
-        const text = tap ? row.send.text : `${row.send.text}\n\n${hint}`;
+        const text =
+            tap && account.type !== ENUM_ACCOUNT_TYPE.ZALO_PAGE
+                ? row.send.text
+                : `${row.send.text}\n\n${hint}`;
         messages.push({
             outbound: {
                 content: { kind: 'text', text },

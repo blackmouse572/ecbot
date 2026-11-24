@@ -8,7 +8,7 @@ import {
     UnprocessableEntityException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createHash, timingSafeEqual } from 'crypto';
+import { createHash, createHmac, timingSafeEqual } from 'crypto';
 import { readCappedBody } from '@app/common/utils/read-capped-body.util';
 import { MEDIA_FETCH_TIMEOUT_MS } from '../../constants/media.constant';
 import {
@@ -44,12 +44,14 @@ const UPLOAD_FILE_URL = 'https://openapi.zalo.me/v2.0/oa/upload/file';
 const IMAGE_MAX_BYTES = 1_000_000;
 const FILE_MAX_BYTES = 5_000_000;
 const MESSAGE_LIMIT = 2000;
-// A message carries at most 5 template buttons.
+// A message carries at most 5 template buttons, titles up to 100 characters.
 const MAX_BUTTONS = 5;
+const BUTTON_TITLE_LIMIT = 100;
 // A quick reply is an `oa.query.hide` button: tapping it sends its payload
-// back as the customer's text (hidden in their chat), so the payload is
-// prefixed to tell it from typed text. With no value the label stands in,
-// as the tapped text does on Messenger.
+// back as the customer's text (hidden in their chat). The payload is
+// `ecbot_action:<sig>.<action>`, signed with the app secret, so a customer
+// who types the prefix can't make up an action. With no value the label
+// stands in, as the tapped text does on Messenger.
 const ACTION_PREFIX = 'ecbot_action:';
 // Reject webhooks whose (signed) timestamp is older than this — replay guard.
 const WEBHOOK_MAX_AGE_MS = 5 * 60 * 1000;
@@ -206,10 +208,7 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
 
         const attachments = this.mapAttachments(payload.message?.attachments);
         const typed = payload.message?.text;
-        const action =
-            kind === 'message' && typed?.startsWith(ACTION_PREFIX)
-                ? decodeActionPayload(typed.slice(ACTION_PREFIX.length))
-                : undefined;
+        const action = kind === 'message' ? this.readAction(typed) : undefined;
         const reactedMessageId =
             payload.reaction?.r_msg_id ?? payload.message?.msg_id;
 
@@ -222,7 +221,7 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
                 kind === 'reaction'
                     ? reactedMessageId
                     : payload.message?.msg_id,
-            text: action ? action.value : typed,
+            text: action?.value ?? typed,
             action,
             timestamp: this.toDate(payload.timestamp),
             raw: payload,
@@ -366,9 +365,11 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
         const buttons = (msg.quickReplies ?? [])
             .slice(0, MAX_BUTTONS)
             .map(q => ({
-                title: q.label,
+                title: this.truncateGraphemes(q.label, BUTTON_TITLE_LIMIT),
                 type: 'oa.query.hide',
-                payload: `${ACTION_PREFIX}${encodeActionPayload(q.id, q.value ?? q.label)}`,
+                payload: this.signAction(
+                    encodeActionPayload(q.id, q.value ?? q.label)
+                ),
             }));
         return {
             text: this.truncate(text),
@@ -418,6 +419,32 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
             );
             return null;
         }
+    }
+
+    private signAction(action: string): string {
+        return `${ACTION_PREFIX}${this.actionSig(action)}.${action}`;
+    }
+
+    /** The action a tapped button sent back, if its signature holds. */
+    private readAction(text: string | undefined) {
+        if (!text?.startsWith(ACTION_PREFIX)) return undefined;
+        const rest = text.slice(ACTION_PREFIX.length);
+        const dot = rest.indexOf('.');
+        const sig = Buffer.from(rest.slice(0, dot));
+        const action = rest.slice(dot + 1);
+        const expected = Buffer.from(this.actionSig(action));
+        const ok =
+            dot > 0 &&
+            sig.length === expected.length &&
+            timingSafeEqual(sig, expected);
+        return ok ? decodeActionPayload(action) : undefined;
+    }
+
+    private actionSig(action: string): string {
+        return createHmac('sha256', this.appSecret ?? '')
+            .update(action)
+            .digest('hex')
+            .slice(0, 16);
     }
 
     private truncate(t: string): string {

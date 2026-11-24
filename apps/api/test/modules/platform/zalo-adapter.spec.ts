@@ -1,4 +1,4 @@
-import { createHash } from 'crypto';
+import { createHash, createHmac } from 'crypto';
 import { ZaloPlatformAdapter } from '../../../src/modules/platform/adapters/zalo/zalo.platform-adapter';
 
 const APP_ID = 'app-123';
@@ -23,6 +23,10 @@ function makeAdapter(
         } as any
     );
 }
+
+// A button payload: ecbot_action:<HMAC(appSecret, action)[0:16]>.<action>
+const tap = (action: string) =>
+    `ecbot_action:${createHmac('sha256', APP_SECRET).update(action).digest('hex').slice(0, 16)}.${action}`;
 
 // mac = SHA256(appId + rawBody + timestamp + appSecret)
 const sign = (body: string, timestamp: string) =>
@@ -179,23 +183,36 @@ describe('ZaloPlatformAdapter.parse', () => {
         ]);
     });
 
-    it('reads a tapped quick reply back as an action', () => {
-        const a = makeAdapter();
-        const [e] = a.parse(
+    const typed = (text: string) =>
+        makeAdapter().parse(
             wrap({
                 event_name: 'user_send_text',
                 sender: { id: 'S' },
-                message: {
-                    msg_id: 'm9',
-                    text: 'ecbot_action:{"id":"marketing.stop","value":"dừng"}',
-                },
+                message: { msg_id: 'm9', text },
             })
-        );
-        expect(e).toMatchObject({
+        )[0];
+
+    it('reads a tapped quick reply back as an action', () => {
+        expect(
+            typed(tap('{"id":"marketing.stop","value":"dừng"}'))
+        ).toMatchObject({
             kind: 'message',
             text: 'dừng',
             action: { id: 'marketing.stop', value: 'dừng' },
         });
+    });
+
+    it('keeps typed text that only looks like a button tap', () => {
+        const forged = 'ecbot_action:0000000000000000.{"id":"marketing.stop"}';
+        const e = typed(forged);
+        expect(e.action).toBeUndefined();
+        expect(e.text).toBe(forged);
+    });
+
+    it('keeps the text of a signed tap whose action has no value', () => {
+        const e = typed(tap('plain-id'));
+        expect(e.action).toEqual({ id: 'plain-id' });
+        expect(e.text).toBe(tap('plain-id'));
     });
 
     it('classifies oa_send_text as echo', () => {
@@ -290,7 +307,9 @@ describe('ZaloPlatformAdapter.doSend', () => {
                     label: 'Không nhận nữa',
                     value: 'dừng',
                 },
-                ...[1, 2, 3, 4, 5].map(n => ({ id: `q${n}`, label: `Q${n}` })),
+                { id: 'q1', label: 'Q1' },
+                { id: 'q2', label: 'x'.repeat(120) },
+                ...[3, 4, 5].map(n => ({ id: `q${n}`, label: `Q${n}` })),
             ],
         });
 
@@ -301,12 +320,14 @@ describe('ZaloPlatformAdapter.doSend', () => {
         expect(message.attachment.payload.buttons[0]).toEqual({
             title: 'Không nhận nữa',
             type: 'oa.query.hide',
-            payload: 'ecbot_action:{"id":"marketing.stop","value":"dừng"}',
+            payload: tap('{"id":"marketing.stop","value":"dừng"}'),
         });
         // No value: the label is what the customer "said".
         expect(message.attachment.payload.buttons[1].payload).toBe(
-            'ecbot_action:{"id":"q1","value":"Q1"}'
+            tap('{"id":"q1","value":"Q1"}')
         );
+        // Zalo rejects titles over 100 characters.
+        expect(message.attachment.payload.buttons[2].title).toHaveLength(100);
     });
 
     it('degrades a card to its fallbackText (capabilities all false)', async () => {
