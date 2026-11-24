@@ -206,7 +206,7 @@ async def test_text_question_left_out_by_the_model_is_not_required(async_client,
 
 
 # #506: /decision/write drafts a short shop message from instructions and a
-# state (a marketing offer), with the decision model at a higher temperature
+# state (a marketing offer), with WRITE_MODEL at a higher temperature
 # so "Viết kiểu khác" gives a different text.
 class _FakeWriter:
     def __init__(self, *, content: Any = None, raises: Exception | None = None):
@@ -249,8 +249,8 @@ async def test_write_returns_the_drafted_text_and_what_it_spent(async_client, pa
     assert resp.status_code == 200
     data = resp.json()["data"]
     assert data["text"] == "Chào {name}, Lumi giảm 10% cho bạn đến 20/11 nha."
-    assert data["model"] == AppVars.DECISION_MODEL
-    assert seen["kwargs"]["model_text_name"] == AppVars.DECISION_MODEL
+    assert data["model"] == AppVars.WRITE_MODEL
+    assert seen["kwargs"]["model_text_name"] == AppVars.WRITE_MODEL
     assert seen["kwargs"]["temperature"] > 0.5
     [messages] = seen["writer"].calls
     assert WRITE_BODY["instructions"] in messages[-1]["content"]

@@ -129,13 +129,13 @@ async def system_one(req: DecisionRequest) -> AppResponse[DecisionResponse]:
 
 @router.post("/write", response_model=AppResponse[WriteResponse])
 async def write(req: WriteRequest) -> AppResponse[WriteResponse]:
-    """Drafts a short shop message (#506: a marketing offer) with the decision model."""
+    """Drafts a short shop message (#506: a marketing offer) with WRITE_MODEL."""
     # As with system-one, a failure answers 200 with an empty text: the shop
     # can still write the message itself. Usage is reported either way.
     with get_usage_metadata_callback() as usage_cb:
         try:
             llm = build_chat_model(
-                model_text_name=AppVars.DECISION_MODEL,
+                model_text_name=AppVars.WRITE_MODEL,
                 temperature=WRITE_TEMPERATURE,
                 max_tokens=WRITE_MAX_TOKENS,
             )
@@ -151,5 +151,5 @@ async def write(req: WriteRequest) -> AppResponse[WriteResponse]:
             text = ""
 
     return AppResponse(
-        data=WriteResponse(text=text, usage=sum_usage(usage_cb.usage_metadata), model=AppVars.DECISION_MODEL)
+        data=WriteResponse(text=text, usage=sum_usage(usage_cb.usage_metadata), model=AppVars.WRITE_MODEL)
     )
