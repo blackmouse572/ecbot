@@ -2651,6 +2651,12 @@
             "viaCode": "Qua link {{code}}, {{date}}",
             "viaSource": "Qua link nguồn, {{date}}"
           }
+        },
+        "noCustomer": {
+          "title": "Chưa có hồ sơ khách",
+          "hint": "Khách nhắn qua kênh không gửi tên. Hồ sơ tự tạo khi khách để lại số điện thoại, email hoặc đặt đơn.",
+          "tags": "Gắn nhãn được khi khách có hồ sơ.",
+          "marketing": "Giai đoạn và quyền nhận ưu đãi bắt đầu từ khi có hồ sơ."
         }
       }
     },

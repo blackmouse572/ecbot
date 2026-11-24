@@ -16,6 +16,14 @@ vi.mock("@/hooks/api/conversations", () => ({
     isPending: false,
     isError: false,
   }),
+  useConversation: () => ({
+    conversation: {
+      id: "conv-1",
+      senderId: "9360590e-cf96",
+      senderName: null,
+      account: { type: "WEBSITE_WIDGET", name: "lumiskincare.vn" },
+    },
+  }),
 }));
 vi.mock("@/hooks/api/customer-marketing", () => ({
   useCustomerMarketing: () => ({ marketing: undefined }),
@@ -168,7 +176,7 @@ const Providers = ({ children }: { children: ReactNode }) => (
 );
 
 describe("CustomerSidePanel", () => {
-  it("renders nothing when no customerId is provided (no panel for un-linked conversations)", () => {
+  it("still shows the panel, with empty states, for a chat with no customer yet", () => {
     useCustomerMock.mockReturnValue({
       customer: undefined,
       isLoading: false,
@@ -177,11 +185,28 @@ describe("CustomerSidePanel", () => {
       contactPoints: [],
     } as unknown as UseContactPointsReturn);
 
-    const { container } = render(<CustomerSidePanel customerId={null} />, {
+    render(<CustomerSidePanel customerId={null} conversationId="conv-1" />, {
       wrapper: Providers,
     });
 
-    expect(container.firstChild).toBeNull();
+    expect(
+      screen.getByText("conversations.customer.panel.noCustomer.title"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("conversations.customer.panel.tags.title"),
+    ).toBeInTheDocument();
+    // The channel they wrote on comes from the conversation itself.
+    expect(screen.getByText("widget.visitorName")).toBeInTheDocument();
+    expect(screen.getByText(/lumiskincare\.vn/)).toBeInTheDocument();
+    // Things that need a profile are not offered.
+    expect(
+      screen.queryByRole("button", { name: "actions.edit" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "customers.detail.open" }),
+    ).not.toBeInTheDocument();
+    // What belongs to the conversation still works.
+    expect(screen.getByText("timezone-section")).toBeInTheDocument();
   });
 
   it("shows the orders section only while the orders flag is on", async () => {

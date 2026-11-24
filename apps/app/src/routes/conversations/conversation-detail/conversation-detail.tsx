@@ -231,7 +231,7 @@ export function ConversationDetail() {
             ? () => navigate(`/${workspaceSlug}/${ROUTES.Conversations}`)
             : undefined
         }
-        onOpenCustomer={isMobile && customerId ? toggleSidebar : undefined}
+        onOpenCustomer={isMobile ? toggleSidebar : undefined}
       />
       <MessageList
         conversationId={id}
@@ -275,7 +275,7 @@ export function ConversationDetail() {
     // Small screens stack the customer details over the thread, app style.
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
-        {sidebarOpen && customerId ? (
+        {sidebarOpen ? (
           <CustomerSidePanel
             customerId={customerId}
             conversationId={id}
