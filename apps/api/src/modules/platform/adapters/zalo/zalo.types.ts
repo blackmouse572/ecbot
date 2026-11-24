@@ -9,6 +9,8 @@ export interface ZaloWebhookPayload {
     timestamp?: string;
     sender?: { id: string };
     recipient?: { id: string };
+    /** On `follow` / `unfollow`, which carry no sender. */
+    follower?: { id: string };
     message?: ZaloWebhookMessage;
     // NOTE (reaction shape UNCONFIRMED): no captured payload or Zalo doc
     // excerpt exists anywhere in this repo for the "user reacts to message"

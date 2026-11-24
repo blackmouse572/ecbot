@@ -412,6 +412,23 @@ describe('CustomerMarketingService', () => {
         });
     });
 
+    describe('recordFollow', () => {
+        it('logs a Zalo follow and unfollow without touching offers', async () => {
+            const { service, states, events } = makeHarness({ c1: 'w1' });
+            await service.recordFollow('c1', 'w1', true);
+            await service.recordFollow('c1', 'w1', false);
+            expect(
+                events
+                    .filter(e => e.kind === KIND.FOLLOW)
+                    .map(e => [e.actor, e.newValue])
+            ).toEqual([
+                [ACTOR.RULE, 'true'],
+                [ACTOR.RULE, 'false'],
+            ]);
+            expect(states.get('c1')?.permission).toBe(PERMISSION.PENDING);
+        });
+    });
+
     describe('mergeInto', () => {
         it('keeps the opt-out, the further stage and the hostile flag', async () => {
             const { service, states, events, em } = makeHarness({

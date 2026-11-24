@@ -21,6 +21,7 @@ const DOT_CLASS: Record<MarketingEventGetResponseDto["kind"], string> = {
   REACTION: "shadow-[0_0_0_1.5px_var(--tag-purple-icon)]",
   INTENT: "shadow-[0_0_0_1.5px_var(--tag-orange-icon)]",
   SOURCE: "shadow-[0_0_0_1.5px_var(--tag-neutral-icon)]",
+  FOLLOW: "shadow-[0_0_0_1.5px_var(--tag-blue-icon)]",
 };
 
 /** One label change: what changed, why, when and who. */

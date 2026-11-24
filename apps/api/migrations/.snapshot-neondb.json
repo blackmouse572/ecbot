@@ -13191,7 +13191,8 @@
             "HOSTILE",
             "REACTION",
             "INTENT",
-            "SOURCE"
+            "SOURCE",
+            "FOLLOW"
           ],
           "mappedType": "enum"
         },

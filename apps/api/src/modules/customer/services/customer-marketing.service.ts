@@ -499,6 +499,22 @@ export class CustomerMarketingService {
         return { alreadyAsked: false };
     }
 
+    /** A Zalo OA follow or unfollow, on the customer's timeline only. */
+    async recordFollow(
+        customerId: string,
+        workspaceId: string,
+        following: boolean
+    ): Promise<void> {
+        const context = { actor: ENUM_MARKETING_EVENT_ACTOR.RULE };
+        const state = await this.ensureState(customerId, workspaceId, context);
+        this.addEvent(state, ENUM_MARKETING_EVENT_KIND.FOLLOW, {
+            ...context,
+            oldValue: null,
+            newValue: String(following),
+        });
+        await this.save(state);
+    }
+
     /** "Khó chịu": also stops offers for good. */
     async setHostile(
         customerId: string,

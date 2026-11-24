@@ -136,6 +136,28 @@ describe('ZaloPlatformAdapter.parse', () => {
         expect(e.timestamp).toEqual(new Date(1580890668038));
     });
 
+    it.each(['follow', 'unfollow'] as const)(
+        'reads a %s from the follower id, keyed for dedupe',
+        kind => {
+            const [e] = makeAdapter().parse(
+                JSON.stringify({
+                    app_id: APP_ID,
+                    oa_id: 'OA',
+                    event_name: kind,
+                    follower: { id: 'F' },
+                    source: 'oa_profile',
+                    timestamp: '1580890668038',
+                })
+            );
+            expect(e).toMatchObject({
+                kind,
+                accountKey: 'OA',
+                senderId: 'F',
+                externalMessageId: `${kind}:F:1580890668038`,
+            });
+        }
+    );
+
     it('normalizes an image attachment', () => {
         const a = makeAdapter();
         const [e] = a.parse(

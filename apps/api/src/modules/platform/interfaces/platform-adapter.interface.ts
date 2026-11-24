@@ -41,6 +41,9 @@ export type PlatformWebhookEventKind =
     | 'delivery'
     | 'read'
     | 'referral'
+    // Zalo OA: the customer followed or unfollowed the OA (no message).
+    | 'follow'
+    | 'unfollow'
     | 'unknown';
 
 export interface PlatformAttachment {

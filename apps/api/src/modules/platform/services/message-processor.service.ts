@@ -96,14 +96,22 @@ export class MessageProcessorService implements OnModuleInit {
         // Allow action events (postback/quick_reply) through even when kind
         // != 'message', and a reopened chat that only carries a tracked link.
         const isReferral = event.kind === 'referral' && !!event.referral?.code;
-        if (event.kind !== 'message' && !event.action && !isReferral) return;
+        const isFollow = event.kind === 'follow' || event.kind === 'unfollow';
+        if (
+            event.kind !== 'message' &&
+            !event.action &&
+            !isReferral &&
+            !isFollow
+        )
+            return;
         // A photo, sticker or voice message with no caption is still a
         // customer turn: the agent reads a note on what arrived.
         if (
             !event.text &&
             !event.action &&
             !event.attachments?.length &&
-            !isReferral
+            !isReferral &&
+            !isFollow
         )
             return;
 
@@ -171,6 +179,22 @@ export class MessageProcessorService implements OnModuleInit {
         const chatbot = account.chatbot;
         const adapter = this.registry.get(account.type);
         const workspaceId = chatbot.workspace.id;
+
+        // A follow or unfollow has no message: it goes on the timeline of a
+        // customer the shop already has, and changes nothing else.
+        if (event.kind === 'follow' || event.kind === 'unfollow') {
+            const known = await this.customerService.findCustomerId(
+                workspaceId,
+                account.type,
+                event.senderId
+            );
+            if (known) {
+                await this.moduleRef
+                    .get(CustomerMarketingService, { strict: false })
+                    .recordFollow(known, workspaceId, event.kind === 'follow');
+            }
+            return;
+        }
 
         const { contactPoint, customerId } =
             await this.customerService.resolveContactPoint({

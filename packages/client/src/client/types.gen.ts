@@ -6810,7 +6810,7 @@ export type MarketingEventGetResponseDto = {
      * Delete by
      */
     deletedBy?: UserMetaResponseDto;
-    kind: 'STAGE' | 'PERMISSION' | 'CONSENT_ASKED' | 'HOSTILE' | 'REACTION' | 'INTENT' | 'SOURCE';
+    kind: 'STAGE' | 'PERMISSION' | 'CONSENT_ASKED' | 'HOSTILE' | 'REACTION' | 'INTENT' | 'SOURCE' | 'FOLLOW';
     actor: 'BOT' | 'CLASSIFIER' | 'OPERATOR' | 'CLIENT' | 'RULE';
     oldValue?: string | null;
     newValue?: string | null;
