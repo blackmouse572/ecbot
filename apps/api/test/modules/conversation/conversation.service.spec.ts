@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ENUM_CONVERSATION_STATUS } from '../../../src/modules/conversation/enums/conversation.enum';
+import { ConversationGetResponseDto } from '../../../src/modules/conversation/dtos/response/conversation.get.response.dto';
 import { ConversationService } from '../../../src/modules/conversation/services/conversation.service';
 import { ConversationMemoryService } from '../../../src/modules/platform/services/conversation-memory.service';
 import { CustomerTagAssignmentService } from '../../../src/modules/customer/services/customer-tag-assignment.service';
@@ -107,10 +108,6 @@ describe('ConversationService', () => {
         service = module.get<ConversationService>(ConversationService);
 
         jest.clearAllMocks();
-    });
-
-    it('should be defined', () => {
-        expect(service).toBeDefined();
     });
 
     describe('findOrCreate', () => {
@@ -1105,6 +1102,7 @@ describe('ConversationService', () => {
 
     describe('mapGet', () => {
         it('should transform a ConversationEntity to ConversationGetResponseDto', () => {
+            const lastMessageAt = new Date('2026-01-02T03:04:05Z');
             const entity = {
                 id: 'conv-1',
                 senderId: 'sender-1',
@@ -1112,12 +1110,21 @@ describe('ConversationService', () => {
                 fallbackCount: 0,
                 handoffAt: null,
                 resolvedAt: null,
-                lastMessageAt: new Date(),
+                lastMessageAt,
                 handoffReason: null,
             };
 
             const result = service.mapGet(entity as any);
-            expect(result).toBeDefined();
+            expect(result).toBeInstanceOf(ConversationGetResponseDto);
+            expect(result).toMatchObject({
+                id: 'conv-1',
+                senderId: 'sender-1',
+                status: ENUM_CONVERSATION_STATUS.OPEN,
+                fallbackCount: 0,
+                lastMessageAt,
+            });
+            // No customer was loaded, so the detail response has none.
+            expect(result.customerId).toBeUndefined();
         });
 
         it('names the sender after the customer when the platform gave none', () => {

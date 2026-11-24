@@ -14,6 +14,8 @@ export default defineConfig({
   timeout: 30_000,
   expect: { timeout: 10_000 },
   fullyParallel: false, // sequential — tests share DB state
+  // A committed test.only would otherwise run one test and pass the job.
+  forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
 

@@ -85,10 +85,6 @@ describe('WorkspaceMemberService', () => {
         jest.clearAllMocks();
     });
 
-    it('should be defined', () => {
-        expect(service).toBeDefined();
-    });
-
     describe('verifyInvitationToken', () => {
         it('should return the decoded payload for a valid token', async () => {
             const payload = { workspaceId: 'w', invitedEmail: 'a@b.co' };
