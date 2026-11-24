@@ -160,15 +160,6 @@ describe("MarketingSection", () => {
     expect(screen.getByText(/Paused until Apr 15, 2026/)).toBeInTheDocument();
   });
 
-  it("says how long free messages stay open on each channel", () => {
-    renderSection();
-
-    expect(screen.getByText("6 hours left on Facebook")).toBeInTheDocument();
-    expect(
-      screen.getByText("Customer last wrote 18 hours ago"),
-    ).toBeInTheDocument();
-  });
-
   it("lists the five latest changes and jumps to this conversation's messages", async () => {
     vi.useRealTimers();
     state.events = [

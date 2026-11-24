@@ -1,6 +1,25 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { TooltipProvider } from "@medusajs/ui";
+import type { ReactNode } from "react";
+import { MemoryRouter } from "react-router-dom";
+
+// The panel links to the full customer page and to each channel's
+// conversation, so it renders inside a router with a workspace slug.
+vi.mock("@/hooks/use-workspace-params", () => ({
+  useWorkspaceParams: () => ({ workspaceSlug: "acme" }),
+}));
+vi.mock("@/hooks/api/conversations", () => ({
+  useConversations: () => ({
+    conversations: [],
+    isPending: false,
+    isError: false,
+  }),
+}));
+vi.mock("@/hooks/api/customer-marketing", () => ({
+  useCustomerMarketing: () => ({ marketing: undefined }),
+}));
 
 // Data subject rights live in the Customer side panel's overflow menu:
 // "Export data" downloads a JSON copy, "Delete customer and all
@@ -143,6 +162,7 @@ const renderAs = (rules: typeof ADMIN, ui: ReactElement) =>
     >
       {ui}
     </AbilityProvider>,
+    { wrapper: Providers },
   );
 
 const useCustomerMock = vi.mocked(useCustomer);
@@ -210,6 +230,12 @@ const openMenuItem = async (name: string) => {
   );
   await user.click(await screen.findByRole("menuitem", { name }));
 };
+
+const Providers = ({ children }: { children: ReactNode }) => (
+  <TooltipProvider>
+    <MemoryRouter>{children}</MemoryRouter>
+  </TooltipProvider>
+);
 
 describe("CustomerSidePanel: export and erase actions", () => {
   it("Export data downloads the customer JSON", async () => {

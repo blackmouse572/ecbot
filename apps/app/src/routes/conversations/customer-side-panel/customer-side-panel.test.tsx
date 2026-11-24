@@ -1,6 +1,25 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { TooltipProvider } from "@medusajs/ui";
+import type { ReactNode } from "react";
+import { MemoryRouter } from "react-router-dom";
+
+// The panel links to the full customer page and to each channel's
+// conversation, so it renders inside a router with a workspace slug.
+vi.mock("@/hooks/use-workspace-params", () => ({
+  useWorkspaceParams: () => ({ workspaceSlug: "acme" }),
+}));
+vi.mock("@/hooks/api/conversations", () => ({
+  useConversations: () => ({
+    conversations: [],
+    isPending: false,
+    isError: false,
+  }),
+}));
+vi.mock("@/hooks/api/customer-marketing", () => ({
+  useCustomerMarketing: () => ({ marketing: undefined }),
+}));
 
 // --- Mock the API hooks at module level so the component never touches network ---
 
@@ -142,6 +161,12 @@ afterEach(() => {
   featureFlags.orders = true;
 });
 
+const Providers = ({ children }: { children: ReactNode }) => (
+  <TooltipProvider>
+    <MemoryRouter>{children}</MemoryRouter>
+  </TooltipProvider>
+);
+
 describe("CustomerSidePanel", () => {
   it("renders nothing when no customerId is provided (no panel for un-linked conversations)", () => {
     useCustomerMock.mockReturnValue({
@@ -152,7 +177,9 @@ describe("CustomerSidePanel", () => {
       contactPoints: [],
     } as unknown as UseContactPointsReturn);
 
-    const { container } = render(<CustomerSidePanel customerId={null} />);
+    const { container } = render(<CustomerSidePanel customerId={null} />, {
+      wrapper: Providers,
+    });
 
     expect(container.firstChild).toBeNull();
   });
@@ -166,12 +193,16 @@ describe("CustomerSidePanel", () => {
       contactPoints: [],
     } as unknown as UseContactPointsReturn);
 
-    const { unmount } = render(<CustomerSidePanel customerId="cust-1" />);
+    const { unmount } = render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
     expect(await screen.findByText("orders-section")).toBeInTheDocument();
     unmount();
 
     featureFlags.orders = false;
-    render(<CustomerSidePanel customerId="cust-1" />);
+    render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
     await screen.findByText("Alice Nguyen");
     expect(screen.queryByText("orders-section")).not.toBeInTheDocument();
   });
@@ -186,7 +217,9 @@ describe("CustomerSidePanel", () => {
     } as unknown as UseContactPointsReturn);
 
     const user = userEvent.setup();
-    render(<CustomerSidePanel customerId="cust-1" />);
+    render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
 
     // Read-only by default: no inputs competing with the chat.
     expect(await screen.findByText("Alice Nguyen")).toBeInTheDocument();
@@ -207,7 +240,9 @@ describe("CustomerSidePanel", () => {
       contactPoints: [],
     } as unknown as UseContactPointsReturn);
 
-    render(<CustomerSidePanel customerId="cust-1" />);
+    render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
 
     expect(await screen.findByText("general.notSet")).toBeInTheDocument();
   });
@@ -222,7 +257,9 @@ describe("CustomerSidePanel", () => {
     } as unknown as UseContactPointsReturn);
 
     const user = userEvent.setup();
-    render(<CustomerSidePanel customerId="cust-1" conversationId="conv-1" />);
+    render(<CustomerSidePanel customerId="cust-1" conversationId="conv-1" />, {
+      wrapper: Providers,
+    });
 
     expect(screen.queryByText("conversations-section")).not.toBeInTheDocument();
     expect(screen.getByText("timezone-section")).toBeInTheDocument();
@@ -246,7 +283,9 @@ describe("CustomerSidePanel", () => {
     } as unknown as UseContactPointsReturn);
 
     const user = userEvent.setup();
-    render(<CustomerSidePanel customerId="cust-1" />);
+    render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
 
     await user.click(
       await screen.findByRole("button", { name: "actions.edit" }),
@@ -298,7 +337,9 @@ describe("CustomerSidePanel", () => {
       ],
     } as unknown as UseContactPointsReturn);
 
-    render(<CustomerSidePanel customerId="cust-1" />);
+    render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
 
     // One PlatformIcon per contact point, each with the platform passed through.
     const icons = screen.getAllByTestId("platform-icon");
@@ -320,7 +361,9 @@ describe("CustomerSidePanel", () => {
       contactPoints: [],
     } as unknown as UseContactPointsReturn);
 
-    render(<CustomerSidePanel customerId="cust-1" />);
+    render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
 
     expect(
       screen.getByText("conversations.customer.panel.contactPoints.empty"),

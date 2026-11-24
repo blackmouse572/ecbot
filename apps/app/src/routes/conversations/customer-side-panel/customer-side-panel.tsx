@@ -210,7 +210,10 @@ export function CustomerSidePanel({
             <Heading level="h3" className="mb-2">
               {t("conversations.customer.panel.contactPoints.title")}
             </Heading>
-            <ContactPointsList contactPoints={contactPoints} />
+            <ContactPointsList
+              customerId={customer.id}
+              contactPoints={contactPoints}
+            />
           </div>
 
           <div className="border-ui-border-base border-t px-4 py-4">

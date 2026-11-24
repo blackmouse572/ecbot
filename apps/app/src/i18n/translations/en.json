@@ -2465,7 +2465,11 @@
         "contactPoints": {
           "title": "Contact points",
           "empty": "No contact points yet",
-          "emptyHint": "Ways to reach this customer, like a phone number or email, show up here."
+          "emptyHint": "Ways to reach this customer, like a phone number or email, show up here.",
+          "windowOpen": "{{time}} left",
+          "windowClosed": "Free window closed",
+          "windowUnlimited": "No time limit",
+          "lastInbound": "Wrote {{time}}"
         },
         "conversations": {
           "title": "Conversations",
@@ -2555,15 +2559,10 @@
           "stage": "Stage",
           "permission": "Offers",
           "freeWindow": {
-            "title": "Free messaging",
-            "open": "{{time}} left on {{channel}}",
-            "closed": "Closed on {{channel}}",
-            "unlimited": "No time limit on {{channel}}",
             "hours_one": "{{count}} hour",
             "hours_other": "{{count}} hours",
             "minutes_one": "{{count}} minute",
-            "minutes_other": "{{count}} minutes",
-            "lastInbound": "Customer last wrote {{time}}"
+            "minutes_other": "{{count}} minutes"
           },
           "timeline": {
             "title": "Marketing timeline",

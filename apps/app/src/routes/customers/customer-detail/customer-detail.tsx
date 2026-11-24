@@ -162,7 +162,10 @@ export function CustomerDetail() {
           <Section
             title={t("conversations.customer.panel.contactPoints.title")}
           >
-            <ContactPointsList contactPoints={contactPoints} />
+            <ContactPointsList
+              customerId={customer.id}
+              contactPoints={contactPoints}
+            />
           </Section>
 
           <Section>

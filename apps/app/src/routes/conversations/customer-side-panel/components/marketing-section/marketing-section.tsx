@@ -16,7 +16,6 @@ import { EVENT_LIST_CLASS, LATEST_EVENT_COUNT } from "./constants";
 import { MarketingEditDrawer } from "./marketing-edit-drawer";
 import { MarketingEventItem } from "./marketing-event-item";
 import { MarketingFirstSource } from "./marketing-first-source";
-import { MarketingFreeWindows } from "./marketing-free-windows";
 import { MarketingLayerRow } from "./marketing-layer-row";
 import { MarketingProductReactions } from "./marketing-product-reactions";
 import { MarketingTimelineDrawer } from "./marketing-timeline-drawer";
@@ -108,15 +107,6 @@ export const MarketingSection: FC<Props> = ({
               />
             </MarketingLayerRow>
           </div>
-
-          {marketing.freeWindows.length > 0 && (
-            <div className="flex flex-col gap-y-1">
-              <Text size="small" weight="plus">
-                {t(`${KEY}.freeWindow.title`)}
-              </Text>
-              <MarketingFreeWindows windows={marketing.freeWindows} />
-            </div>
-          )}
 
           {flags.customerSources && (
             <div className="flex flex-col gap-y-1">

@@ -2502,7 +2502,11 @@
         "contactPoints": {
           "title": "Kênh liên hệ",
           "empty": "Chưa có kênh liên hệ",
-          "emptyHint": "Các cách liên hệ với khách hàng, như số điện thoại hoặc email, sẽ hiện ở đây."
+          "emptyHint": "Các cách liên hệ với khách hàng, như số điện thoại hoặc email, sẽ hiện ở đây.",
+          "windowOpen": "Còn {{time}}",
+          "windowClosed": "Hết hạn nhắn",
+          "windowUnlimited": "Không giới hạn",
+          "lastInbound": "Nhắn {{time}}"
         },
         "conversations": {
           "title": "Cuộc trò chuyện",
@@ -2592,13 +2596,8 @@
           "stage": "Giai đoạn",
           "permission": "Nhận ưu đãi",
           "freeWindow": {
-            "title": "Nhắn miễn phí",
-            "open": "Còn {{time}} trên {{channel}}",
-            "closed": "Đã hết trên {{channel}}",
-            "unlimited": "Không giới hạn trên {{channel}}",
             "hours_other": "{{count}} giờ",
-            "minutes_other": "{{count}} phút",
-            "lastInbound": "Khách nhắn lần cuối {{time}}"
+            "minutes_other": "{{count}} phút"
           },
           "timeline": {
             "title": "Dòng thời gian tiếp thị",
