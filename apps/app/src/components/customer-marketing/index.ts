@@ -9,3 +9,4 @@ export * from "./types";
 export * from "./use-marketing-event-text";
 
 export * from "./use-marketing-date";
+export * from "./use-free-window-left";

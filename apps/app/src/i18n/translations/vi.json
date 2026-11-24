@@ -2502,12 +2502,19 @@
         "contactPoints": {
           "title": "Kênh liên hệ",
           "empty": "Chưa có kênh liên hệ",
-          "emptyHint": "Các cách liên hệ với khách hàng, như số điện thoại hoặc email, sẽ hiện ở đây."
+          "emptyHint": "Các cách liên hệ với khách hàng, như số điện thoại hoặc email, sẽ hiện ở đây.",
+          "windowOpen": "Còn {{time}}",
+          "windowClosed": "Hết hạn nhắn",
+          "windowUnlimited": "Không giới hạn",
+          "lastInbound": "Nhắn {{time}}",
+          "count_other": "{{count}} kênh",
+          "openHint": "Bấm một kênh để mở cuộc trò chuyện trên kênh đó."
         },
         "conversations": {
           "title": "Cuộc trò chuyện",
           "empty": "Chưa có cuộc trò chuyện",
-          "current": "Đang xem"
+          "current": "Đang xem",
+          "emptyHint": "Khi khách nhắn tới trên một kênh, cuộc trò chuyện sẽ hiện ở đây."
         },
         "followups": {
           "title": "Nhắc hẹn",
@@ -2591,13 +2598,8 @@
           "stage": "Giai đoạn",
           "permission": "Nhận ưu đãi",
           "freeWindow": {
-            "title": "Nhắn miễn phí",
-            "open": "Còn {{time}} trên {{channel}}",
-            "closed": "Đã hết trên {{channel}}",
-            "unlimited": "Không giới hạn trên {{channel}}",
             "hours_other": "{{count}} giờ",
-            "minutes_other": "{{count}} phút",
-            "lastInbound": "Khách nhắn lần cuối {{time}}"
+            "minutes_other": "{{count}} phút"
           },
           "timeline": {
             "title": "Dòng thời gian tiếp thị",
@@ -2753,6 +2755,54 @@
       },
       "firstSource": "Nguồn đầu tiên",
       "source": "Nguồn"
+    },
+    "detail": {
+      "open": "Xem hồ sơ khách",
+      "unnamed": "Khách chưa có tên",
+      "since": "Khách từ {{date}}",
+      "openConversation": "Trò chuyện",
+      "profileSummary": "Tóm tắt từ AI",
+      "stats": {
+        "spent": "Đã chi",
+        "lastActive": "Nhắn gần nhất",
+        "spentHint_other": "{{count}} đơn đã xác nhận",
+        "lastOrder": "Mua gần nhất",
+        "noOrders": "Chưa có đơn",
+        "windowOpen": "Còn nhắn miễn phí {{time}}",
+        "windowClosed": "Hết hạn nhắn miễn phí",
+        "consent": "Nhận ưu đãi"
+      },
+      "addOrder": "Thêm đơn",
+      "cameFrom": "Đến từ",
+      "tabs": {
+        "overview": "Tổng quan",
+        "conversations": "Hội thoại",
+        "orders": "Đơn hàng",
+        "marketing": "Tiếp thị"
+      },
+      "upcoming": {
+        "title": "Sắp tới",
+        "count_other": "{{count}} việc",
+        "followup": "Nhắc lại {{date}}",
+        "cancel": "Hủy",
+        "paused": "Tạm dừng gợi ý nhóm {{group}} đến {{date}}",
+        "pausedHint": "Khách nói \"{{reason}}\", ưu đãi nhóm hàng khác vẫn gửi được",
+        "resume": "Bỏ tạm dừng"
+      },
+      "activity": {
+        "title": "Hoạt động",
+        "filters": {
+          "all": "Tất cả",
+          "message": "Tin nhắn",
+          "order": "Đơn hàng",
+          "marketing": "Tiếp thị"
+        },
+        "firstMessage": "Tin nhắn đầu tiên",
+        "lastMessage": "Tin nhắn gần nhất",
+        "order": "Đơn {{code}} · {{total}} · {{status}}",
+        "more": "Xem thêm",
+        "empty": "Chưa có hoạt động nào"
+      }
     }
   },
   "settings": {

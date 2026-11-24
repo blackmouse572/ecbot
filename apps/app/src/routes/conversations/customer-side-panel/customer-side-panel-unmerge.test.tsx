@@ -1,6 +1,25 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { TooltipProvider } from "@medusajs/ui";
+import type { ReactNode } from "react";
+import { MemoryRouter } from "react-router-dom";
+
+// The panel links to the full customer page and to each channel's
+// conversation, so it renders inside a router with a workspace slug.
+vi.mock("@/hooks/use-workspace-params", () => ({
+  useWorkspaceParams: () => ({ workspaceSlug: "acme" }),
+}));
+vi.mock("@/hooks/api/conversations", () => ({
+  useConversations: () => ({
+    conversations: [],
+    isPending: false,
+    isError: false,
+  }),
+}));
+vi.mock("@/hooks/api/customer-marketing", () => ({
+  useCustomerMarketing: () => ({ marketing: undefined }),
+}));
 
 // The Unmerge action lives in the Customer side panel's overflow menu. The
 // production gating is: the menu item is always rendered (the service throws
@@ -156,9 +175,17 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+const Providers = ({ children }: { children: ReactNode }) => (
+  <TooltipProvider>
+    <MemoryRouter>{children}</MemoryRouter>
+  </TooltipProvider>
+);
+
 describe("CustomerSidePanel — Unmerge action", () => {
   it("renders the overflow menu trigger (the ellipsis IconButton)", () => {
-    render(<CustomerSidePanel customerId="cust-1" />);
+    render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
 
     const moreBtn = screen.getByRole("button", {
       name: "conversations.customer.panel.actions.more",
@@ -169,7 +196,9 @@ describe("CustomerSidePanel — Unmerge action", () => {
 
   it("opening the menu reveals the Unmerge action (always visible — server-side gates with 404)", async () => {
     const user = userEvent.setup();
-    render(<CustomerSidePanel customerId="cust-1" />);
+    render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
 
     const moreBtn = screen.getByRole("button", {
       name: "conversations.customer.panel.actions.more",
@@ -187,7 +216,9 @@ describe("CustomerSidePanel — Unmerge action", () => {
   it("clicking Unmerge opens a confirm Prompt with the danger variant; confirming calls useUnmergeCustomer", async () => {
     promptFn.mockResolvedValue(true);
     const user = userEvent.setup();
-    render(<CustomerSidePanel customerId="cust-1" />);
+    render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
 
     await user.click(
       screen.getByRole("button", {
@@ -215,7 +246,9 @@ describe("CustomerSidePanel — Unmerge action", () => {
   it("cancelling the prompt does NOT call useUnmergeCustomer", async () => {
     promptFn.mockResolvedValue(false);
     const user = userEvent.setup();
-    render(<CustomerSidePanel customerId="cust-1" />);
+    render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
 
     await user.click(
       screen.getByRole("button", {
@@ -237,7 +270,9 @@ describe("CustomerSidePanel — Unmerge action", () => {
   });
 
   it("useUnmergeCustomer is bound to the current customerId", () => {
-    render(<CustomerSidePanel customerId="cust-1" />);
+    render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
     // The hook was called with the customerId from the side-panel prop.
     expect(useUnmergeMock).toHaveBeenCalledWith("cust-1");
   });

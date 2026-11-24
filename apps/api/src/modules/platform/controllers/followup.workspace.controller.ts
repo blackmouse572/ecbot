@@ -63,6 +63,7 @@ export class FollowupWorkspaceController {
     @ApiQuery({ name: 'conversationId', required: false, type: String })
     @ApiQuery({ name: 'search', required: false, type: String })
     @ApiQuery({ name: 'status', required: false, enum: ENUM_FOLLOWUP_STATUS })
+    @ApiQuery({ name: 'customer', required: false, type: String })
     @Get('/')
     async list(
         @WorkspacePayload() workspace: WorkspaceEntity,
@@ -78,12 +79,14 @@ export class FollowupWorkspaceController {
             'status',
             new ParseEnumPipe(ENUM_FOLLOWUP_STATUS, { optional: true })
         )
-        status?: string
+        status?: string,
+        @Query('customer') customerId?: string
     ): Promise<IResponsePaging<FollowupListResponseDto>> {
         const [followups, total] =
             await this.followupService.findAllByWorkspace(workspace.id, {
                 conversationId,
                 chatbotId,
+                customerId,
                 search,
                 status: status as ENUM_FOLLOWUP_STATUS,
                 limit: _limit,

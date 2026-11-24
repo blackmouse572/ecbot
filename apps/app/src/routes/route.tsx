@@ -569,7 +569,28 @@ function getRouteMaps(): RouteObject[] {
                 breadcrumb: () => t("customers.title"),
               },
               ErrorBoundary: ErrorBoundary,
-              lazy: () => import("./customers/customer-list"),
+              children: [
+                {
+                  path: "",
+                  lazy: () => import("./customers/customer-list"),
+                },
+                {
+                  path: ":customerId",
+                  ErrorBoundary: ErrorBoundary,
+                  lazy: async function () {
+                    const { Breadcrumb, Component } =
+                      await import("./customers/customer-detail");
+                    return {
+                      Component,
+                      handle: {
+                        breadcrumb: (match: UIMatch) => (
+                          <Breadcrumb {...match} />
+                        ),
+                      },
+                    };
+                  },
+                },
+              ],
             },
             {
               path: ROUTES.CustomerSuggestions,

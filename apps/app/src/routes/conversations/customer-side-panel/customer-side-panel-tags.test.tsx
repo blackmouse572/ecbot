@@ -1,6 +1,25 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { TooltipProvider } from "@medusajs/ui";
+import type { ReactNode } from "react";
+import { MemoryRouter } from "react-router-dom";
+
+// The panel links to the full customer page and to each channel's
+// conversation, so it renders inside a router with a workspace slug.
+vi.mock("@/hooks/use-workspace-params", () => ({
+  useWorkspaceParams: () => ({ workspaceSlug: "acme" }),
+}));
+vi.mock("@/hooks/api/conversations", () => ({
+  useConversations: () => ({
+    conversations: [],
+    isPending: false,
+    isError: false,
+  }),
+}));
+vi.mock("@/hooks/api/customer-marketing", () => ({
+  useCustomerMarketing: () => ({ marketing: undefined }),
+}));
 
 // Mock every hook the panel touches at module level — the tag section
 // is rendered inside CustomerSidePanel, so we need to satisfy the rest
@@ -184,6 +203,12 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+const Providers = ({ children }: { children: ReactNode }) => (
+  <TooltipProvider>
+    <MemoryRouter>{children}</MemoryRouter>
+  </TooltipProvider>
+);
+
 describe("CustomerSidePanel — tags section", () => {
   it("renders applied tag chips with emoji + name when assignments are present", () => {
     useTagAssignmentsMock.mockReturnValue({
@@ -197,7 +222,9 @@ describe("CustomerSidePanel — tags section", () => {
       isLoading: false,
     } as unknown as UseTagListReturn);
 
-    render(<CustomerSidePanel customerId="cust-1" />);
+    render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
 
     expect(screen.getByText("VIP")).toBeInTheDocument();
     expect(screen.getByText("Hot lead")).toBeInTheDocument();
@@ -215,7 +242,9 @@ describe("CustomerSidePanel — tags section", () => {
       isLoading: false,
     } as unknown as UseTagListReturn);
 
-    render(<CustomerSidePanel customerId="cust-1" />);
+    render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
 
     expect(
       screen.getByText("conversations.customer.panel.tags.empty"),
@@ -237,7 +266,9 @@ describe("CustomerSidePanel — tags section", () => {
     } as unknown as UseTagListReturn);
 
     const user = userEvent.setup();
-    render(<CustomerSidePanel customerId="cust-1" />);
+    render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
 
     const removeButton = screen.getByRole("button", {
       name: "conversations.customer.panel.tags.remove",
@@ -261,7 +292,9 @@ describe("CustomerSidePanel — tags section", () => {
     } as unknown as UseTagListReturn);
 
     const user = userEvent.setup();
-    render(<CustomerSidePanel customerId="cust-1" />);
+    render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
 
     const addButton = screen.getByRole("button", {
       name: "conversations.customer.panel.tags.add",
@@ -294,7 +327,9 @@ describe("CustomerSidePanel — tags section", () => {
     } as unknown as UseTagListReturn);
 
     const user = userEvent.setup();
-    render(<CustomerSidePanel customerId="cust-1" />);
+    render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
 
     const addButton = screen.getByRole("button", {
       name: "conversations.customer.panel.tags.add",
@@ -318,7 +353,9 @@ describe("CustomerSidePanel — tags section", () => {
       isError: true,
     } as unknown as UseTagAssignmentsReturn);
 
-    render(<CustomerSidePanel customerId="cust-1" />);
+    render(<CustomerSidePanel customerId="cust-1" />, {
+      wrapper: Providers,
+    });
 
     expect(screen.getByText("general.loadFailed")).toBeInTheDocument();
     expect(

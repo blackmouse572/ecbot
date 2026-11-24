@@ -150,7 +150,12 @@ const OrderDetailBody: FC<{ order: OrderGetResponseDto }> = ({ order }) => {
         <section className="flex flex-col gap-y-2">
           <Heading level="h3">{t("orders.detail.customer")}</Heading>
           <Row label={t("orders.detail.name")}>
-            {order.customerName || t("orders.noName")}
+            <Link
+              to={`/${workspaceSlug}/${ROUTES.Customers}/${order.customerId}`}
+              className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
+            >
+              {order.customerName || t("orders.noName")}
+            </Link>
           </Row>
           <Row label={t("orders.detail.phone")}>
             <span className="tabular-nums">{order.customerPhone ?? "-"}</span>

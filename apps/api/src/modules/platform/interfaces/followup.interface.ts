@@ -41,6 +41,8 @@ export interface IFollowupCreate {
 export interface IFollowupWorkspaceFilter {
     conversationId?: string;
     chatbotId?: string;
+    // Every conversation of this customer, across their contact points.
+    customerId?: string;
     status?: ENUM_FOLLOWUP_STATUS;
     search?: string;
     limit: number;

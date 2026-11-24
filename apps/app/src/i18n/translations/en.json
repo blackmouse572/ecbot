@@ -2465,12 +2465,20 @@
         "contactPoints": {
           "title": "Contact points",
           "empty": "No contact points yet",
-          "emptyHint": "Ways to reach this customer, like a phone number or email, show up here."
+          "emptyHint": "Ways to reach this customer, like a phone number or email, show up here.",
+          "windowOpen": "{{time}} left",
+          "windowClosed": "Free window closed",
+          "windowUnlimited": "No time limit",
+          "lastInbound": "Wrote {{time}}",
+          "count_one": "{{count}} channel",
+          "count_other": "{{count}} channels",
+          "openHint": "Tap a channel to open its conversation."
         },
         "conversations": {
           "title": "Conversations",
           "empty": "No conversations yet",
-          "current": "Current"
+          "current": "Current",
+          "emptyHint": "When the customer messages you on a channel, the conversation shows up here."
         },
         "followups": {
           "title": "Followups",
@@ -2554,15 +2562,10 @@
           "stage": "Stage",
           "permission": "Offers",
           "freeWindow": {
-            "title": "Free messaging",
-            "open": "{{time}} left on {{channel}}",
-            "closed": "Closed on {{channel}}",
-            "unlimited": "No time limit on {{channel}}",
             "hours_one": "{{count}} hour",
             "hours_other": "{{count}} hours",
             "minutes_one": "{{count}} minute",
-            "minutes_other": "{{count}} minutes",
-            "lastInbound": "Customer last wrote {{time}}"
+            "minutes_other": "{{count}} minutes"
           },
           "timeline": {
             "title": "Marketing timeline",
@@ -2720,6 +2723,56 @@
       },
       "firstSource": "First source",
       "source": "Source"
+    },
+    "detail": {
+      "open": "View customer profile",
+      "unnamed": "Unnamed customer",
+      "since": "Customer since {{date}}",
+      "openConversation": "Chat",
+      "profileSummary": "AI summary",
+      "stats": {
+        "spent": "Spent",
+        "lastActive": "Last message",
+        "spentHint_one": "{{count}} confirmed order",
+        "spentHint_other": "{{count}} confirmed orders",
+        "lastOrder": "Last order",
+        "noOrders": "No orders yet",
+        "windowOpen": "Free messages for {{time}} more",
+        "windowClosed": "Free messaging window closed",
+        "consent": "Offers"
+      },
+      "addOrder": "Add order",
+      "cameFrom": "Came from",
+      "tabs": {
+        "overview": "Overview",
+        "conversations": "Conversations",
+        "orders": "Orders",
+        "marketing": "Marketing"
+      },
+      "upcoming": {
+        "title": "Coming up",
+        "count_one": "{{count}} item",
+        "count_other": "{{count}} items",
+        "followup": "Reminder on {{date}}",
+        "cancel": "Cancel",
+        "paused": "Offers for {{group}} paused until {{date}}",
+        "pausedHint": "Customer said \"{{reason}}\". Offers for other product groups can still go out.",
+        "resume": "Resume"
+      },
+      "activity": {
+        "title": "Activity",
+        "filters": {
+          "all": "All",
+          "message": "Messages",
+          "order": "Orders",
+          "marketing": "Marketing"
+        },
+        "firstMessage": "First message",
+        "lastMessage": "Latest message",
+        "order": "Order {{code}} · {{total}} · {{status}}",
+        "more": "Show more",
+        "empty": "Nothing here yet"
+      }
     }
   },
   "settings": {

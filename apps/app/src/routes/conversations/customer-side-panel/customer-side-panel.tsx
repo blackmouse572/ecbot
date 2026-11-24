@@ -1,61 +1,33 @@
-import {
-  useContactPointsByCustomer,
-  type ContactPointGetResponseDto,
-} from "@/hooks/api/contact-points";
-import {
-  useApplyCustomerTag,
-  useCustomerTagAssignments,
-  useRemoveCustomerTag,
-  type CustomerTagAssignmentGetResponseDto,
-} from "@/hooks/api/customer-tag-assignments";
-import {
-  useCustomerTagList,
-  type CustomerTagGetResponseDto,
-} from "@/hooks/api/customer-tags";
-import {
-  useCustomer,
-  useEraseCustomer,
-  useExportCustomer,
-} from "@/hooks/api/customers";
-import { downloadJson } from "@/utils";
-import { useUnmergeCustomer } from "@/hooks/api/customer-merge-suggestions";
+import { useContactPointsByCustomer } from "@/hooks/api/contact-points";
+import { useCustomer } from "@/hooks/api/customers";
 import { useFeatureFlags } from "@/hooks/api/feature-flags";
-import { PlatformIcon } from "@/components/platform-icon/platform-icon";
+import { useWorkspaceParams } from "@/hooks/use-workspace-params";
+import { ROUTES } from "@/routes/constants";
+import { ContactPointsList } from "./components/contact-points-list";
 import { ConversationsSection } from "./components/conversations-section";
+import { CustomerActions } from "./components/customer-actions";
 import { CustomerEditDrawer } from "./components/customer-edit-drawer";
-import { CustomerTagPicker } from "./components/customer-tag-picker";
 import { DetailRow } from "./components/detail-row";
 import { FoldedSection } from "./components/folded-section";
 import { FollowupsSection } from "./components/followups-section";
 import { MarketingSection } from "./components/marketing-section";
 import { OrdersSection } from "./components/orders-section";
 import { SavedFieldsSection } from "./components/saved-fields-section";
+import { TagsSection } from "./components/tags-section";
 import { TimezoneSection } from "./components/timezone-section";
-import { CUSTOMER_DATA_SUBJECT } from "../constants";
-import { Can } from "@repo/auth";
 import { Accordion } from "@repo/ui/components";
-import { NoRecords } from "@repo/ui/common-components";
-import { IconAddressBook, IconTag } from "@tabler/icons-react";
 import {
   ArrowLeft,
+  ArrowUpRightOnBox,
   ChevronDoubleLeft,
   ChevronDoubleRight,
-  EllipsisHorizontal,
   PencilSquare,
-  XMarkMini,
 } from "@medusajs/icons";
-import {
-  Badge,
-  DropdownMenu,
-  Heading,
-  IconButton,
-  Text,
-  toast,
-  usePrompt,
-} from "@medusajs/ui";
+import { Heading, IconButton, Tooltip } from "@medusajs/ui";
 import { Skeleton } from "@repo/ui/common-components";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 // Which folded sections the operator keeps open, remembered per browser.
 const OPEN_SECTIONS_KEY = "conversations.customerPanel.openSections";
@@ -95,6 +67,7 @@ export function CustomerSidePanel({
 }: Props) {
   const { t } = useTranslation();
   const { flags } = useFeatureFlags();
+  const { workspaceSlug } = useWorkspaceParams();
   const { customer, isLoading } = useCustomer(customerId);
   const { contactPoints } = useContactPointsByCustomer(customerId);
   const [editing, setEditing] = useState(false);
@@ -145,6 +118,16 @@ export function CustomerSidePanel({
           </Heading>
         </div>
         <div className="flex items-center gap-x-1">
+          <Tooltip content={t("customers.detail.open")}>
+            <IconButton size="small" variant="transparent" asChild>
+              <Link
+                to={`/${workspaceSlug}/${ROUTES.Customers}/${customerId}`}
+                aria-label={t("customers.detail.open")}
+              >
+                <ArrowUpRightOnBox />
+              </Link>
+            </IconButton>
+          </Tooltip>
           {!onBack && (
             <IconButton
               size="small"
@@ -227,7 +210,10 @@ export function CustomerSidePanel({
             <Heading level="h3" className="mb-2">
               {t("conversations.customer.panel.contactPoints.title")}
             </Heading>
-            <ContactPointsList contactPoints={contactPoints} />
+            <ContactPointsList
+              customerId={customer.id}
+              contactPoints={contactPoints}
+            />
           </div>
 
           <div className="border-ui-border-base border-t px-4 py-4">
@@ -277,258 +263,5 @@ export function CustomerSidePanel({
         </>
       )}
     </aside>
-  );
-}
-
-function TagsSection({ customerId }: { customerId: string }) {
-  const { t } = useTranslation();
-  const { assignments, isError } = useCustomerTagAssignments(customerId);
-  const { tags: catalog } = useCustomerTagList();
-  const apply = useApplyCustomerTag(customerId);
-  const remove = useRemoveCustomerTag(customerId);
-
-  const appliedTagIds = useMemo(
-    () =>
-      new Set(assignments.map((a) => a.tag?.id).filter(Boolean) as string[]),
-    [assignments],
-  );
-
-  const isBusy = apply.isPending || remove.isPending;
-
-  return (
-    <div className="flex flex-col gap-y-2">
-      {isError ? (
-        <Text size="small" className="text-ui-fg-error">
-          {t("general.loadFailed")}
-        </Text>
-      ) : assignments.length === 0 ? (
-        <NoRecords
-          size="small"
-          title={t("conversations.customer.panel.tags.empty")}
-          message={t("conversations.customer.panel.tags.emptyHint")}
-          icon={<IconTag />}
-        />
-      ) : (
-        <ul className="flex flex-wrap gap-1.5">
-          {assignments.map((assignment) => (
-            <TagChip
-              key={assignment.id}
-              assignment={assignment}
-              onRemove={() => {
-                if (!assignment.tag?.id) return;
-                remove.mutate(assignment.tag.id);
-              }}
-              disabled={isBusy}
-            />
-          ))}
-        </ul>
-      )}
-
-      <div>
-        <CustomerTagPicker
-          tags={catalog}
-          appliedTagIds={appliedTagIds}
-          onApply={(tagId) => apply.mutate(tagId)}
-          onRemove={(tagId) => remove.mutate(tagId)}
-          disabled={isBusy}
-        />
-      </div>
-    </div>
-  );
-}
-
-function TagLabel({ tag }: { tag: CustomerTagGetResponseDto }) {
-  return (
-    <span className="flex items-center gap-x-1.5">
-      {tag.emoji ? <span aria-hidden>{tag.emoji}</span> : null}
-      <span>{tag.name}</span>
-    </span>
-  );
-}
-
-function TagChip({
-  assignment,
-  onRemove,
-  disabled,
-}: {
-  assignment: CustomerTagAssignmentGetResponseDto;
-  onRemove: () => void;
-  disabled: boolean;
-}) {
-  const { t } = useTranslation();
-  const tag = assignment.tag;
-
-  if (!tag) return null;
-
-  return (
-    <li>
-      <Badge size="small" className="flex items-center gap-x-1">
-        <TagLabel tag={tag} />
-        <button
-          type="button"
-          onClick={onRemove}
-          disabled={disabled}
-          aria-label={t("conversations.customer.panel.tags.remove")}
-          className="text-ui-fg-subtle hover:text-ui-fg-base disabled:opacity-50"
-        >
-          <XMarkMini />
-        </button>
-      </Badge>
-    </li>
-  );
-}
-
-function CustomerActions({
-  customerId,
-  customerName,
-  onErased,
-}: {
-  customerId: string;
-  customerName?: string | null;
-  onErased?: () => void;
-}) {
-  const { t } = useTranslation();
-  const prompt = usePrompt();
-  const unmerge = useUnmergeCustomer(customerId);
-  const exportData = useExportCustomer(customerId);
-  const erase = useEraseCustomer(customerId);
-
-  const handleExport = () =>
-    toast.promise(
-      exportData
-        .mutateAsync()
-        .then((data) => downloadJson(data, `customer-${customerId}.json`)),
-      {
-        loading: t("conversations.customer.panel.exportData.loading"),
-        success: t("conversations.customer.panel.exportData.success"),
-        error: t("conversations.customer.panel.exportData.error"),
-      },
-    );
-
-  const handleErase = async () => {
-    const confirmed = await prompt({
-      title: t("conversations.customer.panel.erase.confirm.title"),
-      description: t("conversations.customer.panel.erase.confirm.body"),
-      confirmText: t("conversations.customer.panel.erase.confirm.confirm"),
-      cancelText: t("conversations.customer.panel.erase.confirm.cancel"),
-      variant: "danger",
-      // Typing the name (or a fixed word when there is none) makes a
-      // permanent delete a deliberate act, not a slip of the mouse.
-      verificationText:
-        customerName?.trim() ||
-        t("conversations.customer.panel.erase.confirm.verification"),
-    });
-
-    if (!confirmed) return;
-
-    try {
-      await erase.mutateAsync();
-      toast.success(t("conversations.customer.panel.erase.toast.success"));
-      onErased?.();
-    } catch {
-      toast.error(t("conversations.customer.panel.erase.toast.failed"));
-    }
-  };
-
-  const handleUnmerge = async () => {
-    const confirmed = await prompt({
-      title: t("conversations.customer.panel.unmerge.confirm.title"),
-      description: t("conversations.customer.panel.unmerge.confirm.body"),
-      confirmText: t("conversations.customer.panel.unmerge.confirm.confirm"),
-      cancelText: t("conversations.customer.panel.unmerge.confirm.cancel"),
-      variant: "danger",
-    });
-
-    if (!confirmed) return;
-
-    try {
-      await unmerge.mutateAsync();
-      toast.success(t("conversations.customer.panel.unmerge.toast.success"));
-    } catch (e) {
-      toast.error(t("conversations.customer.panel.unmerge.toast.failed"));
-    }
-  };
-
-  return (
-    <DropdownMenu>
-      <DropdownMenu.Trigger asChild>
-        <IconButton
-          size="small"
-          variant="transparent"
-          aria-label={t("conversations.customer.panel.actions.more")}
-        >
-          <EllipsisHorizontal />
-        </IconButton>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Content>
-        <DropdownMenu.Item onClick={handleUnmerge} disabled={unmerge.isPending}>
-          {t("conversations.customer.panel.unmerge.action")}
-        </DropdownMenu.Item>
-        <Can I="read" a={CUSTOMER_DATA_SUBJECT}>
-          <DropdownMenu.Item
-            onClick={handleExport}
-            disabled={exportData.isPending}
-          >
-            {t("conversations.customer.panel.exportData.action")}
-          </DropdownMenu.Item>
-        </Can>
-        <Can I="delete" a={CUSTOMER_DATA_SUBJECT}>
-          <DropdownMenu.Separator />
-          <DropdownMenu.Item
-            onClick={handleErase}
-            disabled={erase.isPending}
-            className="text-ui-fg-error"
-          >
-            {t("conversations.customer.panel.erase.action")}
-          </DropdownMenu.Item>
-        </Can>
-      </DropdownMenu.Content>
-    </DropdownMenu>
-  );
-}
-
-function ContactPointsList({
-  contactPoints,
-}: {
-  contactPoints: ContactPointGetResponseDto[];
-}) {
-  const { t } = useTranslation();
-
-  if (contactPoints.length === 0) {
-    return (
-      <NoRecords
-        size="small"
-        title={t("conversations.customer.panel.contactPoints.empty")}
-        message={t("conversations.customer.panel.contactPoints.emptyHint")}
-        icon={<IconAddressBook />}
-      />
-    );
-  }
-
-  return (
-    <ul className="flex flex-col gap-y-2">
-      {contactPoints.map((cp) => (
-        <li
-          key={cp.id}
-          className="border-ui-border-base bg-ui-bg-base flex items-center gap-x-2 rounded border px-2 py-1.5"
-        >
-          <PlatformIcon
-            type={cp.platform as A}
-            size={16}
-            className="shrink-0"
-          />
-          <div className="flex min-w-0 flex-col">
-            <Text size="small" weight="plus" className="truncate">
-              {cp.displaySenderName ?? cp.externalSenderId}
-            </Text>
-            {cp.displaySenderName && (
-              <Text size="xsmall" className="text-ui-fg-subtle truncate">
-                {cp.externalSenderId}
-              </Text>
-            )}
-          </div>
-        </li>
-      ))}
-    </ul>
   );
 }

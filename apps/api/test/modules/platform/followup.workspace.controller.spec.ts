@@ -88,6 +88,27 @@ describe('FollowupWorkspaceController', () => {
             });
         });
 
+        it('forwards the customer filter so a customer page lists reminders across their conversations', async () => {
+            mockFollowupService.findAllByWorkspace.mockResolvedValue([[], 0]);
+            mockFollowupService.mapList.mockReturnValue([]);
+            mockPaginationService.totalPage.mockReturnValue(0);
+
+            await controller.list(
+                workspace,
+                { _limit: 20, _offset: 0 } as any,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                'cus-1'
+            );
+
+            expect(mockFollowupService.findAllByWorkspace).toHaveBeenCalledWith(
+                'ws-1',
+                expect.objectContaining({ customerId: 'cus-1' })
+            );
+        });
+
         it('works with no filters supplied', async () => {
             mockFollowupService.findAllByWorkspace.mockResolvedValue([[], 0]);
             mockFollowupService.mapList.mockReturnValue([]);

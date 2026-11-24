@@ -37240,6 +37240,7 @@ export type FollowupWorkspaceControllerListV1Data = {
         conversationId?: string;
         search?: string;
         status?: 'SCHEDULED' | 'COMPLETED' | 'SKIPPED' | 'FAILED' | 'CANCELLED';
+        customer?: string;
         /**
          * Data per page, max 100
          */

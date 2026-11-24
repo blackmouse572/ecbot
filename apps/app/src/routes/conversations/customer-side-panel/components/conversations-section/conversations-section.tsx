@@ -45,6 +45,7 @@ export function ConversationsSection({ customerId, conversationId }: Props) {
       <NoRecords
         size="small"
         title={t("conversations.customer.panel.conversations.empty")}
+        message={t("conversations.customer.panel.conversations.emptyHint")}
         icon={<IconMessages />}
       />
     );
