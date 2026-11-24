@@ -3371,7 +3371,8 @@
       "TAG_CLASSIFIER": "Gắn tag khách hàng",
       "CONVERSATION_MEMORY": "Ghi nhớ hội thoại",
       "AGENT_BUILDER": "Tạo agent",
-      "KNOWLEDGE_INGEST": "Xử lý kiến thức"
+      "KNOWLEDGE_INGEST": "Xử lý kiến thức",
+      "MARKETING_DRAFT": "Soạn tin tiếp thị"
     },
     "share": "Tỷ trọng",
     "messages": "Tin nhắn",

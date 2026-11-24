@@ -14713,6 +14713,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "text"
+        },
+        "stop_reply_enabled": {
+          "name": "stop_reply_enabled",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "true",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
         }
       },
       "name": "marketing_settings",

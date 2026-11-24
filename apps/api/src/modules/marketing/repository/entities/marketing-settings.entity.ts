@@ -41,4 +41,8 @@ export class MarketingSettingsEntity extends DatabaseEntityBase {
     /** The confirmation sent back; null keeps the built-in text. */
     @Property({ type: 'text', nullable: true })
     stopReply?: string | null;
+
+    /** Off: a customer who opts out gets no confirmation at all. */
+    @Property({ type: 'boolean', default: true })
+    stopReplyEnabled: boolean = true;
 }

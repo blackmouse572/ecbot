@@ -38,4 +38,10 @@ export class MarketingSettingsGetResponseDto {
         description: 'Null: the built-in text in the agent language.',
     })
     stopReply: string | null;
+
+    @Expose()
+    @ApiProperty({
+        description: 'False: a customer who opts out gets no confirmation.',
+    })
+    stopReplyEnabled: boolean;
 }

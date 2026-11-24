@@ -733,6 +733,23 @@ describe('WidgetChatService attachments', () => {
             );
         });
 
+        it('stays quiet on "dừng" when the shop turned the confirmation off', async () => {
+            const {
+                service,
+                customerMarketing,
+                chatbotAIService,
+                messageRepository,
+            } = setup({ optedOut: true });
+            customerMarketing.stopReplyText.mockResolvedValueOnce(null);
+
+            await service.handleTurn(res, { ...turn, text: 'dừng' });
+
+            expect(chatbotAIService.streamChat).not.toHaveBeenCalled();
+            expect(
+                messageRepository.insertPendingOutbound
+            ).not.toHaveBeenCalled();
+        });
+
         it('logs the tracked link the visitor arrived through, then answers', async () => {
             const { service, attribution, chatbotAIService } = setup();
 

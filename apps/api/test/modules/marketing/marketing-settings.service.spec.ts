@@ -10,6 +10,7 @@ const DEFAULTS = {
     sendTo: '20:00',
     stopKeywords: ['dừng', 'dung', 'stop'],
     stopReply: null,
+    stopReplyEnabled: true,
 };
 
 function makeService(saved: Record<string, unknown> | null = null) {
@@ -127,12 +128,21 @@ describe('MarketingSettingsService', () => {
         expect(repository.findOne).toHaveBeenCalledTimes(1);
     });
 
-    it('gives the shop reply, trimmed, or null for the built-in one', async () => {
+    it('gives the shop reply, trimmed, or null for the built-in one, and whether it is on', async () => {
         const { service } = makeService();
-        await expect(service.stopReply('ws1')).resolves.toBeNull();
+        await expect(service.stopReply('ws1')).resolves.toEqual({
+            enabled: true,
+            text: null,
+        });
         await service.update('ws1', { stopReply: '  Dạ shop ngưng gửi ạ.  ' });
-        await expect(service.stopReply('ws1')).resolves.toBe(
-            'Dạ shop ngưng gửi ạ.'
-        );
+        await expect(service.stopReply('ws1')).resolves.toEqual({
+            enabled: true,
+            text: 'Dạ shop ngưng gửi ạ.',
+        });
+        await service.update('ws1', { stopReplyEnabled: false });
+        await expect(service.stopReply('ws1')).resolves.toEqual({
+            enabled: false,
+            text: 'Dạ shop ngưng gửi ạ.',
+        });
     });
 });

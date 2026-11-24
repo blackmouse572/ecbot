@@ -7722,6 +7722,31 @@ export type MarketingSendCreateRequestDto = {
     imageUrl?: string;
 };
 
+export type MarketingSendDraftResponseDto = {
+    text: string;
+};
+
+export type MarketingSendDraftRequestDto = {
+    /**
+     * A Tổng quan "Việc nên làm" row; leave out conditions
+     */
+    preset?: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'CROSS_SELL' | 'REPURCHASE' | 'WIN_BACK';
+    /**
+     * Khách khớp Tất cả (ALL) or Bất kỳ (ANY) điều kiện
+     */
+    match?: 'ALL' | 'ANY';
+    conditions?: Array<MarketingAudienceConditionRequestDto>;
+    /**
+     * Ưu đãi: the shop's offer in its own words. Left out, the text invites a reply.
+     */
+    offer?: string;
+    /**
+     * The last draft, so "Viết kiểu khác" writes a different one
+     */
+    previous?: string;
+    language?: 'vi' | 'en';
+};
+
 export type MarketingSendListResponseDto = {
     id: string;
     name: string;
@@ -7782,6 +7807,10 @@ export type MarketingSettingsGetResponseDto = {
      * Null: the built-in text in the agent language.
      */
     stopReply: string | null;
+    /**
+     * False: a customer who opts out gets no confirmation.
+     */
+    stopReplyEnabled: boolean;
 };
 
 export type MarketingSettingsUpdateRequestDto = {
@@ -7815,6 +7844,10 @@ export type MarketingSettingsUpdateRequestDto = {
     stopReply?: {
         [key: string]: unknown;
     } | null;
+    /**
+     * Gửi lời xác nhận khi khách dừng nhận tin. False: the customer gets no reply when they opt out.
+     */
+    stopReplyEnabled?: boolean;
 };
 
 export type FollowupListResponseDto = {
@@ -37386,6 +37419,85 @@ export type MarketingSendWorkspaceControllerCreateV1Responses = {
 };
 
 export type MarketingSendWorkspaceControllerCreateV1Response = MarketingSendWorkspaceControllerCreateV1Responses[keyof MarketingSendWorkspaceControllerCreateV1Responses];
+
+export type MarketingSendWorkspaceControllerDraftV1Data = {
+    body: MarketingSendDraftRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/marketing/sends/draft';
+};
+
+export type MarketingSendWorkspaceControllerDraftV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSendWorkspaceControllerDraftV1Error = MarketingSendWorkspaceControllerDraftV1Errors[keyof MarketingSendWorkspaceControllerDraftV1Errors];
+
+export type MarketingSendWorkspaceControllerDraftV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MarketingSendDraftResponseDto;
+    };
+};
+
+export type MarketingSendWorkspaceControllerDraftV1Response = MarketingSendWorkspaceControllerDraftV1Responses[keyof MarketingSendWorkspaceControllerDraftV1Responses];
 
 export type MarketingSendWorkspaceControllerGetV1Data = {
     body?: never;

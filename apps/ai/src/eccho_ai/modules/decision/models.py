@@ -27,3 +27,17 @@ class DecisionResponse(BaseModel):
     # What the call spent, for apps/api to meter; None when no model ran.
     usage: TokenUsage | None = None
     model: str | None = None
+
+
+class WriteRequest(BaseModel):
+    """A short shop message to draft: what to write, and what it is about."""
+
+    instructions: str = Field(min_length=1, max_length=4000)
+    state: str = Field(min_length=1, max_length=4000)
+
+
+class WriteResponse(BaseModel):
+    # Empty when the model failed: the caller says so to the person.
+    text: str = ""
+    usage: TokenUsage | None = None
+    model: str | None = None

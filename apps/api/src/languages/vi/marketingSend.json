@@ -9,6 +9,8 @@
     "replies": "Đã tải khách đã trả lời.",
     "error": {
         "notFound": "Không tìm thấy lần gửi này.",
-        "notAuto": "Chỉ lần gửi tự gửi mỗi ngày mới bật hoặc tắt được."
-    }
+        "notAuto": "Chỉ lần gửi tự gửi mỗi ngày mới bật hoặc tắt được.",
+        "draftFailed": "Chưa soạn được tin lúc này, bạn thử lại nhé."
+    },
+    "draft": "Đã soạn tin."
 }

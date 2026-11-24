@@ -9,6 +9,8 @@
     "replies": "Replies loaded.",
     "error": {
         "notFound": "This send was not found.",
-        "notAuto": "Only a send that runs each day can be turned on or off."
-    }
+        "notAuto": "Only a send that runs each day can be turned on or off.",
+        "draftFailed": "The draft could not be written right now. Please try again."
+    },
+    "draft": "Draft written."
 }

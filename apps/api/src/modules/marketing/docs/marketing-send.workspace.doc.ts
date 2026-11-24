@@ -13,12 +13,14 @@ import {
     MarketingSendDocQueryList,
 } from '../constants/marketing-send.doc.constant';
 import { MarketingSendCreateRequestDto } from '../dtos/request/marketing-send.create.request.dto';
+import { MarketingSendDraftRequestDto } from '../dtos/request/marketing-send.draft.request.dto';
 import { MarketingSendUpdateRequestDto } from '../dtos/request/marketing-send.update.request.dto';
 import {
     MarketingSendGetResponseDto,
     MarketingSendListResponseDto,
     MarketingSendReplyResponseDto,
 } from '../dtos/response/marketing-send.get.response.dto';
+import { MarketingSendDraftResponseDto } from '../dtos/response/marketing-send.draft.response.dto';
 
 const auth = () => DocAuth({ xApiKey: true, jwtAccessToken: true });
 const withId = [...WorkspaceDocParamsId, ...MarketingSendDocParamsId];
@@ -96,5 +98,22 @@ export function MarketingSendRepliesDoc(): MethodDecorator {
             'marketingSend.replies',
             { dto: MarketingSendReplyResponseDto }
         )
+    );
+}
+
+export function MarketingSendDraftDoc(): MethodDecorator {
+    return applyDecorators(
+        Doc({
+            summary: "AI soạn giúp: draft a send's text for a stage or conditions",
+        }),
+        DocRequest({
+            params: WorkspaceDocParamsId,
+            dto: MarketingSendDraftRequestDto,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+        }),
+        auth(),
+        DocResponse<MarketingSendDraftResponseDto>('marketingSend.draft', {
+            dto: MarketingSendDraftResponseDto,
+        })
     );
 }

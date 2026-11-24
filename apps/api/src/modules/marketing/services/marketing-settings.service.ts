@@ -56,6 +56,7 @@ export class MarketingSettingsService {
                 dto.stopReply === undefined
                     ? undefined
                     : dto.stopReply?.trim() || null,
+            stopReplyEnabled: dto.stopReplyEnabled,
         };
         const defined = Object.fromEntries(
             Object.entries(changes).filter(([, value]) => value !== undefined)
@@ -118,9 +119,18 @@ export class MarketingSettingsService {
         return (saved?.stopKeywords ?? CUSTOMER_MARKETING_OPT_OUT_KEYWORDS)[0];
     }
 
-    /** The shop's own opt-out confirmation, or null for the built-in one. */
-    async stopReply(workspaceId: string): Promise<string | null> {
-        return (await this.find(workspaceId))?.stopReply ?? null;
+    /**
+     * The opt-out confirmation: whether the shop sends one, and its own text
+     * (null for the built-in one).
+     */
+    async stopReply(
+        workspaceId: string
+    ): Promise<{ enabled: boolean; text: string | null }> {
+        const saved = await this.find(workspaceId);
+        return {
+            enabled: saved?.stopReplyEnabled ?? true,
+            text: saved?.stopReply ?? null,
+        };
     }
 
     private find(workspaceId: string): Promise<MarketingSettingsEntity | null> {
@@ -168,6 +178,7 @@ export class MarketingSettingsService {
                     ...CUSTOMER_MARKETING_OPT_OUT_KEYWORDS,
                 ],
                 stopReply: saved?.stopReply ?? null,
+                stopReplyEnabled: saved?.stopReplyEnabled ?? true,
             },
             { excludeExtraneousValues: true }
         );

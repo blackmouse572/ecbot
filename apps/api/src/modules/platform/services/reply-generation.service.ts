@@ -502,7 +502,7 @@ export class ReplyGenerationService {
         );
     }
 
-    /** Confirm an opt-out: the shop's own text, else the built-in one. */
+    /** Confirm an opt-out: the shop's own text, else the built-in one, unless turned off. */
     async sendOptOutReply(
         chatbot: any,
         account: any,
@@ -512,6 +512,8 @@ export class ReplyGenerationService {
         const text = await this.moduleRef
             .get(CustomerMarketingService, { strict: false })
             .stopReplyText(chatbot.workspace.id, chatbot);
+        // The shop turned the confirmation off: nothing is sent.
+        if (text === null) return false;
         return this.sendBotText(
             chatbot,
             account,

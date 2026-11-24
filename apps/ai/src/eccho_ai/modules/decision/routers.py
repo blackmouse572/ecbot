@@ -16,7 +16,13 @@ from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.providers.chat_model import build_chat_model
 from eccho_ai.llm.usage import sum_usage
 from eccho_ai.models.app_models import AppResponse
-from eccho_ai.modules.decision.models import DecisionQuestion, DecisionRequest, DecisionResponse
+from eccho_ai.modules.decision.models import (
+    DecisionQuestion,
+    DecisionRequest,
+    DecisionResponse,
+    WriteRequest,
+    WriteResponse,
+)
 
 logger = logging.getLogger("uvicorn.info")
 router = APIRouter(
@@ -124,4 +130,44 @@ async def system_one(req: DecisionRequest) -> AppResponse[DecisionResponse]:
         data=DecisionResponse(
             answers=answers, usage=sum_usage(usage_cb.usage_metadata), model=AppVars.DECISION_MODEL
         )
+    )
+
+
+WRITE_SYSTEM_PROMPT = """\
+You write one short message that a shop sends to its customers, following the
+instructions exactly. Reply with the message only: no quotes around it, no
+notes, no title, no list of options.
+"""
+
+# A draft is sampled, so asking again gives another wording.
+WRITE_TEMPERATURE = 0.9
+WRITE_MAX_TOKENS = 600
+WRITE_TEXT_MAX = 1000
+
+
+@router.post("/write", response_model=AppResponse[WriteResponse])
+async def write(req: WriteRequest) -> AppResponse[WriteResponse]:
+    """Drafts a short shop message (#506: a marketing offer) with the decision model."""
+    # As with system-one, a failure answers 200 with an empty text: the shop
+    # can still write the message itself. Usage is reported either way.
+    with get_usage_metadata_callback() as usage_cb:
+        try:
+            llm = build_chat_model(
+                model_text_name=AppVars.DECISION_MODEL,
+                temperature=WRITE_TEMPERATURE,
+                max_tokens=WRITE_MAX_TOKENS,
+            )
+            reply = await llm.ainvoke(
+                [
+                    {"role": "system", "content": WRITE_SYSTEM_PROMPT},
+                    {"role": "user", "content": f"Instructions:\n{req.instructions}\n\nState:\n{req.state}"},
+                ]
+            )
+            text = str(reply.content).strip().strip('"').strip()[:WRITE_TEXT_MAX]
+        except Exception as exc:  # noqa: BLE001 - the shop can write it by hand
+            logger.warning("decision.write failed err=%s", exc)
+            text = ""
+
+    return AppResponse(
+        data=WriteResponse(text=text, usage=sum_usage(usage_cb.usage_metadata), model=AppVars.DECISION_MODEL)
     )
