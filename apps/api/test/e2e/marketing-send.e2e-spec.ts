@@ -547,6 +547,24 @@ describe('E2E — marketing sends', () => {
             .send({ preset: 'ASKED_PRICE', language: 'fr' });
         expect(bad.status).toBe(422);
 
+        // Ngắn hơn works on the current text, so it needs one.
+        const shorter = await http(ctx.app)
+            .post(url('/draft'))
+            .set(...auth())
+            .send({
+                preset: 'ASKED_PRICE',
+                previous: 'Chào {name}, Lumi giảm 10% nha.',
+                rewrite: 'SHORTER',
+                tone: 'PLAYFUL',
+            });
+        expect(shorter.status).toBe(200);
+        expect(write.mock.calls.at(-1)?.[0]).toContain('shorter');
+        const noText = await http(ctx.app)
+            .post(url('/draft'))
+            .set(...auth())
+            .send({ preset: 'ASKED_PRICE', rewrite: 'LONGER' });
+        expect(noText.status).toBe(422);
+
         // The audience checks of a send: neither, or both, is a 400.
         for (const body of [
             {},

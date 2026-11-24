@@ -124,7 +124,13 @@ export class MarketingSendWorkspaceController {
         @WorkspacePayload() workspace: WorkspaceEntity,
         @Body() body: MarketingSendDraftRequestDto
     ): Promise<IResponse<MarketingSendDraftResponseDto>> {
-        return { data: await this.draftService.draft(workspace.id, workspace.name, body) };
+        return {
+            data: await this.draftService.draft(
+                workspace.id,
+                workspace.name,
+                body
+            ),
+        };
     }
 
     @MarketingSendListDoc()

@@ -7741,9 +7741,17 @@ export type MarketingSendDraftRequestDto = {
      */
     offer?: string;
     /**
-     * The last draft, so "Viết kiểu khác" writes a different one
+     * The current text, which `rewrite` works on. Needed with `rewrite`.
      */
     previous?: string;
+    /**
+     * Viết kiểu khác (DIFFERENT, the default with a `previous`), Dài hơn (LONGER) or Ngắn hơn (SHORTER)
+     */
+    rewrite?: 'DIFFERENT' | 'LONGER' | 'SHORTER';
+    /**
+     * Giọng văn: Thân thiện, Lịch sự or Vui vẻ
+     */
+    tone?: 'FRIENDLY' | 'POLITE' | 'PLAYFUL';
     language?: 'vi' | 'en';
 };
 

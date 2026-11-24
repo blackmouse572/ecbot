@@ -59,6 +59,8 @@ export class MarketingDraftService {
             preset,
             offer: dto.offer,
             previous: dto.previous,
+            rewrite: dto.rewrite,
+            tone: dto.tone,
             language: dto.language,
         });
         const written = await this.ai

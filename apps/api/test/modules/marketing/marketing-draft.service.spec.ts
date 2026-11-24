@@ -4,6 +4,10 @@ import {
     UnprocessableEntityException,
 } from '@nestjs/common';
 import { ENUM_AI_USAGE_SOURCE } from 'src/app/ai-usage-meter.interface';
+import {
+    ENUM_MARKETING_DRAFT_REWRITE,
+    ENUM_MARKETING_DRAFT_TONE,
+} from 'src/modules/marketing/enums/marketing-draft.enum';
 import { ENUM_MARKETING_TODO } from 'src/modules/marketing/enums/marketing-overview.enum';
 import { MarketingDraftService } from 'src/modules/marketing/services/marketing-draft.service';
 
@@ -100,6 +104,42 @@ describe('MarketingDraftService', () => {
         );
         expect(meter.check).not.toHaveBeenCalled();
         expect(ai.write).not.toHaveBeenCalled();
+    });
+
+    it('makes the current text longer or shorter, keeping it', async () => {
+        const { service, ai } = makeService('x');
+        const current = 'Chào {name}, Lumi giảm 10% nha.';
+        await service.draft('ws1', 'Lumi', {
+            preset: ENUM_MARKETING_TODO.NEW,
+            previous: current,
+            rewrite: ENUM_MARKETING_DRAFT_REWRITE.SHORTER,
+        });
+        await service.draft('ws1', 'Lumi', {
+            preset: ENUM_MARKETING_TODO.NEW,
+            previous: current,
+            rewrite: ENUM_MARKETING_DRAFT_REWRITE.LONGER,
+        });
+        const [shorter] = ai.write.mock.calls[0] as unknown as [string];
+        const [longer] = ai.write.mock.calls[1] as unknown as [string];
+        expect(shorter).toContain('shorter');
+        expect(shorter).toContain(current);
+        expect(shorter).not.toContain('under 300 characters');
+        expect(longer).toContain('longer');
+        expect(longer).toContain(current);
+    });
+
+    it('writes in the tone asked, friendly by default', async () => {
+        const { service, ai } = makeService('x');
+        await service.draft('ws1', 'Lumi', { preset: ENUM_MARKETING_TODO.NEW });
+        await service.draft('ws1', 'Lumi', {
+            preset: ENUM_MARKETING_TODO.NEW,
+            tone: ENUM_MARKETING_DRAFT_TONE.POLITE,
+        });
+        const [friendly] = ai.write.mock.calls[0] as unknown as [string];
+        const [polite] = ai.write.mock.calls[1] as unknown as [string];
+        expect(friendly).toContain('Warm and natural');
+        expect(polite).toContain('Polite');
+        expect(polite).not.toContain('Warm and natural');
     });
 
     it('replaces dashes with commas', async () => {

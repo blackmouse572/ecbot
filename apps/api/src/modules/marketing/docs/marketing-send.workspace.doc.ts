@@ -104,7 +104,8 @@ export function MarketingSendRepliesDoc(): MethodDecorator {
 export function MarketingSendDraftDoc(): MethodDecorator {
     return applyDecorators(
         Doc({
-            summary: "AI soạn giúp: draft a send's text for a stage or conditions",
+            summary:
+                "AI soạn giúp: draft a send's text for a stage or conditions",
         }),
         DocRequest({
             params: WorkspaceDocParamsId,

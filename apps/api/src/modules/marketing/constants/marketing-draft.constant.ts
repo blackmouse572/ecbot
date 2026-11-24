@@ -1,3 +1,7 @@
+import {
+    ENUM_MARKETING_DRAFT_REWRITE,
+    ENUM_MARKETING_DRAFT_TONE,
+} from '../enums/marketing-draft.enum';
 import { ENUM_MARKETING_TODO } from '../enums/marketing-overview.enum';
 
 export const MARKETING_DRAFT_MAX_OFFER_LENGTH = 500;
@@ -32,9 +36,33 @@ export const MARKETING_DRAFT_STAGE: Record<ENUM_MARKETING_TODO, string> = {
 export const MARKETING_DRAFT_CUSTOM_AUDIENCE =
     'customers the shop picked with its own conditions. Mention {product} where it fits.';
 
+/** A new draft's length; a rewrite says its own. */
+export const MARKETING_DRAFT_LENGTH =
+    'One to three short sentences, under 300 characters.';
+
+export const MARKETING_DRAFT_TONE: Record<ENUM_MARKETING_DRAFT_TONE, string> = {
+    [ENUM_MARKETING_DRAFT_TONE.FRIENDLY]:
+        'Warm and natural, as the shop owner would write it.',
+    [ENUM_MARKETING_DRAFT_TONE.POLITE]:
+        'Polite and respectful, a little formal, as a careful shop would write to a valued customer.',
+    [ENUM_MARKETING_DRAFT_TONE.PLAYFUL]:
+        'Light, cheerful and playful, still respectful.',
+};
+
+/** What to do with the current text; `{current}` is replaced by it. */
+export const MARKETING_DRAFT_REWRITE: Record<
+    ENUM_MARKETING_DRAFT_REWRITE,
+    string
+> = {
+    [ENUM_MARKETING_DRAFT_REWRITE.DIFFERENT]:
+        'Write a different version of the current text, about as long: {current}',
+    [ENUM_MARKETING_DRAFT_REWRITE.LONGER]:
+        'Make the current text longer, three to five sentences and under 600 characters, with one more concrete reason to reply. Keep its meaning and offer: {current}',
+    [ENUM_MARKETING_DRAFT_REWRITE.SHORTER]:
+        'Make the current text shorter, one or two sentences and under 150 characters. Keep its offer: {current}',
+};
+
 export const MARKETING_DRAFT_RULES = [
-    'One to three short sentences, under 300 characters.',
-    'Warm and natural, as the shop owner would write it.',
     'Greet the customer with {name}.',
     'Keep {name} and {product} exactly as written: each customer gets their own name and product group.',
     'Use the offer exactly as given. Never invent a discount, price, gift or deadline. With no offer, invite them to reply instead.',
