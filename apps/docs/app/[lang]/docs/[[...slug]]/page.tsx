@@ -5,7 +5,7 @@ import {
   DocsTitle,
   MarkdownCopyButton,
   ViewOptionsPopover,
-} from "fumadocs-ui/layouts/docs/page";
+} from "fumadocs-ui/layouts/notebook/page";
 import Link from "fumadocs-core/link";
 import type { Metadata } from "next";
 import type { ComponentProps } from "react";

@@ -1,7 +1,7 @@
-import { DocsLayout } from "fumadocs-ui/layouts/docs";
+import { DocsLayout } from "fumadocs-ui/layouts/notebook";
 import type { ReactNode } from "react";
 import { baseOptions } from "@/lib/layout.shared";
-import { sectionsToFolders } from "@/lib/sidebar";
+import { sectionsToFolders, splitTabs, tabsOf } from "@/lib/sidebar";
 import { source } from "@/lib/source";
 
 export default async function Layout({
@@ -12,9 +12,15 @@ export default async function Layout({
   children: ReactNode;
 }) {
   const { lang } = await params;
+  const tree = splitTabs(sectionsToFolders(source.getPageTree(lang), 2), {
+    agent: "Agent",
+    marketing: lang === "vi" ? "Tiếp thị" : "Marketing",
+  });
   return (
     <DocsLayout
-      tree={sectionsToFolders(source.getPageTree(lang), 2)}
+      tree={tree}
+      tabs={tabsOf(tree)}
+      tabMode="navbar"
       {...baseOptions(lang)}
     >
       {children}

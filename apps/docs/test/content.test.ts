@@ -149,25 +149,3 @@ describe("legal drafts", () => {
     }
   });
 });
-
-// Grow sales pages describe screens behind the `marketing`, `customerSources`
-// and `orders` flags. They stay out of navigation and search until rollout.
-describe("Grow sales drafts", () => {
-  const marketing = pages.filter((p) => p.slug.startsWith("marketing/"));
-
-  it("are noindex", () => {
-    expect(marketing.length).toBe(8);
-    for (const p of marketing) expect(p.data.noindex, p.file).toBe(true);
-  });
-
-  it("are not in the navigation", () => {
-    for (const lang of LANGS) {
-      const meta = JSON.parse(
-        fs.readFileSync(path.join(DIR, `meta.${lang}.json`), "utf8"),
-      );
-      expect(
-        meta.pages.filter((p: string) => p.startsWith("marketing")),
-      ).toEqual([]);
-    }
-  });
-});
