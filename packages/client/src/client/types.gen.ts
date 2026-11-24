@@ -7626,6 +7626,147 @@ export type MarketingOverviewResponseDto = {
     health: MarketingOverviewHealthDto;
 };
 
+export type MarketingSendStatsDto = {
+    /**
+     * Waiting to go out
+     */
+    queued: number;
+    sent: number;
+    failed: number;
+    /**
+     * Not sent at send time, see notSent
+     */
+    skipped: number;
+    /**
+     * Sent offers answered within 72 hours
+     */
+    replied: number;
+    /**
+     * Customers who ordered within 7 days
+     */
+    ordered: number;
+    /**
+     * Those orders' total, in minor units
+     */
+    revenue: number;
+    /**
+     * Customers who opted out after their offer
+     */
+    optedOut: number;
+    lastSentAt: string | null;
+};
+
+export type MarketingSendChannelDto = {
+    channel: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
+    sent: number;
+    replied: number;
+    ordered: number;
+    optedOut: number;
+};
+
+export type MarketingSendNotSentDto = {
+    /**
+     * Left out when the send started (CAPPED, RESTING, ...), or skipped at send time (WINDOW_CLOSED, ...)
+     */
+    reason: 'STOPPED' | 'HOSTILE' | 'PAUSED' | 'DEFERRED' | 'CAPPED' | 'RESTING' | 'NO_CHANNEL' | 'WINDOW_CLOSED' | 'OPTED_OUT' | 'ACCOUNT_BLOCKED' | 'SEND_HOURS_ENDED';
+    count: number;
+};
+
+export type MarketingSendGetResponseDto = {
+    id: string;
+    name: string;
+    mode: 'ONCE' | 'AUTO';
+    /**
+     * AUTO: false once turned off
+     */
+    active: boolean;
+    /**
+     * May hold {name} and {product}
+     */
+    text: string;
+    imageUrl: string | null;
+    preset?: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'CROSS_SELL' | 'REPURCHASE' | 'WIN_BACK';
+    match?: 'ALL' | 'ANY';
+    conditions?: Array<MarketingAudienceConditionResponseDto>;
+    stats: MarketingSendStatsDto;
+    createdAt: string;
+    channels: Array<MarketingSendChannelDto>;
+    /**
+     * Không gửi được
+     */
+    notSent: Array<MarketingSendNotSentDto>;
+};
+
+export type MarketingSendCreateRequestDto = {
+    /**
+     * A Tổng quan "Việc nên làm" row; leave out conditions
+     */
+    preset?: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'CROSS_SELL' | 'REPURCHASE' | 'WIN_BACK';
+    /**
+     * Khách khớp Tất cả (ALL) or Bất kỳ (ANY) điều kiện
+     */
+    match?: 'ALL' | 'ANY';
+    conditions?: Array<MarketingAudienceConditionRequestDto>;
+    name: string;
+    /**
+     * ONCE: Chỉ gửi 1 lần. AUTO: Tự gửi mỗi ngày to customers who newly match.
+     */
+    mode: 'ONCE' | 'AUTO';
+    /**
+     * {name} and {product} are filled in for each customer: their name, and the product group they asked about (or bought, for a bought stage).
+     */
+    text: string;
+    /**
+     * A picture sent before the text. Left out, each customer gets their product group's photo if it has one.
+     */
+    imageUrl?: string;
+};
+
+export type MarketingSendListResponseDto = {
+    id: string;
+    name: string;
+    mode: 'ONCE' | 'AUTO';
+    /**
+     * AUTO: false once turned off
+     */
+    active: boolean;
+    /**
+     * May hold {name} and {product}
+     */
+    text: string;
+    imageUrl: string | null;
+    preset?: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'CROSS_SELL' | 'REPURCHASE' | 'WIN_BACK';
+    match?: 'ALL' | 'ANY';
+    conditions?: Array<MarketingAudienceConditionResponseDto>;
+    stats: MarketingSendStatsDto;
+    createdAt: string;
+};
+
+export type MarketingSendUpdateRequestDto = {
+    name?: string;
+    /**
+     * Offers still waiting to go out are sent with the new text.
+     */
+    text?: string;
+    imageUrl?: string | null;
+    /**
+     * AUTO sends only: false is "Tắt tự gửi", true turns it back on.
+     */
+    active?: boolean;
+};
+
+export type MarketingSendReplyResponseDto = {
+    customerId: string;
+    name: string | null;
+    conversationId: string | null;
+    /**
+     * Their first message after the offer
+     */
+    text: string | null;
+    repliedAt: string;
+    status: 'ORDERED' | 'STOPPED' | 'WAITING' | 'BOT';
+};
+
 export type MarketingSettingsGetResponseDto = {
     maxPer30Days: number;
     /**
@@ -37069,6 +37210,438 @@ export type MarketingOverviewWorkspaceControllerGetV1Responses = {
 };
 
 export type MarketingOverviewWorkspaceControllerGetV1Response = MarketingOverviewWorkspaceControllerGetV1Responses[keyof MarketingOverviewWorkspaceControllerGetV1Responses];
+
+export type MarketingSendWorkspaceControllerListV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        /**
+         * ONCE (Gửi 1 lần) and/or AUTO (Đang tự gửi), with ',' delimiter
+         */
+        mode?: string;
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/workspace/{workspace}/marketing/sends';
+};
+
+export type MarketingSendWorkspaceControllerListV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSendWorkspaceControllerListV1Error = MarketingSendWorkspaceControllerListV1Errors[keyof MarketingSendWorkspaceControllerListV1Errors];
+
+export type MarketingSendWorkspaceControllerListV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<MarketingSendListResponseDto>;
+    };
+};
+
+export type MarketingSendWorkspaceControllerListV1Response = MarketingSendWorkspaceControllerListV1Responses[keyof MarketingSendWorkspaceControllerListV1Responses];
+
+export type MarketingSendWorkspaceControllerCreateV1Data = {
+    body: MarketingSendCreateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/marketing/sends';
+};
+
+export type MarketingSendWorkspaceControllerCreateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSendWorkspaceControllerCreateV1Error = MarketingSendWorkspaceControllerCreateV1Errors[keyof MarketingSendWorkspaceControllerCreateV1Errors];
+
+export type MarketingSendWorkspaceControllerCreateV1Responses = {
+    /**
+     * 201
+     */
+    201: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MarketingSendGetResponseDto;
+    };
+};
+
+export type MarketingSendWorkspaceControllerCreateV1Response = MarketingSendWorkspaceControllerCreateV1Responses[keyof MarketingSendWorkspaceControllerCreateV1Responses];
+
+export type MarketingSendWorkspaceControllerGetV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the send
+         */
+        send: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/marketing/sends/{send}';
+};
+
+export type MarketingSendWorkspaceControllerGetV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSendWorkspaceControllerGetV1Error = MarketingSendWorkspaceControllerGetV1Errors[keyof MarketingSendWorkspaceControllerGetV1Errors];
+
+export type MarketingSendWorkspaceControllerGetV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MarketingSendGetResponseDto;
+    };
+};
+
+export type MarketingSendWorkspaceControllerGetV1Response = MarketingSendWorkspaceControllerGetV1Responses[keyof MarketingSendWorkspaceControllerGetV1Responses];
+
+export type MarketingSendWorkspaceControllerUpdateV1Data = {
+    body: MarketingSendUpdateRequestDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the send
+         */
+        send: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: never;
+    url: '/api/v1/workspace/{workspace}/marketing/sends/{send}';
+};
+
+export type MarketingSendWorkspaceControllerUpdateV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSendWorkspaceControllerUpdateV1Error = MarketingSendWorkspaceControllerUpdateV1Errors[keyof MarketingSendWorkspaceControllerUpdateV1Errors];
+
+export type MarketingSendWorkspaceControllerUpdateV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: MarketingSendGetResponseDto;
+    };
+};
+
+export type MarketingSendWorkspaceControllerUpdateV1Response = MarketingSendWorkspaceControllerUpdateV1Responses[keyof MarketingSendWorkspaceControllerUpdateV1Responses];
+
+export type MarketingSendWorkspaceControllerRepliesV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path: {
+        /**
+         * The ID of the send
+         */
+        send: string;
+        /**
+         * The ID or slug of the workspace
+         */
+        workspace: string;
+    };
+    query?: {
+        /**
+         * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
+         */
+        search?: string;
+        /**
+         * Data per page, max 100
+         */
+        perPage?: number;
+        /**
+         * page number, max 20
+         */
+        page?: number;
+        /**
+         * Order by base on _metadata.pagination.availableOrderBy
+         */
+        orderBy?: string;
+        /**
+         * Order direction base on _metadata.pagination.availableOrderDirection
+         */
+        orderDirection?: 'ASC' | 'DESC';
+    };
+    url: '/api/v1/workspace/{workspace}/marketing/sends/{send}/replies';
+};
+
+export type MarketingSendWorkspaceControllerRepliesV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type MarketingSendWorkspaceControllerRepliesV1Error = MarketingSendWorkspaceControllerRepliesV1Errors[keyof MarketingSendWorkspaceControllerRepliesV1Errors];
+
+export type MarketingSendWorkspaceControllerRepliesV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponsePagingDto & {
+        message?: unknown;
+        statusCode?: number;
+        data?: Array<MarketingSendReplyResponseDto>;
+    };
+};
+
+export type MarketingSendWorkspaceControllerRepliesV1Response = MarketingSendWorkspaceControllerRepliesV1Responses[keyof MarketingSendWorkspaceControllerRepliesV1Responses];
 
 export type MarketingSettingsWorkspaceControllerGetV1Data = {
     body?: never;

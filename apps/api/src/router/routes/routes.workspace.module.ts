@@ -7,6 +7,7 @@ import { AnalyticsModule } from '@app/modules/analytics/analytics.module';
 import { AnalyticsWorkspaceController } from '@app/modules/analytics/controllers/analytics.workspace.controller';
 import { MarketingAudienceWorkspaceController } from '@app/modules/marketing/controllers/marketing-audience.workspace.controller';
 import { MarketingOverviewWorkspaceController } from '@app/modules/marketing/controllers/marketing-overview.workspace.controller';
+import { MarketingSendWorkspaceController } from '@app/modules/marketing/controllers/marketing-send.workspace.controller';
 import { MarketingSettingsWorkspaceController } from '@app/modules/marketing/controllers/marketing-settings.workspace.controller';
 import { MarketingModule } from '@app/modules/marketing/marketing.module';
 import { ChatbotModule } from '@app/modules/chatbot/chatbot.module';
@@ -106,6 +107,7 @@ import { CustomerProductReactionWorkspaceController } from '@app/modules/custome
         AnalyticsWorkspaceController,
         MarketingAudienceWorkspaceController,
         MarketingOverviewWorkspaceController,
+        MarketingSendWorkspaceController,
         MarketingSettingsWorkspaceController,
         FollowupWorkspaceController,
         ClientCredentialWorkspaceController,

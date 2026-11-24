@@ -81,20 +81,25 @@ export class MarketingAudienceService {
         );
     }
 
-    /** One page of reached customer ids, latest message first, and the total. */
+    /**
+     * One page of reached customer ids, latest message first, and the total.
+     * `notReachedBy` leaves out who that send already queued or sent to.
+     */
     async reached(
         workspaceId: string,
         dto: MarketingAudienceRequestDto,
         limit: number,
         offset: number,
-        now: Date = new Date()
+        now: Date = new Date(),
+        notReachedBy?: string
     ): Promise<{ ids: string[]; total: number }> {
         const audience = this.toAudience(dto);
         return this.repository.reached(
             await this.window(workspaceId, now),
             audience,
             limit,
-            offset
+            offset,
+            notReachedBy
         );
     }
 

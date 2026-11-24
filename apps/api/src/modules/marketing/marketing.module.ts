@@ -18,6 +18,7 @@ import { MarketingOverviewService } from './services/marketing-overview.service'
 import { MarketingSavedAudienceService } from './services/marketing-saved-audience.service';
 import { MarketingSendService } from './services/marketing-send.service';
 import { MarketingSettingsService } from './services/marketing-settings.service';
+import { MarketingAutoSendScheduler } from './schedulers/marketing-auto-send.scheduler';
 
 /** Tiếp thị v2 (#502 onward): Tổng quan, audiences, the send rules and sends. */
 @Module({
@@ -44,6 +45,7 @@ import { MarketingSettingsService } from './services/marketing-settings.service'
         MarketingSendRepository,
         MarketingMessageRepository,
         MarketingSendService,
+        MarketingAutoSendScheduler,
     ],
     exports: [
         MarketingOverviewService,

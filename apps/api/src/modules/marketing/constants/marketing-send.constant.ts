@@ -1,3 +1,6 @@
+import { ENUM_MARKETING_TODO } from '../enums/marketing-overview.enum';
+import { IMarketingSendStats } from '../interfaces/marketing-send.interface';
+
 /** Defaults for Cài đặt gửi tin (#505); the shop can change each one. */
 export const MARKETING_SETTINGS_DEFAULT = {
     /** Offers per customer in any 30 days, all sends counted together. */
@@ -63,3 +66,41 @@ export const MARKETING_STOP_HINT: Record<string, (keyword: string) => string> =
             `Nhắn "${keyword}" nếu bạn không muốn nhận tin ưu đãi nữa.`,
         en: keyword => `Reply "${keyword}" to stop receiving offers.`,
     };
+
+/** Placeholders an offer's text may hold, filled in for each customer. */
+export const MARKETING_TEXT_NAME = '{name}';
+export const MARKETING_TEXT_PRODUCT = '{product}';
+
+/** What fills a placeholder the customer has no value for, by chatbot language. */
+export const MARKETING_TEXT_FALLBACK: Record<
+    string,
+    { name: string; product: string }
+> = {
+    vi: { name: 'bạn', product: 'sản phẩm bạn quan tâm' },
+    en: { name: 'there', product: 'the product you asked about' },
+};
+
+export const MARKETING_SEND_MAX_NAME_LENGTH = 120;
+export const MARKETING_SEND_MAX_TEXT_LENGTH = 1000;
+export const MARKETING_SEND_LIST_AVAILABLE_SEARCH = ['name'];
+export const MARKETING_SEND_LIST_AVAILABLE_ORDER_BY = ['createdAt', 'name'];
+
+/** A send's results before any offer went out. */
+export const MARKETING_SEND_EMPTY_STATS: IMarketingSendStats = {
+    queued: 0,
+    sent: 0,
+    failed: 0,
+    skipped: 0,
+    replied: 0,
+    ordered: 0,
+    revenue: 0,
+    optedOut: 0,
+    lastSentAt: null,
+};
+
+/** Stages about a purchase: their offers name the product bought first. */
+export const MARKETING_SEND_BOUGHT_PRESETS: ENUM_MARKETING_TODO[] = [
+    ENUM_MARKETING_TODO.CROSS_SELL,
+    ENUM_MARKETING_TODO.REPURCHASE,
+    ENUM_MARKETING_TODO.WIN_BACK,
+];

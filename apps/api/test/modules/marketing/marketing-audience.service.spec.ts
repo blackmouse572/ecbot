@@ -92,7 +92,8 @@ describe('MarketingAudienceService', () => {
             window,
             { preset: T.NEW },
             20,
-            40
+            40,
+            undefined
         );
     });
 

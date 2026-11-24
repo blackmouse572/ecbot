@@ -1,6 +1,10 @@
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
-import { ENUM_MARKETING_SKIP_REASON } from '../enums/marketing-send.enum';
-import { IMarketingAudience } from './marketing-audience.interface';
+import { MarketingAudienceRequestDto } from '../dtos/request/marketing-audience.request.dto';
+import {
+    ENUM_MARKETING_REPLY_STATUS,
+    ENUM_MARKETING_SEND_MODE,
+    ENUM_MARKETING_SKIP_REASON,
+} from '../enums/marketing-send.enum';
 
 /** The send rules a workspace runs with: its settings or the defaults. */
 export interface IMarketingSendRules {
@@ -38,9 +42,11 @@ export type IMarketingRoute =
           channel?: ENUM_ACCOUNT_TYPE;
       };
 
-/** What a shop sends: who to, and the fixed text and picture. */
+/** What a shop sends: who to, how often, and the text and picture. */
 export interface IMarketingSendInput {
-    audience: IMarketingAudience;
+    name: string;
+    mode: ENUM_MARKETING_SEND_MODE;
+    audience: MarketingAudienceRequestDto;
     text: string;
     imageUrl?: string | null;
 }
@@ -57,4 +63,33 @@ export interface IMarketingSendStats {
     ordered: number;
     /** Those orders' total, in minor units. */
     revenue: number;
+    /** Customers who opted out after their offer. */
+    optedOut: number;
+    lastSentAt: Date | null;
+}
+
+/** One send's results on one channel. */
+export interface IMarketingSendChannelStats {
+    channel: ENUM_ACCOUNT_TYPE;
+    sent: number;
+    replied: number;
+    ordered: number;
+    optedOut: number;
+}
+
+/** A customer who answered an offer, and how they stand now. */
+export interface IMarketingSendReply {
+    customerId: string;
+    name: string | null;
+    conversationId: string | null;
+    /** Their first message after the offer. */
+    text: string | null;
+    repliedAt: Date;
+    status: ENUM_MARKETING_REPLY_STATUS;
+}
+
+/** The product an offer names for one customer: the one they asked about or bought. */
+export interface IMarketingProduct {
+    name: string;
+    imageUrl: string | null;
 }

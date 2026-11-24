@@ -3,6 +3,7 @@ import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import { CustomerEntity } from '@app/modules/customer/repository/entities/customer.entity';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
+import { ENUM_MARKETING_MESSAGE_STATUS as M } from '../../enums/marketing-send.enum';
 import {
     ENUM_MARKETING_AUDIENCE_EXCLUSION as X,
     ENUM_MARKETING_AUDIENCE_FIELD as F,
@@ -275,23 +276,37 @@ export class MarketingAudienceRepository extends DatabaseRepository<CustomerEnti
         w: IMarketingAudienceWindow,
         audience: IMarketingAudience,
         limit: number,
-        offset: number
+        offset: number,
+        notReachedBy?: string
     ): Promise<{ ids: string[]; total: number }> {
         const window = windowParams(w);
         const p = picked(audience);
+        // An AUTO send's daily run: who this send already queued or sent
+        // to is left out here, not after reading every page.
+        const fresh = notReachedBy
+            ? {
+                  sql: `AND NOT EXISTS (
+                    SELECT 1 FROM marketing_messages mm
+                    WHERE mm.send_id = ?::uuid
+                        AND mm.customer_id = picked.id
+                        AND mm.status IN ('${M.QUEUED}', '${M.SENT}')
+                )`,
+                  params: [notReachedBy],
+              }
+            : { sql: '', params: [] };
         const [rows, [count]] = await Promise.all([
             this.run(
                 `WITH ${WINDOW}, ${p.sql}
                 SELECT id FROM picked
-                WHERE reason IS NULL
+                WHERE reason IS NULL ${fresh.sql}
                 ORDER BY last_message DESC, id
                 LIMIT ? OFFSET ?`,
-                [...window, ...p.params, limit, offset]
+                [...window, ...p.params, ...fresh.params, limit, offset]
             ),
             this.run(
                 `WITH ${WINDOW}, ${p.sql}
-                SELECT COUNT(*) AS n FROM picked WHERE reason IS NULL`,
-                [...window, ...p.params]
+                SELECT COUNT(*) AS n FROM picked WHERE reason IS NULL ${fresh.sql}`,
+                [...window, ...p.params, ...fresh.params]
             ),
         ]);
         return {
