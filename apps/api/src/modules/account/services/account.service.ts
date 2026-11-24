@@ -372,9 +372,10 @@ export class AccountService implements IAccountService {
                 ? await this.subscribeFacebookPages(profile)
                 : [];
 
+        const channelType = LINKED_CHANNEL_TYPE[platform] ?? platform;
         const linked = await this.upsertLinkedAccount(
             profile,
-            LINKED_CHANNEL_TYPE[platform] ?? platform,
+            channelType,
             workspaceId,
             actor
         );
@@ -402,7 +403,7 @@ export class AccountService implements IAccountService {
         );
         const linkedSiblings = await this.upsertSiblingAccounts(
             profile.additionalAccounts ?? [],
-            platform,
+            channelType,
             workspaceId,
             actor
         );

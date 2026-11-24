@@ -132,6 +132,22 @@ describe('ZaloPlatformAdapter.parse', () => {
         expect(e.timestamp).toEqual(new Date(1580890668038));
     });
 
+    // A GMF group chat posts to the same webhook URL with a top-level
+    // group_id. Replying 1-1 would DM each group member, so drop it.
+    it('ignores a message sent in a GMF group chat', () => {
+        const a = makeAdapter();
+        expect(
+            a.parse(
+                wrap({
+                    event_name: 'user_send_text',
+                    group_id: 'f414c8f76fa586fbdfb4',
+                    sender: { id: 'S' },
+                    message: { msg_id: 'm1', text: 'hi' },
+                })
+            )
+        ).toEqual([]);
+    });
+
     it('normalizes an image attachment', () => {
         const a = makeAdapter();
         const [e] = a.parse(

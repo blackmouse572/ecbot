@@ -180,6 +180,10 @@ export class ZaloPlatformAdapter extends PlatformAdapter {
         if (!payload || typeof payload !== 'object' || !payload.sender?.id) {
             return [];
         }
+        // GMF group chat events share this webhook URL. Group replies go
+        // through a different API (/oa/group/message) we don't support yet,
+        // so a group message must not become a 1-1 turn or a staff echo.
+        if (payload.group_id) return [];
         return [this.normalizeEvent(payload)];
     }
 
