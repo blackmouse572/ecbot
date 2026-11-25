@@ -1,8 +1,10 @@
 """System One-shaped decisions answered by an OpenRouter model.
 
-apps/api sends typed questions (choice / noul, built by @repo/agent-blueprint)
-and reads answers in the shape TypeSafe's System One API uses, so which model
-decides is configuration (DECISION_MODEL), not code.
+apps/api sends typed questions (choice / noul / text, built by
+@repo/agent-blueprint) and reads answers in the shape TypeSafe's System One API
+uses, so which model decides is configuration (DECISION_MODEL), not code.
+Decisions models such as Jev use their native endpoint; chat models keep using
+chat/completions, and answer the `text` questions a decisions model cannot.
 """
 import logging
 from typing import Any, Literal
@@ -14,7 +16,7 @@ from pydantic import BaseModel, Field, create_model
 from eccho_ai.core.security import require_internal_token
 from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.providers.chat_model import build_chat_model
-from eccho_ai.llm.usage import sum_usage
+from eccho_ai.llm.usage import TokenUsage, add_usage, sum_usage
 from eccho_ai.models.app_models import AppResponse
 from eccho_ai.modules.decision.constants import (
     SYSTEM_PROMPT,
@@ -23,6 +25,13 @@ from eccho_ai.modules.decision.constants import (
     WRITE_SYSTEM_PROMPT,
     WRITE_TEMPERATURE,
     WRITE_TEXT_MAX,
+)
+from eccho_ai.modules.decision.decisions import (
+    answers_from_decisions,
+    build_request,
+    is_decisions_model,
+    request_decisions,
+    usage_from_decisions,
 )
 from eccho_ai.modules.decision.models import (
     DecisionQuestion,
@@ -81,6 +90,38 @@ def _as_dict(value: Any) -> dict[str, Any]:
     return value.model_dump() if isinstance(value, BaseModel) else dict(value)
 
 
+async def _answer_with_chat(
+    state: str,
+    questions: dict[str, DecisionQuestion],
+    model: str,
+) -> dict[str, dict[str, Any]]:
+    """Ask a chat model the questions a decisions model cannot answer."""
+    llm = build_chat_model(model_text_name=model, temperature=0.0)
+    structured = llm.with_structured_output(_output_model(questions))
+    result = _as_dict(
+        await structured.ainvoke(
+            [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": f"State:\n{state}\n\nQuestions:\n{_format_questions(questions)}"},
+            ]
+        )
+    )
+
+    answers: dict[str, dict[str, Any]] = {}
+    for index, (qid, q) in enumerate(questions.items()):
+        value = result.get(f"q{index}")
+        if value is None:
+            continue
+        if q.type == "choice":
+            v = _as_dict(value)
+            answers[qid] = {"type": "choice", "choice": v.get("choice"), "confidence": v.get("confidence")}
+        elif q.type == "text":
+            answers[qid] = {"type": "text", "text": value}
+        else:
+            answers[qid] = {"type": "noul", "noul": value}
+    return answers
+
+
 @router.post("/system-one", response_model=AppResponse[DecisionResponse])
 async def system_one(req: DecisionRequest) -> AppResponse[DecisionResponse]:
     if not req.questions:
@@ -91,39 +132,42 @@ async def system_one(req: DecisionRequest) -> AppResponse[DecisionResponse]:
     # suggestions, so any failure here degrades to empty answers with HTTP 200
     # rather than bubbling up as a 400/500 through main.py's global handlers.
     # Usage is reported even when the answers are lost: the tokens were spent.
+    answers: dict[str, dict[str, Any]] = {}
+    usage: TokenUsage | None = None
     with get_usage_metadata_callback() as usage_cb:
         try:
-            llm = build_chat_model(model_text_name=AppVars.DECISION_MODEL, temperature=0.0)
-            structured = llm.with_structured_output(_output_model(req.questions))
-            result = _as_dict(
-                await structured.ainvoke(
-                    [
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": f"State:\n{req.state}\n\nQuestions:\n{_format_questions(req.questions)}"},
-                    ]
+            if is_decisions_model(AppVars.DECISION_MODEL):
+                # Jev and other decisions models reject chat/completions; they
+                # answer choice/noul on the native endpoint. They cannot write
+                # text at all, so `text` questions go to a chat model.
+                typed = {qid: q for qid, q in req.questions.items() if q.type != "text"}
+                text = {qid: q for qid, q in req.questions.items() if q.type == "text"}
+                if typed:
+                    response = await request_decisions(
+                        build_request(AppVars.DECISION_MODEL, req.state, typed)
+                    )
+                    answers.update(answers_from_decisions(response, typed))
+                    usage = usage_from_decisions(response)
+                if text:
+                    answers.update(
+                        await _answer_with_chat(req.state, text, AppVars.DECISION_TEXT_MODEL)
+                    )
+            else:
+                answers = await _answer_with_chat(
+                    req.state, req.questions, AppVars.DECISION_MODEL
                 )
-            )
-
-            answers: dict[str, dict[str, Any]] = {}
-            for index, (qid, q) in enumerate(req.questions.items()):
-                value = result.get(f"q{index}")
-                if value is None:
-                    continue
-                if q.type == "choice":
-                    v = _as_dict(value)
-                    answers[qid] = {"type": "choice", "choice": v.get("choice"), "confidence": v.get("confidence")}
-                elif q.type == "text":
-                    answers[qid] = {"type": "text", "text": value}
-                else:
-                    answers[qid] = {"type": "noul", "noul": value}
         except Exception as exc:  # noqa: BLE001 - the builder must work without suggestions
             logger.warning("decision.system_one failed err=%s", exc)
             answers = {}
 
+    chat_usage = sum_usage(usage_cb.usage_metadata)
+    if usage is None:
+        usage = chat_usage
+    elif chat_usage is not None:
+        usage = add_usage(usage, chat_usage)
+
     return AppResponse(
-        data=DecisionResponse(
-            answers=answers, usage=sum_usage(usage_cb.usage_metadata), model=AppVars.DECISION_MODEL
-        )
+        data=DecisionResponse(answers=answers, usage=usage, model=AppVars.DECISION_MODEL)
     )
 
 

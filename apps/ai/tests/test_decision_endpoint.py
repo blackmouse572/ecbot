@@ -34,6 +34,9 @@ class _FakeLLM:
 
 @pytest.fixture
 def patch_llm(monkeypatch):
+    # These tests exercise the chat/completions provider; the default
+    # DECISION_MODEL is a decisions model (Jev), which takes the native path.
+    monkeypatch.setattr(AppVars, "DECISION_MODEL", "google/gemini-2.5-flash")
     seen: dict[str, Any] = {}
 
     def _apply(structured: _FakeStructured) -> dict[str, Any]:
@@ -122,6 +125,7 @@ async def test_build_chat_model_failure_returns_no_answers(async_client, monkeyp
         raise HTTPException(status_code=400, detail="OPENROUTER_API_KEY is not configured.")
 
     monkeypatch.setattr(decision_router_module, "build_chat_model", _raise)
+    monkeypatch.setattr(AppVars, "DECISION_MODEL", "google/gemini-2.5-flash")
 
     resp = await async_client.post("/api/decision/system-one", json=BODY)
     assert resp.status_code == 200

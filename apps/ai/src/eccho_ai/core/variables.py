@@ -121,7 +121,12 @@ class _AppVars(BaseSettings):
     CLASSIFIER_MODEL: str = "google/gemini-2.5-flash"
     CUSTOMER_CLASSIFIER_TEMPERATURE: float = 0.1
     # OpenRouter model that answers agent-builder decisions (System One-shaped).
+    # Decisions models (typesafe/*, e.g. Jev) use the native /alpha/decisions
+    # endpoint; chat models keep using chat/completions.
     DECISION_MODEL: str = "~typesafe/jev-latest"
+    # Chat model that answers `text` questions: decisions models return typed
+    # answers only and cannot write text.
+    DECISION_TEXT_MODEL: str = "google/gemini-2.5-flash"
     # OpenRouter model that drafts short shop messages (/decision/write, #506).
     WRITE_MODEL: str = "~deepseek/deepseek-v4-flash-latest"
     # Describes inbound customer images (must accept image input).

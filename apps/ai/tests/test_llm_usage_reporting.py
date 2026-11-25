@@ -45,6 +45,7 @@ class _FakeLLM:
 
 
 async def test_system_one_reports_usage_and_model(async_client, monkeypatch):
+    monkeypatch.setattr(AppVars, "DECISION_MODEL", "google/gemini-2.5-flash")
     fake = _FakeLLM({"q0": 0.8})
     monkeypatch.setattr(decision_router_module, "build_chat_model", lambda *_a, **_k: fake)
 
@@ -61,6 +62,7 @@ async def test_system_one_reports_usage_and_model(async_client, monkeypatch):
 
 async def test_system_one_reports_usage_when_the_answer_is_unreadable(async_client, monkeypatch):
     # The tokens were spent even though the answers are thrown away.
+    monkeypatch.setattr(AppVars, "DECISION_MODEL", "google/gemini-2.5-flash")
     fake = _FakeLLM({"q0": "not a number"}, parse=lambda _v: 42)
     monkeypatch.setattr(decision_router_module, "build_chat_model", lambda *_a, **_k: fake)
 
@@ -72,6 +74,44 @@ async def test_system_one_reports_usage_when_the_answer_is_unreadable(async_clie
     data = resp.json()["data"]
     assert data["answers"] == {}
     assert data["usage"] == REPORTED
+
+
+async def test_system_one_adds_native_decisions_usage_to_a_text_call(async_client, monkeypatch):
+    # A decisions model answers the noul natively; the text question goes to a
+    # chat model. apps/api meters both.
+    monkeypatch.setattr(AppVars, "DECISION_MODEL", "~typesafe/jev-latest")
+
+    async def _request(_payload: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "answers": {"a": {"type": "noul", "noul": 0.8}},
+            "usage": {"input_tokens": 100, "output_tokens": 0},
+        }
+
+    monkeypatch.setattr(decision_router_module, "request_decisions", _request)
+    fake = _FakeLLM({"q0": "7h"})
+    monkeypatch.setattr(decision_router_module, "build_chat_model", lambda *_a, **_k: fake)
+
+    resp = await async_client.post(
+        "/api/decision/system-one",
+        json={
+            "state": "x",
+            "questions": {
+                "a": {"type": "noul", "instructions": "?"},
+                "b": {"type": "text", "instructions": "?"},
+            },
+        },
+    )
+
+    data = resp.json()["data"]
+    assert data["answers"] == {
+        "a": {"type": "noul", "noul": 0.8},
+        "b": {"type": "text", "text": "7h"},
+    }
+    assert data["usage"] == {
+        **REPORTED,
+        "input_tokens": 220,
+        "total_tokens": 250,
+    }
 
 
 async def test_classify_reports_usage_and_model(async_client, monkeypatch):
