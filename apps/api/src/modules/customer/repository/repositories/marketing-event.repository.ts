@@ -42,12 +42,15 @@ export class MarketingEventRepository extends DatabaseRepository<MarketingEventE
         });
     }
 
-    /** Tracked links by id, with the parent and account a source name needs. */
+    /**
+     * Live tracked links by id, with the parent and account a source name
+     * needs. A deleted link is left out, so it names nothing and opens no page.
+     */
     async findLinks(ids: string[]): Promise<Map<string, TrackedLinkEntity>> {
         if (!ids.length) return new Map();
         const links = await this.em.find(
             TrackedLinkEntity,
-            { id: { $in: [...new Set(ids)] } },
+            { id: { $in: [...new Set(ids)] }, deletedAt: null },
             { populate: ['parent', 'account'] }
         );
         return new Map(links.map(link => [link.id, link]));

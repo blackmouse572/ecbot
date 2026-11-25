@@ -454,7 +454,7 @@ describe('CustomerMarketingService sources', () => {
         ]);
     });
 
-    it('names the link on a SOURCE event, and nothing for a deleted link or other events', async () => {
+    it('names the link on a SOURCE event only, and nothing for a deleted link', async () => {
         const at = new Date('2026-11-25T09:12:00Z');
         const { service } = makeHarness({ links: [ADS] });
 
@@ -466,7 +466,8 @@ describe('CustomerMarketingService sources', () => {
                 trackedLinkId: 'gone',
                 createdAt: at,
             },
-            { id: 'e3', kind: KIND.STAGE, createdAt: at },
+            // The STAGE row of an arrival carries its link too.
+            { id: 'e3', kind: KIND.STAGE, trackedLinkId: 's3', createdAt: at },
         ] as any);
 
         expect(events.map(e => e.source)).toEqual([

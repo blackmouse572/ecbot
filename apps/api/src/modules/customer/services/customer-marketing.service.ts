@@ -647,15 +647,22 @@ export class CustomerMarketingService {
     async mapEvents(
         events: MarketingEventEntity[]
     ): Promise<MarketingEventGetResponseDto[]> {
+        const arrivals = events.filter(
+            e => e.kind === ENUM_MARKETING_EVENT_KIND.SOURCE && e.trackedLinkId
+        );
         const links = await this.eventRepository.findLinks(
-            events.flatMap(e => (e.trackedLinkId ? [e.trackedLinkId] : []))
+            arrivals.map(e => e.trackedLinkId as string)
         );
         return plainToInstance(
             MarketingEventGetResponseDto,
             events.map(event => {
-                const link = event.trackedLinkId
-                    ? links.get(event.trackedLinkId)
-                    : undefined;
+                // Other events of an arrival carry its link too; only SOURCE
+                // names it.
+                const link =
+                    event.kind === ENUM_MARKETING_EVENT_KIND.SOURCE &&
+                    event.trackedLinkId
+                        ? links.get(event.trackedLinkId)
+                        : undefined;
                 return {
                     ...event,
                     orderId: event.order?.id ?? null,
