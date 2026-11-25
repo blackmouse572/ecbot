@@ -53,6 +53,8 @@ export type ConversationListQuery = {
   stage?: string;
   orderBy?: string;
   orderDirection?: "ASC" | "DESC";
+  /** Cache key only, never sent: keeps each workspace's rows apart. */
+  workspace?: string;
 };
 
 export const conversationQueryKeys = {
@@ -61,7 +63,13 @@ export const conversationQueryKeys = {
   ),
   messages: (id: string, query?: { perPage?: number }) =>
     [CONVERSATION_QUERY_KEY, "messages", id, { query }] as const,
-  pausedCount: () => [CONVERSATION_QUERY_KEY, "paused-count"] as const,
+  /** Without a workspace this is the prefix that matches every workspace. */
+  pausedCount: (workspace?: string) =>
+    [
+      CONVERSATION_QUERY_KEY,
+      "paused-count",
+      ...(workspace ? [workspace] : []),
+    ] as const,
 };
 
 const MESSAGES_PER_PAGE = 50;
@@ -632,7 +640,7 @@ export const usePausedConversationsCount = () => {
   const slug = workspace?.slug;
 
   const { data } = useQuery({
-    queryKey: conversationQueryKeys.pausedCount(),
+    queryKey: conversationQueryKeys.pausedCount(slug),
     enabled: !!slug,
     refetchInterval: (query) =>
       query.state.status === "error" ? false : PAUSED_COUNT_REFETCH_MS,

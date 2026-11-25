@@ -5,8 +5,8 @@ import { type ChatbotControllerFindAllV1Responses } from "@repo/client";
 import type { LoaderFunctionArgs } from "react-router-dom";
 
 export const chatbotLoader = async ({ params }: LoaderFunctionArgs) => {
-  const query = chatbotListQuery();
   const workspace = getWorkspaceParams(params);
+  const query = chatbotListQuery(workspace.workspaceSlug);
   const data = queryClient.getQueryData<
     ChatbotControllerFindAllV1Responses["200"]
   >(query.queryKey);

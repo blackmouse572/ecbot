@@ -48,8 +48,8 @@ export const chatbotQueryKeys = {
   ...queryKeysFactory(CHATBOT_QUERY_KEY),
 };
 
-export const chatbotListQuery = () => ({
-  queryKey: chatbotQueryKeys.lists(),
+export const chatbotListQuery = (workspace: string) => ({
+  queryKey: chatbotQueryKeys.list({ workspace }),
   queryFn: async (workspace: string) =>
     chatbotControllerFindAllV1({
       query: {

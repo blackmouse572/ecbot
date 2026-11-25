@@ -28,7 +28,7 @@ vi.mock("./workspace", () => ({
 }));
 
 import { useAccountChatbot, useChatbots } from "./chatbot";
-import { useConversations } from "./conversations";
+import { useConversations, usePausedConversationsCount } from "./conversations";
 
 /** Every count a render returned once loaded, tagged with the workspace. */
 const seen: { slug: string; hook: string; count: number }[] = [];
@@ -39,10 +39,11 @@ const Counts: FC = () => {
   const accountChatbot = useAccountChatbot("acc");
   const hooks = { conversations, chatbots, accountChatbot };
   for (const [hook, q] of Object.entries(hooks)) {
-    if (!q.isLoading && !q.isError && q.data !== undefined)
+    if (q.isSuccess)
       seen.push({ slug: current.slug, hook, count: q.count ?? 0 });
   }
-  return <p>{`${conversations.count}-${chatbots.count}`}</p>;
+  const paused = usePausedConversationsCount();
+  return <p>{`${conversations.count}-${chatbots.count}-${paused}`}</p>;
 };
 
 describe("switching workspace keeps list counts per workspace", () => {
@@ -57,7 +58,7 @@ describe("switching workspace keeps list counts per workspace", () => {
         <Counts />
       </QueryClientProvider>,
     );
-    expect(await screen.findByText("0-0")).toBeTruthy();
+    expect(await screen.findByText("0-0-0")).toBeTruthy();
 
     current.slug = "busy";
     await act(async () =>
@@ -67,9 +68,20 @@ describe("switching workspace keeps list counts per workspace", () => {
         </QueryClientProvider>,
       ),
     );
-    expect(await screen.findByText("7-7")).toBeTruthy();
+    expect(await screen.findByText("7-7-7")).toBeTruthy();
 
+    // The paused badge has no loading flag; the screen above only ever showed
+    // the workspace's own totals.
     const leaked = seen.filter((s) => s.slug === "busy" && s.count === 0);
     expect(leaked).toEqual([]);
+  });
+});
+
+describe("agents list loader", () => {
+  it("caches each workspace's agents under its own key", async () => {
+    const { chatbotListQuery } = await import("./chatbot");
+    expect(chatbotListQuery("empty").queryKey).not.toEqual(
+      chatbotListQuery("busy").queryKey,
+    );
   });
 });
