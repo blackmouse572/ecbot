@@ -38,12 +38,13 @@ import {
 } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { accountQueryKeys } from "./accounts";
+import { CHATBOT_QUERY_KEY } from "./chatbot-query-key";
 import { useWorkspace } from "./workspace";
 
 /** Shared by every read hook below that just forwards `useQuery`'s options. */
 type ChatbotQueryOptions = Omit<UseQueryOptions, "queryFn" | "queryKey">;
 
-export const CHATBOT_QUERY_KEY = "chatbot" as const;
+export { CHATBOT_QUERY_KEY };
 export const chatbotQueryKeys = {
   ...queryKeysFactory(CHATBOT_QUERY_KEY),
 };

@@ -37,6 +37,7 @@ import {
   type UseQueryOptions,
 } from "@tanstack/react-query";
 import { useWorkspaceParams } from "../use-workspace-params";
+import { CHATBOT_QUERY_KEY } from "./chatbot-query-key";
 import { useWorkspace } from "./workspace";
 
 /** Shared by every read hook below that just forwards `useQuery`'s options. */
@@ -319,6 +320,8 @@ export const useBatchUnlinkAccounts = () => {
       queryClient.invalidateQueries({
         queryKey: accountQueryKeys.lists(),
       });
+      // Agents list their linked channels, and unlinking detaches it from them.
+      queryClient.invalidateQueries({ queryKey: [CHATBOT_QUERY_KEY] });
     },
   });
 };
@@ -341,6 +344,8 @@ export const useUnLinkAccount = () => {
       queryClient.invalidateQueries({
         queryKey: accountQueryKeys.lists(),
       });
+      // Agents list their linked channels, and unlinking detaches it from them.
+      queryClient.invalidateQueries({ queryKey: [CHATBOT_QUERY_KEY] });
     },
   });
 };
