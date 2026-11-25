@@ -9,10 +9,11 @@ describe('CustomerMarketingStateRepository.customerListFilter source', () => {
             getKnex: () => knex,
         } as any);
 
-        const repoWithQb = Object.assign(repo, {
+        // customerIds is private; stub it to keep the first-source part simple.
+        Object.assign(repo as any, {
             customerIds: () => 'first-source-ids',
         });
-        const filter = repoWithQb.customerListFilter({ sourceId: 'src-1' });
+        const filter = repo.customerListFilter({ sourceId: 'src-1' }) as any;
 
         // The first source still matches on its own, or any later arrival.
         expect(filter.$and[0].$or[0]).toEqual({
