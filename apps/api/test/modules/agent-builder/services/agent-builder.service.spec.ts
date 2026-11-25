@@ -64,6 +64,25 @@ describe('AgentBuilderService.suggest', () => {
         expect(cache.set).not.toHaveBeenCalled();
     });
 
+    it('meters the extraction call when the decisions call fails', async () => {
+        // The extraction was already sent, so its tokens are spent even though
+        // the suggestion is lost.
+        const m = meter(true);
+        const { service } = setup({
+            fail: true,
+            meter: m,
+            extractUsage: { inputTokens: 50, outputTokens: 10, totalTokens: 60 },
+        });
+        await expect(service.suggest('ws-1', 'Nail spa')).resolves.toEqual(EMPTY_SUGGESTION);
+        expect(m.record).toHaveBeenCalledTimes(1);
+        expect(m.record).toHaveBeenCalledWith(
+            expect.objectContaining({
+                usage: { inputTokens: 50, outputTokens: 10, totalTokens: 60 },
+                model: 'google/gemini-2.5-flash',
+            })
+        );
+    });
+
     it('does not cache an empty answer set from the apps/ai decision service', async () => {
         const { service, cache } = setup({ answers: {}, texts: {} });
         await expect(service.suggest('ws-1', 'x')).resolves.toEqual(EMPTY_SUGGESTION);

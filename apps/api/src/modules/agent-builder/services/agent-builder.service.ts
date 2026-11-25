@@ -16,7 +16,7 @@ import {
 } from 'src/app/ai-usage-meter.interface';
 import { TokenUsageDelta } from 'src/modules/chatbot/interfaces/token-usage-wire.interface';
 import { createHash } from 'crypto';
-import { AiDecisionService, type IAiExtractResult } from './ai-decision.service';
+import { AiDecisionService, type IAiExtractResult, type ISystemOneResult } from './ai-decision.service';
 
 @Injectable()
 export class AgentBuilderService {
@@ -60,7 +60,17 @@ export class AgentBuilderService {
             if (!budget.allowed) return EMPTY_SUGGESTION;
 
             const [decision, extracted] = await Promise.all([
-                this.aiDecision.decide(state, buildSuggestQuestions()),
+                // The two calls fail independently: if the decisions call dies
+                // after the extraction was sent, its tokens are still spent and
+                // must be metered.
+                this.aiDecision.decide(state, buildSuggestQuestions()).catch(
+                    (error: unknown): ISystemOneResult | null => {
+                        this.logger.warn(
+                            `agent builder decision failed: ${(error as Error).message}`
+                        );
+                        return null;
+                    }
+                ),
                 // Decisions models cannot write text; only losing the texts is
                 // acceptable, so a failed extraction keeps the rest.
                 this.aiDecision.extract(state, buildExtractFields()).catch(
@@ -75,9 +85,10 @@ export class AgentBuilderService {
             // Meter each call with its own model: the two models price
             // differently, so one summed row would bill the wrong rate.
             await Promise.all([
-                this.recordUsage(workspaceId, decision.usage, decision.model),
+                this.recordUsage(workspaceId, decision?.usage ?? null, decision?.model),
                 this.recordUsage(workspaceId, extracted.usage, extracted.model),
             ]);
+            if (!decision) return EMPTY_SUGGESTION;
             const suggestion = readSuggestAnswers(decision.answers, extracted.answers);
             // apps/ai answers `{}` on any failure: never cache that for 24h.
             // A failed or empty extraction has no prefilled details either, so
