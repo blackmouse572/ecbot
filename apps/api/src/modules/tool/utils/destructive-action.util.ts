@@ -1,3 +1,5 @@
+import { plainText } from '@app/common/utils/text.util';
+
 /** The parts of a discovered MCP action that say whether it destroys data. */
 export interface IDestructiveActionInput {
     name: string;
@@ -44,12 +46,8 @@ const WORD_VERBS = [
 const WARNING_WORDING =
     /cannot be undone|can't be undone|irreversible|permanently|dangerous|khong the hoan tac|vinh vien|\bxoa\b/;
 
-/** Lowercase, without Vietnamese diacritics, so "Xóa" reads as "xoa". */
-const plain = (text: string): string =>
-    text.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase();
-
 const words = (name: string): string[] =>
-    plain(name.replace(/([a-z0-9])([A-Z])/g, '$1 $2'))
+    plainText(name.replace(/([a-z0-9])([A-Z])/g, '$1 $2'))
         .split(/[^a-z0-9]+/)
         .filter(Boolean);
 
@@ -88,6 +86,6 @@ export const isDestructiveAction = (
     return (
         words(action.name).some(
             word => isWordVerb(word) || hasStrongVerb(word)
-        ) || WARNING_WORDING.test(plain(action.description ?? ''))
+        ) || WARNING_WORDING.test(plainText(action.description ?? ''))
     );
 };

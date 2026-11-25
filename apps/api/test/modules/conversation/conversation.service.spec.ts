@@ -700,6 +700,33 @@ describe('ConversationService', () => {
             );
         });
 
+        // #617: customers type Vietnamese without diacritics.
+        it("matches the owner's accented keyword in unaccented text", () => {
+            expect(
+                service.detectHandoffKeywords('Cho minh gap nhan vien voi a', [
+                    'khiếu nại',
+                    'gặp nhân viên',
+                ])
+            ).toEqual({ keyword: 'gặp nhân viên', source: 'custom' });
+        });
+
+        it("matches the owner's unaccented keyword in accented text", () => {
+            expect(
+                service.detectHandoffKeywords('Cho mình gặp nhân viên với ạ', [
+                    'gap nhan vien',
+                ])
+            ).toEqual({ keyword: 'gap nhan vien', source: 'custom' });
+        });
+
+        it('matches a built-in accented keyword in unaccented text', () => {
+            expect(
+                service.detectHandoffKeywords(
+                    'Cho minh gap nhan vien voi a',
+                    []
+                )
+            ).toEqual({ keyword: 'nhân viên', source: 'default' });
+        });
+
         it('returns null for an empty message', () => {
             expect(service.detectHandoffKeywords('', [])).toBeNull();
         });

@@ -16,6 +16,7 @@ import { PlatformAdapterRegistry } from '@app/modules/platform/services/platform
 import { ConversationMemoryService } from '@app/modules/platform/services/conversation-memory.service';
 import { WorkspaceMemberEntity } from '@app/modules/workspace/repository/entities/workspace-member.entity';
 import { WorkspaceMemberRepository } from '@app/modules/workspace/repository/repositories/workspace-member.repository';
+import { plainText } from '@app/common/utils/text.util';
 import { wrap } from '@mikro-orm/core';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
@@ -490,6 +491,8 @@ export class ConversationService implements IConversationService {
     /**
      * The handoff keyword the message contains, and whether it is the owner's
      * own (checked first, it wins) or from the default list. Null if none.
+     * Diacritics are folded both ways (#617), since customers type Vietnamese
+     * without them: "gap nhan vien" matches "gặp nhân viên".
      */
     detectHandoffKeywords(
         message: string,
@@ -497,9 +500,9 @@ export class ConversationService implements IConversationService {
     ): IHandoffKeywordMatch | null {
         if (!message) return null;
 
-        const lowerMessage = message.toLowerCase();
+        const plainMessage = plainText(message);
         const find = (list: string[]) =>
-            list.find(keyword => lowerMessage.includes(keyword.toLowerCase()));
+            list.find(keyword => plainMessage.includes(plainText(keyword)));
 
         const custom = find(keywords);
         if (custom) return { keyword: custom, source: 'custom' };
