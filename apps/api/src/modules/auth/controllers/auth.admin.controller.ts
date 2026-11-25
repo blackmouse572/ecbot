@@ -177,7 +177,7 @@ export class AuthAdminController {
             });
         }
 
-        const typed = body?.password !== undefined;
+        const typed = body?.password != null;
         const passwordString =
             body?.password ?? this.authService.createPasswordRandom();
         const session = this.em.fork();

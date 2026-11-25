@@ -139,6 +139,29 @@ describe('AuthAdminController.updatePassword', () => {
         });
     });
 
+    // @IsOptional lets null through validation: it must not count as typed,
+    // or a random password nobody knows would be stored and never shown.
+    it('treats a null password as generated', async () => {
+        await expect(
+            controller.updatePassword(
+                'admin-1',
+                ENUM_POLICY_ROLE_TYPE.ADMIN,
+                user as any,
+                { password: null } as any
+            )
+        ).resolves.toEqual({ data: { password: 'Temp123!' } });
+
+        expect(createPassword).toHaveBeenCalledWith('Temp123!', {
+            temporary: true,
+        });
+        expect(enqueue).toHaveBeenCalledWith(
+            'email',
+            ENUM_SEND_EMAIL_PROCESS.TEMPORARY_PASSWORD,
+            expect.anything(),
+            expect.anything()
+        );
+    });
+
     describe('typed', () => {
         it('stores the typed password as a normal one and returns nothing', async () => {
             await expect(
