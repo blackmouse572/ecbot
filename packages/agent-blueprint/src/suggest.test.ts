@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  EMPTY_SUGGESTION, applySuggestion, buildSuggestQuestions, confidenceLevel, readSuggestAnswers,
+  EMPTY_SUGGESTION, applySuggestion, buildExtractFields, buildSuggestQuestions, confidenceLevel, readSuggestAnswers,
 } from "./suggest";
 import { agentProfileSchema } from "./profile";
 
@@ -17,12 +17,21 @@ describe("buildSuggestQuestions", () => {
     expect(JSON.stringify(q)).not.toContain("—");
   });
 
-  // #256: details the owner already wrote are read in the same call.
-  it("asks text questions for the details a description usually gives", () => {
+  // #623: text details moved to /decision/extract, which a chat model answers.
+  it("does not send text questions to system-one", () => {
     const q = buildSuggestQuestions();
-    expect(q.text__business_name?.type).toBe("text");
-    expect(q.text__opening_hours?.type).toBe("text");
-    expect(q.text__offerings?.type).toBe("text");
+    expect(Object.keys(q).some((id) => id.startsWith("text__"))).toBe(false);
+    expect(JSON.stringify(q)).not.toContain('"type":"text"');
+  });
+
+  it("builds the detail prompts for the extract endpoint", () => {
+    const fields = buildExtractFields();
+    expect(fields.business_name).toContain("business called");
+    expect(fields.opening_hours).toContain("opening hours");
+    expect(fields.offerings).toContain("products, dishes or services");
+    expect(Object.keys(fields)).toEqual([
+      "business_name", "opening_hours", "address", "offerings", "delivery", "payment_methods",
+    ]);
   });
 
   it("uses the withArticle helper for business_type criteria", () => {
@@ -100,19 +109,19 @@ describe("readSuggestAnswers", () => {
 
 describe("readSuggestAnswers: texts", () => {
   it("keeps stated texts, trimmed, and drops empty or malformed ones", () => {
-    const s = readSuggestAnswers({
-      text__business_name: { type: "text", text: "  Mây  " },
-      text__address: { type: "text", text: "" },
-      text__offerings: { type: "noul", noul: 1 } as never,
-      text__nope: { type: "text", text: "x" },
-    });
+    const s = readSuggestAnswers({}, {
+      business_name: "  Mây  ",
+      address: "",
+      offerings: 42 as never,
+      nope: "x",
+    } as never);
     expect(s.texts).toEqual({ business_name: "Mây" });
   });
 
   it("cuts a text to the profile's limits", () => {
-    const s = readSuggestAnswers({
-      text__business_name: { type: "text", text: "x".repeat(500) },
-      text__offerings: { type: "text", text: "y".repeat(5000) },
+    const s = readSuggestAnswers({}, {
+      business_name: "x".repeat(500),
+      offerings: "y".repeat(5000),
     });
     expect(s.texts.business_name).toHaveLength(120);
     expect(s.texts.offerings).toHaveLength(1000);

@@ -6,7 +6,7 @@ const config = { get: (k: string) => (k === 'agentBuilder.suggestTtlMs' ? 86_400
 
 const USAGE = { inputTokens: 100, outputTokens: 20, totalTokens: 120 };
 
-function setup(overrides: { cached?: unknown; answers?: unknown; fail?: boolean; meter?: unknown } = {}) {
+function setup(overrides: { cached?: unknown; answers?: unknown; texts?: Record<string, string>; extractUsage?: typeof USAGE; fail?: boolean; extractFail?: boolean; meter?: unknown } = {}) {
     const aiDecision = {
         warm: jest.fn(async () => {
             if (overrides.fail) throw new Error('down');
@@ -16,6 +16,14 @@ function setup(overrides: { cached?: unknown; answers?: unknown; fail?: boolean;
             return {
                 answers: overrides.answers ?? { business_type: { type: 'choice', choice: 'beauty', confidence: 0.95 } },
                 usage: USAGE,
+                model: 'google/gemini-2.5-flash',
+            };
+        }),
+        extract: jest.fn(async () => {
+            if (overrides.extractFail) throw new Error('extract down');
+            return {
+                answers: overrides.texts ?? {},
+                usage: overrides.extractUsage ?? null,
                 model: 'google/gemini-2.5-flash',
             };
         }),
@@ -38,12 +46,14 @@ describe('AgentBuilderService.suggest', () => {
         const { service, aiDecision } = setup({ cached });
         await expect(service.suggest('ws-1', 'homestay in Hoi An')).resolves.toEqual(cached);
         expect(aiDecision.decide).not.toHaveBeenCalled();
+        expect(aiDecision.extract).not.toHaveBeenCalled();
     });
 
-    it('calls the apps/ai decision service, maps the answers and caches them for 24h', async () => {
+    it('calls the apps/ai decision and extract services, maps the answers and caches them for 24h', async () => {
         const { service, cache, aiDecision } = setup();
         const out = await service.suggest('ws-1', '  Nail spa in Da Nang  ');
         expect(aiDecision.decide).toHaveBeenCalledWith('Nail spa in Da Nang', expect.objectContaining({ business_type: expect.any(Object) }));
+        expect(aiDecision.extract).toHaveBeenCalledWith('Nail spa in Da Nang', expect.objectContaining({ business_name: expect.any(String) }));
         expect(out.businessType).toEqual({ value: 'beauty', confidence: 0.95 });
         expect(cache.set).toHaveBeenCalledWith(AgentBuilderService.cacheKey('Nail spa in Da Nang'), out, 86_400_000);
     });
@@ -101,6 +111,7 @@ describe('AgentBuilderService.suggest', () => {
         const { service, aiDecision } = setup({ meter: m });
         await expect(service.suggest('ws-1', 'Nail spa')).resolves.toEqual(EMPTY_SUGGESTION);
         expect(aiDecision.decide).not.toHaveBeenCalled();
+        expect(aiDecision.extract).not.toHaveBeenCalled();
         expect(m.record).not.toHaveBeenCalled();
     });
 
@@ -117,16 +128,38 @@ describe('AgentBuilderService.suggest', () => {
         expect(AgentBuilderService.cacheKey('x')).toMatch(/^agent-builder:suggest:v2:[a-f0-9]{64}$/);
     });
 
-    // #256: the suggestion also reads details the owner wrote.
+    // #256/#623: the suggestion also reads details the owner wrote, now through
+    // the separate extraction call.
     it('returns the texts read from the description', async () => {
         const { service } = setup({
             answers: {
                 business_type: { type: 'choice', choice: 'restaurant', confidence: 0.98 },
-                text__business_name: { type: 'text', text: 'Mây' },
             },
+            texts: { business_name: 'Mây' },
         });
         const out = await service.suggest('ws-1', 'Quán cà phê Mây');
         expect(out.texts).toEqual({ business_name: 'Mây' });
+    });
+
+    it('still returns the decision answers when text extraction fails', async () => {
+        const { service } = setup({ extractFail: true });
+        const out = await service.suggest('ws-1', 'Nail spa');
+        expect(out.businessType).toEqual({ value: 'beauty', confidence: 0.95 });
+        expect(out.texts).toEqual({});
+    });
+
+    it('adds what the extraction call spent to what the decision call spent', async () => {
+        const m = meter(true);
+        const { service } = setup({
+            meter: m,
+            extractUsage: { inputTokens: 50, outputTokens: 10, totalTokens: 60 },
+        });
+        await service.suggest('ws-1', 'Nail spa');
+        expect(m.record).toHaveBeenCalledWith(
+            expect.objectContaining({
+                usage: { inputTokens: 150, outputTokens: 30, totalTokens: 180 },
+            })
+        );
     });
 });
 

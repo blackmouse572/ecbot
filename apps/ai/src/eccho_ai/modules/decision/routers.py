@@ -1,13 +1,12 @@
-"""System One-shaped decisions answered by an OpenRouter model.
+"""System One-shaped decisions, plus the text extraction they cannot do.
 
-apps/api sends typed questions (choice / noul / text, built by
-@repo/agent-blueprint) and reads answers in the shape TypeSafe's System One API
-uses, so which model decides is configuration (DECISION_MODEL), not code.
-Decisions models such as Jev use their native endpoint; chat models keep using
-chat/completions, and answer the `text` questions a decisions model cannot.
+`system-one` always calls OpenRouter's Decisions API with `DECISION_MODEL`, so
+any decisions model (Jev, Gemini Decision, Liquid, ...) works by configuration
+alone. Decisions models answer typed primitives only, so `text` fields live on
+`/decision/extract`, which asks a chat model.
 """
 import logging
-from typing import Any, Literal
+from typing import Any
 
 from fastapi import APIRouter, Depends
 from langchain_core.callbacks import get_usage_metadata_callback
@@ -16,10 +15,10 @@ from pydantic import BaseModel, Field, create_model
 from eccho_ai.core.security import require_internal_token
 from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.providers.chat_model import build_chat_model
-from eccho_ai.llm.usage import TokenUsage, add_usage, sum_usage
+from eccho_ai.llm.usage import sum_usage
 from eccho_ai.models.app_models import AppResponse
 from eccho_ai.modules.decision.constants import (
-    SYSTEM_PROMPT,
+    EXTRACT_SYSTEM_PROMPT,
     TEXT_ANSWER_MAX,
     WRITE_MAX_TOKENS,
     WRITE_SYSTEM_PROMPT,
@@ -29,7 +28,6 @@ from eccho_ai.modules.decision.constants import (
 from eccho_ai.modules.decision.decisions import (
     answers_from_decisions,
     build_request,
-    is_decisions_model,
     request_decisions,
     usage_from_decisions,
 )
@@ -37,6 +35,8 @@ from eccho_ai.modules.decision.models import (
     DecisionQuestion,
     DecisionRequest,
     DecisionResponse,
+    ExtractRequest,
+    ExtractResponse,
     WriteRequest,
     WriteResponse,
 )
@@ -47,79 +47,26 @@ router = APIRouter(
 )
 
 
-def _output_model(questions: dict[str, DecisionQuestion]) -> type[BaseModel]:
-    # Field names are positional (q0, q1, ...), never the question id itself:
-    # a question id can be anything the caller likes, including a pydantic
-    # reserved name like "model_config", which would break `create_model` if
-    # used directly as a field name.
-    fields: dict[str, Any] = {}
-    for index, q in enumerate(questions.values()):
-        field_name = f"q{index}"
-        if q.type == "choice":
-            options = tuple((q.criteria or {}).keys())
-            answer = create_model(
-                f"ChoiceAnswer{index}",
-                choice=(Literal[options], ...),  # type: ignore[valid-type]
-                confidence=(float, Field(ge=0, le=1)),
-            )
-            fields[field_name] = (answer, ...)
-        elif q.type == "text":
-            # Optional: a provider may leave out a detail the state never
-            # gives, and that must not void the other answers.
-            fields[field_name] = (str, Field(default="", max_length=TEXT_ANSWER_MAX))
-        else:
-            fields[field_name] = (float, Field(ge=0, le=1))
-    return create_model("DecisionAnswers", **fields)
+def _field_model(fields: dict[str, str]) -> type[BaseModel]:
+    # Field names are positional (q0, q1, ...), never the field id itself: an
+    # id can be anything the caller likes, including a pydantic reserved name
+    # like "model_config", which would break `create_model` if used directly.
+    schema: dict[str, Any] = {}
+    for index in range(len(fields)):
+        # Optional: a field the state never gives must not void the others.
+        schema[f"q{index}"] = (str, Field(default="", max_length=TEXT_ANSWER_MAX))
+    return create_model("ExtractedFields", **schema)
 
 
-def _format_questions(questions: dict[str, DecisionQuestion]) -> str:
-    lines: list[str] = []
-    for index, (qid, q) in enumerate(questions.items()):
-        field_name = f"q{index}"
-        if q.type == "choice":
-            options = "\n".join(f"    - {key}: {text}" for key, text in (q.criteria or {}).items())
-            lines.append(f"- {field_name} ({qid}, choice): {q.instructions}\n  options:\n{options}")
-        elif q.type == "text":
-            lines.append(f"- {field_name} ({qid}, text, empty if not stated): {q.instructions}")
-        else:
-            lines.append(f"- {field_name} ({qid}, noul, probability of yes): {q.instructions}")
-    return "\n".join(lines)
+def _format_fields(fields: dict[str, str]) -> str:
+    return "\n".join(
+        f"- q{index} ({fid}, empty if not stated): {instructions}"
+        for index, (fid, instructions) in enumerate(fields.items())
+    )
 
 
 def _as_dict(value: Any) -> dict[str, Any]:
     return value.model_dump() if isinstance(value, BaseModel) else dict(value)
-
-
-async def _answer_with_chat(
-    state: str,
-    questions: dict[str, DecisionQuestion],
-    model: str,
-) -> dict[str, dict[str, Any]]:
-    """Ask a chat model the questions a decisions model cannot answer."""
-    llm = build_chat_model(model_text_name=model, temperature=0.0)
-    structured = llm.with_structured_output(_output_model(questions))
-    result = _as_dict(
-        await structured.ainvoke(
-            [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": f"State:\n{state}\n\nQuestions:\n{_format_questions(questions)}"},
-            ]
-        )
-    )
-
-    answers: dict[str, dict[str, Any]] = {}
-    for index, (qid, q) in enumerate(questions.items()):
-        value = result.get(f"q{index}")
-        if value is None:
-            continue
-        if q.type == "choice":
-            v = _as_dict(value)
-            answers[qid] = {"type": "choice", "choice": v.get("choice"), "confidence": v.get("confidence")}
-        elif q.type == "text":
-            answers[qid] = {"type": "text", "text": value}
-        else:
-            answers[qid] = {"type": "noul", "noul": value}
-    return answers
 
 
 @router.post("/system-one", response_model=AppResponse[DecisionResponse])
@@ -127,47 +74,63 @@ async def system_one(req: DecisionRequest) -> AppResponse[DecisionResponse]:
     if not req.questions:
         return AppResponse(data=DecisionResponse())
 
-    # Everything that can fail (building the model, the structured call, and
-    # assembling the answers) lives in one try: the builder must work without
-    # suggestions, so any failure here degrades to empty answers with HTTP 200
-    # rather than bubbling up as a 400/500 through main.py's global handlers.
-    # Usage is reported even when the answers are lost: the tokens were spent.
-    answers: dict[str, dict[str, Any]] = {}
-    usage: TokenUsage | None = None
-    with get_usage_metadata_callback() as usage_cb:
-        try:
-            if is_decisions_model(AppVars.DECISION_MODEL):
-                # Jev and other decisions models reject chat/completions; they
-                # answer choice/noul on the native endpoint. They cannot write
-                # text at all, so `text` questions go to a chat model.
-                typed = {qid: q for qid, q in req.questions.items() if q.type != "text"}
-                text = {qid: q for qid, q in req.questions.items() if q.type == "text"}
-                if typed:
-                    response = await request_decisions(
-                        build_request(AppVars.DECISION_MODEL, req.state, typed)
-                    )
-                    answers.update(answers_from_decisions(response, typed))
-                    usage = usage_from_decisions(response)
-                if text:
-                    answers.update(
-                        await _answer_with_chat(req.state, text, AppVars.DECISION_TEXT_MODEL)
-                    )
-            else:
-                answers = await _answer_with_chat(
-                    req.state, req.questions, AppVars.DECISION_MODEL
-                )
-        except Exception as exc:  # noqa: BLE001 - the builder must work without suggestions
-            logger.warning("decision.system_one failed err=%s", exc)
-            answers = {}
-
-    chat_usage = sum_usage(usage_cb.usage_metadata)
-    if usage is None:
-        usage = chat_usage
-    elif chat_usage is not None:
-        usage = add_usage(usage, chat_usage)
+    # `DECISION_MODEL` must be a decisions model: they all use the native
+    # endpoint, and none accept chat/completions. Any failure (request,
+    # provider, answer assembly) degrades to empty answers with HTTP 200
+    # rather than bubbling up as a 400/500 through main.py's global handlers:
+    # the builder must work without suggestions.
+    try:
+        response = await request_decisions(
+            build_request(AppVars.DECISION_MODEL, req.state, req.questions)
+        )
+        answers = answers_from_decisions(response, req.questions)
+        usage = usage_from_decisions(response)
+    except Exception as exc:  # noqa: BLE001 - the builder must work without suggestions
+        logger.warning("decision.system_one failed err=%s", exc)
+        answers, usage = {}, None
 
     return AppResponse(
         data=DecisionResponse(answers=answers, usage=usage, model=AppVars.DECISION_MODEL)
+    )
+
+
+@router.post("/extract", response_model=AppResponse[ExtractResponse])
+async def extract(req: ExtractRequest) -> AppResponse[ExtractResponse]:
+    """Copies stated details out of a state with EXTRACT_MODEL (a chat model).
+
+    Decisions models answer typed primitives only, so text answers cannot come
+    from `system-one`; this is the separate chat call for them (#623).
+    """
+    if not req.fields:
+        return AppResponse(data=ExtractResponse())
+
+    with get_usage_metadata_callback() as usage_cb:
+        try:
+            llm = build_chat_model(model_text_name=AppVars.EXTRACT_MODEL, temperature=0.0)
+            structured = llm.with_structured_output(_field_model(req.fields))
+            result = _as_dict(
+                await structured.ainvoke(
+                    [
+                        {"role": "system", "content": EXTRACT_SYSTEM_PROMPT},
+                        {"role": "user", "content": f"State:\n{req.state}\n\nFields:\n{_format_fields(req.fields)}"},
+                    ]
+                )
+            )
+            answers: dict[str, str] = {}
+            for index, field_id in enumerate(req.fields):
+                value = result.get(f"q{index}")
+                if isinstance(value, str):
+                    answers[field_id] = value
+        except Exception as exc:  # noqa: BLE001 - the caller can prefill by hand
+            logger.warning("decision.extract failed err=%s", exc)
+            answers = {}
+
+    return AppResponse(
+        data=ExtractResponse(
+            answers=answers,
+            usage=sum_usage(usage_cb.usage_metadata),
+            model=AppVars.EXTRACT_MODEL,
+        )
     )
 
 

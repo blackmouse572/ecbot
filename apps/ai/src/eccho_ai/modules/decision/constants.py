@@ -1,13 +1,11 @@
-"""Prompts and limits for the decision endpoints (system-one and write)."""
+"""Prompts and limits for the decision endpoints (system-one, extract, write)."""
 
-SYSTEM_PROMPT = """\
-You answer typed questions about a piece of state, like a calibrated classifier.
-For a "choice" question, pick exactly one option id from its options and give
-your confidence from 0 to 1 that it is the right option.
-For a "noul" question, give the probability from 0 to 1 that the answer is yes.
-For a "text" question, copy the answer from the state in its own words and
-language, or give an empty string when the state does not say.
-Judge only from the state. Do not explain.
+# /decision/extract copies stated details out of a state; decisions models
+# cannot write text, so this is the only chat-model prompt here.
+EXTRACT_SYSTEM_PROMPT = """\
+You copy details out of a piece of state. For each field, copy what the state
+says in its own words and language, or give an empty string when the state does
+not say. Judge only from the state. Do not explain.
 """
 
 # Matches the profile's longest text field (PROFILE_LIMITS.longText).

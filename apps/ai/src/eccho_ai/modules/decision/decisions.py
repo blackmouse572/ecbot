@@ -1,9 +1,9 @@
-"""OpenRouter's alpha Decisions API, for decisions models such as Jev.
+"""OpenRouter's alpha Decisions API, for the configured decisions model.
 
-Jev (`typesafe/*`) is not a chat model: OpenRouter rejects `chat/completions`
-for it and serves it on `POST /api/alpha/decisions`. The router asks this module
-when `DECISION_MODEL` names a decisions model, and maps the native answers back
-into the System One shape the rest of the service already expects.
+`DECISION_MODEL` must name a decisions model (e.g. `~typesafe/jev-latest`):
+those models reject `chat/completions` and are served on
+`POST /api/alpha/decisions`. There is no model-type branch: swapping one
+decisions model for another stays an environment change.
 """
 from __future__ import annotations
 
@@ -14,15 +14,6 @@ import httpx
 from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.usage import TokenUsage
 from eccho_ai.modules.decision.models import DecisionQuestion
-
-
-def is_decisions_model(model: str) -> bool:
-    """True when OpenRouter serves `model` on the Decisions API, not chat.
-
-    Only the TypeSafe/Jev family is routed natively today. `~` is OpenRouter's
-    auto-router prefix, as on `~typesafe/jev-latest`.
-    """
-    return model.lstrip("~").startswith("typesafe/")
 
 
 def decisions_url(base_url: str | None = None) -> str:
@@ -40,11 +31,10 @@ def decisions_url(base_url: str | None = None) -> str:
 def build_request(
     model: str, state: str, questions: dict[str, DecisionQuestion]
 ) -> dict[str, Any]:
-    """A Decisions API request for the typed questions it can answer.
+    """A Decisions API request for the typed questions `system-one` accepts.
 
-    `choice` and `noul` map straight onto Decisions primitives. `text` does not:
-    decisions models return probabilities, never generated prose, so the router
-    answers text questions with a chat model instead.
+    `choice` and `noul` map straight onto Decisions primitives; decisions models
+    have no text primitive, so they never receive text questions.
     """
     mapped: dict[str, dict[str, Any]] = {}
     for qid, question in questions.items():
@@ -54,7 +44,7 @@ def build_request(
                 "instructions": question.instructions,
                 "criteria": dict(question.criteria or {}),
             }
-        elif question.type == "noul":
+        else:
             mapped[qid] = {"type": "noul", "instructions": question.instructions}
     return {"model": model, "state": state, "questions": mapped}
 

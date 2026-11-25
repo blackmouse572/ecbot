@@ -3,6 +3,7 @@ import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
     EMPTY_SUGGESTION,
+    buildExtractFields,
     buildSuggestQuestions,
     readSuggestAnswers,
     type AgentSuggestion,
@@ -13,8 +14,9 @@ import {
     AiUsageMeter,
     ENUM_AI_USAGE_SOURCE,
 } from 'src/app/ai-usage-meter.interface';
+import { addTokenUsage } from 'src/modules/chatbot/interfaces/token-usage-wire.interface';
 import { createHash } from 'crypto';
-import { AiDecisionService } from './ai-decision.service';
+import { AiDecisionService, type IAiExtractResult } from './ai-decision.service';
 
 @Injectable()
 export class AgentBuilderService {
@@ -57,18 +59,31 @@ export class AgentBuilderService {
             const budget = (await this.meter?.check(workspaceId)) ?? { allowed: true };
             if (!budget.allowed) return EMPTY_SUGGESTION;
 
-            const { answers, usage, model } = await this.aiDecision.decide(state, buildSuggestQuestions());
+            const [decision, extracted] = await Promise.all([
+                this.aiDecision.decide(state, buildSuggestQuestions()),
+                // Decisions models cannot write text; only losing the texts is
+                // acceptable, so a failed extraction keeps the rest.
+                this.aiDecision.extract(state, buildExtractFields()).catch(
+                    (error: unknown): IAiExtractResult => {
+                        this.logger.warn(
+                            `agent builder text extraction failed: ${(error as Error).message}`
+                        );
+                        return { answers: {}, usage: null };
+                    }
+                ),
+            ]);
+            const usage = addTokenUsage(decision.usage, extracted.usage);
             if (usage) {
                 await this.meter?.record({
                     workspaceId,
                     usage,
                     source: ENUM_AI_USAGE_SOURCE.AGENT_BUILDER,
-                    model,
+                    model: decision.model ?? extracted.model,
                 }).catch((err: unknown) => this.logger.warn(`agent builder usage not recorded: ${err}`));
             }
-            const suggestion = readSuggestAnswers(answers);
+            const suggestion = readSuggestAnswers(decision.answers, extracted.answers);
             // apps/ai answers `{}` on any failure: never cache that for 24h.
-            const empty = !answers || Object.keys(answers).length === 0;
+            const empty = !decision.answers || Object.keys(decision.answers).length === 0;
             if (empty || suggestion.businessType === null) return suggestion;
             await this.cache.set(key, suggestion, this.config.get<number>('agentBuilder.suggestTtlMs'));
             return suggestion;

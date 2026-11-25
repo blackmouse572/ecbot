@@ -21,7 +21,15 @@ export interface IAiWriteResult {
     model?: string;
 }
 
-// apps/ai answers System One-shaped questions with the model in DECISION_MODEL.
+export interface IAiExtractResult {
+    /** The detail copied for each field id; empty when apps/ai could not read them. */
+    answers: Record<string, string>;
+    usage: TokenUsageDelta | null;
+    model?: string;
+}
+
+// apps/ai answers System One-shaped questions with the decisions model in
+// DECISION_MODEL; text details come from its own chat-model call.
 @Injectable()
 export class AiDecisionService {
     private readonly baseUrl: string;
@@ -83,7 +91,38 @@ export class AiDecisionService {
         };
     }
 
-    /** Drafts a short text from instructions and a state (apps/ai `/api/decision/write`). */
+    /** Copies stated details out of a state (`apps/ai /api/decision/extract`). */
+    async extract(
+        state: string,
+        fields: Record<string, string>,
+        timeoutMs?: number
+    ): Promise<IAiExtractResult> {
+        const authHeaders = await getInternalAuthHeader(this.baseUrl);
+        const resp = await firstValueFrom(
+            this.http.post(
+                `${this.baseUrl}/api/decision/extract`,
+                { state, fields },
+                {
+                    timeout: timeoutMs ?? this.config.get<number>('agentBuilder.decisionTimeoutMs') ?? 15000,
+                    headers: {
+                        ...authHeaders,
+                        ...getInternalTokenHeader(this.config),
+                        'Content-Type': 'application/json',
+                    },
+                }
+            )
+        );
+        const payload = resp.data as {
+            data?: { answers?: Record<string, string>; usage?: unknown; model?: string };
+        };
+        return {
+            answers: payload?.data?.answers ?? {},
+            usage: parseWireTokenUsage(payload?.data?.usage),
+            model: payload?.data?.model,
+        };
+    }
+
+    /** Drafts a short text from instructions and a state (`apps/ai /api/decision/write`). */
     async write(instructions: string, state: string, timeoutMs?: number): Promise<IAiWriteResult> {
         const authHeaders = await getInternalAuthHeader(this.baseUrl);
         const resp = await firstValueFrom(

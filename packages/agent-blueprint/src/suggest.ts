@@ -6,12 +6,10 @@ import { PROFILE_LIMITS, createProfile, type AgentProfile } from "./profile";
 
 export type SystemOneQuestion =
   | { type: "choice"; instructions: string; criteria: Record<string, string> }
-  | { type: "noul"; instructions: string }
-  | { type: "text"; instructions: string };
+  | { type: "noul"; instructions: string };
 export type SystemOneAnswer =
   | { type: "choice"; choice: string; confidence: number }
-  | { type: "noul"; noul: number }
-  | { type: "text"; text: string };
+  | { type: "noul"; noul: number };
 export type Scored = { value: string; confidence: number };
 export type AgentSuggestion = {
   businessType: Scored | null;
@@ -69,8 +67,15 @@ export function buildSuggestQuestions(): Record<string, SystemOneQuestion> {
   };
   for (const g of GOALS) questions[`goal__${g.id}`] = { type: "noul", instructions: `Should the assistant do this job? ${g.prompt}` };
   for (const r of RULES) questions[`rule__${r.id}`] = { type: "noul", instructions: `Is this rule important for this business? ${r.prompt}` };
-  for (const t of TEXTS) questions[`text__${t.id}`] = { type: "text", instructions: t.prompt };
   return questions;
+}
+
+/** The detail prompts `/decision/extract` answers on a chat model (#623). */
+export function buildExtractFields(): Record<TextId, string> {
+  // Every TextId is derived from TEXTS, so the loop fills the record.
+  const fields = {} as Record<TextId, string>;
+  for (const t of TEXTS) fields[t.id] = t.prompt;
+  return fields;
 }
 
 function scored(a: SystemOneAnswer | undefined | null, allowed: readonly string[]): Scored | null {
@@ -80,7 +85,10 @@ function scored(a: SystemOneAnswer | undefined | null, allowed: readonly string[
   return { value: a.choice, confidence: clampedConfidence };
 }
 
-export function readSuggestAnswers(answers: Record<string, SystemOneAnswer | undefined> | null | undefined): AgentSuggestion {
+export function readSuggestAnswers(
+  answers: Record<string, SystemOneAnswer | undefined> | null | undefined,
+  extracted: Partial<Record<TextId, string>> = {},
+): AgentSuggestion {
   const safeAnswers = typeof answers === "object" && answers !== null ? answers : {};
   const goalIds = new Set(GOALS.map((g) => g.id));
   const ruleIds = new Set(RULES.map((r) => r.id));
@@ -98,10 +106,10 @@ export function readSuggestAnswers(answers: Record<string, SystemOneAnswer | und
   );
   const texts: AgentSuggestion["texts"] = {};
   for (const t of TEXTS) {
-    const a = safeAnswers[`text__${t.id}`];
-    if (!a || typeof a !== "object" || a.type !== "text" || typeof a.text !== "string") continue;
+    const raw = extracted[t.id];
+    if (typeof raw !== "string") continue;
     const limit = t.id === "business_name" ? PROFILE_LIMITS.shortText : PROFILE_LIMITS.longText;
-    const text = a.text.trim().slice(0, limit).trim();
+    const text = raw.trim().slice(0, limit).trim();
     if (text) texts[t.id] = text;
   }
   return {
