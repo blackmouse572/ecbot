@@ -168,11 +168,6 @@ export const ContactPointsList: FC<Props> = ({ customerId, contactPoints }) => {
           );
         })}
       </ul>
-      {conversations.length > 0 && (
-        <Text size="xsmall" className="text-ui-fg-muted">
-          {t(`${KEY}.openHint`)}
-        </Text>
-      )}
     </div>
   );
 };

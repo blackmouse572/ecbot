@@ -2471,8 +2471,7 @@
           "windowUnlimited": "No time limit",
           "lastInbound": "Wrote {{time}}",
           "count_one": "{{count}} channel",
-          "count_other": "{{count}} channels",
-          "openHint": "Tap a channel to open its conversation."
+          "count_other": "{{count}} channels"
         },
         "conversations": {
           "title": "Conversations",

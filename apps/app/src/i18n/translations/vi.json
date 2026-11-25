@@ -2507,8 +2507,7 @@
           "windowClosed": "Hết hạn nhắn",
           "windowUnlimited": "Không giới hạn",
           "lastInbound": "Nhắn {{time}}",
-          "count_other": "{{count}} kênh",
-          "openHint": "Bấm một kênh để mở cuộc trò chuyện trên kênh đó."
+          "count_other": "{{count}} kênh"
         },
         "conversations": {
           "title": "Cuộc trò chuyện",
