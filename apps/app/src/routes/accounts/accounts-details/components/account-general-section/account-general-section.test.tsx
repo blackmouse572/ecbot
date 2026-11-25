@@ -34,7 +34,7 @@ vi.mock("@repo/ui/common-components", () => ({
   ),
 }));
 
-vi.mock("@/hooks/api", () => ({
+vi.mock("@/hooks/api/accounts", () => ({
   useUnLinkAccount: () => ({ mutateAsync: unlink }),
 }));
 
