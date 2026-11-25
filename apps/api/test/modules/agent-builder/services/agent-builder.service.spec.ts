@@ -22,7 +22,7 @@ function setup(overrides: { cached?: unknown; answers?: unknown; texts?: Record<
         extract: jest.fn(async () => {
             if (overrides.extractFail) throw new Error('extract down');
             return {
-                answers: overrides.texts ?? {},
+                answers: overrides.texts ?? { business_name: 'Mây' },
                 usage: overrides.extractUsage ?? null,
                 model: 'google/gemini-2.5-flash',
             };
@@ -65,7 +65,7 @@ describe('AgentBuilderService.suggest', () => {
     });
 
     it('does not cache an empty answer set from the apps/ai decision service', async () => {
-        const { service, cache } = setup({ answers: {} });
+        const { service, cache } = setup({ answers: {}, texts: {} });
         await expect(service.suggest('ws-1', 'x')).resolves.toEqual(EMPTY_SUGGESTION);
         expect(cache.set).not.toHaveBeenCalled();
     });
@@ -141,11 +141,20 @@ describe('AgentBuilderService.suggest', () => {
         expect(out.texts).toEqual({ business_name: 'Mây' });
     });
 
-    it('still returns the decision answers when text extraction fails', async () => {
-        const { service } = setup({ extractFail: true });
+    it('still returns the decision answers when text extraction fails, without caching them', async () => {
+        const { service, cache } = setup({ extractFail: true });
         const out = await service.suggest('ws-1', 'Nail spa');
         expect(out.businessType).toEqual({ value: 'beauty', confidence: 0.95 });
         expect(out.texts).toEqual({});
+        expect(cache.set).not.toHaveBeenCalled();
+    });
+
+    it('does not cache a suggestion whose extraction returned only empty details', async () => {
+        const { service, cache } = setup({ texts: { business_name: '   ', opening_hours: '' } });
+        const out = await service.suggest('ws-1', 'Nail spa');
+        expect(out.businessType).toEqual({ value: 'beauty', confidence: 0.95 });
+        expect(out.texts).toEqual({});
+        expect(cache.set).not.toHaveBeenCalled();
     });
 
     it('meters each model call as its own row, at its own model', async () => {

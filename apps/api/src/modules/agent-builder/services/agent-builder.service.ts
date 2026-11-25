@@ -80,8 +80,11 @@ export class AgentBuilderService {
             ]);
             const suggestion = readSuggestAnswers(decision.answers, extracted.answers);
             // apps/ai answers `{}` on any failure: never cache that for 24h.
+            // A failed or empty extraction has no prefilled details either, so
+            // caching it would hide the business name/hours until the TTL ends.
             const empty = !decision.answers || Object.keys(decision.answers).length === 0;
-            if (empty || suggestion.businessType === null) return suggestion;
+            const missingTexts = Object.keys(suggestion.texts).length === 0;
+            if (empty || missingTexts || suggestion.businessType === null) return suggestion;
             await this.cache.set(key, suggestion, this.config.get<number>('agentBuilder.suggestTtlMs'));
             return suggestion;
         } catch (error) {
