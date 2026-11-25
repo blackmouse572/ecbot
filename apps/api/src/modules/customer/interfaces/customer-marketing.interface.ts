@@ -1,3 +1,4 @@
+import { TrackedLinkEntity } from '../repository/entities/tracked-link.entity';
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
 import type { CustomerProductReactionEntity } from '../repository/entities/customer-product-reaction.entity';
 import {
@@ -64,12 +65,18 @@ export interface ICustomerMarketingFirstSource {
     at: Date;
 }
 
+/** A tracked link a customer arrived through, and when. */
+export interface ICustomerMarketingArrivalAt {
+    link: TrackedLinkEntity;
+    at: Date;
+}
+
 /** Customers list filters on the marketing labels. */
 export interface ICustomerMarketingListFilter {
     stages?: ENUM_CUSTOMER_JOURNEY_STAGE[];
     permissions?: ENUM_CUSTOMER_MARKETING_PERMISSION[];
     dormant?: boolean;
-    /** First source, or one of its codes. */
+    /** Arrived through this source or one of its codes, at any time. */
     sourceId?: string;
 }
 

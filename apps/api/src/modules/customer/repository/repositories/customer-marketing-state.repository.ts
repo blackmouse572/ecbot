@@ -5,10 +5,14 @@ import { CUSTOMER_MARKETING_DORMANT_DAYS } from '../../constants/customer-market
 import {
     ENUM_CUSTOMER_JOURNEY_STAGE,
     ENUM_CUSTOMER_MARKETING_PERMISSION,
+    ENUM_MARKETING_EVENT_KIND,
 } from '../../enums/customer-marketing.enum';
 import { ICustomerMarketingListFilter } from '../../interfaces/customer-marketing.interface';
 import { ITrackedLinkStats } from '../../interfaces/tracked-link.interface';
 import { CustomerMarketingStateEntity } from '../entities/customer-marketing-state.entity';
+import { CustomerTableName } from '../entities/customer.entity';
+import { MarketingEventTableName } from '../entities/marketing-event.entity';
+import { TrackedLinkTableName } from '../entities/tracked-link.entity';
 
 const DAY_MS = 86_400_000;
 
@@ -133,14 +137,19 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
         }
 
         if (filter.sourceId) {
-            const fromSource = this.customerIds({
+            const firstFrom = this.customerIds({
                 $or: [
                     { firstTrackedLink: filter.sourceId },
                     { firstTrackedLink: { parent: filter.sourceId } },
                 ],
             });
 
-            conditions.push({ id: { $in: fromSource } });
+            conditions.push({
+                $or: [
+                    { id: { $in: firstFrom } },
+                    { id: { $in: this.arrivedThrough(filter.sourceId) } },
+                ],
+            });
         }
 
         return conditions.length ? { $and: conditions } : {};
@@ -168,6 +177,24 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
         return includeMissing
             ? { $or: [matching, { id: { $nin: this.customerIds({}) } }] }
             : matching;
+    }
+
+    /**
+     * Customers who arrived through a source or one of its codes at any time,
+     * from the SOURCE events. A merged-away customer counts as the one it went
+     * into. The first source above still matches on its own.
+     */
+    private arrivedThrough(sourceId: string) {
+        const knex = this.em.getKnex();
+        const links = knex(TrackedLinkTableName)
+            .select('id')
+            .where('id', sourceId)
+            .orWhere('parent_id', sourceId);
+        return knex(`${MarketingEventTableName} as e`)
+            .join(`${CustomerTableName} as c`, 'c.id', 'e.customer_id')
+            .where('e.kind', ENUM_MARKETING_EVENT_KIND.SOURCE)
+            .whereIn('e.tracked_link_id', links)
+            .select(knex.raw('COALESCE(c.merged_into_customer_id, c.id)'));
     }
 
     private customerIds(where: QBFilterQuery<CustomerMarketingStateEntity>) {

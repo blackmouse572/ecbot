@@ -141,7 +141,7 @@ export class CustomerMarketingWorkspaceController {
                 total,
                 totalPage: this.paginationService.totalPage(total, _limit),
             },
-            data: this.marketingService.mapEvents(events),
+            data: await this.marketingService.mapEvents(events),
         };
     }
 }

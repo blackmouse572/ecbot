@@ -2777,6 +2777,9 @@
       },
       "addOrder": "Thêm đơn",
       "cameFrom": "Đến từ",
+      "moreSources_one": "Đến qua thêm {{count}} nguồn",
+      "moreSources_other": "Đến qua thêm {{count}} nguồn",
+      "firstArrival": "{{date}}, lần đầu",
       "tabs": {
         "overview": "Tổng quan",
         "conversations": "Hội thoại",
@@ -3913,6 +3916,7 @@
       "reactionEnded": "Hết tạm hoãn một nhóm hàng",
       "intent": "Quan tâm theo nhóm hàng: {{to}}",
       "source": "Đến qua link nguồn",
+      "sourceNamed": "Đến qua {{name}}",
       "followOn": "Quan tâm Zalo OA",
       "followOff": "Bỏ quan tâm Zalo OA"
     },

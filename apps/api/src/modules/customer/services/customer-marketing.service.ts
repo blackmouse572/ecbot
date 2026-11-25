@@ -57,7 +57,10 @@ import { CustomerProductReactionRepository } from '../repository/repositories/cu
 import { CustomerRepository } from '../repository/repositories/customer.repository';
 import { MarketingEventRepository } from '../repository/repositories/marketing-event.repository';
 import { customerProductReactionResponse } from '../utils/customer-product-reaction.util';
-import { customerMarketingFirstSource } from '../utils/customer-marketing-first-source.util';
+import {
+    customerMarketingFirstSource,
+    customerMarketingSource,
+} from '../utils/customer-marketing-first-source.util';
 import { customerMarketingFreeWindows } from '../utils/customer-marketing-free-window.util';
 import { MarketingSendService } from '@app/modules/marketing/services/marketing-send.service';
 import { MarketingSettingsService } from '@app/modules/marketing/services/marketing-settings.service';
@@ -273,6 +276,10 @@ export class CustomerMarketingService {
             this.reactionRepository.findActiveByCustomer(customerId),
             this.stateRepository.populateFirstSource([state]),
         ]);
+        const arrivals = await this.eventRepository.findArrivals(
+            customerId,
+            workspaceId
+        );
 
         return plainToInstance(
             CustomerMarketingStateGetResponseDto,
@@ -287,6 +294,9 @@ export class CustomerMarketingService {
                     channel => this.freeMessageWindowHours(channel)
                 ),
                 firstSource: customerMarketingFirstSource(state),
+                sources: arrivals.map(({ link, at }) =>
+                    customerMarketingSource(link, at)
+                ),
                 reactions: reactions.map(customerProductReactionResponse),
             },
             { excludeExtraneousValues: true }
@@ -633,14 +643,35 @@ export class CustomerMarketingService {
         ]);
     }
 
-    mapEvents(events: MarketingEventEntity[]): MarketingEventGetResponseDto[] {
+    /** SOURCE events name the tracked link they came through. */
+    async mapEvents(
+        events: MarketingEventEntity[]
+    ): Promise<MarketingEventGetResponseDto[]> {
+        const arrivals = events.filter(
+            e => e.kind === ENUM_MARKETING_EVENT_KIND.SOURCE && e.trackedLinkId
+        );
+        const links = await this.eventRepository.findLinks(
+            arrivals.map(e => e.trackedLinkId as string)
+        );
         return plainToInstance(
             MarketingEventGetResponseDto,
-            events.map(event => ({
-                ...event,
-                orderId: event.order?.id ?? null,
-                productGroupId: event.productGroup?.id ?? null,
-            })),
+            events.map(event => {
+                // Other events of an arrival carry its link too; only SOURCE
+                // names it.
+                const link =
+                    event.kind === ENUM_MARKETING_EVENT_KIND.SOURCE &&
+                    event.trackedLinkId
+                        ? links.get(event.trackedLinkId)
+                        : undefined;
+                return {
+                    ...event,
+                    orderId: event.order?.id ?? null,
+                    productGroupId: event.productGroup?.id ?? null,
+                    source: link
+                        ? customerMarketingSource(link, event.createdAt)
+                        : null,
+                };
+            }),
             { excludeExtraneousValues: true }
         );
     }

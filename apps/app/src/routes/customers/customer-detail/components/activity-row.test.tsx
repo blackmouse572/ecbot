@@ -48,6 +48,34 @@ describe("ActivityRow", () => {
     expect(screen.getByText("Unfollowed the Zalo OA")).toBeInTheDocument();
   });
 
+  it("names the link a customer came through and opens its source", () => {
+    renderRow(
+      marketing({
+        kind: "SOURCE",
+        source: {
+          sourceId: "s-2",
+          sourceName: "Tờ rơi Tết",
+          codeName: "KOL Minh Thư",
+          channel: "FACEBOOK_PAGE",
+          at: "2026-11-20T08:00:00Z",
+        },
+      }),
+    );
+
+    expect(
+      screen.getByRole("link", {
+        name: "Came through Tờ rơi Tết (KOL Minh Thư)",
+      }),
+    ).toHaveAttribute("href", "/acme/sources/s-2");
+  });
+
+  it("keeps the plain line when the link was deleted", () => {
+    renderRow(marketing({ kind: "SOURCE", source: null }));
+
+    expect(screen.getByText("Came through a source link")).toBeInTheDocument();
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+  });
+
   it("links an order to its page", () => {
     renderRow({
       kind: "order",

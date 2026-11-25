@@ -95,12 +95,24 @@ export const ActivityRow: FC<{ item: CustomerActivityItem }> = ({ item }) => {
 
   const { title, reason, actor } = toText(item.event);
   const look = EVENT_LOOK[item.event.kind];
+  const source = item.event.source;
 
   return (
     <Row
       tone={look.tone}
       icon={look.icon}
-      title={title}
+      title={
+        source ? (
+          <Link
+            to={`/${workspaceSlug}/${ROUTES.CustomerSources}/${source.sourceId}`}
+            className="hover:text-ui-fg-interactive transition-colors"
+          >
+            {title}
+          </Link>
+        ) : (
+          title
+        )
+      }
       meta={[when, reason, actor]}
     />
   );

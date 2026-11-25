@@ -2746,6 +2746,9 @@
       },
       "addOrder": "Add order",
       "cameFrom": "Came from",
+      "moreSources_one": "Came through {{count}} more source",
+      "moreSources_other": "Came through {{count}} more sources",
+      "firstArrival": "{{date}}, first",
       "tabs": {
         "overview": "Overview",
         "conversations": "Conversations",
@@ -3886,6 +3889,7 @@
       "reactionEnded": "Product group pause ended",
       "intent": "Product group interest: {{to}}",
       "source": "Came through a source link",
+      "sourceNamed": "Came through {{name}}",
       "followOn": "Followed the Zalo OA",
       "followOff": "Unfollowed the Zalo OA"
     },

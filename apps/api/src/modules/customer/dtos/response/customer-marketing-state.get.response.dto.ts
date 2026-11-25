@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
+import { CustomerMarketingFirstSourceResponseDto } from './customer-marketing-first-source.response.dto';
 import { CustomerMarketingFreeWindowResponseDto } from './customer-marketing-free-window.response.dto';
 import { CustomerProductReactionGetResponseDto } from './customer-product-reaction.get.response.dto';
 import { CustomerMarketingSummaryResponseDto } from './customer-marketing-summary.response.dto';
@@ -9,6 +10,16 @@ export class CustomerMarketingStateGetResponseDto extends CustomerMarketingSumma
     @Expose()
     @ApiProperty({ type: Date, required: false, nullable: true })
     consentAskedAt?: Date | null;
+
+    @Expose()
+    @Type(() => CustomerMarketingFirstSourceResponseDto)
+    @ApiProperty({
+        type: CustomerMarketingFirstSourceResponseDto,
+        isArray: true,
+        description:
+            'Every tracked link the customer arrived through, with the first time, oldest first.',
+    })
+    sources: CustomerMarketingFirstSourceResponseDto[];
 
     @Expose()
     @ApiProperty({ type: Date, required: false, nullable: true })

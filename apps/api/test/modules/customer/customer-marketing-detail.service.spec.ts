@@ -33,6 +33,8 @@ function makeHarness(opts: {
     lastInbound?: { channel: ENUM_ACCOUNT_TYPE; lastInboundAt: Date }[];
     states?: CustomerMarketingStateEntity[];
     reactions?: any[];
+    arrivals?: { link: any; at: Date }[];
+    links?: any[];
 }) {
     const em: any = {
         getReference: jest.fn((_e: any, id: string) => ({ id })),
@@ -49,6 +51,15 @@ function makeHarness(opts: {
     const eventRepository = {
         findOne: jest.fn(
             async (where: any) => opts.events?.[where.kind] ?? null
+        ),
+        findArrivals: jest.fn(async () => opts.arrivals ?? []),
+        findLinks: jest.fn(
+            async (ids: string[]) =>
+                new Map(
+                    (opts.links ?? [])
+                        .filter(l => ids.includes(l.id))
+                        .map(l => [l.id, l])
+                )
         ),
     };
     const customerRepository = {
@@ -400,6 +411,76 @@ describe('CustomerMarketingService.getDetail, Với nhóm hàng and Nguồn đ�
         expect(
             (await direct.service.getDetail('c1', 'w1')).firstSource
         ).toBeNull();
+    });
+});
+
+describe('CustomerMarketingService sources', () => {
+    const ADS = {
+        id: 's3',
+        name: 'Quảng cáo kem chống nắng',
+        parent: null,
+        account: { type: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE },
+    } as any;
+
+    it('lists every link the customer arrived through, oldest first', async () => {
+        const first = new Date('2026-11-20T00:00:00Z');
+        const later = new Date('2026-11-25T00:00:00Z');
+        const { service, eventRepository } = makeHarness({
+            state: state(),
+            arrivals: [
+                { link: KOL_CODE, at: first },
+                { link: ADS, at: later },
+            ],
+        });
+
+        const detail = await service.getDetail('c1', 'w1');
+
+        expect(eventRepository.findArrivals).toHaveBeenCalledWith('c1', 'w1');
+        expect(detail.sources).toEqual([
+            {
+                sourceId: 's1',
+                sourceName: 'Tờ rơi Tết',
+                codeName: 'KOL Minh Thư',
+                channel: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+                at: first,
+            },
+            {
+                sourceId: 's3',
+                sourceName: 'Quảng cáo kem chống nắng',
+                codeName: null,
+                channel: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+                at: later,
+            },
+        ]);
+    });
+
+    it('names the link on a SOURCE event only, and nothing for a deleted link', async () => {
+        const at = new Date('2026-11-25T09:12:00Z');
+        const { service } = makeHarness({ links: [ADS] });
+
+        const events = await service.mapEvents([
+            { id: 'e1', kind: KIND.SOURCE, trackedLinkId: 's3', createdAt: at },
+            {
+                id: 'e2',
+                kind: KIND.SOURCE,
+                trackedLinkId: 'gone',
+                createdAt: at,
+            },
+            // The STAGE row of an arrival carries its link too.
+            { id: 'e3', kind: KIND.STAGE, trackedLinkId: 's3', createdAt: at },
+        ] as any);
+
+        expect(events.map(e => e.source)).toEqual([
+            {
+                sourceId: 's3',
+                sourceName: 'Quảng cáo kem chống nắng',
+                codeName: null,
+                channel: ENUM_ACCOUNT_TYPE.FACEBOOK_PAGE,
+                at,
+            },
+            null,
+            null,
+        ]);
     });
 });
 

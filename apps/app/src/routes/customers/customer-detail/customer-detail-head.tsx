@@ -23,6 +23,7 @@ import { useAbility } from "@repo/auth";
 import type { FC, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { MoreSources } from "./components/more-sources";
 import { useCustomerDisplayName } from "./use-customer-display-name";
 
 type Props = {
@@ -118,6 +119,7 @@ export const CustomerDetailHead: FC<Props> = ({
                       {source.sourceName}
                     </Link>
                   </span>
+                  <MoreSources sources={marketing?.sources ?? []} />
                 </>
               )}
             </Text>

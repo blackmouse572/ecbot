@@ -135,6 +135,14 @@ describe('E2E — customer marketing labels', () => {
             );
         }
 
+        // "Đã dừng" came first through another source, then later through
+        // the flyer: a later arrival matches the flyer filter too.
+        await sql.execute(
+            `insert into marketing_events (id, workspace_id, customer_id, kind, actor, tracked_link_id, created_at, updated_at)
+             values (gen_random_uuid(), ?, ?, 'SOURCE', 'RULE', ?, now(), now())`,
+            [workspaceId, ids.stopped, sourceId]
+        );
+
         const [contactPoint] = await sql.execute(
             `insert into contact_points (id, workspace_id, customer_id, platform, external_sender_id, created_at, updated_at)
              values (gen_random_uuid(), ?, ?, 'FACEBOOK_PAGE', 'psid-1', now(), now()) returning id`,
@@ -223,9 +231,9 @@ describe('E2E — customer marketing labels', () => {
         expect(page.body._metadata.pagination.total).toBe(2);
     });
 
-    it('filters by first source, its codes included, and names the code on each row', async () => {
+    it('filters by any arrival through a source, its codes included, and names the first code on each row', async () => {
         expect(await listNames(`source=${sourceId}`)).toEqual(
-            ['Hỏi giá', 'Mua gần đây'].sort()
+            ['Hỏi giá', 'Mua gần đây', 'Đã dừng'].sort()
         );
         await new Promise(resolve => setTimeout(resolve, 60));
         const res = await http(ctx.app)
