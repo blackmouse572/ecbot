@@ -13,6 +13,7 @@ import {
 import {
     IMarketingAudience,
     IMarketingAudienceCondition,
+    IMarketingAudienceCustomerFilter,
     IMarketingAudienceWindow,
     IMarketingAudiencePreviewRow,
     IMarketingSql,
@@ -198,11 +199,13 @@ const audienceSql = (
 
 /**
  * The matching customers with the reason each one is left out (NULL when
- * the audience reaches them), as the `picked` CTE. Placeholders run in text
- * order: the window, the deferral groups, then the conditions.
+ * the audience reaches them), as the `picked` CTE. Customers the shop
+ * unticked are not picked at all. Placeholders run in text order: the
+ * window, the deferral groups, the conditions, then the unticked ids.
  */
 const picked = (audience: IMarketingAudience): IMarketingSql => {
     const { match, deferred } = audienceSql(audience);
+    const unticked = audience.excludedCustomerIds ?? [];
     const sql = `${LIVE},
     picked AS (
         SELECT l.id, ${LAST_MESSAGE} AS last_message,
@@ -218,8 +221,49 @@ const picked = (audience: IMarketingAudience): IMarketingSql => {
         FROM live l
         CROSS JOIN w
         WHERE ${match.sql}
+            ${unticked.length ? 'AND l.id NOT IN (?)' : ''}
     )`;
-    return { sql, params: [...(deferred?.params ?? []), ...match.params] };
+    return {
+        sql,
+        params: [
+            ...(deferred?.params ?? []),
+            ...match.params,
+            ...(unticked.length ? [unticked] : []),
+        ],
+    };
+};
+
+const LIKE_SPECIAL = /[\\%_]/g;
+
+/** Narrows `picked` to one channel and a name, for the customer list. */
+const narrowed = (filter: IMarketingAudienceCustomerFilter): IMarketingSql => {
+    const parts: IMarketingSql[] = [];
+    if (filter.platform) {
+        parts.push({
+            sql: `EXISTS (
+                SELECT 1 FROM contact_points cp
+                WHERE cp.customer_id = picked.id
+                    AND cp.deleted_at IS NULL
+                    AND cp.platform = ?
+            )`,
+            params: [filter.platform],
+        });
+    }
+    const search = filter.search?.trim();
+    if (search) {
+        parts.push({
+            sql: `EXISTS (
+                SELECT 1 FROM customers c
+                WHERE c.id = picked.id AND c.name ILIKE ?
+            )`,
+            params: [`%${search.replace(LIKE_SPECIAL, m => `\\${m}`)}%`],
+        });
+    }
+
+    return {
+        sql: parts.map(p => `AND ${p.sql}`).join(' '),
+        params: parts.flatMap(p => p.params),
+    };
 };
 
 /** Audiences (#504): who a set of conditions or a preset reaches. */
@@ -279,10 +323,12 @@ export class MarketingAudienceRepository extends DatabaseRepository<CustomerEnti
         audience: IMarketingAudience,
         limit: number,
         offset: number,
-        notReachedBy?: string
+        notReachedBy?: string,
+        filter: IMarketingAudienceCustomerFilter = {}
     ): Promise<{ ids: string[]; total: number }> {
         const window = windowParams(w);
         const p = picked(audience);
+        const only = narrowed(filter);
         // An AUTO send's daily run: who this send already queued or sent
         // to is left out here, not after reading every page.
         const fresh = notReachedBy
@@ -300,15 +346,23 @@ export class MarketingAudienceRepository extends DatabaseRepository<CustomerEnti
             this.run(
                 `WITH ${WINDOW}, ${p.sql}
                 SELECT id FROM picked
-                WHERE reason IS NULL ${fresh.sql}
+                WHERE reason IS NULL ${fresh.sql} ${only.sql}
                 ORDER BY last_message DESC, id
                 LIMIT ? OFFSET ?`,
-                [...window, ...p.params, ...fresh.params, limit, offset]
+                [
+                    ...window,
+                    ...p.params,
+                    ...fresh.params,
+                    ...only.params,
+                    limit,
+                    offset,
+                ]
             ),
             this.run(
                 `WITH ${WINDOW}, ${p.sql}
-                SELECT COUNT(*) AS n FROM picked WHERE reason IS NULL ${fresh.sql}`,
-                [...window, ...p.params, ...fresh.params]
+                SELECT COUNT(*) AS n FROM picked
+                WHERE reason IS NULL ${fresh.sql} ${only.sql}`,
+                [...window, ...p.params, ...fresh.params, ...only.params]
             ),
         ]);
         return {

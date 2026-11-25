@@ -386,6 +386,48 @@ describe('E2E — marketing audiences', () => {
         expect(res.body.data.map((c: any) => c.id)).toEqual([ids.lan]);
     });
 
+    it('finds reached customers by channel and name', async () => {
+        const list = async (filter: object) => {
+            await new Promise(resolve => setTimeout(resolve, 60));
+            return http(ctx.app)
+                .post(`${url()}/marketing/audiences/customers`)
+                .set(...auth(ownerToken))
+                .send({
+                    ...all({
+                        field: 'CHANNEL',
+                        operator: 'IN',
+                        values: [A.FACEBOOK_PAGE, A.ZALO_PAGE],
+                    }),
+                    ...filter,
+                });
+        };
+        // Lan, Khanh and Tuan on Facebook; Minh and Khanh on Zalo.
+        const zalo = await list({ platform: A.ZALO_PAGE });
+        expect(zalo.status).toBe(200);
+        expect(zalo.body.data.map((c: any) => c.id).sort()).toEqual(
+            [ids.minh, ids.khanh].sort()
+        );
+        const named = await list({ platform: A.FACEBOOK_PAGE, search: 'KHA' });
+        expect(named.body._metadata.pagination.total).toBe(1);
+        expect(named.body.data.map((c: any) => c.id)).toEqual([ids.khanh]);
+    });
+
+    it('leaves out the customers the shop unticked', async () => {
+        const res = await preview({
+            ...all({
+                field: 'CHANNEL',
+                operator: 'IN',
+                values: [A.FACEBOOK_PAGE],
+            }),
+            excludedCustomerIds: [ids.lan, ids.khanh],
+        });
+        expect(res.status).toBe(200);
+        expect(res.body.data.count).toBe(1); // Tuan
+        expect(res.body.data.channels).toEqual([
+            { platform: A.FACEBOOK_PAGE, count: 1 },
+        ]);
+    });
+
     it('rejects a condition that does not fit its field', async () => {
         const res = await preview(
             all({ field: 'STAGE', operator: 'AT_LEAST', number: 2 })

@@ -760,4 +760,17 @@ describe('E2E — marketing sends', () => {
         ]);
         expect(replies[0].status).not.toBe(ENUM_MARKETING_REPLY_STATUS.ORDERED);
     });
+
+    it('keeps the customers the shop unticked with the send, for every run', async () => {
+        const send = await inRequest(() =>
+            sends().create(workspaceId, {
+                ...offer,
+                name: 'Bỏ chọn Lan',
+                mode: S.AUTO,
+                audience: { ...offer.audience, excludedCustomerIds: [ids.Lan] },
+            })
+        );
+        // Each run reads the send's audience, so a daily AUTO run leaves her out too.
+        expect(send.audience.excludedCustomerIds).toEqual([ids.Lan]);
+    });
 });

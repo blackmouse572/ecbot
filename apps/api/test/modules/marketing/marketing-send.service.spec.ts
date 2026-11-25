@@ -212,8 +212,7 @@ describe('MarketingSendService', () => {
                 input.audience,
                 500,
                 0,
-                now,
-                undefined
+                { now, notReachedBy: undefined }
             );
         });
 
@@ -276,8 +275,7 @@ describe('MarketingSendService', () => {
                 input.audience,
                 500,
                 500,
-                now,
-                undefined
+                { now, notReachedBy: undefined }
             );
             expect(ledger.plan.mock.calls[0][2]).toHaveLength(501);
             // The inbound lookup is paged the same way.
@@ -425,8 +423,7 @@ describe('MarketingSendService', () => {
                 auto.audience,
                 500,
                 0,
-                now,
-                'send1'
+                { now, notReachedBy: 'send1' }
             );
             expect(ledger.plan).toHaveBeenCalledWith(
                 'ws1',
