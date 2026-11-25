@@ -41,6 +41,9 @@ class _AppVars(BaseSettings):
     FIRECRAWL_API_KEY: SecretStr = Field(default=SecretStr(""))
     OPENROUTER_API_KEY: SecretStr = Field(default=SecretStr(""))
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+    # The native Decisions API is not under the chat gateway's /v1 path, so it
+    # has its own setting. A proxy/gateway overrides both URLs explicitly.
+    OPENROUTER_DECISIONS_URL: str = "https://openrouter.ai/api/alpha/decisions"
     # Which OpenRouter provider serves replies: "price", "throughput" or
     # "latency". Empty keeps OpenRouter's own routing. A request's
     # `provider_sort` wins over it.
@@ -121,7 +124,12 @@ class _AppVars(BaseSettings):
     CLASSIFIER_MODEL: str = "google/gemini-2.5-flash"
     CUSTOMER_CLASSIFIER_TEMPERATURE: float = 0.1
     # OpenRouter model that answers agent-builder decisions (System One-shaped).
+    # It must be a decisions model (Jev, Gemini Decision, Liquid, ...): all of
+    # them use OpenRouter's native /alpha/decisions endpoint.
     DECISION_MODEL: str = "~typesafe/jev-latest"
+    # Chat model that copies stated details out of a description
+    # (/decision/extract): decisions models cannot write text.
+    EXTRACT_MODEL: str = "google/gemini-2.5-flash"
     # OpenRouter model that drafts short shop messages (/decision/write, #506).
     WRITE_MODEL: str = "~deepseek/deepseek-v4-flash-latest"
     # Describes inbound customer images (must accept image input).

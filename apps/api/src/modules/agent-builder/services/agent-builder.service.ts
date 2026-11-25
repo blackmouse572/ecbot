@@ -3,6 +3,7 @@ import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
     EMPTY_SUGGESTION,
+    buildExtractFields,
     buildSuggestQuestions,
     readSuggestAnswers,
     type AgentSuggestion,
@@ -13,8 +14,9 @@ import {
     AiUsageMeter,
     ENUM_AI_USAGE_SOURCE,
 } from 'src/app/ai-usage-meter.interface';
+import { TokenUsageDelta } from 'src/modules/chatbot/interfaces/token-usage-wire.interface';
 import { createHash } from 'crypto';
-import { AiDecisionService } from './ai-decision.service';
+import { AiDecisionService, type IAiExtractResult, type ISystemOneResult } from './ai-decision.service';
 
 @Injectable()
 export class AgentBuilderService {
@@ -57,24 +59,67 @@ export class AgentBuilderService {
             const budget = (await this.meter?.check(workspaceId)) ?? { allowed: true };
             if (!budget.allowed) return EMPTY_SUGGESTION;
 
-            const { answers, usage, model } = await this.aiDecision.decide(state, buildSuggestQuestions());
-            if (usage) {
-                await this.meter?.record({
-                    workspaceId,
-                    usage,
-                    source: ENUM_AI_USAGE_SOURCE.AGENT_BUILDER,
-                    model,
-                }).catch((err: unknown) => this.logger.warn(`agent builder usage not recorded: ${err}`));
-            }
-            const suggestion = readSuggestAnswers(answers);
+            const [decision, extracted] = await Promise.all([
+                // The two calls fail independently: if the decisions call dies
+                // after the extraction was sent, its tokens are still spent and
+                // must be metered.
+                this.aiDecision.decide(state, buildSuggestQuestions()).catch(
+                    (error: unknown): ISystemOneResult | null => {
+                        this.logger.warn(
+                            `agent builder decision failed: ${(error as Error).message}`
+                        );
+                        return null;
+                    }
+                ),
+                // Decisions models cannot write text; only losing the texts is
+                // acceptable, so a failed extraction keeps the rest.
+                this.aiDecision.extract(state, buildExtractFields()).catch(
+                    (error: unknown): IAiExtractResult => {
+                        this.logger.warn(
+                            `agent builder text extraction failed: ${(error as Error).message}`
+                        );
+                        return { answers: {}, usage: null, failed: true };
+                    }
+                ),
+            ]);
+            // Meter each call with its own model: the two models price
+            // differently, so one summed row would bill the wrong rate.
+            await Promise.all([
+                this.recordUsage(workspaceId, decision?.usage ?? null, decision?.model),
+                this.recordUsage(workspaceId, extracted.usage, extracted.model),
+            ]);
+            if (!decision) return EMPTY_SUGGESTION;
+            const suggestion = readSuggestAnswers(decision.answers, extracted.answers);
             // apps/ai answers `{}` on any failure: never cache that for 24h.
-            const empty = !answers || Object.keys(answers).length === 0;
-            if (empty || suggestion.businessType === null) return suggestion;
+            // A failed extraction (from apps/ai or the transport) has no
+            // prefilled details either, so caching it would hide them until
+            // the TTL ends. A successful extraction that found nothing is a
+            // real answer for that description, so it is cached instead of
+            // re-running both models every time.
+            const empty = !decision.answers || Object.keys(decision.answers).length === 0;
+            if (empty || extracted.failed || suggestion.businessType === null) return suggestion;
             await this.cache.set(key, suggestion, this.config.get<number>('agentBuilder.suggestTtlMs'));
             return suggestion;
         } catch (error) {
             this.logger.warn(`agent builder suggest failed: ${(error as Error).message}`);
             return EMPTY_SUGGESTION;
         }
+    }
+
+    /** One meter row per model call; `usage` is null when apps/ai reported none. */
+    private async recordUsage(
+        workspaceId: string,
+        usage: TokenUsageDelta | null,
+        model?: string
+    ): Promise<void> {
+        if (!usage) return;
+        await this.meter
+            ?.record({
+                workspaceId,
+                usage,
+                source: ENUM_AI_USAGE_SOURCE.AGENT_BUILDER,
+                model,
+            })
+            .catch((err: unknown) => this.logger.warn(`agent builder usage not recorded: ${err}`));
     }
 }

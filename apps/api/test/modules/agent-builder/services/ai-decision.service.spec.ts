@@ -1,4 +1,5 @@
 import { of } from 'rxjs';
+import type { HttpService } from '@nestjs/axios';
 
 jest.mock('@app/common/utils/gcp-id-token.util', () => ({
     getInternalAuthHeader: jest.fn(async () => ({ Authorization: 'Bearer id-token' })),
@@ -37,6 +38,28 @@ describe('AiDecisionService', () => {
         await s.systemOne('x', {}, 5000);
         const [, , opts] = post.mock.calls[0] as unknown as [string, unknown, { timeout: number }];
         expect(opts.timeout).toBe(5000);
+    });
+
+    // #623: text details have their own chat-model call on apps/ai.
+    it('posts state and fields to the extract endpoint and returns the answers', async () => {
+        const post = jest.fn(() =>
+            of({ data: { data: { answers: { business_name: 'Mây' }, model: 'google/gemini-2.5-flash' } } })
+        );
+        const s = new AiDecisionService({ post } as unknown as HttpService, config);
+        const out = await s.extract('hello', { business_name: 'What is the business called?' });
+        expect(out).toEqual({
+            answers: { business_name: 'Mây' },
+            usage: null,
+            model: 'google/gemini-2.5-flash',
+            failed: false,
+        });
+        const [url, body, opts] = post.mock.calls[0] as unknown as [string, unknown, { timeout: number }];
+        expect(url).toBe('http://ai:8000/api/decision/extract');
+        expect(body).toEqual({
+            state: 'hello',
+            fields: { business_name: 'What is the business called?' },
+        });
+        expect(opts.timeout).toBe(15000);
     });
 
     // #256: opening the builder wakes apps/ai, which scales to zero, so the

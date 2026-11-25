@@ -6,6 +6,10 @@ from eccho_ai.llm.usage import TokenUsage
 
 
 class DecisionQuestion(BaseModel):
+    # Decisions models answer typed primitives only; `text` extraction has its
+    # own endpoint (chat model). `text` is still accepted for one release so an
+    # apps/ai deploy can land before apps/api stops sending `text__*`; system-one
+    # drops it before calling the Decisions API. Drop `text` once apps/api ships.
     type: Literal["choice", "noul", "text"]
     instructions: str = Field(min_length=1, max_length=2000)
     criteria: dict[str, str] | None = None
@@ -27,6 +31,25 @@ class DecisionResponse(BaseModel):
     # What the call spent, for apps/api to meter; None when no model ran.
     usage: TokenUsage | None = None
     model: str | None = None
+
+
+class ExtractRequest(BaseModel):
+    """Details to copy out of a state, keyed by id (context: /decision/extract)."""
+
+    state: str = Field(min_length=1, max_length=4000)
+    # id -> what the field should contain. Decisions models cannot write text,
+    # so these run on a chat model instead of the Decisions API.
+    fields: dict[str, str] = Field(min_length=1, max_length=64)
+
+
+class ExtractResponse(BaseModel):
+    # id -> the detail copied from the state; empty when the model failed.
+    answers: dict[str, str] = Field(default_factory=dict)
+    usage: TokenUsage | None = None
+    model: str | None = None
+    # True when the model call failed; `answers` is then empty. Lets apps/api
+    # tell a failed extraction from a successful one that found no details.
+    failed: bool = False
 
 
 class WriteRequest(BaseModel):

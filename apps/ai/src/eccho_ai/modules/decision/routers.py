@@ -1,13 +1,15 @@
-"""System One-shaped decisions answered by an OpenRouter model.
+"""System One-shaped decisions, plus the text extraction they cannot do.
 
-apps/api sends typed questions (choice / noul, built by @repo/agent-blueprint)
-and reads answers in the shape TypeSafe's System One API uses, so which model
-decides is configuration (DECISION_MODEL), not code.
+`system-one` always calls OpenRouter's Decisions API with `DECISION_MODEL`, so
+any decisions model (Jev, Gemini Decision, Liquid, ...) works by configuration
+alone. Decisions models answer typed primitives only, so `text` fields live on
+`/decision/extract`, which asks a chat model.
 """
 import logging
-from typing import Any, Literal
+from typing import Any
 
 from fastapi import APIRouter, Depends
+from httpx import HTTPStatusError
 from langchain_core.callbacks import get_usage_metadata_callback
 from pydantic import BaseModel, Field, create_model
 
@@ -17,17 +19,25 @@ from eccho_ai.llm.providers.chat_model import build_chat_model
 from eccho_ai.llm.usage import sum_usage
 from eccho_ai.models.app_models import AppResponse
 from eccho_ai.modules.decision.constants import (
-    SYSTEM_PROMPT,
+    EXTRACT_SYSTEM_PROMPT,
     TEXT_ANSWER_MAX,
     WRITE_MAX_TOKENS,
     WRITE_SYSTEM_PROMPT,
     WRITE_TEMPERATURE,
     WRITE_TEXT_MAX,
 )
+from eccho_ai.modules.decision.decisions import (
+    answers_from_decisions,
+    build_request,
+    request_decisions,
+    usage_from_decisions,
+)
 from eccho_ai.modules.decision.models import (
     DecisionQuestion,
     DecisionRequest,
     DecisionResponse,
+    ExtractRequest,
+    ExtractResponse,
     WriteRequest,
     WriteResponse,
 )
@@ -38,43 +48,22 @@ router = APIRouter(
 )
 
 
-def _output_model(questions: dict[str, DecisionQuestion]) -> type[BaseModel]:
-    # Field names are positional (q0, q1, ...), never the question id itself:
-    # a question id can be anything the caller likes, including a pydantic
-    # reserved name like "model_config", which would break `create_model` if
-    # used directly as a field name.
-    fields: dict[str, Any] = {}
-    for index, q in enumerate(questions.values()):
-        field_name = f"q{index}"
-        if q.type == "choice":
-            options = tuple((q.criteria or {}).keys())
-            answer = create_model(
-                f"ChoiceAnswer{index}",
-                choice=(Literal[options], ...),  # type: ignore[valid-type]
-                confidence=(float, Field(ge=0, le=1)),
-            )
-            fields[field_name] = (answer, ...)
-        elif q.type == "text":
-            # Optional: a provider may leave out a detail the state never
-            # gives, and that must not void the other answers.
-            fields[field_name] = (str, Field(default="", max_length=TEXT_ANSWER_MAX))
-        else:
-            fields[field_name] = (float, Field(ge=0, le=1))
-    return create_model("DecisionAnswers", **fields)
+def _field_model(fields: dict[str, str]) -> type[BaseModel]:
+    # Field names are positional (q0, q1, ...), never the field id itself: an
+    # id can be anything the caller likes, including a pydantic reserved name
+    # like "model_config", which would break `create_model` if used directly.
+    schema: dict[str, Any] = {}
+    for index in range(len(fields)):
+        # Optional: a field the state never gives must not void the others.
+        schema[f"q{index}"] = (str, Field(default="", max_length=TEXT_ANSWER_MAX))
+    return create_model("ExtractedFields", **schema)
 
 
-def _format_questions(questions: dict[str, DecisionQuestion]) -> str:
-    lines: list[str] = []
-    for index, (qid, q) in enumerate(questions.items()):
-        field_name = f"q{index}"
-        if q.type == "choice":
-            options = "\n".join(f"    - {key}: {text}" for key, text in (q.criteria or {}).items())
-            lines.append(f"- {field_name} ({qid}, choice): {q.instructions}\n  options:\n{options}")
-        elif q.type == "text":
-            lines.append(f"- {field_name} ({qid}, text, empty if not stated): {q.instructions}")
-        else:
-            lines.append(f"- {field_name} ({qid}, noul, probability of yes): {q.instructions}")
-    return "\n".join(lines)
+def _format_fields(fields: dict[str, str]) -> str:
+    return "\n".join(
+        f"- q{index} ({fid}, empty if not stated): {instructions}"
+        for index, (fid, instructions) in enumerate(fields.items())
+    )
 
 
 def _as_dict(value: Any) -> dict[str, Any]:
@@ -86,43 +75,78 @@ async def system_one(req: DecisionRequest) -> AppResponse[DecisionResponse]:
     if not req.questions:
         return AppResponse(data=DecisionResponse())
 
-    # Everything that can fail (building the model, the structured call, and
-    # assembling the answers) lives in one try: the builder must work without
-    # suggestions, so any failure here degrades to empty answers with HTTP 200
-    # rather than bubbling up as a 400/500 through main.py's global handlers.
-    # Usage is reported even when the answers are lost: the tokens were spent.
+    # Old apps/api builds may still send `text__*` questions. There is no
+    # Decisions primitive for them, so they are accepted and dropped here for
+    # one release instead of failing the whole suggestion.
+    typed = {qid: q for qid, q in req.questions.items() if q.type != "text"}
+    if not typed:
+        return AppResponse(data=DecisionResponse(model=AppVars.DECISION_MODEL))
+
+    # `DECISION_MODEL` must be a decisions model: they all use the native
+    # endpoint, and none accept chat/completions. Any failure (request,
+    # provider, answer assembly) degrades to empty answers with HTTP 200
+    # rather than bubbling up as a 400/500 through main.py's global handlers:
+    # the builder must work without suggestions.
+    try:
+        response = await request_decisions(
+            build_request(AppVars.DECISION_MODEL, req.state, typed)
+        )
+        answers = answers_from_decisions(response, typed)
+        usage = usage_from_decisions(response)
+    except HTTPStatusError as exc:
+        # The body names the rejected question shape or model; `%s` on the
+        # exception alone only prints the status line and URL.
+        logger.warning(
+            "decision.system_one failed status=%s body=%s",
+            exc.response.status_code,
+            exc.response.text,
+        )
+        answers, usage = {}, None
+    except Exception as exc:  # noqa: BLE001 - the builder must work without suggestions
+        logger.warning("decision.system_one failed err=%s", exc)
+        answers, usage = {}, None
+
+    return AppResponse(
+        data=DecisionResponse(answers=answers, usage=usage, model=AppVars.DECISION_MODEL)
+    )
+
+
+@router.post("/extract", response_model=AppResponse[ExtractResponse])
+async def extract(req: ExtractRequest) -> AppResponse[ExtractResponse]:
+    """Copies stated details out of a state with EXTRACT_MODEL (a chat model).
+
+    Decisions models answer typed primitives only, so text answers cannot come
+    from `system-one`; this is the separate chat call for them (#623).
+    """
+    failed = False
     with get_usage_metadata_callback() as usage_cb:
         try:
-            llm = build_chat_model(model_text_name=AppVars.DECISION_MODEL, temperature=0.0)
-            structured = llm.with_structured_output(_output_model(req.questions))
+            llm = build_chat_model(model_text_name=AppVars.EXTRACT_MODEL, temperature=0.0)
+            structured = llm.with_structured_output(_field_model(req.fields))
             result = _as_dict(
                 await structured.ainvoke(
                     [
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": f"State:\n{req.state}\n\nQuestions:\n{_format_questions(req.questions)}"},
+                        {"role": "system", "content": EXTRACT_SYSTEM_PROMPT},
+                        {"role": "user", "content": f"State:\n{req.state}\n\nFields:\n{_format_fields(req.fields)}"},
                     ]
                 )
             )
-
-            answers: dict[str, dict[str, Any]] = {}
-            for index, (qid, q) in enumerate(req.questions.items()):
+            answers: dict[str, str] = {}
+            for index, field_id in enumerate(req.fields):
                 value = result.get(f"q{index}")
-                if value is None:
-                    continue
-                if q.type == "choice":
-                    v = _as_dict(value)
-                    answers[qid] = {"type": "choice", "choice": v.get("choice"), "confidence": v.get("confidence")}
-                elif q.type == "text":
-                    answers[qid] = {"type": "text", "text": value}
-                else:
-                    answers[qid] = {"type": "noul", "noul": value}
-        except Exception as exc:  # noqa: BLE001 - the builder must work without suggestions
-            logger.warning("decision.system_one failed err=%s", exc)
+                if isinstance(value, str):
+                    answers[field_id] = value
+        except Exception as exc:  # noqa: BLE001 - the caller can prefill by hand
+            logger.warning("decision.extract failed err=%s", exc)
             answers = {}
+            failed = True
 
     return AppResponse(
-        data=DecisionResponse(
-            answers=answers, usage=sum_usage(usage_cb.usage_metadata), model=AppVars.DECISION_MODEL
+        data=ExtractResponse(
+            answers=answers,
+            usage=sum_usage(usage_cb.usage_metadata),
+            model=AppVars.EXTRACT_MODEL,
+            failed=failed,
         )
     )
 
