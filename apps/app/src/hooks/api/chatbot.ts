@@ -48,8 +48,8 @@ export const chatbotQueryKeys = {
   ...queryKeysFactory(CHATBOT_QUERY_KEY),
 };
 
-export const chatbotListQuery = () => ({
-  queryKey: chatbotQueryKeys.lists(),
+export const chatbotListQuery = (workspace: string) => ({
+  queryKey: chatbotQueryKeys.list({ workspace }),
   queryFn: async (workspace: string) =>
     chatbotControllerFindAllV1({
       query: {
@@ -70,7 +70,7 @@ export const useChatbots = (
   const { workspace } = useWorkspace();
 
   const { data, isError, error, ...rest } = useQuery({
-    queryKey: chatbotQueryKeys.list(query),
+    queryKey: chatbotQueryKeys.list({ workspace: workspace?.slug, ...query }),
     enabled: options?.enabled as boolean | undefined,
     placeholderData: options?.placeholderData as A,
     initialData: options?.initialData as A,
@@ -95,7 +95,11 @@ export const useInfiniteChatbotList = (search: string) => {
   const { workspace } = useWorkspace();
   const perPage = 20;
   const { data, ...rest } = useInfiniteQuery({
-    queryKey: chatbotQueryKeys.list({ search, infinite: true }),
+    queryKey: chatbotQueryKeys.list({
+      workspace: workspace?.slug,
+      search,
+      infinite: true,
+    }),
     queryFn: ({ pageParam }) =>
       chatbotControllerFindAllV1({
         path: { workspace: workspace!.slug },
@@ -203,7 +207,10 @@ export function useAccountChatbot(
   const singleAccountQuery = { perPage: 1, page: 1, account: accountId };
 
   const { data, isError, error, ...rest } = useQuery({
-    queryKey: chatbotQueryKeys.list(singleAccountQuery),
+    queryKey: chatbotQueryKeys.list({
+      workspace: workspace?.slug,
+      ...singleAccountQuery,
+    }),
     placeholderData: options?.placeholderData as A,
     initialData: options?.initialData as A,
     queryFn: () =>
