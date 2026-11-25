@@ -1682,7 +1682,7 @@ export const authAdminControllerResetMfaV1 = <ThrowOnError extends boolean = fal
 });
 
 /**
- * admin update user password
+ * admin set a user's password: typed, or generated as a temporary one; signs out every session
  */
 export const authAdminControllerUpdatePasswordV1 = <ThrowOnError extends boolean = false>(options: Options<AuthAdminControllerUpdatePasswordV1Data, ThrowOnError>): RequestResult<AuthAdminControllerUpdatePasswordV1Responses, AuthAdminControllerUpdatePasswordV1Errors, ThrowOnError> => (options.client ?? client).put<AuthAdminControllerUpdatePasswordV1Responses, AuthAdminControllerUpdatePasswordV1Errors, ThrowOnError>({
     responseType: 'json',
@@ -1692,7 +1692,11 @@ export const authAdminControllerUpdatePasswordV1 = <ThrowOnError extends boolean
             type: 'http'
         }, { name: 'x-api-key', type: 'apiKey' }],
     url: '/api/v1/admin/auth/update/{user}/password',
-    ...options
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**

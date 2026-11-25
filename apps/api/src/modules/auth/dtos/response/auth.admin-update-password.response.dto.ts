@@ -2,9 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class AuthAdminUpdatePasswordResponseDto {
     @ApiProperty({
-        required: true,
-        description: 'New temporary password, shown to the admin once',
+        required: false,
+        description:
+            'New temporary password, shown to the admin once. Absent when the admin typed the password',
         example: 'aB3$kL9!xQ',
     })
-    password: string;
+    password?: string;
 }

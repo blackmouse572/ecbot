@@ -11,6 +11,9 @@ import { MfaService } from '@app/modules/auth/services/mfa.service';
 import { ActivityService } from '@app/modules/activity/services/activity.service';
 import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { ENUM_AUTH_STATUS_CODE_ERROR } from '@app/modules/auth/enums/auth.status-code.enum';
+import { ENUM_PASSWORD_HISTORY_TYPE } from '@app/modules/password-history/enums/password-history.enum';
+import { ENUM_POLICY_SUBJECT } from '@app/modules/policy/enums/policy.enum';
+import { SessionService } from '@app/modules/session/services/session.service';
 
 describe('AuthAdminController.updatePassword', () => {
     let controller: AuthAdminController;
@@ -21,22 +24,24 @@ describe('AuthAdminController.updatePassword', () => {
     const updatePassword = jest.fn();
     const resetPasswordAttempt = jest.fn();
     const createByAdmin = jest.fn();
+    const activityCreateByAdmin = jest.fn();
+    const updateManyRevokeByUser = jest.fn();
     const begin = jest.fn();
     const commit = jest.fn();
     const rollback = jest.fn();
-    const fork = jest.fn(() => ({ begin, commit, rollback }));
+    const em = { begin, commit, rollback };
+    const fork = jest.fn(() => em);
+
+    const user = {
+        id: 'user-1',
+        email: 'a@b.com',
+        name: 'A',
+        role: { type: ENUM_POLICY_ROLE_TYPE.USER },
+    };
+    const passwordExpired = new Date('2026-02-01T00:00:00.000Z');
 
     beforeEach(async () => {
-        enqueue.mockReset();
-        createPasswordRandom.mockReset();
-        createPassword.mockReset();
-        updatePassword.mockReset();
-        resetPasswordAttempt.mockReset();
-        createByAdmin.mockReset();
-        begin.mockReset();
-        commit.mockReset();
-        rollback.mockReset();
-        fork.mockClear();
+        jest.clearAllMocks();
 
         const module: TestingModule = await Test.createTestingModule({
             controllers: [AuthAdminController],
@@ -56,87 +61,182 @@ describe('AuthAdminController.updatePassword', () => {
                     useValue: { createByAdmin },
                 },
                 { provide: MfaService, useValue: {} },
-                { provide: ActivityService, useValue: {} },
+                {
+                    provide: ActivityService,
+                    useValue: { createByAdmin: activityCreateByAdmin },
+                },
+                {
+                    provide: SessionService,
+                    useValue: { updateManyRevokeByUser },
+                },
             ],
         }).compile();
 
         controller = module.get(AuthAdminController);
         enqueue.mockResolvedValue(undefined);
-    });
-
-    it('enqueues TEMPORARY_PASSWORD via CloudTasksQueueClient after the reset transaction commits', async () => {
-        const user = {
-            id: 'user-1',
-            email: 'a@b.com',
-            name: 'A',
-            role: { type: ENUM_POLICY_ROLE_TYPE.USER },
-        };
-        const passwordExpired = new Date('2026-02-01T00:00:00.000Z');
         createPasswordRandom.mockReturnValue('Temp123!');
         createPassword.mockResolvedValue({
-            password: 'hashed',
+            passwordHash: 'hashed',
             passwordExpired,
         });
-        updatePassword.mockResolvedValue(user);
-        resetPasswordAttempt.mockResolvedValue(user);
-        createByAdmin.mockResolvedValue(undefined);
-        commit.mockResolvedValue(undefined);
+        updatePassword.mockImplementation(async u => u);
+        resetPasswordAttempt.mockImplementation(async u => u);
+    });
 
-        await controller.updatePassword(
-            'admin-1',
-            ENUM_POLICY_ROLE_TYPE.ADMIN,
-            user as any,
-            'vi'
-        );
+    describe('generated', () => {
+        it('stores a temporary password, emails it and returns it once', async () => {
+            await expect(
+                controller.updatePassword(
+                    'admin-1',
+                    ENUM_POLICY_ROLE_TYPE.ADMIN,
+                    user as any,
+                    {},
+                    'vi'
+                )
+            ).resolves.toEqual({ data: { password: 'Temp123!' } });
 
-        expect(enqueue).toHaveBeenCalledWith(
-            'email',
-            ENUM_SEND_EMAIL_PROCESS.TEMPORARY_PASSWORD,
-            {
-                send: { email: 'a@b.com', name: 'A' },
-                data: {
-                    passwordExpiredAt: passwordExpired,
-                    password: 'Temp123!',
-                    language: 'vi',
+            expect(createPassword).toHaveBeenCalledWith('Temp123!', {
+                temporary: true,
+            });
+            expect(createByAdmin).toHaveBeenCalledWith(
+                user,
+                { by: 'admin-1', type: ENUM_PASSWORD_HISTORY_TYPE.TEMPORARY },
+                { em, actionBy: 'admin-1' }
+            );
+            expect(enqueue).toHaveBeenCalledWith(
+                'email',
+                ENUM_SEND_EMAIL_PROCESS.TEMPORARY_PASSWORD,
+                {
+                    send: { email: 'a@b.com', name: 'A' },
+                    data: {
+                        passwordExpiredAt: passwordExpired,
+                        password: 'Temp123!',
+                        language: 'vi',
+                    },
                 },
-            },
-            {
-                taskName: expect.stringMatching(
-                    /^TEMPORARY_PASSWORD-user-1-[0-9a-f-]{36}$/
-                ),
-            }
-        );
+                {
+                    taskName: expect.stringMatching(
+                        /^TEMPORARY_PASSWORD-user-1-[0-9a-f-]{36}$/
+                    ),
+                }
+            );
+        });
+
+        it('does not roll back the already-committed session when enqueue fails', async () => {
+            enqueue.mockRejectedValue(new Error('boom'));
+
+            await expect(
+                controller.updatePassword(
+                    'admin-1',
+                    ENUM_POLICY_ROLE_TYPE.ADMIN,
+                    user as any,
+                    {}
+                )
+            ).resolves.toEqual({ data: { password: 'Temp123!' } });
+
+            expect(commit).toHaveBeenCalledTimes(1);
+            expect(rollback).not.toHaveBeenCalled();
+        });
     });
 
-    it('does not roll back the already-committed session when enqueue fails', async () => {
-        const user = {
-            id: 'user-1',
-            email: 'a@b.com',
-            name: 'A',
-            role: { type: ENUM_POLICY_ROLE_TYPE.USER },
-        };
-        const passwordExpired = new Date('2026-02-01T00:00:00.000Z');
-        createPasswordRandom.mockReturnValue('Temp123!');
-        createPassword.mockResolvedValue({
-            password: 'hashed',
-            passwordExpired,
+    describe('typed', () => {
+        it('stores the typed password as a normal one and returns nothing', async () => {
+            await expect(
+                controller.updatePassword(
+                    'admin-1',
+                    ENUM_POLICY_ROLE_TYPE.ADMIN,
+                    user as any,
+                    { password: 'Typed123!@#' }
+                )
+            ).resolves.toEqual({ data: {} });
+
+            expect(createPasswordRandom).not.toHaveBeenCalled();
+            expect(createPassword).toHaveBeenCalledWith('Typed123!@#', {
+                temporary: false,
+            });
+            expect(createByAdmin).toHaveBeenCalledWith(
+                user,
+                { by: 'admin-1', type: ENUM_PASSWORD_HISTORY_TYPE.CHANGE },
+                { em, actionBy: 'admin-1' }
+            );
         });
-        updatePassword.mockResolvedValue(user);
-        resetPasswordAttempt.mockResolvedValue(user);
-        createByAdmin.mockResolvedValue(undefined);
-        commit.mockResolvedValue(undefined);
-        enqueue.mockRejectedValue(new Error('boom'));
+
+        // The admin shares it themselves: the email only says it changed.
+        it('sends the change notice without the password', async () => {
+            await controller.updatePassword(
+                'admin-1',
+                ENUM_POLICY_ROLE_TYPE.ADMIN,
+                user as any,
+                { password: 'Typed123!@#' }
+            );
+
+            expect(enqueue).toHaveBeenCalledTimes(1);
+            expect(enqueue).toHaveBeenCalledWith(
+                'email',
+                ENUM_SEND_EMAIL_PROCESS.CHANGE_PASSWORD,
+                { send: { email: 'a@b.com', name: 'A' } },
+                expect.anything()
+            );
+            expect(JSON.stringify(enqueue.mock.calls)).not.toContain(
+                'Typed123!@#'
+            );
+        });
+    });
+
+    it.each([
+        ['generated', {}],
+        ['typed', { password: 'Typed123!@#' }],
+    ])(
+        'signs the user out everywhere and audits a %s password',
+        async (mode, body) => {
+            await controller.updatePassword(
+                'admin-1',
+                ENUM_POLICY_ROLE_TYPE.ADMIN,
+                user as any,
+                body
+            );
+
+            expect(updateManyRevokeByUser).toHaveBeenCalledWith('user-1', {
+                em,
+            });
+            expect(activityCreateByAdmin).toHaveBeenCalledWith(
+                user,
+                'admin-1',
+                {
+                    action: ENUM_ACTIVITY_ACTION.UPDATE,
+                    subject: ENUM_POLICY_SUBJECT.AUTH,
+                    metadata: {
+                        id: 'user-1',
+                        by: 'admin-1',
+                        password:
+                            mode === 'typed'
+                                ? 'set_by_admin'
+                                : 'reset_by_admin',
+                    },
+                },
+                { em }
+            );
+            expect(
+                JSON.stringify(activityCreateByAdmin.mock.calls)
+            ).not.toMatch(/Typed123|Temp123/);
+        }
+    );
+
+    it('rolls back and signs nobody out when the write fails', async () => {
+        updatePassword.mockRejectedValue(new Error('db'));
 
         await expect(
             controller.updatePassword(
                 'admin-1',
                 ENUM_POLICY_ROLE_TYPE.ADMIN,
-                user as any
+                user as any,
+                { password: 'Typed123!@#' }
             )
-        ).resolves.toEqual({ data: { password: 'Temp123!' } });
+        ).rejects.toBeDefined();
 
-        expect(commit).toHaveBeenCalledTimes(1);
-        expect(rollback).not.toHaveBeenCalled();
+        expect(rollback).toHaveBeenCalled();
+        expect(commit).not.toHaveBeenCalled();
+        expect(enqueue).not.toHaveBeenCalled();
     });
 
     // The new password comes back in the response, so an admin resetting a
@@ -148,7 +248,8 @@ describe('AuthAdminController.updatePassword', () => {
                 controller.updatePassword(
                     'admin-1',
                     ENUM_POLICY_ROLE_TYPE.ADMIN,
-                    { id: 'user-2', role: { type: targetType } } as any
+                    { id: 'user-2', role: { type: targetType } } as any,
+                    { password: 'Typed123!@#' }
                 )
             ).rejects.toMatchObject({
                 response: {
@@ -161,22 +262,14 @@ describe('AuthAdminController.updatePassword', () => {
     );
 
     it('lets a SUPER_ADMIN reset an admin', async () => {
-        const admin = {
-            id: 'user-2',
-            email: 'a@b.com',
-            name: 'A',
-            role: { type: ENUM_POLICY_ROLE_TYPE.ADMIN },
-        };
-        createPasswordRandom.mockReturnValue('Temp123!');
-        createPassword.mockResolvedValue({ password: 'hashed' });
-        updatePassword.mockResolvedValue(admin);
-        resetPasswordAttempt.mockResolvedValue(admin);
+        const admin = { ...user, role: { type: ENUM_POLICY_ROLE_TYPE.ADMIN } };
 
         await expect(
             controller.updatePassword(
                 'root-1',
                 ENUM_POLICY_ROLE_TYPE.SUPER_ADMIN,
-                admin as any
+                admin as any,
+                {}
             )
         ).resolves.toEqual({ data: { password: 'Temp123!' } });
     });
@@ -204,6 +297,7 @@ describe('AuthAdminController.resetMfa', () => {
                 { provide: PasswordHistoryService, useValue: {} },
                 { provide: MfaService, useValue: mfaService },
                 { provide: ActivityService, useValue: activityService },
+                { provide: SessionService, useValue: {} },
             ],
         }).compile();
         controller = module.get(AuthAdminController);

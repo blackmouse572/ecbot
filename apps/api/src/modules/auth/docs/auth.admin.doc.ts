@@ -1,5 +1,7 @@
 import { AuthAdminUpdatePasswordResponseDto } from 'src/modules/auth/dtos/response/auth.admin-update-password.response.dto';
+import { AuthAdminUpdatePasswordRequestDto } from 'src/modules/auth/dtos/request/auth.admin-update-password.request.dto';
 import { applyDecorators } from '@nestjs/common';
+import { ENUM_DOC_REQUEST_BODY_TYPE } from 'src/common/doc/enums/doc.enum';
 import {
     Doc,
     DocAuth,
@@ -12,10 +14,13 @@ import { UserDocParamsId } from 'src/modules/user/constants/user.doc.constant';
 export function AuthAdminUpdatePasswordDoc(): MethodDecorator {
     return applyDecorators(
         Doc({
-            summary: 'admin update user password',
+            summary:
+                "admin set a user's password: typed, or generated as a temporary one; signs out every session",
         }),
         DocRequest({
             params: UserDocParamsId,
+            bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
+            dto: AuthAdminUpdatePasswordRequestDto,
         }),
         DocAuth({
             xApiKey: true,
