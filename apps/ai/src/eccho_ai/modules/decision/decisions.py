@@ -19,10 +19,11 @@ from eccho_ai.modules.decision.models import DecisionQuestion
 def build_request(
     model: str, state: str, questions: dict[str, DecisionQuestion]
 ) -> dict[str, Any]:
-    """A Decisions API request for the typed questions `system-one` accepts.
+    """A Decisions API request for the typed questions it can answer.
 
-    `choice` and `noul` map straight onto Decisions primitives; decisions models
-    have no text primitive, so they never receive text questions.
+    `choice` and `noul` map straight onto Decisions primitives. `text` is
+    accepted only for rollout compatibility and deliberately never sent: the
+    alpha API has no text primitive.
     """
     mapped: dict[str, dict[str, Any]] = {}
     for qid, question in questions.items():
@@ -32,7 +33,7 @@ def build_request(
                 "instructions": question.instructions,
                 "criteria": dict(question.criteria or {}),
             }
-        else:
+        elif question.type == "noul":
             mapped[qid] = {"type": "noul", "instructions": question.instructions}
     return {"model": model, "state": state, "questions": mapped}
 

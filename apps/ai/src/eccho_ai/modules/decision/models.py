@@ -7,8 +7,10 @@ from eccho_ai.llm.usage import TokenUsage
 
 class DecisionQuestion(BaseModel):
     # Decisions models answer typed primitives only; `text` extraction has its
-    # own endpoint (chat model) so `system-one` can always use the Decisions API.
-    type: Literal["choice", "noul"]
+    # own endpoint (chat model). `text` is still accepted for one release so an
+    # apps/ai deploy can land before apps/api stops sending `text__*`; system-one
+    # drops it before calling the Decisions API. Drop `text` once apps/api ships.
+    type: Literal["choice", "noul", "text"]
     instructions: str = Field(min_length=1, max_length=2000)
     criteria: dict[str, str] | None = None
 

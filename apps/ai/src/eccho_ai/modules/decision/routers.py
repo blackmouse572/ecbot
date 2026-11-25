@@ -75,6 +75,13 @@ async def system_one(req: DecisionRequest) -> AppResponse[DecisionResponse]:
     if not req.questions:
         return AppResponse(data=DecisionResponse())
 
+    # Old apps/api builds may still send `text__*` questions. There is no
+    # Decisions primitive for them, so they are accepted and dropped here for
+    # one release instead of failing the whole suggestion.
+    typed = {qid: q for qid, q in req.questions.items() if q.type != "text"}
+    if not typed:
+        return AppResponse(data=DecisionResponse(model=AppVars.DECISION_MODEL))
+
     # `DECISION_MODEL` must be a decisions model: they all use the native
     # endpoint, and none accept chat/completions. Any failure (request,
     # provider, answer assembly) degrades to empty answers with HTTP 200
@@ -82,9 +89,9 @@ async def system_one(req: DecisionRequest) -> AppResponse[DecisionResponse]:
     # the builder must work without suggestions.
     try:
         response = await request_decisions(
-            build_request(AppVars.DECISION_MODEL, req.state, req.questions)
+            build_request(AppVars.DECISION_MODEL, req.state, typed)
         )
-        answers = answers_from_decisions(response, req.questions)
+        answers = answers_from_decisions(response, typed)
         usage = usage_from_decisions(response)
     except HTTPStatusError as exc:
         # The body names the rejected question shape or model; `%s` on the

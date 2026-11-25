@@ -79,11 +79,13 @@ async def test_rejects_a_choice_question_without_options(async_client):
     assert resp.status_code == 422
 
 
-async def test_rejects_text_questions(async_client):
-    # Text extraction has its own endpoint; decisions models cannot write text.
+async def test_text_questions_are_accepted_for_rollout(async_client):
+    # One release accepts `text` so apps/ai can deploy before apps/api stops
+    # sending it; there is no Decisions primitive, so the answer is empty.
     body = {"state": "x", "questions": {"q": {"type": "text", "instructions": "?"}}}
     resp = await async_client.post("/api/decision/system-one", json=body)
-    assert resp.status_code == 422
+    assert resp.status_code == 200
+    assert resp.json()["data"]["answers"] == {}
 
 
 async def test_question_id_that_is_a_pydantic_reserved_name_is_answered(async_client, monkeypatch):

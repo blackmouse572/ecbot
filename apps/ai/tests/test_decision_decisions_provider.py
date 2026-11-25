@@ -99,6 +99,13 @@ def test_builds_a_native_request_for_choice_and_noul():
     }
 
 
+def test_build_request_never_sends_text_questions():
+    text = DecisionQuestion(type="text", instructions="What are the opening hours?")
+    payload = build_request(JEV, "state", {"opening_hours": text, "goal": _noul()})
+
+    assert set(payload["questions"]) == {"goal"}
+
+
 def test_parses_answers_into_the_system_one_shape():
     response = {
         "answers": {
@@ -289,9 +296,53 @@ async def test_native_rejection_logs_the_provider_body(async_client, monkeypatch
     assert "model not found" in caplog.text
 
 
-async def test_system_one_rejects_text_questions(async_client):
+async def test_system_one_accepts_old_text_questions_and_drops_them(async_client, monkeypatch):
+    # A deploy can land apps/ai before apps/api stops sending `text__*`.
+    monkeypatch.setattr(AppVars, "DECISION_MODEL", JEV)
+    seen: dict[str, Any] = {}
+
+    async def _request(payload: dict[str, Any]) -> dict[str, Any]:
+        seen["payload"] = payload
+        return {"answers": {"business_type": {"type": "choice", "choice": "beauty", "confidence": 0.9}}}
+
+    monkeypatch.setattr(decision_router_module, "request_decisions", _request)
+
     resp = await async_client.post(
         "/api/decision/system-one",
-        json={"state": "x", "questions": {"name": {"type": "text", "instructions": "?"}}},
+        json={
+            "state": "x",
+            "questions": {
+                "business_type": {
+                    "type": "choice",
+                    "instructions": "Which kind of business is it?",
+                    "criteria": {"beauty": "A beauty salon or spa", "restaurant": "A restaurant or café"},
+                },
+                "text__opening_hours": {"type": "text", "instructions": "What opening hours?"},
+            },
+        },
     )
-    assert resp.status_code == 422
+
+    assert resp.status_code == 200
+    assert resp.json()["data"]["answers"] == {
+        "business_type": {"type": "choice", "choice": "beauty", "confidence": 0.9},
+    }
+    assert set(seen["payload"]["questions"]) == {"business_type"}
+
+
+async def test_system_one_text_only_questions_skip_the_provider(async_client, monkeypatch):
+    calls: list[Any] = []
+
+    async def _request(payload: dict[str, Any]) -> dict[str, Any]:
+        calls.append(payload)
+        return {"answers": {}}
+
+    monkeypatch.setattr(decision_router_module, "request_decisions", _request)
+
+    resp = await async_client.post(
+        "/api/decision/system-one",
+        json={"state": "x", "questions": {"opening_hours": {"type": "text", "instructions": "?"}}},
+    )
+
+    assert resp.status_code == 200
+    assert resp.json()["data"]["answers"] == {}
+    assert calls == []
