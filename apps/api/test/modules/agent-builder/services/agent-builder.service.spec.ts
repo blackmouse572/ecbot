@@ -16,7 +16,7 @@ function setup(overrides: { cached?: unknown; answers?: unknown; texts?: Record<
             return {
                 answers: overrides.answers ?? { business_type: { type: 'choice', choice: 'beauty', confidence: 0.95 } },
                 usage: USAGE,
-                model: 'google/gemini-2.5-flash',
+                model: '~typesafe/jev-latest',
             };
         }),
         extract: jest.fn(async () => {
@@ -93,7 +93,7 @@ describe('AgentBuilderService.suggest', () => {
             workspaceId: 'ws-1',
             usage: USAGE,
             source: ENUM_AI_USAGE_SOURCE.AGENT_BUILDER,
-            model: 'google/gemini-2.5-flash',
+            model: '~typesafe/jev-latest',
         });
     });
 
@@ -148,16 +148,24 @@ describe('AgentBuilderService.suggest', () => {
         expect(out.texts).toEqual({});
     });
 
-    it('adds what the extraction call spent to what the decision call spent', async () => {
+    it('meters each model call as its own row, at its own model', async () => {
         const m = meter(true);
         const { service } = setup({
             meter: m,
             extractUsage: { inputTokens: 50, outputTokens: 10, totalTokens: 60 },
         });
         await service.suggest('ws-1', 'Nail spa');
+        expect(m.record).toHaveBeenCalledTimes(2);
         expect(m.record).toHaveBeenCalledWith(
             expect.objectContaining({
-                usage: { inputTokens: 150, outputTokens: 30, totalTokens: 180 },
+                usage: USAGE,
+                model: '~typesafe/jev-latest',
+            })
+        );
+        expect(m.record).toHaveBeenCalledWith(
+            expect.objectContaining({
+                usage: { inputTokens: 50, outputTokens: 10, totalTokens: 60 },
+                model: 'google/gemini-2.5-flash',
             })
         );
     });

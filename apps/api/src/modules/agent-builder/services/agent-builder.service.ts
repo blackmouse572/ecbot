@@ -14,7 +14,7 @@ import {
     AiUsageMeter,
     ENUM_AI_USAGE_SOURCE,
 } from 'src/app/ai-usage-meter.interface';
-import { addTokenUsage } from 'src/modules/chatbot/interfaces/token-usage-wire.interface';
+import { TokenUsageDelta } from 'src/modules/chatbot/interfaces/token-usage-wire.interface';
 import { createHash } from 'crypto';
 import { AiDecisionService, type IAiExtractResult } from './ai-decision.service';
 
@@ -72,15 +72,12 @@ export class AgentBuilderService {
                     }
                 ),
             ]);
-            const usage = addTokenUsage(decision.usage, extracted.usage);
-            if (usage) {
-                await this.meter?.record({
-                    workspaceId,
-                    usage,
-                    source: ENUM_AI_USAGE_SOURCE.AGENT_BUILDER,
-                    model: decision.model ?? extracted.model,
-                }).catch((err: unknown) => this.logger.warn(`agent builder usage not recorded: ${err}`));
-            }
+            // Meter each call with its own model: the two models price
+            // differently, so one summed row would bill the wrong rate.
+            await Promise.all([
+                this.recordUsage(workspaceId, decision.usage, decision.model),
+                this.recordUsage(workspaceId, extracted.usage, extracted.model),
+            ]);
             const suggestion = readSuggestAnswers(decision.answers, extracted.answers);
             // apps/ai answers `{}` on any failure: never cache that for 24h.
             const empty = !decision.answers || Object.keys(decision.answers).length === 0;
@@ -91,5 +88,22 @@ export class AgentBuilderService {
             this.logger.warn(`agent builder suggest failed: ${(error as Error).message}`);
             return EMPTY_SUGGESTION;
         }
+    }
+
+    /** One meter row per model call; `usage` is null when apps/ai reported none. */
+    private async recordUsage(
+        workspaceId: string,
+        usage: TokenUsageDelta | null,
+        model?: string
+    ): Promise<void> {
+        if (!usage) return;
+        await this.meter
+            ?.record({
+                workspaceId,
+                usage,
+                source: ENUM_AI_USAGE_SOURCE.AGENT_BUILDER,
+                model,
+            })
+            .catch((err: unknown) => this.logger.warn(`agent builder usage not recorded: ${err}`));
     }
 }
