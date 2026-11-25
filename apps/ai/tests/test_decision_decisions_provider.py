@@ -13,6 +13,7 @@ import pytest
 from pydantic import SecretStr
 
 from eccho_ai.core.variables import AppVars
+from eccho_ai.modules.decision import decisions as decisions_module
 from eccho_ai.modules.decision import routers as decision_router_module
 from eccho_ai.modules.decision.decisions import (
     answers_from_decisions,
@@ -49,12 +50,6 @@ class _Client:
     def __init__(self) -> None:
         self.calls: list[tuple[str, dict[str, Any], dict[str, str]]] = []
 
-    async def __aenter__(self) -> "_Client":
-        return self
-
-    async def __aexit__(self, *_exc: object) -> bool:
-        return False
-
     async def post(self, url: str, *, json: dict[str, Any], headers: dict[str, str]) -> _Response:
         self.calls.append((url, json, headers))
         return _Response()
@@ -64,9 +59,7 @@ async def test_request_decisions_uses_the_configured_url(monkeypatch):
     # The Decisions API is not under the chat gateway's /v1 path, so a proxy
     # base must map to an explicit Decisions URL, not be guessed from it.
     client = _Client()
-    monkeypatch.setattr(
-        "eccho_ai.modules.decision.decisions.httpx.AsyncClient", lambda *_a, **_k: client
-    )
+    monkeypatch.setattr(decisions_module, "_get_client", lambda: client)
     monkeypatch.setattr(AppVars, "OPENROUTER_API_KEY", SecretStr("sk-test"))
     monkeypatch.setattr(
         AppVars,
@@ -80,6 +73,38 @@ async def test_request_decisions_uses_the_configured_url(monkeypatch):
     assert url == "https://gateway.example/openrouter/alpha/decisions"
     assert body == {"model": JEV, "state": "x", "questions": {}}
     assert headers == {"Authorization": "Bearer sk-test"}
+
+
+class _PoolClient:
+    is_closed = False
+
+    def __init__(self) -> None:
+        self.posts: list[tuple[str, dict[str, Any], dict[str, str]]] = []
+
+    async def post(self, url: str, *, json: dict[str, Any], headers: dict[str, str]) -> _Response:
+        self.posts.append((url, json, headers))
+        return _Response()
+
+
+async def test_request_decisions_reuses_one_client(monkeypatch):
+    # The handoff check runs on the inbound path; a per-call client would pay a
+    # new TCP/TLS handshake against a 5s budget.
+    created: list[_PoolClient] = []
+
+    def _factory(*_a: Any, **_k: Any) -> _PoolClient:
+        client = _PoolClient()
+        created.append(client)
+        return client
+
+    monkeypatch.setattr(decisions_module, "_client", None)
+    monkeypatch.setattr(decisions_module.httpx, "AsyncClient", _factory)
+    monkeypatch.setattr(AppVars, "OPENROUTER_API_KEY", SecretStr("sk-test"))
+
+    await request_decisions({"model": JEV, "state": "x", "questions": {}})
+    await request_decisions({"model": JEV, "state": "x", "questions": {}})
+
+    assert len(created) == 1
+    assert len(created[0].posts) == 2
 
 
 def test_builds_a_native_request_for_choice_and_noul():

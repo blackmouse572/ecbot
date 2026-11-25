@@ -16,6 +16,22 @@ from eccho_ai.llm.usage import TokenUsage
 from eccho_ai.modules.decision.models import DecisionQuestion
 
 
+_client: httpx.AsyncClient | None = None
+
+
+def _get_client() -> httpx.AsyncClient:
+    """One pooled client, reused across calls.
+
+    `system-one` runs on the inbound-message path for the handoff check, so a
+    fresh client per call would pay a TCP and TLS handshake under a tight
+    timeout.
+    """
+    global _client
+    if _client is None or _client.is_closed:
+        _client = httpx.AsyncClient(timeout=AppVars.CHAT_MODEL_TIMEOUT_SECONDS)
+    return _client
+
+
 def build_request(
     model: str, state: str, questions: dict[str, DecisionQuestion]
 ) -> dict[str, Any]:
@@ -43,14 +59,13 @@ async def request_decisions(payload: dict[str, Any]) -> dict[str, Any]:
     api_key = AppVars.OPENROUTER_API_KEY.get_secret_value()
     if not api_key:
         raise ValueError("OPENROUTER_API_KEY is not configured.")
-    async with httpx.AsyncClient(timeout=AppVars.CHAT_MODEL_TIMEOUT_SECONDS) as client:
-        response = await client.post(
-            AppVars.OPENROUTER_DECISIONS_URL,
-            json=payload,
-            headers={"Authorization": f"Bearer {api_key}"},
-        )
-        response.raise_for_status()
-        data = response.json()
+    response = await _get_client().post(
+        AppVars.OPENROUTER_DECISIONS_URL,
+        json=payload,
+        headers={"Authorization": f"Bearer {api_key}"},
+    )
+    response.raise_for_status()
+    data = response.json()
     if not isinstance(data, dict):
         raise ValueError("unexpected Decisions API response")
     return data
