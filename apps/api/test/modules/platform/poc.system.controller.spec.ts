@@ -4,9 +4,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import {
     REQUEST_CUSTOM_TIMEOUT_META_KEY,
     REQUEST_CUSTOM_TIMEOUT_VALUE_META_KEY,
+    REQUEST_VALIDATION_PIPE_OPTIONS,
 } from '../../../src/common/request/constants/request.constant';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
-import { REQUEST_VALIDATION_PIPE_OPTIONS } from '../../../src/common/request/constants/request.constant';
 import {
     PocReplyDto,
     PocSystemController,
@@ -137,6 +137,35 @@ describe('PocSystemController.inbound', () => {
             contactPointId: 'cp',
             texts: ['a', 'b'],
         });
+    });
+
+    it('accepts a reply for a sender with no recorded customer (workspace at its customer limit)', async () => {
+        const metatype = Reflect.getMetadata(
+            'design:paramtypes',
+            PocSystemController.prototype,
+            'reply'
+        )[0];
+        const pipe = new ValidationPipe(REQUEST_VALIDATION_PIPE_OPTIONS);
+
+        // The edge echoes back the debounce job verbatim: customerId is null
+        // and contactPointId is missing once the resolver refused to record
+        // the sender (#600).
+        const dto = await pipe.transform(
+            {
+                conversationId: 'c',
+                senderId: 's',
+                customerId: null,
+                texts: ['a'],
+                messageIds: ['m1'],
+            },
+            { type: 'body', metatype }
+        );
+        await controller.reply(dto);
+
+        const input = run.mock.calls[0][0];
+        expect(input.customerId).toBeNull();
+        expect(input.contactPointId).toBeUndefined();
+        expect(input.texts).toEqual(['a']);
     });
 
     it('answers 502 with the reason when nothing reached the customer', async () => {

@@ -8,8 +8,11 @@ export const REPLY_POST_TIMEOUT_MS = 310_000;
 interface Meta {
   conversationId: string;
   senderId: string;
-  customerId: string;
-  contactPointId: string;
+  /** Null when the workspace is at its customer limit and the sender is new:
+   *  apps/api still answers, without a recorded Customer. */
+  customerId?: string | null;
+  /** Absent for the same reason: no ContactPoint was recorded. */
+  contactPointId?: string | null;
 }
 
 /**

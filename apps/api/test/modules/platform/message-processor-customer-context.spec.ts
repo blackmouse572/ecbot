@@ -1,5 +1,8 @@
+import { ValidationPipe } from '@nestjs/common';
+import { REQUEST_VALIDATION_PIPE_OPTIONS } from '../../../src/common/request/constants/request.constant';
 import { ENUM_ACCOUNT_TYPE } from '../../../src/modules/account/enums/account.enum';
 import { ENUM_CONVERSATION_STATUS } from '../../../src/modules/conversation/enums/conversation.enum';
+import { PocSystemController } from '../../../src/modules/platform/controllers/poc.system.controller';
 import { MessageProcessorService } from '../../../src/modules/platform/services/message-processor.service';
 import { PlatformWebhookEvent } from '../../../src/modules/platform/interfaces/platform-adapter.interface';
 
@@ -209,6 +212,8 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
             customerService.updateContactPointProfile
         ).not.toHaveBeenCalled();
         expect(customerService.fillCustomerNameIfEmpty).not.toHaveBeenCalled();
+        // The edge echoes this no-customer shape to /poc/reply; the flag-ON
+        // test below validates that body against PocReplyDto.
         expect(messageDebounceService.schedule).toHaveBeenCalledWith(
             'conv-capped',
             'sender-fb-1',
@@ -335,6 +340,72 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
                     }),
                 })
             );
+        });
+
+        it('sends a body /poc/reply accepts when the sender has no recorded customer (#600)', async () => {
+            process.env.POC_EDGE_DEBOUNCE_URL = 'https://edge.test';
+
+            const fetchMock = jest.fn<
+                Promise<Response>,
+                [RequestInfo | URL, RequestInit?]
+            >(() => Promise.resolve(new Response(null, { status: 200 })));
+
+            global.fetch = fetchMock;
+
+            // Workspace at its customer limit: resolveContactPoint records
+            // neither a Customer nor a ContactPoint, and the turn must still
+            // reach the edge (and the customer).
+            customerService.resolveContactPoint.mockResolvedValue({
+                contactPoint: null,
+                customerId: null,
+                created: false,
+            });
+            conversationService.findOrCreate.mockResolvedValue({
+                id: 'conv-capped',
+                status: ENUM_CONVERSATION_STATUS.OPEN,
+                botEnabled: true,
+                senderId: 'sender-fb-1',
+                senderProfileFetchedAt: new Date(),
+                contactPoint: null,
+                fallbackCount: 0,
+            });
+
+            await processor.process(baseEvent);
+
+            const init = fetchMock.mock.calls[0][1];
+            const body = init?.body;
+
+            if (typeof body !== 'string') {
+                throw new Error('edge debounce body is not a JSON string');
+            }
+
+            const job = JSON.parse(body);
+            expect(job).toMatchObject({ customerId: null });
+            expect(job).not.toHaveProperty('contactPointId');
+
+            // ConversationDebounceDO echoes the job to /poc/reply, turning
+            // `text`/`messageId` into the burst arrays. That body must pass
+            // the pipe the controller runs, or the reply dies with a 422.
+            const replyBody = {
+                conversationId: job.conversationId,
+                senderId: job.senderId,
+                customerId: job.customerId,
+                texts: [job.text],
+                messageIds: [job.messageId],
+            };
+
+            const metatype = Reflect.getMetadata(
+                'design:paramtypes',
+                PocSystemController.prototype,
+                'reply'
+            )[0];
+
+            const dto = await new ValidationPipe(
+                REQUEST_VALIDATION_PIPE_OPTIONS
+            ).transform(replyBody, { type: 'body', metatype });
+
+            expect(dto.customerId).toBeNull();
+            expect(dto.contactPointId).toBeUndefined();
         });
     });
 });
