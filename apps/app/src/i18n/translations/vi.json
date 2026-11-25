@@ -2777,6 +2777,9 @@
       },
       "addOrder": "Thêm đơn",
       "cameFrom": "Đến từ",
+      "moreSources_one": "Đến qua thêm {{count}} nguồn",
+      "moreSources_other": "Đến qua thêm {{count}} nguồn",
+      "firstArrival": "{{date}}, lần đầu",
       "tabs": {
         "overview": "Tổng quan",
         "conversations": "Hội thoại",
@@ -3453,6 +3456,7 @@
       "status": "Trạng thái",
       "kind": "Loại",
       "newCustomers": "Khách mới",
+      "returningCustomers": "Quay lại",
       "potentialCustomers": "Tiềm năng",
       "orders": "Đơn hàng",
       "closeRate": "Tỉ lệ chốt",
@@ -3461,12 +3465,14 @@
     },
     "stats": {
       "newCustomers": "Khách mới",
+      "returningCustomers": "Khách quay lại",
       "since": "Từ {{date}} đến nay",
       "potentialCustomers": "Khách tiềm năng",
-      "potentialHint": "Đã hỏi giá hoặc đã đặt đơn",
+      "potentialHint": "Mới hoặc quay lại, đã hỏi giá hoặc đặt đơn",
       "orders": "Đơn hàng",
-      "ordersHint": "Đơn đã xác nhận, kể từ khi khách đến",
-      "closeRateHint": "Số đơn trên mỗi khách mới"
+      "ordersHint": "Tính cho nguồn khách đến gần nhất trước khi đặt",
+      "returningHint": "Khách cũ quay lại qua nguồn này",
+      "closeRate": "Tỉ lệ chốt {{rate}}"
     },
     "status": {
       "ACTIVE": "Đang dùng",
@@ -3913,6 +3919,7 @@
       "reactionEnded": "Hết tạm hoãn một nhóm hàng",
       "intent": "Quan tâm theo nhóm hàng: {{to}}",
       "source": "Đến qua link nguồn",
+      "sourceNamed": "Đến qua {{name}}",
       "followOn": "Quan tâm Zalo OA",
       "followOff": "Bỏ quan tâm Zalo OA"
     },

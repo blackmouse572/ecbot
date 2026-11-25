@@ -75,6 +75,12 @@ export const SourceChildRow: FC<SourceChildRowProps> = ({ link, showKind }) => {
           </Text>
           <Text
             size="small"
+            className="hidden w-20 shrink-0 text-right tabular-nums md:block"
+          >
+            {number.format(link.stats?.returningCustomers ?? 0)}
+          </Text>
+          <Text
+            size="small"
             className="hidden w-14 shrink-0 text-right tabular-nums md:block"
           >
             {number.format(link.stats?.orders ?? 0)}

@@ -51,6 +51,26 @@ vi.mock("@/hooks/api/customer-marketing", () => ({
         sourceName: "Tờ rơi Tết",
         at: "2026-11-02T00:00:00Z",
       },
+      sources: [
+        {
+          sourceId: "src-1",
+          sourceName: "Tờ rơi Tết",
+          codeName: null,
+          at: "2026-11-02T00:00:00Z",
+        },
+        {
+          sourceId: "src-2",
+          sourceName: "Bài ghim Black Friday",
+          codeName: null,
+          at: "2026-11-23T00:00:00Z",
+        },
+        {
+          sourceId: "src-3",
+          sourceName: "Quảng cáo kem chống nắng",
+          codeName: null,
+          at: "2026-11-25T00:00:00Z",
+        },
+      ],
     },
   }),
 }));
@@ -158,6 +178,9 @@ describe("CustomerDetail", () => {
       "href",
       "/lumi/sources/src-1",
     );
+    expect(
+      screen.getByRole("button", { name: "Came through 2 more sources" }),
+    ).toHaveTextContent("+2");
     expect(screen.getByRole("link", { name: /^Chat$/ })).toHaveAttribute(
       "href",
       "/lumi/conversations/conv-new",

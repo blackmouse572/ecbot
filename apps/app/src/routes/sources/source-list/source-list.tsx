@@ -146,21 +146,27 @@ const useColumns = (links: TrackedLinkGetResponseDto[]) => {
           </div>
         ),
       }),
-      ...(["newCustomers", "potentialCustomers", "orders"] as const).map(
-        (key) =>
-          columnHelper.display({
-            id: key,
-            header: () => (
-              <div className="flex w-full justify-end">
-                {t(`customerSources.columns.${key}`)}
-              </div>
-            ),
-            cell: ({ row }) => (
-              <div className="txt-compact-small flex w-full justify-end tabular-nums">
-                {number.format(row.original.stats?.[key] ?? 0)}
-              </div>
-            ),
-          }),
+      ...(
+        [
+          "newCustomers",
+          "returningCustomers",
+          "potentialCustomers",
+          "orders",
+        ] as const
+      ).map((key) =>
+        columnHelper.display({
+          id: key,
+          header: () => (
+            <div className="flex w-full justify-end">
+              {t(`customerSources.columns.${key}`)}
+            </div>
+          ),
+          cell: ({ row }) => (
+            <div className="txt-compact-small flex w-full justify-end tabular-nums">
+              {number.format(row.original.stats?.[key] ?? 0)}
+            </div>
+          ),
+        }),
       ),
       columnHelper.display({
         id: "closeRate",

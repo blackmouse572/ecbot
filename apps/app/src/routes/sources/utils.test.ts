@@ -92,19 +92,36 @@ describe("previewSourceUrl", () => {
 });
 
 describe("closeRatePercent", () => {
-  it("is confirmed orders per new customer, in percent", () => {
+  it("is confirmed orders per new or returning customer, in percent", () => {
     expect(
       closeRatePercent({
         newCustomers: 186,
+        returningCustomers: 14,
         potentialCustomers: 44,
         orders: 21,
       }),
-    ).toBeCloseTo(11.29, 2);
+    ).toBeCloseTo(10.5, 2);
+  });
+
+  it("counts a link with only returning customers", () => {
+    expect(
+      closeRatePercent({
+        newCustomers: 0,
+        returningCustomers: 4,
+        potentialCustomers: 2,
+        orders: 1,
+      }),
+    ).toBe(25);
   });
 
   it("is empty before the first customer arrives", () => {
     expect(
-      closeRatePercent({ newCustomers: 0, potentialCustomers: 0, orders: 0 }),
+      closeRatePercent({
+        newCustomers: 0,
+        returningCustomers: 0,
+        potentialCustomers: 0,
+        orders: 0,
+      }),
     ).toBeNull();
     expect(closeRatePercent(undefined)).toBeNull();
   });

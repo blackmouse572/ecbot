@@ -150,12 +150,15 @@ export async function pngBlob(svg: SVGSVGElement, size = 1024): Promise<Blob> {
   }
 }
 
-/** "Tỉ lệ chốt": confirmed orders per new customer, in percent. Null before
- *  the first customer arrives. */
+/** "Tỉ lệ chốt": confirmed orders per new or returning customer, in percent.
+ *  Null before the first customer arrives. */
 export function closeRatePercent(
   stats: TrackedLinkStatsResponseDto | undefined,
 ): number | null {
-  return stats?.newCustomers ? (stats.orders / stats.newCustomers) * 100 : null;
+  const customers =
+    (stats?.newCustomers ?? 0) + (stats?.returningCustomers ?? 0);
+
+  return stats && customers ? (stats.orders / customers) * 100 : null;
 }
 
 /** A rate as "11,3%" in the reader's language. */

@@ -57,7 +57,14 @@ export const useMarketingEventText = () => {
             t("customerMarketing.event.intent", {
               to: t(`customerMarketing.stage.${event.newValue}`),
             }),
-          SOURCE: () => t("customerMarketing.event.source"),
+          SOURCE: () =>
+            event.source
+              ? t("customerMarketing.event.sourceNamed", {
+                  name: event.source.codeName
+                    ? `${event.source.sourceName} (${event.source.codeName})`
+                    : event.source.sourceName,
+                })
+              : t("customerMarketing.event.source"),
           FOLLOW: () =>
             event.newValue === "true"
               ? t("customerMarketing.event.followOn")

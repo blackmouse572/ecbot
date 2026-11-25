@@ -2746,6 +2746,9 @@
       },
       "addOrder": "Add order",
       "cameFrom": "Came from",
+      "moreSources_one": "Came through {{count}} more source",
+      "moreSources_other": "Came through {{count}} more sources",
+      "firstArrival": "{{date}}, first",
       "tabs": {
         "overview": "Overview",
         "conversations": "Conversations",
@@ -3424,6 +3427,7 @@
       "status": "Status",
       "kind": "Type",
       "newCustomers": "New customers",
+      "returningCustomers": "Returning",
       "potentialCustomers": "Potential",
       "orders": "Orders",
       "closeRate": "Close rate",
@@ -3432,12 +3436,14 @@
     },
     "stats": {
       "newCustomers": "New customers",
+      "returningCustomers": "Returning customers",
       "since": "Since {{date}}",
       "potentialCustomers": "Potential customers",
-      "potentialHint": "Asked the price or ordered",
+      "potentialHint": "New or returning, asked the price or ordered",
       "orders": "Orders",
-      "ordersHint": "Confirmed orders since the customer arrived",
-      "closeRateHint": "Orders per new customer"
+      "ordersHint": "Counted for the last source before the order",
+      "returningHint": "Earlier customers who came back through this source",
+      "closeRate": "Close rate {{rate}}"
     },
     "status": {
       "ACTIVE": "In use",
@@ -3886,6 +3892,7 @@
       "reactionEnded": "Product group pause ended",
       "intent": "Product group interest: {{to}}",
       "source": "Came through a source link",
+      "sourceNamed": "Came through {{name}}",
       "followOn": "Followed the Zalo OA",
       "followOff": "Unfollowed the Zalo OA"
     },
