@@ -1,5 +1,4 @@
 import type { BatchResult } from "@/hooks/use-batch-result-toast";
-import { queryKeysFactory } from "@/libs/query-factory";
 import type { RequestPaginationDto } from "@/libs/query-types";
 import { CHATBOT_CONSTANTS } from "@/routes/chatbot/constants";
 import {
@@ -38,15 +37,13 @@ import {
 } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { accountQueryKeys } from "./accounts";
+import { CHATBOT_QUERY_KEY, chatbotQueryKeys } from "./chatbot-query-keys";
 import { useWorkspace } from "./workspace";
 
 /** Shared by every read hook below that just forwards `useQuery`'s options. */
 type ChatbotQueryOptions = Omit<UseQueryOptions, "queryFn" | "queryKey">;
 
-export const CHATBOT_QUERY_KEY = "chatbot" as const;
-export const chatbotQueryKeys = {
-  ...queryKeysFactory(CHATBOT_QUERY_KEY),
-};
+export { chatbotQueryKeys };
 
 export const chatbotListQuery = (workspace: string) => ({
   queryKey: chatbotQueryKeys.list({ workspace }),
