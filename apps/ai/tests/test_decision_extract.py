@@ -78,6 +78,7 @@ async def test_extract_answers_each_field_with_the_extract_model(async_client, p
         "delivery": "toàn quốc",
     }
     assert data["model"] == AppVars.EXTRACT_MODEL
+    assert data["failed"] is False
     assert seen["kwargs"]["model_text_name"] == AppVars.EXTRACT_MODEL
     assert seen["kwargs"]["temperature"] == 0.0
     [messages] = seen["structured"].calls
@@ -108,6 +109,7 @@ async def test_extract_failure_returns_no_answers(async_client, patch_extract):
 
     assert resp.status_code == 200
     assert resp.json()["data"]["answers"] == {}
+    assert resp.json()["data"]["failed"] is True
 
 
 async def test_extract_needs_a_field(async_client):

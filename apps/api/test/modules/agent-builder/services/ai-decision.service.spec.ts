@@ -51,6 +51,7 @@ describe('AiDecisionService', () => {
             answers: { business_name: 'Mây' },
             usage: null,
             model: 'google/gemini-2.5-flash',
+            failed: false,
         });
         const [url, body, opts] = post.mock.calls[0] as unknown as [string, unknown, { timeout: number }];
         expect(url).toBe('http://ai:8000/api/decision/extract');

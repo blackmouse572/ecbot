@@ -6,7 +6,7 @@ const config = { get: (k: string) => (k === 'agentBuilder.suggestTtlMs' ? 86_400
 
 const USAGE = { inputTokens: 100, outputTokens: 20, totalTokens: 120 };
 
-function setup(overrides: { cached?: unknown; answers?: unknown; texts?: Record<string, string>; extractUsage?: typeof USAGE; fail?: boolean; extractFail?: boolean; meter?: unknown } = {}) {
+function setup(overrides: { cached?: unknown; answers?: unknown; texts?: Record<string, string>; extractUsage?: typeof USAGE; extractFailed?: boolean; fail?: boolean; extractFail?: boolean; meter?: unknown } = {}) {
     const aiDecision = {
         warm: jest.fn(async () => {
             if (overrides.fail) throw new Error('down');
@@ -25,6 +25,7 @@ function setup(overrides: { cached?: unknown; answers?: unknown; texts?: Record<
                 answers: overrides.texts ?? { business_name: 'Mây' },
                 usage: overrides.extractUsage ?? null,
                 model: 'google/gemini-2.5-flash',
+                failed: overrides.extractFailed ?? false,
             };
         }),
     };
@@ -162,6 +163,16 @@ describe('AgentBuilderService.suggest', () => {
 
     it('still returns the decision answers when text extraction fails, without caching them', async () => {
         const { service, cache } = setup({ extractFail: true });
+        const out = await service.suggest('ws-1', 'Nail spa');
+        expect(out.businessType).toEqual({ value: 'beauty', confidence: 0.95 });
+        expect(out.texts).toEqual({});
+        expect(cache.set).not.toHaveBeenCalled();
+    });
+
+    it('does not cache when apps/ai reports the extraction failed', async () => {
+        // apps/ai catches model failures and answers 200 with failed=true; the
+        // suggestion must not be cached without its details.
+        const { service, cache } = setup({ extractFailed: true, texts: {} });
         const out = await service.suggest('ws-1', 'Nail spa');
         expect(out.businessType).toEqual({ value: 'beauty', confidence: 0.95 });
         expect(out.texts).toEqual({});

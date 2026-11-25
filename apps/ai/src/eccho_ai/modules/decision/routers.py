@@ -118,6 +118,7 @@ async def extract(req: ExtractRequest) -> AppResponse[ExtractResponse]:
     Decisions models answer typed primitives only, so text answers cannot come
     from `system-one`; this is the separate chat call for them (#623).
     """
+    failed = False
     with get_usage_metadata_callback() as usage_cb:
         try:
             llm = build_chat_model(model_text_name=AppVars.EXTRACT_MODEL, temperature=0.0)
@@ -138,12 +139,14 @@ async def extract(req: ExtractRequest) -> AppResponse[ExtractResponse]:
         except Exception as exc:  # noqa: BLE001 - the caller can prefill by hand
             logger.warning("decision.extract failed err=%s", exc)
             answers = {}
+            failed = True
 
     return AppResponse(
         data=ExtractResponse(
             answers=answers,
             usage=sum_usage(usage_cb.usage_metadata),
             model=AppVars.EXTRACT_MODEL,
+            failed=failed,
         )
     )
 

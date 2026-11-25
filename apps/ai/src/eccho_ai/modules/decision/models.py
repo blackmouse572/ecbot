@@ -47,6 +47,9 @@ class ExtractResponse(BaseModel):
     answers: dict[str, str] = Field(default_factory=dict)
     usage: TokenUsage | None = None
     model: str | None = None
+    # True when the model call failed; `answers` is then empty. Lets apps/api
+    # tell a failed extraction from a successful one that found no details.
+    failed: bool = False
 
 
 class WriteRequest(BaseModel):

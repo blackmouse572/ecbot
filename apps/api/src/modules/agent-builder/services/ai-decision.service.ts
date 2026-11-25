@@ -26,6 +26,8 @@ export interface IAiExtractResult {
     answers: Record<string, string>;
     usage: TokenUsageDelta | null;
     model?: string;
+    /** apps/ai's model call failed; `answers` is then empty, not a real "no details". */
+    failed: boolean;
 }
 
 // apps/ai answers System One-shaped questions with the decisions model in
@@ -107,8 +109,9 @@ export class AiDecisionService {
     ): Promise<IAiExtractResult> {
         const { data, usage, model } = await this.post<{
             answers?: Record<string, string>;
+            failed?: boolean;
         }>('/api/decision/extract', { state, fields }, timeoutMs);
-        return { answers: data?.answers ?? {}, usage, model };
+        return { answers: data?.answers ?? {}, usage, model, failed: data?.failed === true };
     }
 
     /** Drafts a short text from instructions and a state (`apps/ai /api/decision/write`). */
