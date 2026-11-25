@@ -2083,16 +2083,16 @@ export type AuthImpersonateResponseDto = {
     expiresIn: number;
 };
 
-export type AuthAdminUpdatePasswordRequestDto = {
+export type AuthAdminUpdatePasswordResponseDto = {
     /**
-     * Password the admin typed. Leave it out to generate a temporary one
+     * New temporary password, shown to the admin once. Absent when the admin typed the password
      */
     password?: string;
 };
 
-export type AuthAdminUpdatePasswordResponseDto = {
+export type AuthAdminUpdatePasswordRequestDto = {
     /**
-     * New temporary password, shown to the admin once. Absent when the admin typed the password
+     * Password the admin typed. Leave it out to generate a temporary one
      */
     password?: string;
 };
@@ -16744,6 +16744,13 @@ export type AuthAdminControllerUpdatePasswordV1Errors = {
      * 408
      */
     408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
         message?: unknown;
         statusCode?: number;
     };
