@@ -8,13 +8,7 @@ vi.mock("react-i18next", () => ({
 vi.mock("@/components/platform-icon/platform-icon", () => ({
   PlatformIcon: () => null,
 }));
-vi.mock("./status-actions-menu", () => ({
-  BotPauseSwitch: () => null,
-  StatusActionsMenu: () => null,
-}));
-vi.mock("./use-status-change", () => ({
-  useStatusChange: () => ({ change: vi.fn(), isPending: false }),
-}));
+vi.mock("./bot-pause-switch", () => ({ BotPauseSwitch: () => null }));
 vi.mock("../components/status-pill", () => ({ StatusPill: () => null }));
 vi.mock("../components/chatbot-badge", () => ({ ChatbotBadge: () => null }));
 
@@ -36,6 +30,11 @@ describe("ConversationHeader", () => {
     expect(
       screen.queryByRole("button", { name: /Ngoc/ }),
     ).not.toBeInTheDocument();
+  });
+
+  it("has no extra actions menu", () => {
+    render(<ConversationHeader conversation={conversation} />);
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
   });
 
   it("on small screens goes back to the list and opens the customer", async () => {

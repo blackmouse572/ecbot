@@ -19,14 +19,10 @@ vi.mock("@/hooks/api/conversations", () => ({
   }),
 }));
 
-import { BotPauseSwitch } from "./status-actions-menu";
-import { useStatusChange } from "./use-status-change";
+import { BotPauseSwitch } from "./bot-pause-switch";
 
 const Harness = ({ conversation }: { conversation: never }) => (
-  <BotPauseSwitch
-    conversation={conversation}
-    status={useStatusChange(conversation)}
-  />
+  <BotPauseSwitch conversation={conversation} />
 );
 
 const conversation = (botEnabled: boolean) =>
