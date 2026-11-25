@@ -416,8 +416,10 @@ export class MarketingSendService {
     }
 
     /**
-     * Left out at the start plus skipped later, one row per reason: an
-     * OFFERED_TODAY customer can be either, depending on which send planned first.
+     * Left out at the start or skipped later, one row per reason. The start is
+     * a count frozen at create, so a customer left out then and skipped on a
+     * later day cannot be told apart from two customers: a reason in both
+     * shows the larger count, never one customer twice.
      */
     private notSent(
         excluded: MarketingSendEntity['excluded'],
@@ -431,7 +433,7 @@ export class MarketingSendService {
             })),
             ...skipped,
         ]) {
-            counts.set(reason, (counts.get(reason) ?? 0) + count);
+            counts.set(reason, Math.max(counts.get(reason) ?? 0, count));
         }
         return [...counts].map(([reason, count]) => ({ reason, count }));
     }

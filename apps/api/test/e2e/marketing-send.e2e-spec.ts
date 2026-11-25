@@ -14,7 +14,10 @@ import { ContactPointEntity } from '@app/modules/customer/repository/entities/co
 import { CustomerMarketingStateEntity } from '@app/modules/customer/repository/entities/customer-marketing-state.entity';
 import { CustomerEntity } from '@app/modules/customer/repository/entities/customer.entity';
 import { CustomerMarketingService } from '@app/modules/customer/services/customer-marketing.service';
-import { ENUM_MARKETING_AUDIENCE_MATCH } from '@app/modules/marketing/enums/marketing-audience.enum';
+import {
+    ENUM_MARKETING_AUDIENCE_EXCLUSION as X,
+    ENUM_MARKETING_AUDIENCE_MATCH,
+} from '@app/modules/marketing/enums/marketing-audience.enum';
 import {
     ENUM_MARKETING_MESSAGE_STATUS as M,
     ENUM_MARKETING_REPLY_STATUS,
@@ -221,16 +224,23 @@ describe('E2E — marketing sends', () => {
 
         // Lan and Tú are queued once between the two sends. The other send
         // either left them out (it planned second) or records why it skipped
-        // them (both planned at once).
+        // them (both planned at once), never drops them without a trace.
         expect(a.queued + b.queued).toBe(2);
+        let skippedToday = 0;
         for (const name of ['Lan', 'Tú']) {
             const rows = await ledger(name);
             expect(rows.filter(r => r.status === M.QUEUED)).toHaveLength(1);
             expect(rows[0].conversation?.id).toBe(conversationOf[name]);
             for (const row of rows.filter(r => r.status !== M.QUEUED)) {
                 expect(row.skipReason).toBe(R.OFFERED_TODAY);
+                skippedToday++;
             }
         }
+        const leftOutToday = [first, second].reduce(
+            (sum, send) => sum + (send.excluded[X.OFFERED_TODAY] ?? 0),
+            0
+        );
+        expect(skippedToday + leftOutToday).toBe(2);
         expect((await ledger('Minh')).map(r => r.skipReason)).toEqual([
             R.WINDOW_CLOSED,
             R.WINDOW_CLOSED,
@@ -622,11 +632,13 @@ describe('E2E — marketing sends', () => {
         expect(
             reasons.filter((r: string) => r === R.OFFERED_TODAY)
         ).toHaveLength(1);
+        // Lan was left out at create and then skipped by the plan: she
+        // counts once, so the row stays at the create-time count.
         expect(
             detail.body.data.notSent.find(
                 (r: { reason: string }) => r.reason === R.OFFERED_TODAY
             ).count
-        ).toBeGreaterThanOrEqual(1);
+        ).toBe(other.excluded[X.OFFERED_TODAY]);
     });
 
     it('credits a reply and an order only to the latest offer', async () => {
@@ -692,5 +704,60 @@ describe('E2E — marketing sends', () => {
             ordered: 1,
             revenue: 200_000,
         });
+    });
+
+    it('does not mark a reply as ordered when a newer offer came before the order', async () => {
+        addCustomer('Thảo', 1);
+        await flush();
+        const em = ctx.app.get(EntityManager).fork();
+        const workspace = em.getReference(WorkspaceEntity, workspaceId);
+        const customer = em.getReference(CustomerEntity, ids['Thảo']);
+        const newSend = (name: string) =>
+            em.create(MarketingSendEntity, {
+                workspace,
+                name,
+                audience: { preset: 'NEW' },
+                text: name,
+            } as Partial<MarketingSendEntity> as MarketingSendEntity);
+        const sentAgo = (send: MarketingSendEntity, hours: number) =>
+            em.create(MarketingMessageEntity, {
+                workspace,
+                send,
+                customer,
+                channel: A.FACEBOOK_PAGE,
+                status: M.SENT,
+                sendDay: ago(hours).toISOString().slice(0, 10),
+                sentAt: ago(hours),
+            } as Partial<MarketingMessageEntity> as MarketingMessageEntity);
+        // Thảo answers offer A while it is her latest.
+        const older = newSend('Tin A');
+        sentAgo(older, 48);
+        await em.flush();
+        await inRequest(() =>
+            ctx.app.get(CustomerMarketingService).recordInbound({
+                customerId: ids['Thảo'],
+                workspaceId,
+                text: 'để em xem',
+            })
+        );
+        // Then offer B reaches her, and she orders inside A's 7 days.
+        sentAgo(newSend('Tin B'), 1);
+        em.create(OrderEntity, {
+            workspace,
+            customer,
+            code: `T-${Date.now()}`,
+            total: 150_000,
+            currency: 'VND',
+            status: ENUM_ORDER_STATUS.CONFIRMED,
+            source: ENUM_ORDER_SOURCE.CHAT,
+            orderedAt: new Date(),
+        } as Partial<OrderEntity> as OrderEntity);
+        await em.flush();
+
+        const replies = await inRequest(() => sends().replies(older.id, 10, 0));
+        expect(replies).toEqual([
+            expect.objectContaining({ customerId: ids['Thảo'] }),
+        ]);
+        expect(replies[0].status).not.toBe(ENUM_MARKETING_REPLY_STATUS.ORDERED);
     });
 });
