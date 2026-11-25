@@ -2507,8 +2507,7 @@
           "windowClosed": "Hết hạn nhắn",
           "windowUnlimited": "Không giới hạn",
           "lastInbound": "Nhắn {{time}}",
-          "count_other": "{{count}} kênh",
-          "openHint": "Bấm một kênh để mở cuộc trò chuyện trên kênh đó."
+          "count_other": "{{count}} kênh"
         },
         "conversations": {
           "title": "Cuộc trò chuyện",
@@ -2651,6 +2650,10 @@
             "viaCode": "Qua link {{code}}, {{date}}",
             "viaSource": "Qua link nguồn, {{date}}"
           }
+        },
+        "noCustomer": {
+          "tags": "Gắn nhãn được khi khách có hồ sơ.",
+          "marketing": "Giai đoạn và quyền nhận ưu đãi bắt đầu từ khi có hồ sơ."
         }
       }
     },

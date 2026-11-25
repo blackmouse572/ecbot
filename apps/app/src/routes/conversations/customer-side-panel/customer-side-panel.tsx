@@ -11,6 +11,7 @@ import { DetailRow } from "./components/detail-row";
 import { FoldedSection } from "./components/folded-section";
 import { FollowupsSection } from "./components/followups-section";
 import { MarketingSection } from "./components/marketing-section";
+import { NoCustomerSection } from "./components/no-customer-section";
 import { OrdersSection } from "./components/orders-section";
 import { SavedFieldsSection } from "./components/saved-fields-section";
 import { TagsSection } from "./components/tags-section";
@@ -82,8 +83,6 @@ export function CustomerSidePanel({
     }
   };
 
-  if (!customerId) return null;
-
   if (!isOpen) {
     return (
       <aside className="border-ui-border-base bg-ui-bg-subtle flex w-10 shrink-0 flex-col items-center border-l py-3">
@@ -118,16 +117,18 @@ export function CustomerSidePanel({
           </Heading>
         </div>
         <div className="flex items-center gap-x-1">
-          <Tooltip content={t("customers.detail.open")}>
-            <IconButton size="small" variant="transparent" asChild>
-              <Link
-                to={`/${workspaceSlug}/${ROUTES.Customers}/${customerId}`}
-                aria-label={t("customers.detail.open")}
-              >
-                <ArrowUpRightOnBox />
-              </Link>
-            </IconButton>
-          </Tooltip>
+          {customerId && (
+            <Tooltip content={t("customers.detail.open")}>
+              <IconButton size="small" variant="transparent" asChild>
+                <Link
+                  to={`/${workspaceSlug}/${ROUTES.Customers}/${customerId}`}
+                  aria-label={t("customers.detail.open")}
+                >
+                  <ArrowUpRightOnBox />
+                </Link>
+              </IconButton>
+            </Tooltip>
+          )}
           {!onBack && (
             <IconButton
               size="small"
@@ -138,15 +139,20 @@ export function CustomerSidePanel({
               <ChevronDoubleRight />
             </IconButton>
           )}
-          <CustomerActions
-            customerId={customerId}
-            customerName={customer?.name}
-            onErased={onCustomerErased}
-          />
+          {customerId && (
+            <CustomerActions
+              customerId={customerId}
+              customerName={customer?.name}
+              onErased={onCustomerErased}
+            />
+          )}
         </div>
       </div>
 
-      {isLoading && !customer ? (
+      {!customerId ? (
+        // A website or API visitor who has not shared anything yet.
+        <NoCustomerSection conversationId={conversationId} />
+      ) : isLoading && !customer ? (
         <div className="flex flex-col gap-y-3 px-4 py-4">
           <Skeleton className="h-9 w-full" />
           <Skeleton className="h-9 w-full" />
@@ -225,42 +231,44 @@ export function CustomerSidePanel({
             />
             {flags.orders && <OrdersSection customerId={customerId} />}
           </div>
-
-          {conversationId && (
-            <div className="border-ui-border-base border-t px-4 py-4">
-              <TimezoneSection conversationId={conversationId} />
-            </div>
-          )}
-
-          {conversationId && (
-            // Looked at now and then, so folded until opened.
-            <Accordion
-              type="multiple"
-              value={openSections}
-              onValueChange={handleOpenSections}
-              className="border-ui-border-base border-t"
-            >
-              <FoldedSection
-                value="followups"
-                title={t("conversations.customer.panel.followups.title")}
-              >
-                <FollowupsSection
-                  conversationId={conversationId}
-                  onViewMessage={onViewMessage}
-                />
-              </FoldedSection>
-              <FoldedSection
-                value="conversations"
-                title={t("conversations.customer.panel.conversations.title")}
-              >
-                <ConversationsSection
-                  customerId={customerId}
-                  conversationId={conversationId}
-                />
-              </FoldedSection>
-            </Accordion>
-          )}
         </>
+      )}
+
+      {conversationId && (
+        <div className="border-ui-border-base border-t px-4 py-4">
+          <TimezoneSection conversationId={conversationId} />
+        </div>
+      )}
+
+      {conversationId && (
+        // Looked at now and then, so folded until opened.
+        <Accordion
+          type="multiple"
+          value={openSections}
+          onValueChange={handleOpenSections}
+          className="border-ui-border-base border-t"
+        >
+          <FoldedSection
+            value="followups"
+            title={t("conversations.customer.panel.followups.title")}
+          >
+            <FollowupsSection
+              conversationId={conversationId}
+              onViewMessage={onViewMessage}
+            />
+          </FoldedSection>
+          {customerId && (
+            <FoldedSection
+              value="conversations"
+              title={t("conversations.customer.panel.conversations.title")}
+            >
+              <ConversationsSection
+                customerId={customerId}
+                conversationId={conversationId}
+              />
+            </FoldedSection>
+          )}
+        </Accordion>
       )}
     </aside>
   );
