@@ -415,6 +415,27 @@ export class MarketingSendService {
         );
     }
 
+    /**
+     * Left out at the start plus skipped later, one row per reason: an
+     * OFFERED_TODAY customer can be either, depending on which send planned first.
+     */
+    private notSent(
+        excluded: MarketingSendEntity['excluded'],
+        skipped: { reason: string; count: number }[]
+    ): { reason: string; count: number }[] {
+        const counts = new Map<string, number>();
+        for (const { reason, count } of [
+            ...Object.entries(excluded).map(([reason, count]) => ({
+                reason,
+                count: count ?? 0,
+            })),
+            ...skipped,
+        ]) {
+            counts.set(reason, (counts.get(reason) ?? 0) + count);
+        }
+        return [...counts].map(([reason, count]) => ({ reason, count }));
+    }
+
     /** A send with its results: totals, by channel, and who was not sent to. */
     async mapGet(
         send: MarketingSendEntity
@@ -430,13 +451,7 @@ export class MarketingSendService {
                 ...this.fields(send),
                 stats,
                 channels,
-                notSent: [
-                    ...Object.entries(send.excluded).map(([reason, count]) => ({
-                        reason,
-                        count,
-                    })),
-                    ...skipped,
-                ],
+                notSent: this.notSent(send.excluded, skipped),
             },
             { excludeExtraneousValues: true }
         );

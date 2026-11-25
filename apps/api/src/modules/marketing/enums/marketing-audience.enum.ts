@@ -44,7 +44,9 @@ export enum ENUM_MARKETING_AUDIENCE_EXCLUSION {
     PAUSED = 'PAUSED',
     /** "Tạm hoãn" on a product group the audience is about. */
     DEFERRED = 'DEFERRED',
-    /** Already had the most offers allowed: today, or in 30 days. */
+    /** "Đã nhận ưu đãi khác hôm nay": another send reached them today. */
+    OFFERED_TODAY = 'OFFERED_TODAY',
+    /** Already had the most offers allowed in 30 days. */
     CAPPED = 'CAPPED',
     /** Left offers unanswered too many times in a row, resting for now. */
     RESTING = 'RESTING',

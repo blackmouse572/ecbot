@@ -13777,7 +13777,8 @@
             "WINDOW_CLOSED",
             "OPTED_OUT",
             "ACCOUNT_BLOCKED",
-            "SEND_HOURS_ENDED"
+            "SEND_HOURS_ENDED",
+            "OFFERED_TODAY"
           ],
           "mappedType": "enum"
         },

@@ -33,6 +33,7 @@ import { wsBase } from './utils/workspace.helper';
 import { MarketingMessageEntity } from '@app/modules/marketing/repository/entities/marketing-message.entity';
 import { MarketingSettingsEntity } from '@app/modules/marketing/repository/entities/marketing-settings.entity';
 import { MarketingSendService } from '@app/modules/marketing/services/marketing-send.service';
+import { MarketingMessageRepository } from '@app/modules/marketing/repository/repositories/marketing-message.repository';
 import {
     ENUM_ORDER_SOURCE,
     ENUM_ORDER_STATUS,
@@ -218,13 +219,17 @@ describe('E2E — marketing sends', () => {
             [first, second].map(send => sends().stats(send.id))
         );
 
-        // Lan and Tú are queued once between the two sends.
+        // Lan and Tú are queued once between the two sends. The other send
+        // either left them out (it planned second) or records why it skipped
+        // them (both planned at once).
         expect(a.queued + b.queued).toBe(2);
-        expect(a.skipped + b.skipped).toBe(4);
         for (const name of ['Lan', 'Tú']) {
             const rows = await ledger(name);
             expect(rows.filter(r => r.status === M.QUEUED)).toHaveLength(1);
             expect(rows[0].conversation?.id).toBe(conversationOf[name]);
+            for (const row of rows.filter(r => r.status !== M.QUEUED)) {
+                expect(row.skipReason).toBe(R.OFFERED_TODAY);
+            }
         }
         expect((await ledger('Minh')).map(r => r.skipReason)).toEqual([
             R.WINDOW_CLOSED,
@@ -577,5 +582,115 @@ describe('E2E — marketing sends', () => {
             expect(refused.status).toBe(400);
         }
         write.mockRestore();
+    });
+
+    it('records an offer two sends planned at once for the same day as skipped', async () => {
+        const [sent] = (await ledger('Lan')).filter(r => r.status === M.SENT);
+        const other = await inRequest(() =>
+            sends().create(workspaceId, { ...offer, name: 'Cùng ngày' })
+        );
+        // Planned at the same moment as Lan's offer of today: the unique
+        // index drops the QUEUED row, so it is written as skipped instead.
+        const queued = await ctx.app
+            .get(MarketingMessageRepository)
+            .plan(workspaceId, other.id, [
+                {
+                    customerId: ids['Lan'],
+                    channel: A.FACEBOOK_PAGE,
+                    conversationId: conversationOf['Lan'],
+                    status: M.QUEUED,
+                    skipReason: null,
+                    sendDay: sent.sendDay,
+                },
+            ]);
+        expect(queued).toEqual([]);
+        expect(
+            (await ledger('Lan')).filter(r => r.send.id === other.id)
+        ).toEqual([
+            expect.objectContaining({
+                status: M.SKIPPED,
+                skipReason: R.OFFERED_TODAY,
+            }),
+        ]);
+        // Đã gửi shows one row per reason, whether left out or skipped.
+        const detail = await http(ctx.app)
+            .get(url(`/${other.id}`))
+            .set(...auth());
+        const reasons = detail.body.data.notSent.map(
+            (r: { reason: string }) => r.reason
+        );
+        expect(
+            reasons.filter((r: string) => r === R.OFFERED_TODAY)
+        ).toHaveLength(1);
+        expect(
+            detail.body.data.notSent.find(
+                (r: { reason: string }) => r.reason === R.OFFERED_TODAY
+            ).count
+        ).toBeGreaterThanOrEqual(1);
+    });
+
+    it('credits a reply and an order only to the latest offer', async () => {
+        addCustomer('Nhi', 1);
+        await flush();
+        const em = ctx.app.get(EntityManager).fork();
+        const workspace = em.getReference(WorkspaceEntity, workspaceId);
+        const customer = em.getReference(CustomerEntity, ids['Nhi']);
+        const newSend = (name: string) =>
+            em.create(MarketingSendEntity, {
+                workspace,
+                name,
+                audience: { preset: 'NEW' },
+                text: name,
+            } as Partial<MarketingSendEntity> as MarketingSendEntity);
+        const sentAgo = (send: MarketingSendEntity, hours: number) =>
+            em.create(MarketingMessageEntity, {
+                workspace,
+                send,
+                customer,
+                channel: A.FACEBOOK_PAGE,
+                status: M.SENT,
+                sendDay: ago(hours).toISOString().slice(0, 10),
+                sentAt: ago(hours),
+            } as Partial<MarketingMessageEntity> as MarketingMessageEntity);
+        const older = newSend('Tin cũ');
+        const latest = newSend('Tin mới');
+        sentAgo(older, 48);
+        sentAgo(latest, 24);
+        await em.flush();
+
+        await inRequest(() =>
+            ctx.app.get(CustomerMarketingService).recordInbound({
+                customerId: ids['Nhi'],
+                workspaceId,
+                text: 'ok shop, lấy 1 cái',
+            })
+        );
+        em.create(OrderEntity, {
+            workspace,
+            customer,
+            code: `N-${Date.now()}`,
+            total: 200_000,
+            currency: 'VND',
+            status: ENUM_ORDER_STATUS.CONFIRMED,
+            source: ENUM_ORDER_SOURCE.CHAT,
+            orderedAt: new Date(),
+        } as Partial<OrderEntity> as OrderEntity);
+        await em.flush();
+
+        const [o, l] = await Promise.all(
+            [older, latest].map(send => inRequest(() => sends().stats(send.id)))
+        );
+        expect(o).toMatchObject({
+            sent: 1,
+            replied: 0,
+            ordered: 0,
+            revenue: 0,
+        });
+        expect(l).toMatchObject({
+            sent: 1,
+            replied: 1,
+            ordered: 1,
+            revenue: 200_000,
+        });
     });
 });

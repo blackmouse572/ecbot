@@ -7470,7 +7470,7 @@ export type MarketingSavedAudienceUpdateRequestDto = {
 };
 
 export type MarketingAudienceExclusionDto = {
-    reason: 'STOPPED' | 'HOSTILE' | 'PAUSED' | 'DEFERRED' | 'CAPPED' | 'RESTING';
+    reason: 'STOPPED' | 'HOSTILE' | 'PAUSED' | 'DEFERRED' | 'OFFERED_TODAY' | 'CAPPED' | 'RESTING';
     count: number;
 };
 
@@ -7668,7 +7668,7 @@ export type MarketingSendNotSentDto = {
     /**
      * Left out when the send started (CAPPED, RESTING, ...), or skipped at send time (WINDOW_CLOSED, ...)
      */
-    reason: 'STOPPED' | 'HOSTILE' | 'PAUSED' | 'DEFERRED' | 'CAPPED' | 'RESTING' | 'NO_CHANNEL' | 'WINDOW_CLOSED' | 'OPTED_OUT' | 'ACCOUNT_BLOCKED' | 'SEND_HOURS_ENDED';
+    reason: 'STOPPED' | 'HOSTILE' | 'PAUSED' | 'DEFERRED' | 'OFFERED_TODAY' | 'CAPPED' | 'RESTING' | 'NO_CHANNEL' | 'WINDOW_CLOSED' | 'OPTED_OUT' | 'ACCOUNT_BLOCKED' | 'SEND_HOURS_ENDED';
     count: number;
 };
 
