@@ -47,8 +47,6 @@ const API_VERSION = 'v23.0';
 const MESSAGE_BYTE_LIMIT = 1000;
 const BUTTON_TITLE_LIMIT = 20;
 const CARD_TEXT_LIMIT = 80;
-// Instagram accepts a single reaction type, "love".
-const HEART_EMOJI = new Set(['❤️', '❤', '♥️', '♥']);
 
 /**
  * Instagram DMs through the Instagram API with Instagram Login: the account
@@ -284,18 +282,13 @@ export class InstagramPlatformAdapter extends PlatformAdapter {
         emoji: string,
         action: 'react' | 'unreact'
     ): Promise<void> {
-        if (action === 'react' && !HEART_EMOJI.has(emoji)) {
-            throw new UnprocessableEntityException({
-                message: 'instagram.error.heartReactionOnly',
-                statusCode: 422,
-            });
-        }
+        // Instagram takes any emoji as the reaction, not only "love".
         await this.httpPost(account, {
             recipient: { id: senderId },
             sender_action: action,
             payload:
                 action === 'react'
-                    ? { message_id: externalId, reaction: 'love' }
+                    ? { message_id: externalId, reaction: emoji }
                     : { message_id: externalId },
         });
     }
