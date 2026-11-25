@@ -24,7 +24,7 @@ function harness() {
         getDetail: jest.fn(async () => detail),
         applyChange: jest.fn(async () => undefined),
         listEvents: jest.fn(async () => [[{ id: 'e1' }], 41]),
-        mapEvents: jest.fn(() => [{ id: 'e1' }]),
+        mapEvents: jest.fn(async () => [{ id: 'e1' }]),
     };
     const activityService = { createByUserWithWorkspace: jest.fn() };
     const paginationService = {

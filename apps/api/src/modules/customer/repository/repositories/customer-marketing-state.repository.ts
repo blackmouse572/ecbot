@@ -5,10 +5,14 @@ import { CUSTOMER_MARKETING_DORMANT_DAYS } from '../../constants/customer-market
 import {
     ENUM_CUSTOMER_JOURNEY_STAGE,
     ENUM_CUSTOMER_MARKETING_PERMISSION,
+    ENUM_MARKETING_EVENT_KIND,
 } from '../../enums/customer-marketing.enum';
 import { ICustomerMarketingListFilter } from '../../interfaces/customer-marketing.interface';
 import { ITrackedLinkStats } from '../../interfaces/tracked-link.interface';
 import { CustomerMarketingStateEntity } from '../entities/customer-marketing-state.entity';
+import { CustomerTableName } from '../entities/customer.entity';
+import { MarketingEventTableName } from '../entities/marketing-event.entity';
+import { TrackedLinkTableName } from '../entities/tracked-link.entity';
 
 const DAY_MS = 86_400_000;
 
@@ -27,9 +31,14 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
         });
     }
 
-    /** Counts per tracked link, by each customer's first source. Merged-away
-     *  customers count once, under the customer they were merged into. */
-    async statsByFirstSource(
+    /**
+     * Nguồn khách counts per tracked link. Khách mới: the link was the
+     * customer's first source. Khách quay lại: an earlier customer who later
+     * arrived through it. Each confirmed order counts once, for the last link
+     * the customer arrived through before it. Merged-away customers count
+     * under the customer they were merged into.
+     */
+    async statsBySource(
         workspaceId: string,
         linkIds: string[]
     ): Promise<(ITrackedLinkStats & { linkId: string })[]> {
@@ -37,36 +46,67 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
         const rows: {
             link_id: string;
             new_customers: string | number;
+            returning_customers: string | number;
             potential_customers: string | number;
             orders: string | number;
         }[] = await this.em.getConnection().execute(
             `
-            SELECT s.first_tracked_link_id AS link_id,
-                COUNT(*) AS new_customers,
-                COUNT(*) FILTER (WHERE s.stage IN (?)) AS potential_customers,
-                COALESCE(SUM(o.orders), 0) AS orders
-            FROM customer_marketing_states s
-            JOIN customers c ON c.id = s.customer_id
-            LEFT JOIN LATERAL (
-                SELECT COUNT(*) AS orders
+            WITH arrivals AS (
+                SELECT COALESCE(c.merged_into_customer_id, c.id) AS customer_id,
+                    e.tracked_link_id AS link_id,
+                    e.created_at AS at
+                FROM marketing_events e
+                JOIN customers c ON c.id = e.customer_id
+                WHERE e.workspace_id = ?
+                    AND e.kind = 'SOURCE'
+                    AND e.tracked_link_id IS NOT NULL
+            ),
+            members AS (
+                SELECT DISTINCT a.link_id, a.customer_id,
+                    s.first_tracked_link_id = a.link_id AS is_new,
+                    s.stage IN (?) AS potential
+                FROM arrivals a
+                JOIN customers c ON c.id = a.customer_id
+                JOIN customer_marketing_states s ON s.customer_id = a.customer_id
+                WHERE a.link_id IN (?)
+                    AND s.deleted_at IS NULL
+                    AND c.deleted_at IS NULL
+                    AND c.merged_into_customer_id IS NULL
+            ),
+            last_touch AS (
+                SELECT (
+                    SELECT a.link_id FROM arrivals a
+                    WHERE a.customer_id = o.customer_id
+                        AND a.at <= o.ordered_at
+                    ORDER BY a.at DESC
+                    LIMIT 1
+                ) AS link_id
                 FROM orders o
-                WHERE o.customer_id = s.customer_id
+                WHERE o.customer_id IN (SELECT customer_id FROM members)
                     AND o.status = 'CONFIRMED'
                     AND o.deleted_at IS NULL
-                    AND o.ordered_at >= s.first_source_at
-            ) o ON TRUE
-            WHERE s.workspace_id = ?
-                AND s.first_tracked_link_id IN (?)
-                AND s.deleted_at IS NULL
-                AND c.deleted_at IS NULL
-                AND c.merged_into_customer_id IS NULL
-            GROUP BY s.first_tracked_link_id
+            ),
+            per_link AS (
+                SELECT link_id,
+                    COUNT(*) FILTER (WHERE is_new) AS new_customers,
+                    COUNT(*) FILTER (WHERE NOT is_new) AS returning_customers,
+                    COUNT(*) FILTER (WHERE potential) AS potential_customers
+                FROM members
+                GROUP BY link_id
+            )
+            SELECT p.link_id, p.new_customers, p.returning_customers,
+                p.potential_customers, COALESCE(t.orders, 0) AS orders
+            FROM per_link p
+            LEFT JOIN (
+                SELECT link_id, COUNT(*) AS orders FROM last_touch GROUP BY link_id
+            ) t ON t.link_id = p.link_id
             `,
-            [POTENTIAL_STAGES, workspaceId, linkIds]
+            [workspaceId, POTENTIAL_STAGES, linkIds]
         );
         return rows.map(row => ({
             linkId: row.link_id,
             newCustomers: Number(row.new_customers),
+            returningCustomers: Number(row.returning_customers),
             potentialCustomers: Number(row.potential_customers),
             orders: Number(row.orders),
         }));
@@ -133,14 +173,9 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
         }
 
         if (filter.sourceId) {
-            const fromSource = this.customerIds({
-                $or: [
-                    { firstTrackedLink: filter.sourceId },
-                    { firstTrackedLink: { parent: filter.sourceId } },
-                ],
+            conditions.push({
+                id: { $in: this.arrivedThrough(filter.sourceId) },
             });
-
-            conditions.push({ id: { $in: fromSource } });
         }
 
         return conditions.length ? { $and: conditions } : {};
@@ -168,6 +203,23 @@ export class CustomerMarketingStateRepository extends DatabaseRepository<Custome
         return includeMissing
             ? { $or: [matching, { id: { $nin: this.customerIds({}) } }] }
             : matching;
+    }
+
+    /**
+     * Customers who ever arrived through a source or one of its codes, not
+     * only first. A merged-away customer counts as the one it went into.
+     */
+    private arrivedThrough(sourceId: string) {
+        const knex = this.em.getKnex();
+        const links = knex(TrackedLinkTableName)
+            .select('id')
+            .where('id', sourceId)
+            .orWhere('parent_id', sourceId);
+        return knex(`${MarketingEventTableName} as e`)
+            .join(`${CustomerTableName} as c`, 'c.id', 'e.customer_id')
+            .where('e.kind', ENUM_MARKETING_EVENT_KIND.SOURCE)
+            .whereIn('e.tracked_link_id', links)
+            .select(knex.raw('COALESCE(c.merged_into_customer_id, c.id)'));
     }
 
     private customerIds(where: QBFilterQuery<CustomerMarketingStateEntity>) {

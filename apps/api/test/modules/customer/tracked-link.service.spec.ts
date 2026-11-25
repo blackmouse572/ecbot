@@ -34,7 +34,7 @@ describe('TrackedLinkService', () => {
     };
     const accountRepository = { findOne: jest.fn() };
     const customerTagRepository = { findByWorkspace: jest.fn() };
-    const marketingStateRepository = { statsByFirstSource: jest.fn() };
+    const marketingStateRepository = { statsBySource: jest.fn() };
 
     let service: TrackedLinkService;
 
@@ -349,22 +349,25 @@ describe('TrackedLinkService', () => {
         const blackFriday = link('black-friday');
 
         beforeEach(() => {
-            marketingStateRepository.statsByFirstSource.mockResolvedValue([
+            marketingStateRepository.statsBySource.mockResolvedValue([
                 {
                     linkId: 'tet',
                     newCustomers: 10,
+                    returningCustomers: 2,
                     potentialCustomers: 3,
                     orders: 2,
                 },
                 {
                     linkId: 'tet-qr',
                     newCustomers: 5,
+                    returningCustomers: 1,
                     potentialCustomers: 1,
                     orders: 1,
                 },
                 {
                     linkId: 'tet-kol',
                     newCustomers: 1,
+                    returningCustomers: 0,
                     potentialCustomers: 1,
                     orders: 0,
                 },
@@ -383,19 +386,28 @@ describe('TrackedLinkService', () => {
                 'tet',
                 'black-friday',
             ]);
-            expect(
-                marketingStateRepository.statsByFirstSource
-            ).toHaveBeenCalledWith('ws-1', [
-                'tet',
-                'black-friday',
-                'tet-qr',
-                'tet-kol',
-            ]);
+            expect(marketingStateRepository.statsBySource).toHaveBeenCalledWith(
+                'ws-1',
+                ['tet', 'black-friday', 'tet-qr', 'tet-kol']
+            );
             expect(rows.map(r => [r.id, r.stats])).toEqual([
-                ['tet', { newCustomers: 16, potentialCustomers: 5, orders: 3 }],
+                [
+                    'tet',
+                    {
+                        newCustomers: 16,
+                        returningCustomers: 3,
+                        potentialCustomers: 5,
+                        orders: 3,
+                    },
+                ],
                 [
                     'black-friday',
-                    { newCustomers: 0, potentialCustomers: 0, orders: 0 },
+                    {
+                        newCustomers: 0,
+                        returningCustomers: 0,
+                        potentialCustomers: 0,
+                        orders: 0,
+                    },
                 ],
             ]);
         });
@@ -409,6 +421,7 @@ describe('TrackedLinkService', () => {
 
             expect(detail.stats).toEqual({
                 newCustomers: 16,
+                returningCustomers: 3,
                 potentialCustomers: 5,
                 orders: 3,
             });

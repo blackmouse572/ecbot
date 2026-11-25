@@ -1,6 +1,7 @@
 import { DatabaseDto } from '@app/common/database/dtos/database.dto';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
+import { CustomerMarketingFirstSourceResponseDto } from './customer-marketing-first-source.response.dto';
 import {
     ENUM_MARKETING_EVENT_ACTOR,
     ENUM_MARKETING_EVENT_KIND,
@@ -50,4 +51,15 @@ export class MarketingEventGetResponseDto extends DatabaseDto {
         description: 'The product group of a REACTION or INTENT event.',
     })
     productGroupId?: string | null;
+
+    @Expose()
+    @Type(() => CustomerMarketingFirstSourceResponseDto)
+    @ApiProperty({
+        type: CustomerMarketingFirstSourceResponseDto,
+        required: false,
+        nullable: true,
+        description:
+            'SOURCE events: the tracked link the customer arrived through. Null when the link was deleted.',
+    })
+    source?: CustomerMarketingFirstSourceResponseDto | null;
 }
