@@ -118,9 +118,6 @@ async def extract(req: ExtractRequest) -> AppResponse[ExtractResponse]:
     Decisions models answer typed primitives only, so text answers cannot come
     from `system-one`; this is the separate chat call for them (#623).
     """
-    if not req.fields:
-        return AppResponse(data=ExtractResponse())
-
     with get_usage_metadata_callback() as usage_cb:
         try:
             llm = build_chat_model(model_text_name=AppVars.EXTRACT_MODEL, temperature=0.0)
