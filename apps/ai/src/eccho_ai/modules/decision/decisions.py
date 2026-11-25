@@ -73,7 +73,8 @@ def answers_from_decisions(
     """The response's answers as the System One answer shape.
 
     A question the provider refused or left out is omitted, exactly as a chat
-    provider leaving a field out is.
+    provider leaving a field out is. So is an answer outside the question's
+    contract: a choice id not in `criteria`, or a probability outside [0, 1].
     """
     raw = response.get("answers")
     if not isinstance(raw, dict):
@@ -86,7 +87,11 @@ def answers_from_decisions(
         if question.type == "choice":
             choice = answer.get("choice")
             confidence = answer.get("confidence")
-            if isinstance(choice, str) and _is_number(confidence):
+            if (
+                isinstance(choice, str)
+                and choice in (question.criteria or {})
+                and _is_probability(confidence)
+            ):
                 answers[qid] = {
                     "type": "choice",
                     "choice": choice,
@@ -94,7 +99,7 @@ def answers_from_decisions(
                 }
         elif question.type == "noul":
             noul = answer.get("noul")
-            if _is_number(noul):
+            if _is_probability(noul):
                 answers[qid] = {"type": "noul", "noul": float(noul)}
     return answers
 
@@ -115,3 +120,7 @@ def usage_from_decisions(response: dict[str, Any]) -> TokenUsage | None:
 
 def _is_number(value: Any) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def _is_probability(value: Any) -> bool:
+    return _is_number(value) and 0 <= value <= 1

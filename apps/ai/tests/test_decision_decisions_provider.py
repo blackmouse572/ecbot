@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
+
 from eccho_ai.core.variables import AppVars
 from eccho_ai.modules.decision import routers as decision_router_module
 from eccho_ai.modules.decision.decisions import (
@@ -89,6 +91,42 @@ def test_answers_from_decisions_skips_refusals_and_missing_answers():
 
     assert answers_from_decisions(response, questions) == {
         "goal": {"type": "noul", "noul": 0.4}
+    }
+
+
+def test_answers_from_decisions_drops_a_choice_not_in_criteria():
+    # A provider answer outside the options would let apps/api branch on a
+    # value the caller never offered.
+    response = {"answers": {"business_type": {"type": "choice", "choice": "casino", "confidence": 0.9}}}
+    assert answers_from_decisions(response, {"business_type": _choice()}) == {}
+
+
+@pytest.mark.parametrize("confidence", [93, -0.1, 1.1, True, "0.9"])
+def test_answers_from_decisions_drops_an_out_of_range_confidence(confidence):
+    # 93 is a percentage, not a confidence in [0, 1]; HandoffIntentService
+    # compares against a threshold without clamping.
+    response = {"answers": {"business_type": {"type": "choice", "choice": "beauty", "confidence": confidence}}}
+    assert answers_from_decisions(response, {"business_type": _choice()}) == {}
+
+
+@pytest.mark.parametrize("noul", [1.2, -0.1, True, "0.9"])
+def test_answers_from_decisions_drops_an_out_of_range_noul(noul):
+    response = {"answers": {"goal": {"type": "noul", "noul": noul}}}
+    assert answers_from_decisions(response, {"goal": _noul()}) == {}
+
+
+def test_answers_from_decisions_accepts_the_probability_bounds():
+    response = {
+        "answers": {
+            "business_type": {"type": "choice", "choice": "beauty", "confidence": 1},
+            "goal": {"type": "noul", "noul": 0},
+        }
+    }
+    questions = {"business_type": _choice(), "goal": _noul()}
+
+    assert answers_from_decisions(response, questions) == {
+        "business_type": {"type": "choice", "choice": "beauty", "confidence": 1.0},
+        "goal": {"type": "noul", "noul": 0.0},
     }
 
 
