@@ -5,8 +5,10 @@ swapping Jev for another decisions model stays an environment change.
 """
 from __future__ import annotations
 
+import logging
 from typing import Any
 
+import httpx
 import pytest
 from pydantic import SecretStr
 
@@ -259,6 +261,32 @@ async def test_native_failure_still_answers_200_with_no_answers(async_client, mo
 
     assert resp.status_code == 200
     assert resp.json()["data"]["answers"] == {}
+
+
+async def test_native_rejection_logs_the_provider_body(async_client, monkeypatch, caplog):
+    # The 400/422 body says which question shape or model was rejected; only
+    # the status line would leave the cause undiagnosable.
+    monkeypatch.setattr(AppVars, "DECISION_MODEL", JEV)
+    request = httpx.Request("POST", "https://openrouter.ai/api/alpha/decisions")
+    response = httpx.Response(
+        400,
+        json={"error": {"message": "model not found", "code": 400}},
+        request=request,
+    )
+
+    async def _request(_payload: dict[str, Any]) -> dict[str, Any]:
+        raise httpx.HTTPStatusError("400 Bad Request", request=request, response=response)
+
+    monkeypatch.setattr(decision_router_module, "request_decisions", _request)
+
+    with caplog.at_level(logging.WARNING, logger="uvicorn.info"):
+        resp = await async_client.post("/api/decision/system-one", json=BODY)
+
+    assert resp.status_code == 200
+    assert resp.json()["data"]["answers"] == {}
+    assert "decision.system_one failed" in caplog.text
+    assert "status=400" in caplog.text
+    assert "model not found" in caplog.text
 
 
 async def test_system_one_rejects_text_questions(async_client):

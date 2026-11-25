@@ -9,6 +9,7 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends
+from httpx import HTTPStatusError
 from langchain_core.callbacks import get_usage_metadata_callback
 from pydantic import BaseModel, Field, create_model
 
@@ -85,6 +86,15 @@ async def system_one(req: DecisionRequest) -> AppResponse[DecisionResponse]:
         )
         answers = answers_from_decisions(response, req.questions)
         usage = usage_from_decisions(response)
+    except HTTPStatusError as exc:
+        # The body names the rejected question shape or model; `%s` on the
+        # exception alone only prints the status line and URL.
+        logger.warning(
+            "decision.system_one failed status=%s body=%s",
+            exc.response.status_code,
+            exc.response.text,
+        )
+        answers, usage = {}, None
     except Exception as exc:  # noqa: BLE001 - the builder must work without suggestions
         logger.warning("decision.system_one failed err=%s", exc)
         answers, usage = {}, None
