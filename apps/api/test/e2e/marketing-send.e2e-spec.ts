@@ -761,16 +761,31 @@ describe('E2E — marketing sends', () => {
         expect(replies[0].status).not.toBe(ENUM_MARKETING_REPLY_STATUS.ORDERED);
     });
 
-    it('keeps the customers the shop unticked with the send, for every run', async () => {
+    it('leaves the customers the shop unticked out of a run, and keeps them with the send', async () => {
+        // Fresh customers: nobody has offered them anything today.
+        addCustomer('Hà', 1);
+        addCustomer('Trang', 1);
+        await flush();
+
         const send = await inRequest(() =>
             sends().create(workspaceId, {
                 ...offer,
-                name: 'Bỏ chọn Lan',
+                name: 'Bỏ chọn Hà',
                 mode: S.AUTO,
-                audience: { ...offer.audience, excludedCustomerIds: [ids.Lan] },
+                audience: {
+                    ...offer.audience,
+                    excludedCustomerIds: [ids['Hà']],
+                },
             })
         );
-        // Each run reads the send's audience, so a daily AUTO run leaves her out too.
-        expect(send.audience.excludedCustomerIds).toEqual([ids.Lan]);
+
+        expect(await ledger('Hà')).toEqual([]);
+        expect(await ledger('Trang')).toEqual([
+            expect.objectContaining({
+                send: expect.objectContaining({ id: send.id }),
+            }),
+        ]);
+        // Each daily AUTO run reads the send's audience, so it leaves her out too.
+        expect(send.audience.excludedCustomerIds).toEqual([ids['Hà']]);
     });
 });
