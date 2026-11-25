@@ -1,5 +1,6 @@
 import { DatabaseRepository } from '@app/common/database/bases/database.repository';
 import { ENUM_PAGINATION_ORDER_DIRECTION_TYPE } from '@app/common/pagination/enums/pagination.enum';
+import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { EntityManager, FilterQuery } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
 import {
@@ -11,6 +12,7 @@ import {
     IMessageAttachment,
     IMessageReplyTo,
 } from '../../interfaces/message-media.interface';
+import { IUnansweredInboundRow } from '../../interfaces/message.interface';
 import { ConversationEntity } from '../entities/conversation.entity';
 import { MessageEntity, MessageReaction } from '../entities/message.entity';
 
@@ -23,6 +25,8 @@ export interface IMessageUpsertData {
     replyTo?: IMessageReplyTo;
     raw?: unknown;
     dateSent: Date;
+    /** Imported by reconciliation and never answered (ADR-0009). */
+    replayed?: boolean;
 }
 
 export interface IMessageOutboundData {
@@ -437,5 +441,90 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
                 },
             } as any
         );
+    }
+
+    /**
+     * One inbound customer message if the bot left it unanswered. Raw SQL: it
+     * spans messages, conversations, chatbots, workspaces and activities, and
+     * has to read rows the Turn never touched.
+     *
+     * Answered means a later SENT outbound row (BOT/OPERATOR/SYSTEM) or a
+     * handoff raised after the message. A PENDING or FAILED send is a miss:
+     * rows are inserted PENDING and only flipped SENT when the platform
+     * accepts them, so a crashed or rejected send left the customer with
+     * nothing. Replayed history, handed-over or resolved conversations, a
+     * turned-off chatbot and a suspended workspace are deliberate silences.
+     */
+    async findUnansweredInboundById(
+        messageId: string
+    ): Promise<IUnansweredInboundRow | null> {
+        // MikroORM types execute() as `any`; the columns are the SELECT's.
+        const rows = (await this.em.getConnection().execute(
+            `SELECT m.id AS message_id,
+                    m.created_at,
+                    conv.id AS conversation_id,
+                    conv.chatbot_id,
+                    cb.workspace_id,
+                    acc.type AS platform
+               FROM messages m
+               JOIN conversations conv ON conv.id = m.conversation_id
+               JOIN chatbots cb ON cb.id = conv.chatbot_id
+               JOIN workspaces w ON w.id = cb.workspace_id
+               JOIN accounts acc ON acc.id = conv.account_id
+              WHERE m.id = ?
+                AND m.direction = 'INBOUND'
+                AND m.author_type = 'USER'
+                AND m.replayed = false
+                AND m.deleted_at IS NULL
+                AND conv.bot_enabled = true
+                AND conv.status = 'OPEN'
+                AND conv.resolved_at IS NULL
+                AND conv.handoff_at IS NULL
+                AND conv.deleted_at IS NULL
+                AND cb.status = 'active'
+                AND cb.deleted_at IS NULL
+                AND w.status <> 'SUSPENDED'
+                AND w.deleted_at IS NULL
+                AND acc.deleted_at IS NULL
+                AND NOT EXISTS (
+                    SELECT 1
+                      FROM messages r
+                     WHERE r.conversation_id = conv.id
+                       AND r.direction = 'OUTBOUND'
+                       AND r.author_type IN ('BOT', 'OPERATOR', 'SYSTEM')
+                       AND r.status = 'SENT'
+                       AND r.deleted_at IS NULL
+                       AND r.created_at >= m.created_at
+                )
+                AND NOT EXISTS (
+                    SELECT 1
+                      FROM activities a
+                     WHERE a.action = '${ENUM_ACTIVITY_ACTION.CONVERSATION_HANDOFF}'
+                       AND a.metadata->>'id' = conv.id::text
+                       AND a.deleted_at IS NULL
+                       AND a.created_at >= m.created_at
+                )
+              LIMIT 1`,
+            [messageId]
+        )) as Array<{
+            message_id: string;
+            created_at: Date;
+            conversation_id: string;
+            chatbot_id: string;
+            workspace_id: string;
+            platform: string;
+        }>;
+
+        const row = rows[0];
+        if (!row) return null;
+
+        return {
+            messageId: row.message_id,
+            createdAt: row.created_at,
+            conversationId: row.conversation_id,
+            chatbotId: row.chatbot_id,
+            workspaceId: row.workspace_id,
+            platform: row.platform,
+        };
     }
 }

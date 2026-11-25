@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { MESSAGE_DEBOUNCE_MS } from '../constants/message-debounce.constant';
 import { ReplyGenerationService } from './reply-generation.service';
+import { ReplyMissedAlertService } from './reply-missed-alert.service';
 
 interface PendingBurst {
     /** The burst's messages in order; `messageId` is the saved row (a message
@@ -34,7 +35,10 @@ export class MessageDebounceService implements OnModuleDestroy {
     private readonly pending = new Map<string, PendingBurst>();
     private readonly replying = new Set<string>();
 
-    constructor(private readonly replyGeneration: ReplyGenerationService) {}
+    constructor(
+        private readonly replyGeneration: ReplyGenerationService,
+        private readonly replyMisses: ReplyMissedAlertService
+    ) {}
 
     onModuleDestroy(): void {
         for (const burst of this.pending.values()) clearTimeout(burst.timer);
@@ -84,17 +88,26 @@ export class MessageDebounceService implements OnModuleDestroy {
         this.replying.add(conversationId);
         let steered: string[] = [];
         try {
+            const messageIds = burst.entries.flatMap(e =>
+                e.messageId ? [e.messageId] : []
+            );
             const outcome = await this.replyGeneration.run({
                 conversationId,
                 senderId: burst.senderId,
                 customerId: burst.customerId,
                 contactPointId: burst.contactPointId,
                 texts: burst.entries.map(e => e.text),
-                messageIds: burst.entries.flatMap(e =>
-                    e.messageId ? [e.messageId] : []
-                ),
+                messageIds,
             });
             steered = outcome?.steeredMessageIds ?? [];
+            if (outcome?.status === 'failed') {
+                await this.replyMisses.reportTurnMiss({
+                    source: 'turn',
+                    conversationId,
+                    reason: outcome.reason,
+                    messageIds,
+                });
+            }
         } finally {
             this.replying.delete(conversationId);
             this.followUp(conversationId, steered);

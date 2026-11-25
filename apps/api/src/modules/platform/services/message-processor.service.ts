@@ -37,6 +37,7 @@ import { PlatformAdapter } from '../adapters/platform-adapter.base';
 import { PlatformAdapterRegistry } from './platform-adapter.registry';
 import { fetchAsBase64 } from '@app/common/utils/fetch-as-base64.util';
 import { MessageDebounceService } from './message-debounce.service';
+import { ReplyMissedAlertService } from './reply-missed-alert.service';
 import { ActionRouter } from './action-router.service';
 import { GenerationLeaseService } from './generation-lease.service';
 import { InboundEventDedupeService } from './inbound-event-dedupe.service';
@@ -69,7 +70,8 @@ export class MessageProcessorService implements OnModuleInit {
         private readonly chatbotAIService: ChatbotAIService,
         private readonly lease: GenerationLeaseService,
         private readonly dedupe: InboundEventDedupeService,
-        private readonly messageMedia: MessageMediaService
+        private readonly messageMedia: MessageMediaService,
+        private readonly replyMisses: ReplyMissedAlertService
     ) {}
 
     onModuleInit(): void {
@@ -308,6 +310,7 @@ export class MessageProcessorService implements OnModuleInit {
                       ),
                       raw: event.raw,
                       dateSent: event.timestamp,
+                      replayed: event.replayed ?? false,
                   }
               )
             : undefined;
@@ -391,6 +394,21 @@ export class MessageProcessorService implements OnModuleInit {
                     greeting
                 );
             if (opensChatOnly(event)) return;
+        }
+
+        // Backstop for a Turn that never runs or dies before sending: check
+        // this message five minutes from now. Deliberate silences (bot off,
+        // resolved, silenced agent, opt-out, greeting-only) returned above.
+        // Non-fatal: retrying the whole inbound Turn here would resend a
+        // greeting or opt-out reply the customer already got.
+        if (inbound?.id) {
+            this.replyMisses
+                .scheduleCheck(inbound.id)
+                .catch((err: unknown) =>
+                    this.logger.warn(
+                        `reply-missed check not scheduled for ${inbound.id}: ${(err as Error).message}`
+                    )
+                );
         }
 
         let typing = false;

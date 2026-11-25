@@ -1543,6 +1543,11 @@ export type ConversationMemoryTaskDto = {
     untilMessageId: string;
 };
 
+export type ReplyMissedTaskDto = {
+    jobName: 'check';
+    messageId: string;
+};
+
 export type KnowledgeIngestTaskDto = {
     jobName: 'ingest' | 'reindex-links' | 'delete';
     knowledgeItemId: string;
@@ -12895,6 +12900,76 @@ export type ConversationMemoryTaskControllerHandleV1Responses = {
 };
 
 export type ConversationMemoryTaskControllerHandleV1Response = ConversationMemoryTaskControllerHandleV1Responses[keyof ConversationMemoryTaskControllerHandleV1Responses];
+
+export type ReplyMissedTaskControllerHandleV1Data = {
+    body: ReplyMissedTaskDto;
+    headers?: {
+        /**
+         * Custom language header
+         */
+        'x-custom-lang'?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/system/tasks/reply-missed';
+};
+
+export type ReplyMissedTaskControllerHandleV1Errors = {
+    /**
+     * 401
+     */
+    401: (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    }) | (ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    });
+    /**
+     * 408
+     */
+    408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 500
+     */
+    500: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ReplyMissedTaskControllerHandleV1Error = ReplyMissedTaskControllerHandleV1Errors[keyof ReplyMissedTaskControllerHandleV1Errors];
+
+export type ReplyMissedTaskControllerHandleV1Responses = {
+    /**
+     * 200
+     */
+    200: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+};
+
+export type ReplyMissedTaskControllerHandleV1Response = ReplyMissedTaskControllerHandleV1Responses[keyof ReplyMissedTaskControllerHandleV1Responses];
 
 export type KnowledgeIngestTaskControllerHandleV1Data = {
     body: KnowledgeIngestTaskDto;

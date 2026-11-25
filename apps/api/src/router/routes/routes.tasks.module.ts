@@ -7,6 +7,7 @@ import { SmsModule } from 'src/modules/sms/sms.module';
 import { FollowupTaskController } from 'src/modules/platform/controllers/followup.task.controller';
 import { InboundEventTaskController } from 'src/modules/platform/controllers/inbound-event.task.controller';
 import { ConversationMemoryTaskController } from 'src/modules/platform/controllers/conversation-memory.task.controller';
+import { ReplyMissedTaskController } from 'src/modules/platform/controllers/reply-missed.task.controller';
 import { PlatformModule } from 'src/modules/platform/platform.module';
 import { KnowledgeIngestTaskController } from 'src/modules/knowledge-base/controllers/knowledge-ingest.task.controller';
 import { KnowledgeBaseServicesModule } from 'src/modules/knowledge-base/services/services.module';
@@ -32,6 +33,7 @@ import { MarketingModule } from 'src/modules/marketing/marketing.module';
         FollowupTaskController,
         InboundEventTaskController,
         ConversationMemoryTaskController,
+        ReplyMissedTaskController,
         KnowledgeIngestTaskController,
         CustomerTagClassifierTaskController,
         CustomerMarketingBackfillTaskController,

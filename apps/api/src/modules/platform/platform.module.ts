@@ -33,6 +33,7 @@ import { ConversationMemoryTaskService } from './services/conversation-memory-ta
 import { InboundInboxService } from './services/inbound-inbox.service';
 import { ActionRouter } from './services/action-router.service';
 import { InboundReconciliationScheduler } from './schedulers/inbound-reconciliation.scheduler';
+import { ReplyMissedAlertService } from './services/reply-missed-alert.service';
 import { FollowupService } from './services/followup.service';
 import { PlatformRepositoryModule } from './repository/platform.repository.module';
 import { ApiChannelCallbackService } from './services/api-channel-callback.service';
@@ -96,6 +97,7 @@ const ADAPTERS = [
         WidgetSessionService,
         WidgetChatService,
         InboundReconciliationScheduler,
+        ReplyMissedAlertService,
         GenerationLeaseService,
         InboundEventDedupeService,
         StreamingDelivery,
@@ -119,6 +121,7 @@ const ADAPTERS = [
         ActionRouter,
         FollowupService,
         ReplyGenerationService,
+        ReplyMissedAlertService,
         ConversationMemoryTaskService,
     ],
 })

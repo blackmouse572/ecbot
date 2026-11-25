@@ -26,6 +26,7 @@ The logger is configured globally and is automatically available throughout the 
         - [Basic Logging](#basic-logging)
         - [Error Handling](#error-handling)
     - [Sensitive Data Handling](#sensitive-data-handling)
+    - [Structured Events](#structured-events)
     - [File Logging](#file-logging)
     - [Performance Considerations](#performance-considerations)
 
@@ -58,21 +59,18 @@ SENTRY_DSN=https://your-sentry-dsn
 The logger's behavior is defined in `src/configs/debug.config.ts`:
 
 ```typescript
-export default registerAs(
-    'debug',
-    (): Record<string, any> => ({
-        enable: process.env.DEBUG_ENABLE === 'true',
-        level: process.env.DEBUG_LEVEL,
-        intoFile: process.env.DEBUG_INTO_FILE === 'true',
-        filePath: '/logs',
-        autoLogger: false,
-        prettier: process.env.DEBUG_PRETTIER === 'true',
-        sentry: {
-            dsn: process.env.SENTRY_DSN,
-            timeout: ms('10s'),
-        },
-    })
-);
+export default registerAs('debug', (): Record<string, any> => ({
+    enable: process.env.DEBUG_ENABLE === 'true',
+    level: process.env.DEBUG_LEVEL,
+    intoFile: process.env.DEBUG_INTO_FILE === 'true',
+    filePath: '/logs',
+    autoLogger: false,
+    prettier: process.env.DEBUG_PRETTIER === 'true',
+    sentry: {
+        dsn: process.env.SENTRY_DSN,
+        timeout: ms('10s'),
+    },
+}));
 ```
 
 The logger also defines excluded routes that won't be logged in `src/common/logger/constants/logger.constant.ts`:
@@ -309,6 +307,25 @@ redact: {
     censor: '***REDACTED***',
 },
 ```
+
+## Structured Events
+
+Passing an object as the log message puts its fields at the top level of
+`jsonPayload`, which is what a log-based metric filters on:
+
+```typescript
+this.logger.warn(
+    { event: 'reply.missed', source: 'check', conversationId, platform },
+    'inbound message left unanswered by the bot'
+);
+```
+
+Cloud Monitoring definitions for these events live in `scripts/monitoring/`
+and are applied with `scripts/apply-monitoring.sh <project-id> <channel-id>`.
+
+| Event          | Emitted by                                                                          | Fields                                                                                 |
+| -------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `reply.missed` | `ReplyMissedAlertService` (a `failed` turn, the edge reply path, the delayed check) | `source`, `conversationId`, `chatbotId`, `workspaceId`, `platform`, `ageSec`, `reason` |
 
 ## File Logging
 

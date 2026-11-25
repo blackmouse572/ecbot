@@ -1,0 +1,25 @@
+{
+  "description": "Inbound customer messages the bot left unanswered (structured warn event reply.missed).",
+  "filter": "resource.type=\"cloud_run_revision\"\njsonPayload.event=\"reply.missed\"",
+  "metricDescriptor": {
+    "metricKind": "DELTA",
+    "valueType": "INT64",
+    "unit": "1",
+    "labels": [
+      {
+        "key": "platform",
+        "valueType": "STRING",
+        "description": "Channel the customer wrote on (account type). Empty for a turn-level report."
+      },
+      {
+        "key": "source",
+        "valueType": "STRING",
+        "description": "Where the miss was detected: turn, poc-reply or check."
+      }
+    ]
+  },
+  "labelExtractors": {
+    "platform": "EXTRACT(jsonPayload.platform)",
+    "source": "EXTRACT(jsonPayload.source)"
+  }
+}

@@ -96,7 +96,8 @@ describe('MessageProcessorService — agent turned off', () => {
             chatbotAIService as any,
             lease as any,
             dedupe as any,
-            {} as any
+            {} as any,
+            { scheduleCheck: jest.fn().mockResolvedValue(undefined) } as any
         );
         processor.onModuleInit();
 

@@ -97,7 +97,8 @@ describe('MessageProcessorService — inbound images', () => {
             chatbotAIService as any,
             lease as any,
             dedupe as any,
-            messageMedia as any
+            messageMedia as any,
+            { scheduleCheck: jest.fn().mockResolvedValue(undefined) } as any
         );
         processor.onModuleInit();
         accountService.findOne.mockResolvedValue(buildAccount());

@@ -137,7 +137,8 @@ describe('MessageProcessorService tracked link arrival', () => {
             chatbotAIService as any,
             lease as any,
             dedupe as any,
-            {} as any
+            {} as any,
+            { scheduleCheck: jest.fn().mockResolvedValue(undefined) } as any
         );
         processor.onModuleInit();
 

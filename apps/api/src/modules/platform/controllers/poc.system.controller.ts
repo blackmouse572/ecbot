@@ -23,6 +23,7 @@ import { PLATFORM_SLUG_TO_TYPE } from '../constants/platform-slug.constant';
 import { MessageProcessorService } from '../services/message-processor.service';
 import { PlatformAdapterRegistry } from '../services/platform-adapter.registry';
 import { ReplyGenerationService } from '../services/reply-generation.service';
+import { ReplyMissedAlertService } from '../services/reply-missed-alert.service';
 import { ReplyOutcome } from '../interfaces/reply-outcome.interface';
 
 class PocInboundDto {
@@ -94,7 +95,8 @@ export class PocSystemController {
     constructor(
         private readonly registry: PlatformAdapterRegistry,
         private readonly processor: MessageProcessorService,
-        private readonly replyGeneration: ReplyGenerationService
+        private readonly replyGeneration: ReplyGenerationService,
+        private readonly replyMisses: ReplyMissedAlertService
     ) {}
 
     // Stub adapters (Instagram, TikTok, Shopee) throw 501 here. Answering 5xx
@@ -148,6 +150,12 @@ export class PocSystemController {
         // The customer got nothing: a non-2xx lets the edge log it instead of
         // a 200 that looked like success.
         if (outcome.status === 'failed') {
+            await this.replyMisses.reportTurnMiss({
+                source: 'poc-reply',
+                conversationId: dto.conversationId,
+                reason: outcome.reason,
+                messageIds: dto.messageIds,
+            });
             throw new BadGatewayException({
                 statusCode: HttpStatus.BAD_GATEWAY,
                 message: 'http.serverError.badGateway',

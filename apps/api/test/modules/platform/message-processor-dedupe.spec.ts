@@ -102,7 +102,8 @@ describe('MessageProcessorService — inbound event dedupe (candidate 1)', () =>
             chatbotAIService as any,
             lease as any,
             dedupe as any,
-            {} as any
+            {} as any,
+            { scheduleCheck: jest.fn().mockResolvedValue(undefined) } as any
         );
         processor.onModuleInit();
 

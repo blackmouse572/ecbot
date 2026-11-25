@@ -77,7 +77,6 @@ export class ConversationDebounceDO {
   ): Promise<string[]> {
     // Log, never retry: the reply may already be partly delivered to the
     // customer, so a second run could answer them twice.
-    const tag = `[reply] conversation ${body.conversationId}`;
     try {
       const res = await postToServer(
         "/api/v1/system/poc/reply",
@@ -85,7 +84,17 @@ export class ConversationDebounceDO {
         AbortSignal.timeout(REPLY_POST_TIMEOUT_MS),
       );
       if (!res.ok) {
-        console.error(`${tag} -> ${res.status}: ${await res.text()}`);
+        console.warn(
+          JSON.stringify({
+            event: "reply.missed",
+            source: "edge",
+            conversationId: body.conversationId,
+            messageIds: body.messageIds,
+            status: res.status,
+            // Same cap as the log line: enough to name the cause.
+            reason: (await res.text()).slice(0, 500),
+          }),
+        );
         return [];
       }
       const outcome = await res
@@ -93,7 +102,15 @@ export class ConversationDebounceDO {
         .catch(() => ({}) as { steeredMessageIds?: string[] });
       return outcome.steeredMessageIds ?? [];
     } catch (err) {
-      console.error(`${tag} threw (${(err as Error).message})`);
+      console.warn(
+        JSON.stringify({
+          event: "reply.missed",
+          source: "edge",
+          conversationId: body.conversationId,
+          messageIds: body.messageIds,
+          reason: (err as Error).message,
+        }),
+      );
       return [];
     }
   }
