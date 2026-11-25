@@ -60,35 +60,43 @@ export class AiDecisionService {
         );
     }
 
+    /** One POST to apps/ai: auth headers, timeout fallback and the `data` unwrap. */
+    private async post<T>(
+        path: string,
+        body: Record<string, unknown>,
+        timeoutMs?: number
+    ): Promise<{ data?: T; usage: TokenUsageDelta | null; model?: string }> {
+        const authHeaders = await getInternalAuthHeader(this.baseUrl);
+        const resp = await firstValueFrom(
+            this.http.post(`${this.baseUrl}${path}`, body, {
+                timeout: timeoutMs ?? this.config.get<number>('agentBuilder.decisionTimeoutMs') ?? 15000,
+                headers: {
+                    ...authHeaders,
+                    ...getInternalTokenHeader(this.config),
+                    'Content-Type': 'application/json',
+                },
+            })
+        );
+        const payload = resp.data as {
+            data?: T & { usage?: unknown; model?: string };
+        };
+        return {
+            data: payload?.data,
+            usage: parseWireTokenUsage(payload?.data?.usage),
+            model: payload?.data?.model,
+        };
+    }
+
     /** `systemOne`, plus what the call spent, for callers that meter it. */
     async decide(
         state: string,
         questions: Record<string, SystemOneQuestion>,
         timeoutMs?: number
     ): Promise<ISystemOneResult> {
-        const authHeaders = await getInternalAuthHeader(this.baseUrl);
-        const resp = await firstValueFrom(
-            this.http.post(
-                `${this.baseUrl}/api/decision/system-one`,
-                { state, questions },
-                {
-                    timeout: timeoutMs ?? this.config.get<number>('agentBuilder.decisionTimeoutMs') ?? 15000,
-                    headers: {
-                        ...authHeaders,
-                        ...getInternalTokenHeader(this.config),
-                        'Content-Type': 'application/json',
-                    },
-                }
-            )
-        );
-        const payload = resp.data as {
-            data?: { answers?: Record<string, SystemOneAnswer>; usage?: unknown; model?: string };
-        };
-        return {
-            answers: payload?.data?.answers ?? {},
-            usage: parseWireTokenUsage(payload?.data?.usage),
-            model: payload?.data?.model,
-        };
+        const { data, usage, model } = await this.post<{
+            answers?: Record<string, SystemOneAnswer>;
+        }>('/api/decision/system-one', { state, questions }, timeoutMs);
+        return { answers: data?.answers ?? {}, usage, model };
     }
 
     /** Copies stated details out of a state (`apps/ai /api/decision/extract`). */
@@ -97,53 +105,19 @@ export class AiDecisionService {
         fields: Record<string, string>,
         timeoutMs?: number
     ): Promise<IAiExtractResult> {
-        const authHeaders = await getInternalAuthHeader(this.baseUrl);
-        const resp = await firstValueFrom(
-            this.http.post(
-                `${this.baseUrl}/api/decision/extract`,
-                { state, fields },
-                {
-                    timeout: timeoutMs ?? this.config.get<number>('agentBuilder.decisionTimeoutMs') ?? 15000,
-                    headers: {
-                        ...authHeaders,
-                        ...getInternalTokenHeader(this.config),
-                        'Content-Type': 'application/json',
-                    },
-                }
-            )
-        );
-        const payload = resp.data as {
-            data?: { answers?: Record<string, string>; usage?: unknown; model?: string };
-        };
-        return {
-            answers: payload?.data?.answers ?? {},
-            usage: parseWireTokenUsage(payload?.data?.usage),
-            model: payload?.data?.model,
-        };
+        const { data, usage, model } = await this.post<{
+            answers?: Record<string, string>;
+        }>('/api/decision/extract', { state, fields }, timeoutMs);
+        return { answers: data?.answers ?? {}, usage, model };
     }
 
     /** Drafts a short text from instructions and a state (`apps/ai /api/decision/write`). */
     async write(instructions: string, state: string, timeoutMs?: number): Promise<IAiWriteResult> {
-        const authHeaders = await getInternalAuthHeader(this.baseUrl);
-        const resp = await firstValueFrom(
-            this.http.post(
-                `${this.baseUrl}/api/decision/write`,
-                { instructions, state },
-                {
-                    timeout: timeoutMs ?? this.config.get<number>('agentBuilder.decisionTimeoutMs') ?? 15000,
-                    headers: {
-                        ...authHeaders,
-                        ...getInternalTokenHeader(this.config),
-                        'Content-Type': 'application/json',
-                    },
-                }
-            )
+        const { data, usage, model } = await this.post<{ text?: string }>(
+            '/api/decision/write',
+            { instructions, state },
+            timeoutMs
         );
-        const payload = resp.data as { data?: { text?: string; usage?: unknown; model?: string } };
-        return {
-            text: payload?.data?.text ?? '',
-            usage: parseWireTokenUsage(payload?.data?.usage),
-            model: payload?.data?.model,
-        };
+        return { text: data?.text ?? '', usage, model };
     }
 }
