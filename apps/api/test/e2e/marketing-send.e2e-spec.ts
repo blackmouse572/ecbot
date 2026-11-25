@@ -1,4 +1,5 @@
 import { EntityManager, RequestContext } from '@mikro-orm/postgresql';
+import { AiDecisionService } from '@app/modules/agent-builder/services/ai-decision.service';
 import { ENUM_ACCOUNT_TYPE as A } from '@app/modules/account/enums/account.enum';
 import { AccountEntity } from '@app/modules/account/repository/entities/account.entity';
 import { ChatbotEntity } from '@app/modules/chatbot/repository/entities/chatbot.entity';
@@ -514,5 +515,67 @@ describe('E2E — marketing sends', () => {
         expect(
             (await ledger('Khoa')).filter(r => r.send.id === autoId)
         ).toHaveLength(0);
+    });
+
+    it('drafts a send text with AI soạn giúp, for a stage and the shop offer', async () => {
+        const write = jest
+            .spyOn(ctx.app.get(AiDecisionService), 'write')
+            .mockResolvedValue({
+                text: 'Chào {name} — {product} bạn hỏi đang giảm 10% nha.',
+                usage: null,
+            });
+        const draft = await http(ctx.app)
+            .post(url('/draft'))
+            .set(...auth())
+            .send({ preset: 'ASKED_PRICE', offer: 'Giảm 10% đến 20/11' });
+        expect(draft.status).toBe(200);
+        expect(draft.body.data).toEqual({
+            text: 'Chào {name}, {product} bạn hỏi đang giảm 10% nha.',
+        });
+        expect(write.mock.calls[0][1]).toContain('Giảm 10% đến 20/11');
+
+        write.mockResolvedValueOnce({ text: '', usage: null });
+        const failed = await http(ctx.app)
+            .post(url('/draft'))
+            .set(...auth())
+            .send({ preset: 'ASKED_PRICE' });
+        expect(failed.status).toBe(503);
+
+        const bad = await http(ctx.app)
+            .post(url('/draft'))
+            .set(...auth())
+            .send({ preset: 'ASKED_PRICE', language: 'fr' });
+        expect(bad.status).toBe(422);
+
+        // Ngắn hơn works on the current text, so it needs one.
+        const shorter = await http(ctx.app)
+            .post(url('/draft'))
+            .set(...auth())
+            .send({
+                preset: 'ASKED_PRICE',
+                previous: 'Chào {name}, Lumi giảm 10% nha.',
+                rewrite: 'SHORTER',
+                tone: 'PLAYFUL',
+            });
+        expect(shorter.status).toBe(200);
+        expect(write.mock.calls.at(-1)?.[0]).toContain('shorter');
+        const noText = await http(ctx.app)
+            .post(url('/draft'))
+            .set(...auth())
+            .send({ preset: 'ASKED_PRICE', rewrite: 'LONGER' });
+        expect(noText.status).toBe(422);
+
+        // The audience checks of a send: neither, or both, is a 400.
+        for (const body of [
+            {},
+            { preset: 'NEW', conditions: offer.audience.conditions },
+        ]) {
+            const refused = await http(ctx.app)
+                .post(url('/draft'))
+                .set(...auth())
+                .send(body);
+            expect(refused.status).toBe(400);
+        }
+        write.mockRestore();
     });
 });

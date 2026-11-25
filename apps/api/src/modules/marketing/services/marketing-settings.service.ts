@@ -14,7 +14,10 @@ import {
 } from '../constants/marketing-send.constant';
 import { MarketingSettingsUpdateRequestDto } from '../dtos/request/marketing-settings.update.request.dto';
 import { MarketingSettingsGetResponseDto } from '../dtos/response/marketing-settings.get.response.dto';
-import { IMarketingSendRules } from '../interfaces/marketing-send.interface';
+import {
+    IMarketingSendRules,
+    IMarketingStopReply,
+} from '../interfaces/marketing-send.interface';
 import { MarketingSettingsEntity } from '../repository/entities/marketing-settings.entity';
 import { MarketingSettingsRepository } from '../repository/repositories/marketing-settings.repository';
 
@@ -56,6 +59,7 @@ export class MarketingSettingsService {
                 dto.stopReply === undefined
                     ? undefined
                     : dto.stopReply?.trim() || null,
+            stopReplyEnabled: dto.stopReplyEnabled,
         };
         const defined = Object.fromEntries(
             Object.entries(changes).filter(([, value]) => value !== undefined)
@@ -118,9 +122,16 @@ export class MarketingSettingsService {
         return (saved?.stopKeywords ?? CUSTOMER_MARKETING_OPT_OUT_KEYWORDS)[0];
     }
 
-    /** The shop's own opt-out confirmation, or null for the built-in one. */
-    async stopReply(workspaceId: string): Promise<string | null> {
-        return (await this.find(workspaceId))?.stopReply ?? null;
+    /**
+     * The opt-out confirmation: whether the shop sends one, and its own text
+     * (null for the built-in one).
+     */
+    async stopReply(workspaceId: string): Promise<IMarketingStopReply> {
+        const saved = await this.find(workspaceId);
+        return {
+            enabled: saved?.stopReplyEnabled ?? true,
+            text: saved?.stopReply ?? null,
+        };
     }
 
     private find(workspaceId: string): Promise<MarketingSettingsEntity | null> {
@@ -168,6 +179,7 @@ export class MarketingSettingsService {
                     ...CUSTOMER_MARKETING_OPT_OUT_KEYWORDS,
                 ],
                 stopReply: saved?.stopReply ?? null,
+                stopReplyEnabled: saved?.stopReplyEnabled ?? true,
             },
             { excludeExtraneousValues: true }
         );

@@ -24,6 +24,8 @@ export enum ENUM_AI_USAGE_SOURCE {
     AGENT_BUILDER = 'AGENT_BUILDER',
     /** Embedding an uploaded knowledge document. */
     KNOWLEDGE_INGEST = 'KNOWLEDGE_INGEST',
+    /** Drafting a marketing offer for the shop (Tiếp thị, Gửi theo giai đoạn). */
+    MARKETING_DRAFT = 'MARKETING_DRAFT',
 }
 
 /** The chatbot fields a meter reads — structural, so any chatbot-shaped

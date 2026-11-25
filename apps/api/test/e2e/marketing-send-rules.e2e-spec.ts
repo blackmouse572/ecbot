@@ -148,6 +148,7 @@ describe('E2E — marketing send rules', () => {
             sendTo: '20:00',
             stopKeywords: ['dừng', 'dung', 'stop'],
             stopReply: null,
+            stopReplyEnabled: true,
         });
     });
 

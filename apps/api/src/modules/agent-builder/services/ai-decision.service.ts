@@ -14,6 +14,13 @@ export interface ISystemOneResult {
     model?: string;
 }
 
+export interface IAiWriteResult {
+    /** The drafted text; empty when apps/ai could not write one. */
+    text: string;
+    usage: TokenUsageDelta | null;
+    model?: string;
+}
+
 // apps/ai answers System One-shaped questions with the model in DECISION_MODEL.
 @Injectable()
 export class AiDecisionService {
@@ -71,6 +78,31 @@ export class AiDecisionService {
         };
         return {
             answers: payload?.data?.answers ?? {},
+            usage: parseWireTokenUsage(payload?.data?.usage),
+            model: payload?.data?.model,
+        };
+    }
+
+    /** Drafts a short text from instructions and a state (apps/ai `/api/decision/write`). */
+    async write(instructions: string, state: string, timeoutMs?: number): Promise<IAiWriteResult> {
+        const authHeaders = await getInternalAuthHeader(this.baseUrl);
+        const resp = await firstValueFrom(
+            this.http.post(
+                `${this.baseUrl}/api/decision/write`,
+                { instructions, state },
+                {
+                    timeout: timeoutMs ?? this.config.get<number>('agentBuilder.decisionTimeoutMs') ?? 15000,
+                    headers: {
+                        ...authHeaders,
+                        ...getInternalTokenHeader(this.config),
+                        'Content-Type': 'application/json',
+                    },
+                }
+            )
+        );
+        const payload = resp.data as { data?: { text?: string; usage?: unknown; model?: string } };
+        return {
+            text: payload?.data?.text ?? '',
             usage: parseWireTokenUsage(payload?.data?.usage),
             model: payload?.data?.model,
         };

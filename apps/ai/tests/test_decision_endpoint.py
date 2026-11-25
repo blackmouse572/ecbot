@@ -203,3 +203,73 @@ async def test_text_question_left_out_by_the_model_is_not_required(async_client,
     seen = patch_llm(_FakeStructured(returns={}))
     await async_client.post("/api/decision/system-one", json=TEXT_BODY)
     assert seen["llm"].schema.model_validate({}).model_dump() == {"q0": ""}
+
+
+# #506: /decision/write drafts a short shop message from instructions and a
+# state (a marketing offer), with WRITE_MODEL at a higher temperature
+# so "Viết kiểu khác" gives a different text.
+class _FakeWriter:
+    def __init__(self, *, content: Any = None, raises: Exception | None = None):
+        self._content = content
+        self._raises = raises
+        self.calls: list[Any] = []
+
+    async def ainvoke(self, messages: Any) -> Any:
+        self.calls.append(messages)
+        if self._raises is not None:
+            raise self._raises
+        return type("Reply", (), {"content": self._content})()
+
+
+@pytest.fixture
+def patch_writer(monkeypatch):
+    seen: dict[str, Any] = {}
+
+    def _apply(writer: _FakeWriter) -> dict[str, Any]:
+        def _build(*_a, **kw):
+            seen["kwargs"] = kw
+            return writer
+
+        monkeypatch.setattr(decision_router_module, "build_chat_model", _build)
+        seen["writer"] = writer
+        return seen
+
+    return _apply
+
+
+WRITE_BODY = {
+    "instructions": "Viết một tin nhắn ưu đãi ngắn cho khách hỏi giá chưa mua.",
+    "state": "Shop: Lumi Skincare. Ưu đãi: giảm 10% đến 20/11.",
+}
+
+
+async def test_write_returns_the_drafted_text_and_what_it_spent(async_client, patch_writer):
+    seen = patch_writer(_FakeWriter(content='  "Chào {name}, Lumi giảm 10% cho bạn đến 20/11 nha."  '))
+    resp = await async_client.post("/api/decision/write", json=WRITE_BODY)
+    assert resp.status_code == 200
+    data = resp.json()["data"]
+    assert data["text"] == "Chào {name}, Lumi giảm 10% cho bạn đến 20/11 nha."
+    assert data["model"] == AppVars.WRITE_MODEL
+    assert seen["kwargs"]["model_text_name"] == AppVars.WRITE_MODEL
+    assert seen["kwargs"]["temperature"] > 0.5
+    [messages] = seen["writer"].calls
+    assert WRITE_BODY["instructions"] in messages[-1]["content"]
+    assert WRITE_BODY["state"] in messages[-1]["content"]
+
+
+async def test_write_caps_the_text(async_client, patch_writer):
+    patch_writer(_FakeWriter(content="a" * 3000))
+    resp = await async_client.post("/api/decision/write", json=WRITE_BODY)
+    assert len(resp.json()["data"]["text"]) == 1000
+
+
+async def test_write_failure_returns_an_empty_text(async_client, patch_writer):
+    patch_writer(_FakeWriter(raises=RuntimeError("provider down")))
+    resp = await async_client.post("/api/decision/write", json=WRITE_BODY)
+    assert resp.status_code == 200
+    assert resp.json()["data"]["text"] == ""
+
+
+async def test_write_needs_instructions(async_client):
+    resp = await async_client.post("/api/decision/write", json={"state": "x", "instructions": ""})
+    assert resp.status_code == 422

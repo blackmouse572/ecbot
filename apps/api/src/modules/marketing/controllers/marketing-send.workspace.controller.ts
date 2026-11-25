@@ -19,7 +19,16 @@ import {
     WorkspacePolicyAbilityProtected,
 } from '@app/modules/workspace/decorators/workspace.decorator';
 import { WorkspaceEntity } from '@app/modules/workspace/repository/entities/workspace.entity';
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Get,
+    HttpCode,
+    HttpStatus,
+    Param,
+    Patch,
+    Post,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
     PaginationQuery,
@@ -43,20 +52,24 @@ import {
 import { MARKETING_SEND_PARAM } from '../constants/marketing-send.doc.constant';
 import {
     MarketingSendCreateDoc,
+    MarketingSendDraftDoc,
     MarketingSendGetDoc,
     MarketingSendListDoc,
     MarketingSendRepliesDoc,
     MarketingSendUpdateDoc,
 } from '../docs/marketing-send.workspace.doc';
 import { MarketingSendCreateRequestDto } from '../dtos/request/marketing-send.create.request.dto';
+import { MarketingSendDraftRequestDto } from '../dtos/request/marketing-send.draft.request.dto';
 import { MarketingSendUpdateRequestDto } from '../dtos/request/marketing-send.update.request.dto';
 import {
     MarketingSendGetResponseDto,
     MarketingSendListResponseDto,
     MarketingSendReplyResponseDto,
 } from '../dtos/response/marketing-send.get.response.dto';
+import { MarketingSendDraftResponseDto } from '../dtos/response/marketing-send.draft.response.dto';
 import { ENUM_MARKETING_SEND_MODE } from '../enums/marketing-send.enum';
 import { MarketingSendEntity } from '../repository/entities/marketing-send.entity';
+import { MarketingDraftService } from '../services/marketing-draft.service';
 import { MarketingSendService } from '../services/marketing-send.service';
 
 /** Gửi theo giai đoạn and Đã gửi (#506): start a send, see what it brought. */
@@ -66,6 +79,7 @@ import { MarketingSendService } from '../services/marketing-send.service';
 export class MarketingSendWorkspaceController {
     constructor(
         private readonly sendService: MarketingSendService,
+        private readonly draftService: MarketingDraftService,
         private readonly paginationService: PaginationService,
         private readonly activityService: ActivityService
     ) {}
@@ -93,6 +107,30 @@ export class MarketingSendWorkspaceController {
         );
         await this.log(user, workspace, ENUM_ACTIVITY_ACTION.CREATE, send);
         return { data: await this.sendService.mapGet(send) };
+    }
+
+    @MarketingSendDraftDoc()
+    @Response('marketingSend.draft')
+    @WorkspacePolicyAbilityProtected({
+        subject: ENUM_POLICY_SUBJECT.MARKETING,
+        action: [ENUM_POLICY_ACTION.CREATE],
+    })
+    @UserProtected()
+    @AuthJwtAccessProtected()
+    @ApiKeyProtected()
+    @HttpCode(HttpStatus.OK)
+    @Post('/draft')
+    async draft(
+        @WorkspacePayload() workspace: WorkspaceEntity,
+        @Body() body: MarketingSendDraftRequestDto
+    ): Promise<IResponse<MarketingSendDraftResponseDto>> {
+        return {
+            data: await this.draftService.draft(
+                workspace.id,
+                workspace.name,
+                body
+            ),
+        };
     }
 
     @MarketingSendListDoc()

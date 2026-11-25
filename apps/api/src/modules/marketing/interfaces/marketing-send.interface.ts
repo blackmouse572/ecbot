@@ -15,6 +15,12 @@ export interface IMarketingSendRules {
     sendTo: string;
 }
 
+/** The confirmation a "dừng" gets: on or off, and the shop's text (null = built-in). */
+export interface IMarketingStopReply {
+    enabled: boolean;
+    text: string | null;
+}
+
 /** A customer's last message on one channel, and the conversation it is in. */
 export interface IMarketingLastInbound {
     customerId: string;

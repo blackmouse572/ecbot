@@ -81,7 +81,12 @@ function makeHarness(
         isStopMessage: jest.fn(async (_ws: string, text: string) =>
             isMarketingOptOutMessage(text)
         ),
-        stopReply: jest.fn(async (): Promise<string | null> => null),
+        stopReply: jest.fn(
+            async (): Promise<{ enabled: boolean; text: string | null }> => ({
+                enabled: true,
+                text: null,
+            })
+        ),
     };
     const sends = { markReplied: jest.fn(async () => undefined) };
     const service = new CustomerMarketingService(
@@ -204,7 +209,10 @@ describe('CustomerMarketingService', () => {
 
         it("confirms with the shop's own text, or the built-in one when it cannot be read", async () => {
             const { service, settings } = makeHarness();
-            settings.stopReply.mockResolvedValueOnce('Dạ shop ngưng gửi ạ.');
+            settings.stopReply.mockResolvedValueOnce({
+                enabled: true,
+                text: 'Dạ shop ngưng gửi ạ.',
+            });
             await expect(
                 service.stopReplyText('w1', { primaryLanguage: 'vi' })
             ).resolves.toBe('Dạ shop ngưng gửi ạ.');
@@ -213,6 +221,17 @@ describe('CustomerMarketingService', () => {
             await expect(
                 service.stopReplyText('w1', { primaryLanguage: 'vi' })
             ).resolves.toContain('dừng gửi tin ưu đãi');
+        });
+
+        it('sends no confirmation when the shop turned it off', async () => {
+            const { service, settings } = makeHarness();
+            settings.stopReply.mockResolvedValueOnce({
+                enabled: false,
+                text: 'x',
+            });
+            await expect(
+                service.stopReplyText('w1', { primaryLanguage: 'vi' })
+            ).resolves.toBeNull();
         });
 
         it('leaves the permission alone on an ordinary negative reply', async () => {

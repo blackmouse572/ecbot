@@ -16,26 +16,26 @@ from eccho_ai.core.variables import AppVars
 from eccho_ai.llm.providers.chat_model import build_chat_model
 from eccho_ai.llm.usage import sum_usage
 from eccho_ai.models.app_models import AppResponse
-from eccho_ai.modules.decision.models import DecisionQuestion, DecisionRequest, DecisionResponse
+from eccho_ai.modules.decision.constants import (
+    SYSTEM_PROMPT,
+    TEXT_ANSWER_MAX,
+    WRITE_MAX_TOKENS,
+    WRITE_SYSTEM_PROMPT,
+    WRITE_TEMPERATURE,
+    WRITE_TEXT_MAX,
+)
+from eccho_ai.modules.decision.models import (
+    DecisionQuestion,
+    DecisionRequest,
+    DecisionResponse,
+    WriteRequest,
+    WriteResponse,
+)
 
 logger = logging.getLogger("uvicorn.info")
 router = APIRouter(
     prefix="/decision", tags=["Decision"], dependencies=[Depends(require_internal_token)]
 )
-
-SYSTEM_PROMPT = """\
-You answer typed questions about a piece of state, like a calibrated classifier.
-For a "choice" question, pick exactly one option id from its options and give
-your confidence from 0 to 1 that it is the right option.
-For a "noul" question, give the probability from 0 to 1 that the answer is yes.
-For a "text" question, copy the answer from the state in its own words and
-language, or give an empty string when the state does not say.
-Judge only from the state. Do not explain.
-"""
-
-
-# Matches the profile's longest text field (PROFILE_LIMITS.longText).
-TEXT_ANSWER_MAX = 1000
 
 
 def _output_model(questions: dict[str, DecisionQuestion]) -> type[BaseModel]:
@@ -124,4 +124,32 @@ async def system_one(req: DecisionRequest) -> AppResponse[DecisionResponse]:
         data=DecisionResponse(
             answers=answers, usage=sum_usage(usage_cb.usage_metadata), model=AppVars.DECISION_MODEL
         )
+    )
+
+
+@router.post("/write", response_model=AppResponse[WriteResponse])
+async def write(req: WriteRequest) -> AppResponse[WriteResponse]:
+    """Drafts a short shop message (#506: a marketing offer) with WRITE_MODEL."""
+    # As with system-one, a failure answers 200 with an empty text: the shop
+    # can still write the message itself. Usage is reported either way.
+    with get_usage_metadata_callback() as usage_cb:
+        try:
+            llm = build_chat_model(
+                model_text_name=AppVars.WRITE_MODEL,
+                temperature=WRITE_TEMPERATURE,
+                max_tokens=WRITE_MAX_TOKENS,
+            )
+            reply = await llm.ainvoke(
+                [
+                    {"role": "system", "content": WRITE_SYSTEM_PROMPT},
+                    {"role": "user", "content": f"Instructions:\n{req.instructions}\n\nState:\n{req.state}"},
+                ]
+            )
+            text = str(reply.content).strip().strip('"').strip()[:WRITE_TEXT_MAX]
+        except Exception as exc:  # noqa: BLE001 - the shop can write it by hand
+            logger.warning("decision.write failed err=%s", exc)
+            text = ""
+
+    return AppResponse(
+        data=WriteResponse(text=text, usage=sum_usage(usage_cb.usage_metadata), model=AppVars.WRITE_MODEL)
     )

@@ -237,6 +237,11 @@ export class WidgetChatService {
                 account.workspace.id,
                 chatbot
             );
+            // The shop turned the confirmation off: the widget stays quiet.
+            if (reply === null) {
+                this.endStreamQuietly(res);
+                return;
+            }
             await this.persistReply(conversation.id, reply, []);
             this.streamFallback(res, reply);
             return;

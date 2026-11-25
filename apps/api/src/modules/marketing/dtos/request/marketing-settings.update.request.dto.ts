@@ -2,6 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
     ArrayMaxSize,
     ArrayMinSize,
+    IsBoolean,
     IsInt,
     IsNotEmpty,
     IsOptional,
@@ -96,4 +97,12 @@ export class MarketingSettingsUpdateRequestDto {
     @IsNotEmpty()
     @MaxLength(MARKETING_SETTINGS_MAX_STOP_REPLY_LENGTH)
     stopReply?: string | null;
+
+    @ApiPropertyOptional({
+        description:
+            'Gửi lời xác nhận khi khách dừng nhận tin. False: the customer gets no reply when they opt out.',
+    })
+    @ValidateIf(given)
+    @IsBoolean()
+    stopReplyEnabled?: boolean;
 }

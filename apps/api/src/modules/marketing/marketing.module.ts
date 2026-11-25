@@ -1,3 +1,4 @@
+import { AgentBuilderModule } from '@app/modules/agent-builder/agent-builder.module';
 import { CustomerEntity } from '@app/modules/customer/repository/entities/customer.entity';
 import { ConversationRepositoryModule } from '@app/modules/conversation/repository/conversation.repository.module';
 import { CloudTasksQueueModule } from '@app/worker/cloud-tasks-queue.module';
@@ -16,6 +17,7 @@ import { MarketingSettingsRepository } from './repository/repositories/marketing
 import { MarketingAudienceService } from './services/marketing-audience.service';
 import { MarketingOverviewService } from './services/marketing-overview.service';
 import { MarketingSavedAudienceService } from './services/marketing-saved-audience.service';
+import { MarketingDraftService } from './services/marketing-draft.service';
 import { MarketingSendService } from './services/marketing-send.service';
 import { MarketingSettingsService } from './services/marketing-settings.service';
 import { MarketingAutoSendScheduler } from './schedulers/marketing-auto-send.scheduler';
@@ -32,6 +34,7 @@ import { MarketingAutoSendScheduler } from './schedulers/marketing-auto-send.sch
         ]),
         ConversationRepositoryModule,
         CloudTasksQueueModule,
+        AgentBuilderModule,
     ],
     providers: [
         MarketingOverviewRepository,
@@ -45,6 +48,7 @@ import { MarketingAutoSendScheduler } from './schedulers/marketing-auto-send.sch
         MarketingSendRepository,
         MarketingMessageRepository,
         MarketingSendService,
+        MarketingDraftService,
         MarketingAutoSendScheduler,
     ],
     exports: [
@@ -53,6 +57,7 @@ import { MarketingAutoSendScheduler } from './schedulers/marketing-auto-send.sch
         MarketingSavedAudienceService,
         MarketingSettingsService,
         MarketingSendService,
+        MarketingDraftService,
     ],
 })
 export class MarketingModule {}
