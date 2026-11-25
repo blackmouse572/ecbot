@@ -8,13 +8,14 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+from pydantic import SecretStr
 
 from eccho_ai.core.variables import AppVars
 from eccho_ai.modules.decision import routers as decision_router_module
 from eccho_ai.modules.decision.decisions import (
     answers_from_decisions,
     build_request,
-    decisions_url,
+    request_decisions,
     usage_from_decisions,
 )
 from eccho_ai.modules.decision.models import DecisionQuestion
@@ -34,12 +35,49 @@ def _noul() -> DecisionQuestion:
     return DecisionQuestion(type="noul", instructions="Should it book appointments?")
 
 
-def test_decisions_url_moves_off_the_chat_gateway():
-    # The chat gateway base is .../api/v1; the Decisions route is .../api/alpha.
-    assert (
-        decisions_url("https://openrouter.ai/api/v1")
-        == "https://openrouter.ai/api/alpha/decisions"
+class _Response:
+    def raise_for_status(self) -> None:
+        return None
+
+    def json(self) -> dict[str, Any]:
+        return {"answers": {}, "usage": {"input_tokens": 1, "output_tokens": 0}}
+
+
+class _Client:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, dict[str, Any], dict[str, str]]] = []
+
+    async def __aenter__(self) -> "_Client":
+        return self
+
+    async def __aexit__(self, *_exc: object) -> bool:
+        return False
+
+    async def post(self, url: str, *, json: dict[str, Any], headers: dict[str, str]) -> _Response:
+        self.calls.append((url, json, headers))
+        return _Response()
+
+
+async def test_request_decisions_uses_the_configured_url(monkeypatch):
+    # The Decisions API is not under the chat gateway's /v1 path, so a proxy
+    # base must map to an explicit Decisions URL, not be guessed from it.
+    client = _Client()
+    monkeypatch.setattr(
+        "eccho_ai.modules.decision.decisions.httpx.AsyncClient", lambda *_a, **_k: client
     )
+    monkeypatch.setattr(AppVars, "OPENROUTER_API_KEY", SecretStr("sk-test"))
+    monkeypatch.setattr(
+        AppVars,
+        "OPENROUTER_DECISIONS_URL",
+        "https://gateway.example/openrouter/alpha/decisions",
+    )
+
+    await request_decisions({"model": JEV, "state": "x", "questions": {}})
+
+    [url, body, headers] = client.calls[0]
+    assert url == "https://gateway.example/openrouter/alpha/decisions"
+    assert body == {"model": JEV, "state": "x", "questions": {}}
+    assert headers == {"Authorization": "Bearer sk-test"}
 
 
 def test_builds_a_native_request_for_choice_and_noul():

@@ -41,6 +41,9 @@ class _AppVars(BaseSettings):
     FIRECRAWL_API_KEY: SecretStr = Field(default=SecretStr(""))
     OPENROUTER_API_KEY: SecretStr = Field(default=SecretStr(""))
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
+    # The native Decisions API is not under the chat gateway's /v1 path, so it
+    # has its own setting. A proxy/gateway overrides both URLs explicitly.
+    OPENROUTER_DECISIONS_URL: str = "https://openrouter.ai/api/alpha/decisions"
     # Which OpenRouter provider serves replies: "price", "throughput" or
     # "latency". Empty keeps OpenRouter's own routing. A request's
     # `provider_sort` wins over it.

@@ -16,18 +16,6 @@ from eccho_ai.llm.usage import TokenUsage
 from eccho_ai.modules.decision.models import DecisionQuestion
 
 
-def decisions_url(base_url: str | None = None) -> str:
-    """The Decisions endpoint for the configured gateway.
-
-    `OPENROUTER_BASE_URL` points at the chat gateway (`.../api/v1`); the
-    Decisions API lives one path up (`.../api/alpha/decisions`).
-    """
-    base = (base_url if base_url is not None else AppVars.OPENROUTER_BASE_URL).rstrip("/")
-    if base.endswith("/v1"):
-        base = base[: -len("/v1")]
-    return f"{base}/alpha/decisions"
-
-
 def build_request(
     model: str, state: str, questions: dict[str, DecisionQuestion]
 ) -> dict[str, Any]:
@@ -56,7 +44,7 @@ async def request_decisions(payload: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("OPENROUTER_API_KEY is not configured.")
     async with httpx.AsyncClient(timeout=AppVars.CHAT_MODEL_TIMEOUT_SECONDS) as client:
         response = await client.post(
-            decisions_url(),
+            AppVars.OPENROUTER_DECISIONS_URL,
             json=payload,
             headers={"Authorization": f"Bearer {api_key}"},
         )
