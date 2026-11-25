@@ -78,7 +78,7 @@ export const useConversations = (query: ConversationListQuery = {}) => {
   const slug = workspace?.slug;
 
   const { data, isError, error, ...rest } = useQuery({
-    queryKey: conversationQueryKeys.list(query),
+    queryKey: conversationQueryKeys.list({ workspace: slug, ...query }),
     enabled: !!slug,
     refetchInterval: (q) =>
       q.state.status === "error" ? false : LIST_REFETCH_MS,
