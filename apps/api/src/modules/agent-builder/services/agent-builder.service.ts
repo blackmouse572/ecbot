@@ -59,6 +59,7 @@ export class AgentBuilderService {
             const budget = (await this.meter?.check(workspaceId)) ?? { allowed: true };
             if (!budget.allowed) return EMPTY_SUGGESTION;
 
+            let extractionFailed = false;
             const [decision, extracted] = await Promise.all([
                 // The two calls fail independently: if the decisions call dies
                 // after the extraction was sent, its tokens are still spent and
@@ -75,6 +76,7 @@ export class AgentBuilderService {
                 // acceptable, so a failed extraction keeps the rest.
                 this.aiDecision.extract(state, buildExtractFields()).catch(
                     (error: unknown): IAiExtractResult => {
+                        extractionFailed = true;
                         this.logger.warn(
                             `agent builder text extraction failed: ${(error as Error).message}`
                         );
@@ -91,11 +93,12 @@ export class AgentBuilderService {
             if (!decision) return EMPTY_SUGGESTION;
             const suggestion = readSuggestAnswers(decision.answers, extracted.answers);
             // apps/ai answers `{}` on any failure: never cache that for 24h.
-            // A failed or empty extraction has no prefilled details either, so
-            // caching it would hide the business name/hours until the TTL ends.
+            // A failed extraction has no prefilled details either, so caching
+            // it would hide them until the TTL ends. A successful extraction
+            // that found nothing is a real answer for that description, so it
+            // is cached instead of re-running both models every time.
             const empty = !decision.answers || Object.keys(decision.answers).length === 0;
-            const missingTexts = Object.keys(suggestion.texts).length === 0;
-            if (empty || missingTexts || suggestion.businessType === null) return suggestion;
+            if (empty || extractionFailed || suggestion.businessType === null) return suggestion;
             await this.cache.set(key, suggestion, this.config.get<number>('agentBuilder.suggestTtlMs'));
             return suggestion;
         } catch (error) {

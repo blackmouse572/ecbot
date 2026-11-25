@@ -168,12 +168,14 @@ describe('AgentBuilderService.suggest', () => {
         expect(cache.set).not.toHaveBeenCalled();
     });
 
-    it('does not cache a suggestion whose extraction returned only empty details', async () => {
-        const { service, cache } = setup({ texts: { business_name: '   ', opening_hours: '' } });
-        const out = await service.suggest('ws-1', 'Nail spa');
+    it('caches a suggestion when extraction succeeds but finds no details', async () => {
+        // Re-running both models for a description that states nothing would
+        // just spend the same tokens again.
+        const { service, cache } = setup({ texts: {} });
+        const out = await service.suggest('ws-1', 'a bot for my spa');
         expect(out.businessType).toEqual({ value: 'beauty', confidence: 0.95 });
         expect(out.texts).toEqual({});
-        expect(cache.set).not.toHaveBeenCalled();
+        expect(cache.set).toHaveBeenCalledTimes(1);
     });
 
     it('meters each model call as its own row, at its own model', async () => {
