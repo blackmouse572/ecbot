@@ -6829,6 +6829,10 @@ export type MarketingEventGetResponseDto = {
     productGroupId?: {
         [key: string]: unknown;
     } | null;
+    /**
+     * SOURCE events: the tracked link the customer arrived through. Null when the link was deleted.
+     */
+    source?: CustomerMarketingFirstSourceResponseDto | null;
 };
 
 export type CustomerMarketingFreeWindowResponseDto = {
@@ -6867,6 +6871,10 @@ export type CustomerMarketingStateGetResponseDto = {
      */
     firstSource: CustomerMarketingFirstSourceResponseDto | null;
     consentAskedAt?: string | null;
+    /**
+     * Every tracked link the customer arrived through, with the first time, oldest first.
+     */
+    sources: Array<CustomerMarketingFirstSourceResponseDto>;
     lastInboundAt?: string | null;
     /**
      * The latest stage change: why the customer is here.
@@ -6945,11 +6953,15 @@ export type TrackedLinkAccountResponseDto = {
 export type TrackedLinkStatsResponseDto = {
     newCustomers: number;
     /**
-     * Asked the price or bought (stage ASKED_PRICE or later)
+     * Earlier customers (first source elsewhere) who later arrived through this link
+     */
+    returningCustomers: number;
+    /**
+     * New or returning, and asked the price or bought (stage ASKED_PRICE or later)
      */
     potentialCustomers: number;
     /**
-     * Confirmed orders since the customer arrived
+     * Confirmed orders whose last arrival before the order was through this link
      */
     orders: number;
 };
