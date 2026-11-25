@@ -11,7 +11,7 @@ const LABELS = {
     toStaff: "Agent hands over, or Pause bot",
     toBot: "Switch the bot on",
     resolve: "Resolve",
-    reopen: ["Customer writes again,", "or Restore to auto"],
+    reopen: ["Customer", "writes again"],
     footer:
       "A new request that needs staff hands over again, even after Resolved.",
   },
@@ -27,7 +27,7 @@ const LABELS = {
     toStaff: "Agent chuyển, hoặc Tạm dừng bot",
     toBot: "Bật bot lại",
     resolve: "Đã xử lý",
-    reopen: ["Khách nhắn tin mới,", "hoặc Khôi phục tự động"],
+    reopen: ["Khách", "nhắn tin mới"],
     footer:
       "Yêu cầu mới cần nhân viên vẫn được chuyển lại, kể cả sau khi Đã xử lý.",
   },

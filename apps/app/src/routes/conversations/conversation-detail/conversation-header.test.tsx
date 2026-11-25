@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("react-i18next", () => ({
@@ -8,7 +9,13 @@ vi.mock("react-i18next", () => ({
 vi.mock("@/components/platform-icon/platform-icon", () => ({
   PlatformIcon: () => null,
 }));
-vi.mock("./bot-pause-switch", () => ({ BotPauseSwitch: () => null }));
+vi.mock("@/hooks/api/conversations", () => ({
+  useUpdateConversationBot: () => ({ mutate: vi.fn(), isPending: false }),
+  useUpdateConversationStatus: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+}));
 vi.mock("../components/status-pill", () => ({ StatusPill: () => null }));
 vi.mock("../components/chatbot-badge", () => ({ ChatbotBadge: () => null }));
 
@@ -18,7 +25,10 @@ const conversation = {
   id: "c1",
   senderId: "s1",
   senderName: "Ngoc",
+  status: "OPEN",
+  botEnabled: true,
   account: { name: "Shop", type: "WEBSITE_WIDGET" },
+  chatbot: { id: "b1" },
 } as never;
 
 describe("ConversationHeader", () => {
@@ -32,8 +42,18 @@ describe("ConversationHeader", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("has no extra actions menu", () => {
-    render(<ConversationHeader conversation={conversation} />);
+  it("shows only the bot switch, with no actions menu", () => {
+    render(
+      <MemoryRouter initialEntries={["/shop/conversations"]}>
+        <Routes>
+          <Route
+            path="/:workspaceSlug/conversations"
+            element={<ConversationHeader conversation={conversation} />}
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole("switch")).toBeInTheDocument();
     expect(screen.queryAllByRole("button")).toHaveLength(0);
   });
 
