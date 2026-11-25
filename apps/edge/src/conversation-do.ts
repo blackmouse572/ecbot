@@ -22,53 +22,78 @@ export class ConversationDebounceDO {
   // In memory on purpose: if the isolate restarts mid-reply, that reply's
   // request is gone too, so nothing must stay held behind it.
   private replying = false;
+  // Storage reads and writes below are separated by awaits, so a fetch can
+  // interleave with the alarm draining the buffer: the message it saves lands
+  // after the reads but before deleteAll(), and is erased. Serialize those
+  // sections — not the reply itself, or inbound webhooks would wait for it.
+  private queue: Promise<void> = Promise.resolve();
 
   constructor(private state: DurableObjectState) {}
 
+  private exclusive<T>(fn: () => Promise<T>): Promise<T> {
+    const result = this.queue.then(fn);
+    this.queue = result.then(
+      () => undefined,
+      () => undefined,
+    );
+    return result;
+  }
+
   async fetch(req: Request): Promise<Response> {
-    const body = await req.json<Meta & { text: string; messageId?: string }>();
-    const texts = (await this.state.storage.get<string[]>("texts")) ?? [];
-    texts.push(body.text);
-    await this.state.storage.put("texts", texts);
-    // Each text's saved row (or null), so a steered one can be dropped.
-    const textIds =
-      (await this.state.storage.get<(string | null)[]>("textIds")) ?? [];
-    textIds.push(body.messageId ?? null);
-    await this.state.storage.put("textIds", textIds);
-    // The saved rows of the burst, so apps/api finds them by id.
-    if (body.messageId) {
-      const ids = (await this.state.storage.get<string[]>("messageIds")) ?? [];
-      ids.push(body.messageId);
-      await this.state.storage.put("messageIds", ids);
-    }
-    await this.state.storage.put("meta", {
-      conversationId: body.conversationId,
-      senderId: body.senderId,
-      customerId: body.customerId,
-      contactPointId: body.contactPointId,
-    } satisfies Meta);
-    // (Re)set the alarm — each new message pushes the debounce window out.
-    // While a reply runs, the alarm waits for it (see followUp).
-    if (!this.replying)
-      await this.state.storage.setAlarm(Date.now() + DEBOUNCE_MS);
-    return new Response("scheduled");
+    return this.exclusive(async () => {
+      const body = await req.json<
+        Meta & { text: string; messageId?: string }
+      >();
+      const texts = (await this.state.storage.get<string[]>("texts")) ?? [];
+      texts.push(body.text);
+      await this.state.storage.put("texts", texts);
+      // Each text's saved row (or null), so a steered one can be dropped.
+      const textIds =
+        (await this.state.storage.get<(string | null)[]>("textIds")) ?? [];
+      textIds.push(body.messageId ?? null);
+      await this.state.storage.put("textIds", textIds);
+      // The saved rows of the burst, so apps/api finds them by id.
+      if (body.messageId) {
+        const ids = (await this.state.storage.get<string[]>("messageIds")) ?? [];
+        ids.push(body.messageId);
+        await this.state.storage.put("messageIds", ids);
+      }
+      await this.state.storage.put("meta", {
+        conversationId: body.conversationId,
+        senderId: body.senderId,
+        customerId: body.customerId,
+        contactPointId: body.contactPointId,
+      } satisfies Meta);
+      // (Re)set the alarm — each new message pushes the debounce window out.
+      // While a reply runs, the alarm waits for it (see followUp).
+      if (!this.replying)
+        await this.state.storage.setAlarm(Date.now() + DEBOUNCE_MS);
+      return new Response("scheduled");
+    });
   }
 
   async alarm(): Promise<void> {
-    const texts = (await this.state.storage.get<string[]>("texts")) ?? [];
-    const messageIds =
-      (await this.state.storage.get<string[]>("messageIds")) ?? [];
-    const meta = await this.state.storage.get<Meta>("meta");
-    await this.state.storage.deleteAll();
-    if (!meta || texts.length === 0) return;
-    this.replying = true;
+    const burst = await this.exclusive(async () => {
+      const texts = (await this.state.storage.get<string[]>("texts")) ?? [];
+      const messageIds =
+        (await this.state.storage.get<string[]>("messageIds")) ?? [];
+      const meta = await this.state.storage.get<Meta>("meta");
+      await this.state.storage.deleteAll();
+      if (!meta || texts.length === 0) return null;
+      // Set while the buffer is still locked: the next fetch must see the
+      // reply in flight and hold, not schedule over it.
+      this.replying = true;
+      return { ...meta, texts, messageIds };
+    });
+    if (!burst) return;
     let steered: string[] = [];
     try {
-      steered = await this.reply({ ...meta, texts, messageIds });
+      steered = await this.reply(burst);
+      await this.exclusive(() => this.followUp(steered));
     } finally {
+      // followUp also clears it under the lock; this covers a throwing reply.
       this.replying = false;
     }
-    await this.followUp(steered);
   }
 
   /** Run one reply turn. Returns the held messages the turn steered in. */
@@ -100,27 +125,34 @@ export class ConversationDebounceDO {
 
   /** Answer what arrived during the reply and was not steered into it. */
   private async followUp(steered: string[]): Promise<void> {
-    const texts = (await this.state.storage.get<string[]>("texts")) ?? [];
-    if (texts.length === 0) return;
-    const textIds =
-      (await this.state.storage.get<(string | null)[]>("textIds")) ?? [];
-    const keep = texts.map((_, i) => {
-      const id = textIds[i];
-      return !id || !steered.includes(id);
-    });
-    if (!keep.includes(true)) {
-      await this.state.storage.deleteAll();
-      return;
+    try {
+      const texts = (await this.state.storage.get<string[]>("texts")) ?? [];
+      if (texts.length === 0) return;
+      const textIds =
+        (await this.state.storage.get<(string | null)[]>("textIds")) ?? [];
+      const keep = texts.map((_, i) => {
+        const id = textIds[i];
+        return !id || !steered.includes(id);
+      });
+      if (!keep.includes(true)) {
+        await this.state.storage.deleteAll();
+        return;
+      }
+      const kept = <T>(list: T[]) => list.filter((_, i) => keep[i]);
+      await this.state.storage.put("texts", kept(texts));
+      await this.state.storage.put("textIds", kept(textIds));
+      const messageIds =
+        (await this.state.storage.get<string[]>("messageIds")) ?? [];
+      await this.state.storage.put(
+        "messageIds",
+        messageIds.filter((id) => !steered.includes(id)),
+      );
+      await this.state.storage.setAlarm(Date.now() + DEBOUNCE_MS);
+    } finally {
+      // Cleared while the buffer is still locked: a fetch queued behind this
+      // follow-up must schedule its own alarm, and one queued before it has
+      // already been read into `texts` above.
+      this.replying = false;
     }
-    const kept = <T>(list: T[]) => list.filter((_, i) => keep[i]);
-    await this.state.storage.put("texts", kept(texts));
-    await this.state.storage.put("textIds", kept(textIds));
-    const messageIds =
-      (await this.state.storage.get<string[]>("messageIds")) ?? [];
-    await this.state.storage.put(
-      "messageIds",
-      messageIds.filter((id) => !steered.includes(id)),
-    );
-    await this.state.storage.setAlarm(Date.now() + DEBOUNCE_MS);
   }
 }

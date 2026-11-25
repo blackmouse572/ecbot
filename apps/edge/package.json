@@ -6,6 +6,7 @@
     "dev": "wrangler dev --env-file .env",
     "deploy": "wrangler deploy",
     "test": "vitest run",
+    "check-types": "tsc --noEmit",
     "cf-typegen": "wrangler types"
   },
   "dependencies": {

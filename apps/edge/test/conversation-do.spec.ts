@@ -57,7 +57,9 @@ describe("ConversationDebounceDO", () => {
   });
 
   it("alarm posts the buffered texts to /poc/reply and clears state", async () => {
-    const fetchMock = vi.fn(async () => new Response("ok", { status: 200 }));
+    const fetchMock = vi.fn(
+      async (..._args: unknown[]) => new Response("ok", { status: 200 }),
+    );
     vi.stubGlobal("fetch", fetchMock);
     const state = mkState();
     await state.storage.put("texts", ["a", "b"]);
@@ -81,7 +83,9 @@ describe("ConversationDebounceDO", () => {
   // apps/api finds the burst's rows by id; counting the last rows breaks
   // when another message is saved before the Turn reads them.
   it("carries the saved message ids of the burst to /poc/reply", async () => {
-    const fetchMock = vi.fn(async () => new Response("ok", { status: 200 }));
+    const fetchMock = vi.fn(
+      async (..._args: unknown[]) => new Response("ok", { status: 200 }),
+    );
     vi.stubGlobal("fetch", fetchMock);
     const state = mkState();
     const sut = new ConversationDebounceDO(state as any);
@@ -266,6 +270,58 @@ describe("ConversationDebounceDO", () => {
       await replying;
       expect(state.storage.setAlarm).toHaveBeenCalledTimes(1);
       expect(await state.storage.get("texts")).toBeUndefined();
+    });
+
+    it("keeps a message that arrives while the alarm drains the buffer", async () => {
+      const fetchMock = vi.fn(
+        async (..._args: unknown[]) => new Response("ok", { status: 200 }),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+
+      // Pause the alarm's first read, so the next message lands between the
+      // reads and deleteAll() — the window that used to erase it.
+      let release!: () => void;
+      const gate = new Promise<void>((resolve) => (release = resolve));
+      let started!: () => void;
+      const reading = new Promise<void>((resolve) => (started = resolve));
+      let gated = false;
+      const store = new Map<string, unknown>();
+      const state = {
+        storage: {
+          get: async (k: string) => {
+            if (k === "texts" && !gated) {
+              gated = true;
+              started();
+              await gate;
+            }
+            return store.get(k);
+          },
+          put: async (k: string, v: unknown) => void store.set(k, v),
+          deleteAll: async () => store.clear(),
+          setAlarm: vi.fn(async () => {}),
+        },
+      };
+      await state.storage.put("texts", ["first"]);
+      await state.storage.put("messageIds", ["m-1"]);
+      await state.storage.put("meta", {
+        conversationId: "c",
+        senderId: "s",
+        customerId: "cu",
+        contactPointId: "cp",
+      });
+      const sut = new ConversationDebounceDO(
+        state as unknown as DurableObjectState, // storage-only mock
+      );
+      const alarming = sut.alarm();
+      await reading;
+      const sending = send(sut, "second", "m-2");
+      release();
+      await Promise.all([alarming, sending]);
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(await state.storage.get("texts")).toEqual(["second"]);
+      expect(await state.storage.get("messageIds")).toEqual(["m-2"]);
+      expect(state.storage.setAlarm).toHaveBeenCalledTimes(1);
     });
   });
 });
