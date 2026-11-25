@@ -415,6 +415,29 @@ export class MarketingSendService {
         );
     }
 
+    /**
+     * Left out at the start or skipped later, one row per reason. The start is
+     * a count frozen at create, so a customer left out then and skipped on a
+     * later day cannot be told apart from two customers: a reason in both
+     * shows the larger count, never one customer twice.
+     */
+    private notSent(
+        excluded: MarketingSendEntity['excluded'],
+        skipped: { reason: string; count: number }[]
+    ): { reason: string; count: number }[] {
+        const counts = new Map<string, number>();
+        for (const { reason, count } of [
+            ...Object.entries(excluded).map(([reason, count]) => ({
+                reason,
+                count: count ?? 0,
+            })),
+            ...skipped,
+        ]) {
+            counts.set(reason, Math.max(counts.get(reason) ?? 0, count));
+        }
+        return [...counts].map(([reason, count]) => ({ reason, count }));
+    }
+
     /** A send with its results: totals, by channel, and who was not sent to. */
     async mapGet(
         send: MarketingSendEntity
@@ -430,13 +453,7 @@ export class MarketingSendService {
                 ...this.fields(send),
                 stats,
                 channels,
-                notSent: [
-                    ...Object.entries(send.excluded).map(([reason, count]) => ({
-                        reason,
-                        count,
-                    })),
-                    ...skipped,
-                ],
+                notSent: this.notSent(send.excluded, skipped),
             },
             { excludeExtraneousValues: true }
         );

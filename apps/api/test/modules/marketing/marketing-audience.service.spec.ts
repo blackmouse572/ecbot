@@ -64,6 +64,7 @@ describe('MarketingAudienceService', () => {
                     { reason: X.HOSTILE, count: 0 },
                     { reason: X.PAUSED, count: 2 },
                     { reason: X.DEFERRED, count: 0 },
+                    { reason: X.OFFERED_TODAY, count: 0 },
                     { reason: X.CAPPED, count: 0 },
                     { reason: X.RESTING, count: 0 },
                 ],

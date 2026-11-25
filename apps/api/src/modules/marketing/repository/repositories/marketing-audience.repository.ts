@@ -19,6 +19,7 @@ import {
 } from '../../interfaces/marketing-audience.interface';
 import {
     CAPPED,
+    OFFERED_TODAY,
     K,
     LIVE,
     P,
@@ -32,7 +33,7 @@ import {
 } from '../marketing.sql';
 
 // Condition values are always bound through `?`; only enum values and
-// column names are inlined. The send rules ride along for CAPPED and RESTING.
+// column names are inlined. The send rules ride along for OFFERED_TODAY, CAPPED and RESTING.
 const WINDOW = `w AS (
     SELECT ?::uuid AS ws, ?::timestamptz AS now, ?::date AS today,
            ?::int AS cap, ?::int AS rest_after, ?::int AS rest_days
@@ -210,6 +211,7 @@ const picked = (audience: IMarketingAudience): IMarketingSql => {
                    WHEN l.hostile THEN '${X.HOSTILE}'
                    WHEN ${PAUSED} THEN '${X.PAUSED}'
                    ${deferred ? `WHEN ${deferred.sql} THEN '${X.DEFERRED}'` : ''}
+                   WHEN ${OFFERED_TODAY} THEN '${X.OFFERED_TODAY}'
                    WHEN ${CAPPED} THEN '${X.CAPPED}'
                    WHEN ${RESTING} THEN '${X.RESTING}'
                END AS reason
