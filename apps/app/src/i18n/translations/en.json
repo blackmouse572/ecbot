@@ -3427,7 +3427,6 @@
       "status": "Status",
       "kind": "Type",
       "newCustomers": "New customers",
-      "returningCustomers": "Returning",
       "potentialCustomers": "Potential",
       "orders": "Orders",
       "closeRate": "Close rate",
@@ -3436,14 +3435,12 @@
     },
     "stats": {
       "newCustomers": "New customers",
-      "returningCustomers": "Returning customers",
       "since": "Since {{date}}",
       "potentialCustomers": "Potential customers",
-      "potentialHint": "New or returning, asked the price or ordered",
+      "potentialHint": "Asked the price or ordered",
       "orders": "Orders",
-      "ordersHint": "Counted for the last source before the order",
-      "returningHint": "Earlier customers who came back through this source",
-      "closeRate": "Close rate {{rate}}"
+      "ordersHint": "Confirmed orders since the customer arrived",
+      "closeRateHint": "Orders per new customer"
     },
     "status": {
       "ACTIVE": "In use",

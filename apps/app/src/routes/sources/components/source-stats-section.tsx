@@ -9,14 +9,12 @@ type SourceStatsSectionProps = {
   source: TrackedLinkDetailResponseDto;
 };
 
-/** The four counts on a source's page, its QR and KOL codes included. The
- *  close rate rides under Đơn hàng. */
+/** The four counts on a source's page, its QR and KOL codes included. */
 export const SourceStatsSection: FC<SourceStatsSectionProps> = ({ source }) => {
   const { t, i18n } = useTranslation();
   const { getFullDate } = useDate();
   const stats = source.stats ?? {
     newCustomers: 0,
-    returningCustomers: 0,
     potentialCustomers: 0,
     orders: 0,
   };
@@ -34,27 +32,21 @@ export const SourceStatsSection: FC<SourceStatsSectionProps> = ({ source }) => {
       />
       <Stat
         className="border-l"
-        label={t("customerSources.stats.returningCustomers")}
-        value={number.format(stats.returningCustomers)}
-        hint={t("customerSources.stats.returningHint")}
-      />
-      <Stat
-        className="border-t lg:border-l lg:border-t-0"
         label={t("customerSources.stats.potentialCustomers")}
         value={number.format(stats.potentialCustomers)}
         hint={t("customerSources.stats.potentialHint")}
       />
       <Stat
-        className="border-l border-t lg:border-t-0"
+        className="border-t lg:border-l lg:border-t-0"
         label={t("customerSources.stats.orders")}
         value={number.format(stats.orders)}
-        hint={
-          rate === null
-            ? t("customerSources.stats.ordersHint")
-            : t("customerSources.stats.closeRate", {
-                rate: formatRate(rate, i18n.language),
-              })
-        }
+        hint={t("customerSources.stats.ordersHint")}
+      />
+      <Stat
+        className="border-l border-t lg:border-t-0"
+        label={t("customerSources.columns.closeRate")}
+        value={rate === null ? "–" : formatRate(rate, i18n.language)}
+        hint={t("customerSources.stats.closeRateHint")}
       />
     </div>
   );

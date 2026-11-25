@@ -91,13 +91,6 @@ export const SourceLinksSection: FC<SourceLinksSectionProps> = ({ source }) => {
             <Text
               size="small"
               weight="plus"
-              className="hidden w-20 shrink-0 text-right text-ui-fg-subtle md:block"
-            >
-              {t("customerSources.columns.returningCustomers")}
-            </Text>
-            <Text
-              size="small"
-              weight="plus"
               className="hidden w-14 shrink-0 text-right text-ui-fg-subtle md:block"
             >
               {t("customerSources.columns.ordersShort")}

@@ -3456,7 +3456,6 @@
       "status": "Trạng thái",
       "kind": "Loại",
       "newCustomers": "Khách mới",
-      "returningCustomers": "Quay lại",
       "potentialCustomers": "Tiềm năng",
       "orders": "Đơn hàng",
       "closeRate": "Tỉ lệ chốt",
@@ -3465,14 +3464,12 @@
     },
     "stats": {
       "newCustomers": "Khách mới",
-      "returningCustomers": "Khách quay lại",
       "since": "Từ {{date}} đến nay",
       "potentialCustomers": "Khách tiềm năng",
-      "potentialHint": "Mới hoặc quay lại, đã hỏi giá hoặc đặt đơn",
+      "potentialHint": "Đã hỏi giá hoặc đã đặt đơn",
       "orders": "Đơn hàng",
-      "ordersHint": "Tính cho nguồn khách đến gần nhất trước khi đặt",
-      "returningHint": "Khách cũ quay lại qua nguồn này",
-      "closeRate": "Tỉ lệ chốt {{rate}}"
+      "ordersHint": "Đơn đã xác nhận, kể từ khi khách đến",
+      "closeRateHint": "Số đơn trên mỗi khách mới"
     },
     "status": {
       "ACTIVE": "Đang dùng",

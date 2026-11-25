@@ -31,14 +31,11 @@ export interface ITrackedLinkArrival {
     messageId?: string;
 }
 
-/** Nguồn khách counts for one tracked link. */
+/** Nguồn khách counts, by each customer's first source. */
 export interface ITrackedLinkStats {
-    /** Customers whose first source was this link. */
     newCustomers: number;
-    /** Earlier customers who later arrived through this link. */
-    returningCustomers: number;
-    /** New or returning, and asked the price or bought (Hỏi giá and later). */
+    /** Asked the price or bought (stage Hỏi giá and later). */
     potentialCustomers: number;
-    /** Confirmed orders whose last link before the order was this one. */
+    /** Confirmed orders since the customer arrived. */
     orders: number;
 }

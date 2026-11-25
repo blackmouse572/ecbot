@@ -236,7 +236,7 @@ export class TrackedLinkService {
             children: TrackedLinkEntity[]
         ) => ITrackedLinkStats
     > {
-        const rows = await this.marketingStateRepository.statsBySource(
+        const rows = await this.marketingStateRepository.statsByFirstSource(
             workspaceId,
             links.map(link => link.id)
         );
@@ -248,21 +248,13 @@ export class TrackedLinkService {
                     return {
                         newCustomers:
                             sum.newCustomers + (row?.newCustomers ?? 0),
-                        returningCustomers:
-                            sum.returningCustomers +
-                            (row?.returningCustomers ?? 0),
                         potentialCustomers:
                             sum.potentialCustomers +
                             (row?.potentialCustomers ?? 0),
                         orders: sum.orders + (row?.orders ?? 0),
                     };
                 },
-                {
-                    newCustomers: 0,
-                    returningCustomers: 0,
-                    potentialCustomers: 0,
-                    orders: 0,
-                }
+                { newCustomers: 0, potentialCustomers: 0, orders: 0 }
             );
     }
 

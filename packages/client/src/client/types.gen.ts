@@ -6953,15 +6953,11 @@ export type TrackedLinkAccountResponseDto = {
 export type TrackedLinkStatsResponseDto = {
     newCustomers: number;
     /**
-     * Earlier customers (first source elsewhere) who later arrived through this link
-     */
-    returningCustomers: number;
-    /**
-     * New or returning, and asked the price or bought (stage ASKED_PRICE or later)
+     * Asked the price or bought (stage ASKED_PRICE or later)
      */
     potentialCustomers: number;
     /**
-     * Confirmed orders whose last arrival before the order was through this link
+     * Confirmed orders since the customer arrived
      */
     orders: number;
 };
