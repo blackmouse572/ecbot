@@ -315,7 +315,7 @@ Passing an object as the log message puts its fields at the top level of
 
 ```typescript
 this.logger.warn(
-    { event: 'reply.missed', source: 'sweep', conversationId, platform },
+    { event: 'reply.missed', source: 'check', conversationId, platform },
     'inbound message left unanswered by the bot'
 );
 ```
@@ -323,9 +323,9 @@ this.logger.warn(
 Cloud Monitoring definitions for these events live in `scripts/monitoring/`
 and are applied with `scripts/apply-monitoring.sh <project-id> <channel-id>`.
 
-| Event          | Emitted by                                                                  | Fields                                                                                 |
-| -------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `reply.missed` | `ReplyMissedAlertService` (a `failed` turn, the edge reply path, the sweep) | `source`, `conversationId`, `chatbotId`, `workspaceId`, `platform`, `ageSec`, `reason` |
+| Event          | Emitted by                                                                          | Fields                                                                                 |
+| -------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `reply.missed` | `ReplyMissedAlertService` (a `failed` turn, the edge reply path, the delayed check) | `source`, `conversationId`, `chatbotId`, `workspaceId`, `platform`, `ageSec`, `reason` |
 
 ## File Logging
 

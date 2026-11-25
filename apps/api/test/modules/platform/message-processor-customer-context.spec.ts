@@ -106,7 +106,8 @@ describe('MessageProcessorService — threads customer_id + contact_point_id int
             chatbotAIService as any,
             lease as any,
             { claim: jest.fn().mockResolvedValue(true) } as any,
-            {} as any
+            {} as any,
+            { scheduleCheck: jest.fn().mockResolvedValue(undefined) } as any
         );
         processor.onModuleInit();
 

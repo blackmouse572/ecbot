@@ -39,15 +39,16 @@ A thrown handler returns 5xx and Cloud Tasks retries the task with the queue's r
 
 ## Queues
 
-| Queue                     | Consumer                              | Notes                                            |
-| ------------------------- | ------------------------------------- | ------------------------------------------------ |
-| `email`                   | `EmailTaskController`                 |                                                  |
-| `sms`                     | `SmsTaskController`                   |                                                  |
-| `followup`                | `FollowupTaskController`              | delayed with `scheduleTime`                      |
-| `knowledge-ingest`        | `KnowledgeIngestTaskController`       |                                                  |
-| `customer-tag-classifier` | `CustomerTagClassifierTaskController` |                                                  |
-| `inbound-event`           | `InboundEventTaskController`          | Inbound Inbox, runs the Turn pipeline (ADR-0008) |
-| `conversation-memory`     | `ConversationMemoryTaskController`    | folds history past the window into the summary   |
+| Queue                     | Consumer                              | Notes                                             |
+| ------------------------- | ------------------------------------- | ------------------------------------------------- |
+| `email`                   | `EmailTaskController`                 |                                                   |
+| `sms`                     | `SmsTaskController`                   |                                                   |
+| `followup`                | `FollowupTaskController`              | delayed with `scheduleTime`                       |
+| `knowledge-ingest`        | `KnowledgeIngestTaskController`       |                                                   |
+| `customer-tag-classifier` | `CustomerTagClassifierTaskController` |                                                   |
+| `inbound-event`           | `InboundEventTaskController`          | Inbound Inbox, runs the Turn pipeline (ADR-0008)  |
+| `conversation-memory`     | `ConversationMemoryTaskController`    | folds history past the window into the summary    |
+| `reply-missed`            | `ReplyMissedTaskController`           | delayed check that a customer message got a reply |
 
 A new queue must also be created in each GCP environment and added to the emulator's `-initial-queue` list in `docker-compose.yml`. Always set the retry and dispatch limits: the Cloud Tasks defaults (100 attempts, up to 1h backoff, 1000 concurrent dispatches) retry a poison job for days and let a burst flood Postgres. For example, the inbound queue (ADR-0008):
 

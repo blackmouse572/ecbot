@@ -1,36 +1,34 @@
 {
-    "displayName": "reply missed: inbound message left unanswered",
-    "documentation": {
-        "mimeType": "text/markdown",
-        "content": "A customer message got no bot reply. The metric counts structured `reply.missed` warns emitted by apps/api:\n\n- `source=turn` / `source=poc-reply`: a reply turn completed with a `failed` outcome (nothing reached the customer).\n- `source=sweep`: an inbound message older than 5 minutes still had no SENT outbound row and no handoff (the turn never ran or died).\n\nDeliberate silences are excluded: bot disabled, conversation handed over or resolved, turned-off chatbot, suspended workspace, replayed history. `platform` is the channel; `conversationId`, `chatbotId` and `workspaceId` are in the log payload. Redis dedupes one message to one alert per hour. Issue #601."
-    },
-    "combiner": "OR",
-    "conditions": [
-        {
-            "displayName": "reply.missed events in 60s",
-            "conditionThreshold": {
-                "filter": "metric.type=\"logging.googleapis.com/user/reply_missed\" AND resource.type=\"cloud_run_revision\"",
-                "comparison": "COMPARISON_GT",
-                "thresholdValue": 0,
-                "duration": "0s",
-                "trigger": {
-                    "count": 1
-                },
-                "aggregations": [
-                    {
-                        "alignmentPeriod": "60s",
-                        "perSeriesAligner": "ALIGN_SUM",
-                        "crossSeriesReducer": "REDUCE_SUM",
-                        "groupByFields": [
-                            "metric.label.platform"
-                        ]
-                    }
-                ]
-            }
-        }
-    ],
-    "alertStrategy": {
-        "autoClose": "1800s"
-    },
-    "notificationChannels": []
+  "displayName": "reply missed: inbound message left unanswered",
+  "documentation": {
+    "mimeType": "text/markdown",
+    "content": "A customer message got no bot reply. The metric counts structured `reply.missed` warns emitted by apps/api:\n\n- `source=turn` / `source=poc-reply`: a reply turn completed with a `failed` outcome (nothing reached the customer).\n- `source=check`: the delayed per-message check, five minutes after the inbound row was saved, found no SENT outbound row and no handoff (the turn never ran or died).\n\nDeliberate silences are excluded: bot disabled, conversation handed over or resolved, turned-off chatbot, suspended workspace, replayed history. `platform` is the channel; `conversationId`, `chatbotId` and `workspaceId` are in the log payload. Redis dedupes one message to one alert per hour. Issue #601."
+  },
+  "combiner": "OR",
+  "conditions": [
+    {
+      "displayName": "reply.missed events in 60s",
+      "conditionThreshold": {
+        "filter": "metric.type=\"logging.googleapis.com/user/reply_missed\" AND resource.type=\"cloud_run_revision\"",
+        "comparison": "COMPARISON_GT",
+        "thresholdValue": 0,
+        "duration": "0s",
+        "trigger": {
+          "count": 1
+        },
+        "aggregations": [
+          {
+            "alignmentPeriod": "60s",
+            "perSeriesAligner": "ALIGN_SUM",
+            "crossSeriesReducer": "REDUCE_SUM",
+            "groupByFields": ["metric.label.platform"]
+          }
+        ]
+      }
+    }
+  ],
+  "alertStrategy": {
+    "autoClose": "1800s"
+  },
+  "notificationChannels": []
 }

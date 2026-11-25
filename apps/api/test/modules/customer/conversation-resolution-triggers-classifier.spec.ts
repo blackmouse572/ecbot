@@ -215,7 +215,8 @@ describe('Classifier wiring (#170)', () => {
                     isCurrent: jest.fn().mockResolvedValue(true),
                 } as any,
                 { claim: jest.fn().mockResolvedValue(true) } as any,
-                {} as any
+                {} as any,
+                { scheduleCheck: jest.fn().mockResolvedValue(undefined) } as any
             );
             processor.onModuleInit();
 

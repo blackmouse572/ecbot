@@ -444,10 +444,9 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
     }
 
     /**
-     * Inbound customer messages the bot left unanswered, created in
-     * `[newerThan, olderThan)`. Raw SQL: it spans messages, conversations,
-     * chatbots, workspaces and activities, and has to read rows the Turn
-     * never touched.
+     * One inbound customer message if the bot left it unanswered. Raw SQL: it
+     * spans messages, conversations, chatbots, workspaces and activities, and
+     * has to read rows the Turn never touched.
      *
      * Answered means a later SENT outbound row (BOT/OPERATOR/SYSTEM) or a
      * handoff raised after the message. A PENDING or FAILED send is a miss:
@@ -456,11 +455,9 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
      * nothing. Replayed history, handed-over or resolved conversations, a
      * turned-off chatbot and a suspended workspace are deliberate silences.
      */
-    async findUnansweredInbound(
-        newerThan: Date,
-        olderThan: Date,
-        limit: number
-    ): Promise<IUnansweredInboundRow[]> {
+    async findUnansweredInboundById(
+        messageId: string
+    ): Promise<IUnansweredInboundRow | null> {
         // MikroORM types execute() as `any`; the columns are the SELECT's.
         const rows = (await this.em.getConnection().execute(
             `SELECT m.id AS message_id,
@@ -474,12 +471,11 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
                JOIN chatbots cb ON cb.id = conv.chatbot_id
                JOIN workspaces w ON w.id = cb.workspace_id
                JOIN accounts acc ON acc.id = conv.account_id
-              WHERE m.direction = 'INBOUND'
+              WHERE m.id = ?
+                AND m.direction = 'INBOUND'
                 AND m.author_type = 'USER'
                 AND m.replayed = false
                 AND m.deleted_at IS NULL
-                AND m.created_at >= ?
-                AND m.created_at < ?
                 AND conv.bot_enabled = true
                 AND conv.status = 'OPEN'
                 AND conv.resolved_at IS NULL
@@ -508,9 +504,8 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
                        AND a.deleted_at IS NULL
                        AND a.created_at >= m.created_at
                 )
-              ORDER BY m.created_at
-              LIMIT ?`,
-            [newerThan, olderThan, limit]
+              LIMIT 1`,
+            [messageId]
         )) as Array<{
             message_id: string;
             created_at: Date;
@@ -520,13 +515,16 @@ export class MessageRepository extends DatabaseRepository<MessageEntity> {
             platform: string;
         }>;
 
-        return rows.map(row => ({
+        const row = rows[0];
+        if (!row) return null;
+
+        return {
             messageId: row.message_id,
             createdAt: row.created_at,
             conversationId: row.conversation_id,
             chatbotId: row.chatbot_id,
             workspaceId: row.workspace_id,
             platform: row.platform,
-        }));
+        };
     }
 }
