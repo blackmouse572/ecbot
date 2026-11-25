@@ -6,8 +6,7 @@ import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import { senderLabel } from "../sender-label";
 import { ChatbotBadge } from "../components/chatbot-badge";
 import { StatusPill } from "../components/status-pill";
-import { BotPauseSwitch, StatusActionsMenu } from "./status-actions-menu";
-import { useStatusChange } from "./use-status-change";
+import { BotPauseSwitch } from "./bot-pause-switch";
 
 interface Props {
   conversation: ConversationGetResponseDto;
@@ -28,7 +27,6 @@ export const ConversationHeader = ({
   onOpenCustomer,
 }: Props) => {
   const { t } = useTranslation();
-  const status = useStatusChange(conversation);
   const senderName = senderLabel(conversation as A, t);
   const senderAvatar = (conversation as A).senderAvatar as string | undefined;
   const accountName =
@@ -100,8 +98,7 @@ export const ConversationHeader = ({
         <div className="max-sm:hidden">
           <StatusPill conversation={conversation} />
         </div>
-        <BotPauseSwitch conversation={conversation} status={status} />
-        <StatusActionsMenu conversation={conversation} status={status} />
+        <BotPauseSwitch conversation={conversation} />
       </div>
     </div>
   );
