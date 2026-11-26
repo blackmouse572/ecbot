@@ -14,6 +14,25 @@ const hover = (link: HTMLElement) => {
 };
 
 describe("NavItem", () => {
+  it("lights a page's link on the pages under it, unless it ends there", () => {
+    render(
+      <MemoryRouter initialEntries={["/marketing/sends"]}>
+        <NavItem label="Overview" to="/marketing" end />
+        <NavItem label="Sent" to="/marketing/sends" />
+        <NavItem label="Marketing" to="/marketing" />
+      </MemoryRouter>,
+    );
+
+    const active = (name: string) =>
+      screen
+        .getByRole("link", { name })
+        .className.includes("shadow-elevation-card-rest");
+
+    expect(active("Overview")).toBe(false);
+    expect(active("Sent")).toBe(true);
+    expect(active("Marketing")).toBe(true);
+  });
+
   it("shows the hint only after the pointer rests on the link", () => {
     vi.useFakeTimers();
     render(
@@ -240,7 +259,7 @@ describe("NavItem", () => {
       );
     });
 
-    it("for type=extension, isActive respects `end`, unlike type=core's prefix override", () => {
+    it("respects `end` for both type=extension and type=core", () => {
       render(
         <MemoryRouter initialEntries={["/users/123"]}>
           <NavItem label="Users Ext" to="/users" type="extension" end />
@@ -248,14 +267,13 @@ describe("NavItem", () => {
         </MemoryRouter>,
       );
 
-      // extension: end=true and "/users/123" isn't an exact match -> not active
+      // end=true and "/users/123" isn't an exact match -> not active
       expect(
         screen.getByRole("link", { name: "Users Ext" }).className,
       ).not.toContain("shadow-elevation-card-rest");
-      // core: the prefix-match override ignores `end` entirely -> still active
       expect(
         screen.getByRole("link", { name: "Users Core" }).className,
-      ).toContain("shadow-elevation-card-rest");
+      ).not.toContain("shadow-elevation-card-rest");
     });
   });
 });

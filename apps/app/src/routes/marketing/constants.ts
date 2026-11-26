@@ -72,3 +72,23 @@ export const MARKETING_SEND_HOURS = Array.from(
   { length: 24 },
   (_, hour) => `${String(hour).padStart(2, "0")}:00`,
 );
+
+/** Đã gửi: rows per page, and the query its tabs, search and pages use. */
+export const MARKETING_SENDS_PAGE_SIZE = 20;
+export const MARKETING_SENDS_QUERY_PARAMS = ["page", "search", "mode"];
+export const MARKETING_SEND_REPLIES_PAGE_SIZE = 10;
+
+export const MARKETING_SEND_STATUS_COLOR = {
+  ACTIVE: "green",
+  OFF: "grey",
+  ONCE: "grey",
+} as const;
+
+export const MARKETING_SEND_NAME_MAX = 120;
+
+export const MARKETING_SEND_REPLY_STATUS_COLOR = {
+  ORDERED: "green",
+  STOPPED: "red",
+  WAITING: "orange",
+  BOT: "blue",
+} as const;

@@ -1,4 +1,5 @@
 import { renderHook } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useCoreRoutes } from "./use-core-routes";
 import { useMarketingRoutes } from "./use-marketing-routes";
@@ -24,14 +25,16 @@ describe("flagged nav items", () => {
     flags.marketing = true;
   });
 
-  it("lists Đơn hàng, Tổng quan and Nguồn khách while their flags are on", () => {
+  it("lists Đơn hàng, Tổng quan, Đã gửi and Nguồn khách while their flags are on", () => {
     expect(paths(renderHook(useCoreRoutes).result.current)).toContain(
       "/lumi/orders",
     );
-    expect(paths(renderHook(useMarketingRoutes).result.current)).toEqual([
-      "/lumi/marketing",
-      "/lumi/sources",
-    ]);
+    expect(
+      paths(
+        renderHook(useMarketingRoutes, { wrapper: MemoryRouter }).result
+          .current,
+      ),
+    ).toEqual(["/lumi/marketing", "/lumi/marketing/sends", "/lumi/sources"]);
   });
 
   it("drops each one while its flag is off", () => {
@@ -42,6 +45,8 @@ describe("flagged nav items", () => {
     expect(paths(renderHook(useCoreRoutes).result.current)).not.toContain(
       "/lumi/orders",
     );
-    expect(renderHook(useMarketingRoutes).result.current).toEqual([]);
+    expect(
+      renderHook(useMarketingRoutes, { wrapper: MemoryRouter }).result.current,
+    ).toEqual([]);
   });
 });

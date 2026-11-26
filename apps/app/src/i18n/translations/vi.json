@@ -3988,7 +3988,12 @@
       "DEFERRED": "hẹn để sau",
       "OFFERED_TODAY": "đã nhận ưu đãi khác hôm nay",
       "CAPPED": "đã nhận đủ tin trong 30 ngày",
-      "RESTING": "đang tạm nghỉ vì không trả lời"
+      "RESTING": "đang tạm nghỉ vì không trả lời",
+      "NO_CHANNEL": "không có kênh nhắn được",
+      "WINDOW_CLOSED": "quá 24 giờ từ tin cuối của khách",
+      "OPTED_OUT": "đã dừng nhận tin",
+      "ACCOUNT_BLOCKED": "đã chặn trang",
+      "SEND_HOURS_ENDED": "hết giờ gửi trong ngày"
     },
     "send": {
       "description": "Ecbot đã chọn khách và soạn sẵn tin, bạn xem rồi gửi.",
@@ -4124,6 +4129,93 @@
         "max": "Tối đa {{max}}",
         "hours": "Giờ kết thúc phải sau giờ bắt đầu"
       }
+    },
+    "sends": {
+      "navTitle": "Đã gửi",
+      "title": "Đã gửi",
+      "tabs": {
+        "all": "Tất cả",
+        "AUTO": "Tự gửi mỗi ngày",
+        "ONCE": "Gửi 1 lần"
+      },
+      "columns": {
+        "name": "Tên",
+        "stage": "Giai đoạn",
+        "mode": "Cách gửi",
+        "sent": "Đã gửi",
+        "replied": "Khách trả lời",
+        "ordered": "Đặt đơn",
+        "lastSentAt": "Lần gửi gần nhất"
+      },
+      "status": {
+        "ACTIVE": "Đang tự gửi",
+        "OFF": "Đã tắt tự gửi",
+        "ONCE": "Gửi 1 lần"
+      },
+      "noRecordsTitle": "Chưa có lần gửi nào",
+      "noRecordsMessage": "Gửi tin đầu tiên từ Việc nên làm ở trang Tổng quan.",
+      "openOverview": "Mở Tổng quan",
+      "summary": {
+        "ACTIVE": "Mỗi ngày tự gửi cho khách mới vào nhóm này. Bắt đầu {{date}}.",
+        "OFF": "Bắt đầu {{date}}.",
+        "ONCE": "Đã gửi {{date}}."
+      },
+      "stats": {
+        "sent": "Đã gửi",
+        "queued": "{{value}} tin đang chờ gửi",
+        "replied": "Khách trả lời",
+        "repliedHint": "{{value}} khách",
+        "ordered": "Đặt đơn sau tin",
+        "revenue": "{{value}} trong 7 ngày sau tin",
+        "optedOut": "Dừng nhận tin"
+      },
+      "channels": {
+        "title": "Kết quả theo kênh",
+        "channel": "Kênh",
+        "sent": "Đã gửi",
+        "replied": "Trả lời",
+        "ordered": "Đặt đơn",
+        "optedOut": "Dừng"
+      },
+      "replies": {
+        "title": "Khách đã trả lời",
+        "description": "Tin đầu tiên khách nhắn sau ưu đãi.",
+        "empty": "Chưa có khách nào trả lời.",
+        "unnamed": "Khách",
+        "status": {
+          "ORDERED": "Đã đặt đơn",
+          "STOPPED": "Đã dừng nhận",
+          "WAITING": "Chờ bạn",
+          "BOT": "Bot trả lời"
+        }
+      },
+      "notSent": {
+        "title": "Không gửi được",
+        "total": "{{value}} khách"
+      },
+      "message": {
+        "AUTO": "Tin đang gửi",
+        "ONCE": "Tin đã gửi",
+        "editHint": "Tin chưa gửi sẽ dùng nội dung mới."
+      },
+      "edit": {
+        "action": "Sửa tin nhắn",
+        "title": "Sửa tin nhắn",
+        "name": "Tên",
+        "saved": "Đã lưu tin nhắn",
+        "text": "Tin nhắn"
+      },
+      "turnOff": {
+        "action": "Tắt tự gửi",
+        "title": "Tắt tự gửi \"{{name}}\"?",
+        "description": "Khách mới vào nhóm này sẽ không nhận tin nữa. Kết quả cũ vẫn giữ, bạn bật lại lúc nào cũng được.",
+        "done": "Đã tắt tự gửi"
+      },
+      "turnOn": {
+        "action": "Bật lại tự gửi",
+        "done": "Đã bật lại tự gửi"
+      },
+      "error": "Chưa lưu được. Bạn thử lại sau."
     }
   }
 }
