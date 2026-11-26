@@ -37395,6 +37395,14 @@ export type MarketingSendWorkspaceControllerListV1Data = {
          */
         mode?: string;
         /**
+         * The stage a send was made for, with ',' delimiter
+         */
+        preset?: string;
+        /**
+         * true (on) and/or false (Đã tắt tự gửi), with ',' delimiter. A one-off send is always true, so pair it with mode=AUTO for Đang tự gửi
+         */
+        active?: string;
+        /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
          */
         search?: string;
