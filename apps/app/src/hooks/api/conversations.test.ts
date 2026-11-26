@@ -203,6 +203,45 @@ describe("useReactToMessage", () => {
       "conversations.reactions.toastFailed",
     );
   });
+
+  // A 4xx carries a translated reason the operator can act on; a 5xx carries
+  // the channel's raw developer error, so it keeps the generic toast.
+  it.each([
+    [
+      422,
+      "Reactions are not supported on this channel.",
+      "Reactions are not supported on this channel.",
+    ],
+    [
+      502,
+      "Instagram react failed (HTTP 400): bad",
+      "conversations.reactions.toastFailed",
+    ],
+  ])("on a %i, toasts %s as %s", async (status, message, shown) => {
+    toastError.mockClear();
+    reactToMessage.mockRejectedValue({
+      response: { status, data: { message } },
+    });
+
+    const client = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+    seedMessages(client);
+    const localWrapper = ({ children }: PropsWithChildren) =>
+      createElement(QueryClientProvider, { client }, children);
+
+    const { result } = renderHook(() => useReactToMessage("conv-1", "op-1"), {
+      wrapper: localWrapper,
+    });
+
+    result.current.mutate({ messageId: "msg-1", emoji: "🔥", action: "react" });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(toastError).toHaveBeenCalledWith(shown);
+  });
 });
 
 describe("useMarkConversationRead", () => {
