@@ -1,4 +1,5 @@
 import { createSelectColumn } from "@/components/table/columns";
+import { DateCell } from "@/components/table/table-cells/common/date-cell";
 import { _DataTable } from "@/components/table/data-table";
 import {
   useBatchSetMarketingSendsActive,
@@ -7,7 +8,6 @@ import {
 } from "@/hooks/api/marketing-sends";
 import { useBatchResultToast } from "@/hooks/use-batch-result-toast";
 import { useDataTable } from "@/hooks/use-data-table";
-import { useDate } from "@/hooks/use-date";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes/constants";
 import { Container, Heading, StatusBadge, Tabs, usePrompt } from "@medusajs/ui";
@@ -62,7 +62,12 @@ export const MarketingSendList = () => {
     enableRowSelection: (row) => row.original.mode === "AUTO",
     rowSelection: { state: rowSelection, updater: setRowSelection },
   });
-  const commands = useCommands(workspaceSlug, setRowSelection);
+  // Offer Tắt only when a ticked send is on, Bật lại only when one is off.
+  const ticked = sends.filter((send) => rowSelection[send.id]);
+  const commands = useCommands(workspaceSlug, setRowSelection, {
+    turnOff: ticked.some((send) => send.active),
+    turnOn: ticked.some((send) => !send.active),
+  });
 
   if (isError) {
     throw error;
@@ -124,6 +129,7 @@ export const MarketingSendList = () => {
 const useCommands = (
   workspace: string,
   setRowSelection: (selection: RowSelectionState) => void,
+  offer: { turnOff: boolean; turnOn: boolean },
 ) => {
   const { t } = useTranslation();
   const prompt = usePrompt();
@@ -136,37 +142,47 @@ const useCommands = (
       setRowSelection({});
     };
 
-    return [
-      {
-        label: t("marketing.sends.batch.turnOff.label"),
-        shortcut: "s",
-        action: async (selection: Record<string, boolean>) => {
-          const ids = Object.keys(selection);
-          const confirmed = await prompt({
-            title: t("marketing.sends.batch.turnOff.title", {
-              count: ids.length,
-            }),
-            description: t("marketing.sends.batch.turnOff.description"),
-            confirmText: t("marketing.sends.batch.turnOff.label"),
-            cancelText: t("actions.cancel"),
-          });
+    const turnOff = {
+      label: t("marketing.sends.batch.turnOff.label"),
+      shortcut: "s",
+      action: async (selection: Record<string, boolean>) => {
+        const ids = Object.keys(selection);
+        const confirmed = await prompt({
+          title: t("marketing.sends.batch.turnOff.title", {
+            count: ids.length,
+          }),
+          description: t("marketing.sends.batch.turnOff.description"),
+          confirmText: t("marketing.sends.batch.turnOff.label"),
+          cancelText: t("actions.cancel"),
+        });
 
-          if (confirmed) await setActive(ids, false);
-        },
+        if (confirmed) await setActive(ids, false);
       },
-      {
-        label: t("marketing.sends.batch.turnOn.label"),
-        shortcut: "a",
-        action: (selection: Record<string, boolean>) =>
-          setActive(Object.keys(selection), true),
-      },
+    };
+    const turnOn = {
+      label: t("marketing.sends.batch.turnOn.label"),
+      shortcut: "a",
+      action: (selection: Record<string, boolean>) =>
+        setActive(Object.keys(selection), true),
+    };
+
+    return [
+      ...(offer.turnOff ? [turnOff] : []),
+      ...(offer.turnOn ? [turnOn] : []),
     ];
-  }, [t, prompt, notifyBatchResult, mutateAsync, setRowSelection]);
+  }, [
+    t,
+    prompt,
+    notifyBatchResult,
+    mutateAsync,
+    setRowSelection,
+    offer.turnOff,
+    offer.turnOn,
+  ]);
 };
 
 const useColumns = () => {
   const { t, i18n } = useTranslation();
-  const { getFullDate } = useDate();
   const number = useMemo(
     () => new Intl.NumberFormat(i18n.language),
     [i18n.language],
@@ -242,17 +258,8 @@ const useColumns = () => {
       columnHelper.display({
         id: "lastSentAt",
         header: () => t("marketing.sends.columns.lastSentAt"),
-        cell: ({ row }) => {
-          const at = row.original.stats.lastSentAt;
-          return (
-            at && (
-              <span className="txt-compact-small text-ui-fg-subtle whitespace-nowrap">
-                {getFullDate({ date: new Date(at), includeTime: true })}
-              </span>
-            )
-          );
-        },
+        cell: ({ row }) => <DateCell date={row.original.stats.lastSentAt} />,
       }),
     ];
-  }, [t, number, percent, getFullDate]);
+  }, [t, number, percent]);
 };

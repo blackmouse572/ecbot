@@ -119,4 +119,16 @@ describe("MarketingSendList", () => {
     expect(boxes[1].hasAttribute("disabled")).toBe(false);
     expect(boxes[2].hasAttribute("disabled")).toBe(true);
   });
+
+  it("offers only the action that fits the ticked sends", async () => {
+    renderIt();
+
+    // s1 is an auto-send that is already off.
+    fireEvent.click(screen.getAllByRole("checkbox")[1]);
+
+    expect(
+      await screen.findByRole("button", { name: /Bật lại tự gửi/ }),
+    ).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^Tắt tự gửi/ })).toBeNull();
+  });
 });
