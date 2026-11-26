@@ -12,10 +12,10 @@ import {
     MARKETING_SEND_MAX_TEXT_LENGTH,
 } from '../../constants/marketing-send.constant';
 import { ENUM_MARKETING_SEND_MODE } from '../../enums/marketing-send.enum';
-import { MarketingAudienceRequestDto } from './marketing-audience.request.dto';
+import { MarketingAudiencePreviewRequestDto } from './marketing-audience-preview.request.dto';
 
 /** A send: who to (a preset or conditions), how often, and the offer. */
-export class MarketingSendCreateRequestDto extends MarketingAudienceRequestDto {
+export class MarketingSendCreateRequestDto extends MarketingAudiencePreviewRequestDto {
     @ApiProperty({ example: 'Nhắc khách hỏi giá chưa mua' })
     @IsString()
     @IsNotEmpty()

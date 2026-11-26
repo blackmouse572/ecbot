@@ -61,7 +61,8 @@ import {
     MarketingSavedAudienceListDoc,
     MarketingSavedAudienceUpdateDoc,
 } from '../docs/marketing-saved-audience.doc';
-import { MarketingAudienceRequestDto } from '../dtos/request/marketing-audience.request.dto';
+import { MarketingAudienceCustomersRequestDto } from '../dtos/request/marketing-audience-customers.request.dto';
+import { MarketingAudiencePreviewRequestDto } from '../dtos/request/marketing-audience-preview.request.dto';
 import { MarketingSavedAudienceCreateRequestDto } from '../dtos/request/marketing-saved-audience.create.request.dto';
 import { MarketingSavedAudienceUpdateRequestDto } from '../dtos/request/marketing-saved-audience.update.request.dto';
 import { MarketingAudiencePreviewResponseDto } from '../dtos/response/marketing-audience-preview.response.dto';
@@ -194,7 +195,7 @@ export class MarketingAudienceWorkspaceController {
     @Post('/preview')
     async preview(
         @WorkspacePayload() workspace: WorkspaceEntity,
-        @Body() body: MarketingAudienceRequestDto
+        @Body() body: MarketingAudiencePreviewRequestDto
     ): Promise<IResponse<MarketingAudiencePreviewResponseDto>> {
         return {
             data: await this.audienceService.preview(workspace.id, body),
@@ -215,13 +216,15 @@ export class MarketingAudienceWorkspaceController {
     async customers(
         @WorkspacePayload() workspace: WorkspaceEntity,
         @PaginationQuery() { _limit, _offset }: PaginationListDto,
-        @Body() body: MarketingAudienceRequestDto
+        @Body() body: MarketingAudienceCustomersRequestDto
     ): Promise<IResponsePaging<CustomerGetResponseDto>> {
+        const { platform, search, ...audience } = body;
         const { ids, total } = await this.audienceService.reached(
             workspace.id,
-            body,
+            audience,
             _limit,
-            _offset
+            _offset,
+            { filter: { platform, search } }
         );
         const [found, summaries, marketing] = await Promise.all([
             this.customerService.findByWorkspace(workspace.id, {

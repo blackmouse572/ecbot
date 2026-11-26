@@ -533,8 +533,7 @@ export class MarketingSendService {
                 audience,
                 MARKETING_SEND_PAGE_SIZE,
                 offset,
-                now,
-                notReachedBy
+                { now, notReachedBy }
             );
             ids.push(...page.ids);
             if (page.ids.length < MARKETING_SEND_PAGE_SIZE) return ids;

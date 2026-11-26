@@ -6,6 +6,8 @@ import {
 export const MARKETING_AUDIENCE_MAX_CONDITIONS = 20;
 export const MARKETING_AUDIENCE_MAX_VALUES = 50;
 export const MARKETING_AUDIENCE_MAX_DAYS = 3650;
+export const MARKETING_AUDIENCE_MAX_EXCLUDED = 1000;
+export const MARKETING_AUDIENCE_MAX_SEARCH_LENGTH = 100;
 
 /** The operators each field takes, and what the operator reads. */
 export const MARKETING_AUDIENCE_OPERATORS: Record<F, O[]> = {
