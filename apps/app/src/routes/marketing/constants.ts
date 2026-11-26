@@ -43,3 +43,32 @@ export const TODO_STAGE: Record<MarketingOverviewTodoDto["key"], StageKey> = {
   REPURCHASE: "BOUGHT_REPEAT",
   WIN_BACK: "DORMANT",
 };
+
+/** Giọng văn the AI writes in. */
+export const MARKETING_DRAFT_TONES = ["FRIENDLY", "POLITE", "PLAYFUL"] as const;
+
+/** Dài hơn, Ngắn hơn: rewrites that keep the tone. */
+export const MARKETING_DRAFT_LENGTHS = ["LONGER", "SHORTER"] as const;
+
+/** Tự gửi mỗi ngày first: it is the one we recommend. */
+export const MARKETING_SEND_MODES = ["AUTO", "ONCE"] as const;
+
+export const MARKETING_SEND_TEXT_MAX = 1000;
+
+/** Customers a send can leave out by hand, and rows per page in their list. */
+export const MARKETING_SEND_EXCLUDED_MAX = 1000;
+export const MARKETING_SEND_CUSTOMERS_PAGE_SIZE = 10;
+
+/** The API's bounds for Cài đặt gửi tin. */
+export const MARKETING_SETTINGS_LIMITS = {
+  maxPer30Days: 10,
+  restAfter: 10,
+  restDays: 365,
+  stopKeywords: 10,
+};
+
+/** Hours a shop picks send times from, "HH:00". */
+export const MARKETING_SEND_HOURS = Array.from(
+  { length: 24 },
+  (_, hour) => `${String(hour).padStart(2, "0")}:00`,
+);

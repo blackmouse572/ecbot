@@ -1,8 +1,10 @@
 import type { MarketingOverviewResponseDto } from "@/hooks/api/marketing-overview";
 import { useAnalyticsFormat } from "@/routes/dashboard/components/analytics/use-analytics-format";
-import { Container, Heading, Skeleton, Text } from "@medusajs/ui";
+import { Button, Container, Heading, Skeleton, Text } from "@medusajs/ui";
+import { Can } from "@repo/auth";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { StageIcon } from "../../components/stage-icon";
 import { useStageLabel } from "../../components/stage-label";
 import { TODO_STAGE } from "../../constants";
@@ -58,7 +60,7 @@ export const OverviewTodos: FC<OverviewTodosProps> = ({
               <div
                 key={todo.key}
                 data-testid={`todo-${todo.key}`}
-                className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-[200px_1fr] md:items-center md:gap-x-6"
+                className="grid grid-cols-1 gap-3 px-6 py-4 md:grid-cols-[200px_1fr_auto] md:items-center md:gap-x-6"
               >
                 <div className="flex items-center gap-x-3">
                   <StageIcon stage={stage} />
@@ -103,6 +105,20 @@ export const OverviewTodos: FC<OverviewTodosProps> = ({
                       })}`}
                   </Text>
                 </div>
+                {todo.count > 0 && (
+                  <Can I="create" a="MARKETING">
+                    <Button
+                      size="small"
+                      variant="secondary"
+                      className="justify-self-start"
+                      asChild
+                    >
+                      <Link to={`send/${todo.key}`}>
+                        {t(`marketing.send.preset.${todo.key}.action`)}
+                      </Link>
+                    </Button>
+                  </Can>
+                )}
               </div>
             );
           })}

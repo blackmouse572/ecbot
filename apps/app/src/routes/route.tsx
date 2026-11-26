@@ -448,6 +448,18 @@ function getRouteMaps(): RouteObject[] {
                 {
                   path: "",
                   lazy: () => import("./marketing/marketing-overview"),
+                  children: [
+                    {
+                      path: "send/:preset",
+                      ErrorBoundary: ErrorBoundary,
+                      lazy: () => import("./marketing/marketing-send-create"),
+                    },
+                    {
+                      path: "settings",
+                      ErrorBoundary: ErrorBoundary,
+                      lazy: () => import("./marketing/marketing-settings"),
+                    },
+                  ],
                 },
               ],
             },
