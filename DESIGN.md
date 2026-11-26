@@ -23,6 +23,7 @@ Related: library and motion picks in [`.agents/skills/eccho-frontend/references/
 - Errors say what went wrong and how to fix it, with no apology.
 - Punctuate with commas, colons, periods or parentheses. **No em dash ("—") in product text**: our non-technical Vietnamese users read it as machine-written. This covers LLM prompt templates too.
 - No emoji as decoration. Channels are shown with their real logos, not emoji.
+- **No filler descriptions.** Leave out a subtitle or hint that restates its label, says where a result will show up ("Hiện trong danh sách Đã gửi."), explains how to click ("Bấm một dòng để mở hội thoại.") or lists a menu's items. Keep one only when it carries a fact the user can't see otherwise: a count, a limit, or a consequence ("Tin chưa gửi sẽ dùng nội dung mới."). A drawer or modal still needs its `Description` for screen readers; make it `sr-only`.
 - Numbers follow the locale: `1.284 tin nhắn`, `12,5%`, prices in VND without decimals (`199.000 ₫`). Plan prices are stored in cents; format at the edge.
 
 ## 3. Colour
@@ -282,4 +283,5 @@ One exception: an edit opened from a side panel that sits beside live work, such
 - [ ] Create flows use `RouteFocusModal`, edit flows use `RouteDrawer`, destructive actions use `usePrompt`.
 - [ ] Usage bars use `Meter`.
 - [ ] No em dash in any user-facing string or prompt template.
+- [ ] Every subtitle and hint carries a fact, a limit or a consequence; none restates its label.
 - [ ] Screenshots attached to the PR.

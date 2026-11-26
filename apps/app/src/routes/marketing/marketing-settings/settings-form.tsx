@@ -176,9 +176,6 @@ export const SettingsForm: FC<SettingsFormProps> = ({ settings }) => {
                 {t("marketing.settings.days")}
               </Text>
             </div>
-            <Text size="small" className="text-ui-fg-subtle">
-              {t("marketing.settings.restHint")}
-            </Text>
             {numberError && (
               <Text size="small" className="text-ui-fg-error">
                 {numberError}
@@ -200,7 +197,6 @@ export const SettingsForm: FC<SettingsFormProps> = ({ settings }) => {
                     placeholder={t("marketing.settings.keywordsPlaceholder")}
                   />
                 </Form.Control>
-                <Form.Hint>{t("marketing.settings.keywordsHint")}</Form.Hint>
                 <Form.ErrorMessage />
               </Form.Item>
             )}

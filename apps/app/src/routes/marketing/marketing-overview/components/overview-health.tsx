@@ -1,6 +1,6 @@
 import type { MarketingOverviewResponseDto } from "@/hooks/api/marketing-overview";
 import { useAnalyticsFormat } from "@/routes/dashboard/components/analytics/use-analytics-format";
-import { Heading, Text } from "@medusajs/ui";
+import { Heading } from "@medusajs/ui";
 import { StatCard } from "@repo/ui/charts";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
@@ -23,12 +23,9 @@ export const OverviewHealth: FC<OverviewHealthProps> = ({
 
   return (
     <div className="flex flex-col gap-y-3">
-      <div className="px-1">
-        <Heading level="h2">{t("marketing.overview.health.title")}</Heading>
-        <Text size="small" className="text-ui-fg-subtle">
-          {t("marketing.overview.health.description")}
-        </Text>
-      </div>
+      <Heading level="h2" className="px-1">
+        {t("marketing.overview.health.title")}
+      </Heading>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <StatCard
           label={t("marketing.overview.health.optOuts")}

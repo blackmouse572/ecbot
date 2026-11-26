@@ -3922,45 +3922,36 @@
     "overview": {
       "navTitle": "Tổng quan",
       "title": "Tổng quan tiếp thị",
-      "description": "Khách đang ở giai đoạn nào, và việc nên làm cho từng giai đoạn.",
       "period": "{{days}} ngày qua, so với {{days}} ngày trước",
       "range": "Khoảng ngày",
       "customers_one": "{{value}} khách",
       "customers_other": "{{value}} khách",
       "todos": {
         "title": "Việc nên làm tuần này",
-        "description": "Số khách nên nhắn ở từng giai đoạn. Ecbot đã bỏ ra khách đã dừng nhận tin, đang tạm ngưng hoặc đang khó chịu.",
         "total": "khách nên nhắn, đã bỏ {{value}} khách",
         "excluded": "Đã bỏ {{value}} khách không nên nhắn.",
         "none": "Chưa có khách nào cần nhắn ở giai đoạn này.",
         "NEW": {
-          "title": "{{value}} khách nhắn tin lần đầu tuần này",
-          "hint": "Khách vừa nhắn shop lần đầu. Trả lời sớm để khách hỏi tiếp."
+          "title": "{{value}} khách nhắn tin lần đầu tuần này"
         },
         "INTERESTED": {
-          "title": "{{value}} khách xem sản phẩm nhưng chưa hỏi giá",
-          "hint": "Gửi một ưu đãi cho lần mua đầu để khách hỏi tiếp."
+          "title": "{{value}} khách xem sản phẩm nhưng chưa hỏi giá"
         },
         "ASKED_PRICE": {
-          "title": "{{value}} khách hỏi giá 7 ngày qua nhưng chưa mua",
-          "hint": "Gửi lại ảnh sản phẩm khách đã hỏi, kèm một ưu đãi nhỏ."
+          "title": "{{value}} khách hỏi giá 7 ngày qua nhưng chưa mua"
         },
         "CROSS_SELL": {
-          "title": "{{value}} khách mua lần đầu được 15 đến 30 ngày",
-          "hint": "Gợi ý món dùng kèm với món khách đã mua."
+          "title": "{{value}} khách mua lần đầu được 15 đến 30 ngày"
         },
         "REPURCHASE": {
-          "title": "{{value}} khách sắp dùng hết hàng đã mua",
-          "hint": "Ecbot tính theo chu kỳ mua lại của từng nhóm hàng."
+          "title": "{{value}} khách sắp dùng hết hàng đã mua"
         },
         "WIN_BACK": {
-          "title": "{{value}} khách đã mua nhưng 31 đến 90 ngày chưa quay lại",
-          "hint": "Mời quay lại bằng một ưu đãi riêng cho khách cũ."
+          "title": "{{value}} khách đã mua nhưng 31 đến 90 ngày chưa quay lại"
         }
       },
       "funnel": {
         "title": "Khách đang ở giai đoạn nào",
-        "description": "Bao nhiêu khách đã đi tới từng giai đoạn, trên tổng {{value}} khách, theo kênh khách nhắn đầu tiên. Bấm một giai đoạn bên dưới để xem danh sách khách.",
         "empty": "Chưa có khách",
         "dropped": "Dừng lại {{value}} ({{share}})"
       },
@@ -3975,7 +3966,6 @@
       },
       "health": {
         "title": "Danh sách có khoẻ không",
-        "description": "Khách dừng nhận tin là tín hiệu shop đang nhắn quá nhiều.",
         "optOuts": "Dừng nhận tin",
         "paused": "Đang tạm ngưng",
         "pausedHint": "Tự nhận tin lại khi hết hạn"
@@ -4037,7 +4027,7 @@
         "drafted": "Ecbot soạn sẵn",
         "offer": "Ưu đãi",
         "offerPlaceholder": "Giảm 10% cho đơn đặt trước 20/11",
-        "offerHint": "Ecbot viết tin dựa trên ưu đãi này. Để trống thì tin chỉ nhắc khách quay lại.",
+        "offerHint": "Để trống thì tin chỉ nhắc khách quay lại.",
         "text": "Lời nhắn",
         "placeholder": "Viết lời nhắn gửi khách",
         "drafting": "Ecbot đang viết tin...",
@@ -4045,7 +4035,6 @@
         "tokenProduct": "Sản phẩm",
         "insert": "Chèn tên khách hoặc sản phẩm",
         "insertHint": "Gõ { để chèn nhanh",
-        "previewHint": "Tên khách và sản phẩm khách đã hỏi được điền riêng cho từng người. Tin gửi kèm ảnh của nhóm hàng đó nếu có.",
         "rewrite": {
           "DIFFERENT": "Viết lại",
           "LONGER": "Dài hơn",
@@ -4062,7 +4051,7 @@
         "title": "Cách gửi",
         "AUTO": {
           "label": "Tự gửi mỗi ngày (nên chọn)",
-          "hint": "Gửi những khách này ngay, rồi mỗi ngày tự gửi cho khách mới vào nhóm này. Bạn tắt được bất cứ lúc nào."
+          "hint": "Gửi những khách này ngay, rồi mỗi ngày tự gửi cho khách mới vào nhóm này."
         },
         "ONCE": {
           "label": "Chỉ gửi 1 lần",
@@ -4071,7 +4060,6 @@
         "limitsLabel": "Giới hạn",
         "limits": "Ecbot chỉ gửi trong giờ được gửi và trong khung nhắn miễn phí của từng kênh. Mỗi khách nhận tối đa 1 tin ưu đãi mỗi ngày."
       },
-      "footer": "Kết quả hiện ở mục Đã gửi",
       "submit": {
         "AUTO": "Gửi và bật tự gửi",
         "ONCE": "Gửi ngay"
@@ -4107,16 +4095,14 @@
       "cap": "Số tin ưu đãi tối đa cho mỗi khách",
       "maxPer30Days": "Số tin trong 30 ngày",
       "capUnit": "tin trong 30 ngày",
-      "capHint": "Và không quá 1 tin mỗi ngày. Tính chung cho mọi lần gửi. Khách đã nhận đủ sẽ được bỏ qua và ghi lý do trong kết quả.",
+      "capHint": "Và không quá 1 tin mỗi ngày.",
       "rest": "Cho khách tạm nghỉ khi không trả lời",
       "restAfter": "Sau",
       "restFor": "tin liền không trả lời, nghỉ",
       "restDays": "Số ngày nghỉ",
       "days": "ngày",
-      "restHint": "Giữ tỉ lệ trả lời cao, kênh ít bị báo spam.",
       "keywords": "Từ khoá dừng nhận tin",
       "keywordsPlaceholder": "Thêm từ khoá...",
-      "keywordsHint": "Khách nhắn một trong các từ này sẽ không nhận tin ưu đãi trên mọi kênh.",
       "stopReply": "Gửi lời xác nhận khi khách dừng nhận tin",
       "stopReplyHint": "Tắt thì Ecbot vẫn ghi nhận khách dừng, chỉ không nhắn lại.",
       "stopReplyText": "Lời xác nhận",

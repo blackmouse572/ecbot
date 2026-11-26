@@ -5,7 +5,7 @@ import {
 } from "@/hooks/api/workspace-analytics";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { CogSixTooth } from "@medusajs/icons";
-import { Button, Container, Heading, Select, Text } from "@medusajs/ui";
+import { Button, Container, Heading, Select } from "@medusajs/ui";
 import { Can } from "@repo/auth";
 import { SingleColumnPage } from "@repo/ui/layout";
 import { Helmet } from "react-helmet-async";
@@ -41,12 +41,7 @@ export const MarketingOverview = () => {
         <title>{t("marketing.overview.title")} - Ecbot</title>
       </Helmet>
       <Container className="flex flex-wrap items-center justify-between gap-4 px-6 py-4">
-        <div>
-          <Heading level="h1">{t("marketing.overview.title")}</Heading>
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("marketing.overview.description")}
-          </Text>
-        </div>
+        <Heading level="h1">{t("marketing.overview.title")}</Heading>
         <div className="flex flex-wrap items-center gap-2">
           <Select
             size="small"

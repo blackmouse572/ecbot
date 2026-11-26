@@ -1,6 +1,6 @@
 import { RouteDrawer } from "@/components/modals";
 import type { MarketingOverviewTodoDto } from "@/hooks/api/marketing-overview";
-import { Heading } from "@medusajs/ui";
+import { clx, Heading } from "@medusajs/ui";
 import { NoRecords } from "@repo/ui/common-components";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
@@ -30,7 +30,7 @@ export const MarketingSendCreate = () => {
               : t("marketing.send.notFoundTitle")}
           </Heading>
         </RouteDrawer.Title>
-        <RouteDrawer.Description>
+        <RouteDrawer.Description className={clx(isPreset(preset) && "sr-only")}>
           {isPreset(preset)
             ? t("marketing.send.description")
             : t("marketing.send.notFoundMessage")}
