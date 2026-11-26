@@ -621,36 +621,22 @@ describe('InstagramPlatformAdapter.sendMessage', () => {
 });
 
 describe('InstagramPlatformAdapter sender actions', () => {
-    it('reacts to a message with the love reaction', async () => {
+    // Instagram accepts any emoji as the reaction ("any emoji reaction or a
+    // valid UTF-8 representation of an emoji"), so the picked one is sent as is.
+    it.each(['❤️', '👍', '🤬'])('reacts to a message with %s', async emoji => {
         const post = jest.fn().mockResolvedValue({ data: {} });
         await makeAdapter({ axiosRef: { post, get: jest.fn() } }).addReaction(
             account,
             CUSTOMER,
             'mid-1',
-            '❤️',
+            emoji,
             'react'
         );
         expect(post.mock.calls[0][1]).toEqual({
             recipient: { id: CUSTOMER },
             sender_action: 'react',
-            payload: { message_id: 'mid-1', reaction: 'love' },
+            payload: { message_id: 'mid-1', reaction: emoji },
         });
-    });
-
-    it('rejects emoji other than the heart, since Instagram only allows love', async () => {
-        const post = jest.fn();
-        await expect(
-            makeAdapter({ axiosRef: { post, get: jest.fn() } }).addReaction(
-                account,
-                CUSTOMER,
-                'mid-1',
-                '👍',
-                'react'
-            )
-        ).rejects.toMatchObject({
-            response: { message: 'instagram.error.heartReactionOnly' },
-        });
-        expect(post).not.toHaveBeenCalled();
     });
 
     it('removes a reaction', async () => {

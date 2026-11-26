@@ -1,3 +1,4 @@
+import { readApiError } from "@/libs/api-error";
 import { queryKeysFactory } from "@/libs/query-factory";
 import { toast } from "@medusajs/ui";
 import {
@@ -491,11 +492,15 @@ export const useReactToMessage = (
 
       return { prev };
     },
-    onError: (_err, _vars, ctx) => {
+    onError: (err, _vars, ctx) => {
       if (ctx?.prev) {
         queryClient.setQueryData(messagesKey, ctx.prev);
       }
-      toast.error(t("conversations.reactions.toastFailed"));
+      // A 4xx says why in the operator's language; a 5xx is the channel's raw
+      // developer error, so it gets the generic message.
+      const { status, message } = readApiError(err);
+      const reason = status && status < 500 ? message : undefined;
+      toast.error(reason ?? t("conversations.reactions.toastFailed"));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: messagesKey });
