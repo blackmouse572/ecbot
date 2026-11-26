@@ -1,6 +1,7 @@
 import {
     Entity,
     Enum,
+    Formula,
     Index,
     ManyToOne,
     Property,
@@ -8,10 +9,17 @@ import {
 import { DatabaseEntityBase } from 'src/common/database/bases/database.entity';
 import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/workspace.entity';
 import { ENUM_MARKETING_AUDIENCE_EXCLUSION } from '../../enums/marketing-audience.enum';
-import { ENUM_MARKETING_SEND_MODE } from '../../enums/marketing-send.enum';
+import {
+    ENUM_MARKETING_MESSAGE_STATUS,
+    ENUM_MARKETING_SEND_MODE,
+} from '../../enums/marketing-send.enum';
 import { IMarketingAudience } from '../../interfaces/marketing-audience.interface';
 
 export const MarketingSendTableName = 'marketing_sends';
+
+/** This send's sent offers, for sorting Đã gửi by its results. */
+const sentOffers = (alias: string) =>
+    `FROM marketing_messages mm WHERE mm.send_id = ${alias}.id AND mm.status = '${ENUM_MARKETING_MESSAGE_STATUS.SENT}' AND mm.deleted_at IS NULL`;
 
 /**
  * One offer a shop sends to an audience (#505): text and an optional
@@ -55,4 +63,23 @@ export class MarketingSendEntity extends DatabaseEntityBase {
     /** Who matched but was left out at the first run, by reason. */
     @Property({ type: 'jsonb', default: '{}' })
     excluded: Partial<Record<ENUM_MARKETING_AUDIENCE_EXCLUSION, number>> = {};
+
+    /** Sort keys only (lazy): the list reads the numbers from statsBySend. */
+    @Formula(a => `(SELECT count(*) ${sentOffers(a.alias)})`, { lazy: true })
+    sent?: number;
+
+    @Formula(
+        a =>
+            `(SELECT count(*) FILTER (WHERE mm.replied_at IS NOT NULL)::float / greatest(count(*), 1) ${sentOffers(a.alias)})`,
+        { lazy: true }
+    )
+    replyRate?: number;
+
+    /** Never-sent sends get the epoch, so they sort last when newest first. */
+    @Formula(
+        a =>
+            `(SELECT coalesce(max(mm.sent_at), 'epoch'::timestamptz) ${sentOffers(a.alias)})`,
+        { lazy: true }
+    )
+    lastSentAt?: Date;
 }

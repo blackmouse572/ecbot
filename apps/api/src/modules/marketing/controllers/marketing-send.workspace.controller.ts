@@ -32,6 +32,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import {
     PaginationQuery,
+    PaginationQueryFilterInBoolean,
     PaginationQueryFilterInEnum,
 } from 'src/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from 'src/common/pagination/dtos/pagination.list.dto';
@@ -67,6 +68,7 @@ import {
     MarketingSendReplyResponseDto,
 } from '../dtos/response/marketing-send.get.response.dto';
 import { MarketingSendDraftResponseDto } from '../dtos/response/marketing-send.draft.response.dto';
+import { ENUM_MARKETING_TODO } from '../enums/marketing-overview.enum';
 import { ENUM_MARKETING_SEND_MODE } from '../enums/marketing-send.enum';
 import { MarketingSendEntity } from '../repository/entities/marketing-send.entity';
 import { MarketingDraftService } from '../services/marketing-draft.service';
@@ -157,9 +159,23 @@ export class MarketingSendWorkspaceController {
             undefined,
             ENUM_MARKETING_SEND_MODE
         )
-        mode?: Record<string, any>
+        mode?: Record<string, any>,
+        @PaginationQueryFilterInEnum(
+            'audience.preset',
+            undefined,
+            ENUM_MARKETING_TODO,
+            { queryField: 'preset' }
+        )
+        preset?: Record<string, any>,
+        @PaginationQueryFilterInBoolean('active', [true, false])
+        active?: Record<string, any>
     ): Promise<IResponsePaging<MarketingSendListResponseDto>> {
-        const find: Record<string, any> = { ..._search, ...mode };
+        const find: Record<string, any> = {
+            ..._search,
+            ...mode,
+            ...preset,
+            ...active,
+        };
         const [sends, total] = await Promise.all([
             this.sendService.findAll(workspace.id, find, {
                 paging: { limit: _limit, offset: _offset },

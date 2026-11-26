@@ -83,7 +83,13 @@ export const MARKETING_TEXT_FALLBACK: Record<
 export const MARKETING_SEND_MAX_NAME_LENGTH = 120;
 export const MARKETING_SEND_MAX_TEXT_LENGTH = 1000;
 export const MARKETING_SEND_LIST_AVAILABLE_SEARCH = ['name'];
-export const MARKETING_SEND_LIST_AVAILABLE_ORDER_BY = ['createdAt', 'name'];
+export const MARKETING_SEND_LIST_AVAILABLE_ORDER_BY = [
+    'createdAt',
+    'name',
+    'sent',
+    'replyRate',
+    'lastSentAt',
+];
 
 /** A send's results before any offer went out. */
 export const MARKETING_SEND_EMPTY_STATS: IMarketingSendStats = {

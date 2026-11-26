@@ -788,4 +788,52 @@ describe('E2E — marketing sends', () => {
         // Each daily AUTO run reads the send's audience, so it leaves her out too.
         expect(send.audience.excludedCustomerIds).toEqual([ids['Hà']]);
     });
+
+    it('filters Đã gửi by stage and on/off, and sorts by results', async () => {
+        const em = ctx.app.get(EntityManager).fork();
+        const workspace = em.getReference(WorkspaceEntity, workspaceId);
+        const off = em.create(MarketingSendEntity, {
+            workspace,
+            name: 'Hỏi giá đã tắt',
+            mode: S.AUTO,
+            active: false,
+            audience: { preset: 'ASKED_PRICE' },
+            text: 'Hỏi giá',
+        } as Partial<MarketingSendEntity> as MarketingSendEntity);
+        await em.flush();
+
+        const byStage = await http(ctx.app)
+            .get(url('?preset=ASKED_PRICE&perPage=100'))
+            .set(...auth());
+        expect(byStage.status).toBe(200);
+        expect(byStage.body.data.map((d: any) => d.id)).toEqual([off.id]);
+
+        const turnedOff = await http(ctx.app)
+            .get(url('?mode=AUTO&active=false&perPage=100'))
+            .set(...auth());
+        expect(turnedOff.body.data.map((d: any) => d.id)).toContain(off.id);
+        expect(turnedOff.body.data.every((d: any) => !d.active)).toBe(true);
+        const on = await http(ctx.app)
+            .get(url('?mode=AUTO&active=true&perPage=100'))
+            .set(...auth());
+        expect(on.body.data.length).toBeGreaterThan(0);
+        expect(on.body.data.every((d: any) => d.active)).toBe(true);
+
+        for (const [orderBy, value] of [
+            ['sent', (d: any) => d.stats.sent],
+            ['replyRate', (d: any) => d.stats.replied / (d.stats.sent || 1)],
+            [
+                'lastSentAt',
+                (d: any) =>
+                    d.stats.lastSentAt ? Date.parse(d.stats.lastSentAt) : 0,
+            ],
+        ] as const) {
+            const sorted = await http(ctx.app)
+                .get(url(`?orderBy=${orderBy}&orderDirection=DESC&perPage=100`))
+                .set(...auth());
+            expect(sorted.status).toBe(200);
+            const values = sorted.body.data.map(value);
+            expect(values).toEqual([...values].sort((a, b) => b - a));
+        }
+    });
 });

@@ -37395,6 +37395,14 @@ export type MarketingSendWorkspaceControllerListV1Data = {
          */
         mode?: string;
         /**
+         * The stage a send was made for, with ',' delimiter
+         */
+        preset?: string;
+        /**
+         * true (Đang tự gửi) and/or false (Đã tắt tự gửi), with ',' delimiter
+         */
+        active?: string;
+        /**
          * Search will base on _metadata.pagination._availableSearch with rule contains, and case insensitive
          */
         search?: string;
