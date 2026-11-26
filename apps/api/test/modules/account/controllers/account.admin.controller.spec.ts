@@ -19,4 +19,32 @@ describe('AccountAdminController', () => {
             populate: ['createdBy', 'updatedBy'],
         });
     });
+
+    it('returns only the public fields of the audit users', async () => {
+        const user = {
+            id: 'u1',
+            name: 'Ada',
+            email: 'ada@example.com',
+            password: 'argon2-hash',
+            salt: 'salt',
+            mfaSecret: 'secret',
+        };
+        const account = {
+            toObject: () => ({ id: 'a1', createdBy: user, updatedBy: user }),
+        };
+        const controller = new AccountAdminController(
+            {} as any,
+            { findOneByIdOrSlug: jest.fn().mockResolvedValue(account) } as any,
+            {} as any
+        );
+
+        const { data } = await controller.get('a1');
+
+        for (const by of [data!.createdBy, data!.updatedBy]) {
+            expect(by).toMatchObject({ id: 'u1', name: 'Ada' });
+            expect(by).not.toHaveProperty('password');
+            expect(by).not.toHaveProperty('salt');
+            expect(by).not.toHaveProperty('mfaSecret');
+        }
+    });
 });
