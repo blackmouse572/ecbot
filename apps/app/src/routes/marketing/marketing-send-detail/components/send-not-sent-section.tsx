@@ -1,5 +1,6 @@
 import type { MarketingSendGetResponseDto } from "@/hooks/api/marketing-sends";
 import { Container, Heading, Text } from "@medusajs/ui";
+import { useAnalyticsFormat } from "@/routes/dashboard/components/analytics/use-analytics-format";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -7,8 +8,8 @@ type SendNotSentSectionProps = { send: MarketingSendGetResponseDto };
 
 /** Customers the send left out or could not reach, by reason. */
 export const SendNotSentSection: FC<SendNotSentSectionProps> = ({ send }) => {
-  const { t, i18n } = useTranslation();
-  const number = new Intl.NumberFormat(i18n.language);
+  const { t } = useTranslation();
+  const f = useAnalyticsFormat();
   const total = send.notSent.reduce((sum, row) => sum + row.count, 0);
 
   if (!total) return null;
@@ -18,7 +19,7 @@ export const SendNotSentSection: FC<SendNotSentSectionProps> = ({ send }) => {
       <div className="flex items-center justify-between gap-x-3 px-6 py-4">
         <Heading level="h2">{t("marketing.sends.notSent.title")}</Heading>
         <Text size="small" className="text-ui-fg-subtle tabular-nums">
-          {t("marketing.sends.notSent.total", { value: number.format(total) })}
+          {t("marketing.sends.notSent.total", { value: f.number(total) })}
         </Text>
       </div>
       <ul className="flex flex-col gap-y-2 px-6 py-4">
@@ -35,7 +36,7 @@ export const SendNotSentSection: FC<SendNotSentSectionProps> = ({ send }) => {
               {t(`marketing.exclusion.${row.reason}`)}
             </Text>
             <Text size="small" weight="plus" className="tabular-nums">
-              {number.format(row.count)}
+              {f.number(row.count)}
             </Text>
           </li>
         ))}

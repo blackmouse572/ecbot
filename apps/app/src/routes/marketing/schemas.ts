@@ -31,7 +31,11 @@ export const marketingSendFormSchema = zod.object({
 export type MarketingSendFormData = zod.infer<typeof marketingSendFormSchema>;
 
 export const marketingSendEditSchema = zod.object({
-  name: zod.string().trim().min(1).max(MARKETING_SEND_NAME_MAX),
+  name: zod
+    .string()
+    .trim()
+    .min(1, t("marketing.sends.edit.errors.name"))
+    .max(MARKETING_SEND_NAME_MAX),
   text: marketingSendFormSchema.shape.text,
 });
 

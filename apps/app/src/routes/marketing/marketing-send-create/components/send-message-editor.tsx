@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, type FC, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
   matchVariables,
+  MESSAGE_VARIABLE_LABEL_KEY,
   MESSAGE_VARIABLES,
   MessageVariableNode,
   toMessageDoc,
@@ -36,11 +37,6 @@ type Suggest = {
   top: number;
 };
 
-const LABEL_KEY: Record<MessageVariable, string> = {
-  name: "marketing.send.message.tokenName",
-  product: "marketing.send.message.tokenProduct",
-};
-
 /**
  * The send text, typed in place. Chat channels send plain text, so there
  * is no formatting: lines, and {name} / {product} as chips. Typing `{`
@@ -56,7 +52,7 @@ export const SendMessageEditor: FC<SendMessageEditorProps> = ({
   actions,
 }) => {
   const { t } = useTranslation();
-  const label = (key: MessageVariable) => t(LABEL_KEY[key]);
+  const label = (key: MessageVariable) => t(MESSAGE_VARIABLE_LABEL_KEY[key]);
 
   const boxRef = useRef<HTMLDivElement>(null);
   const [suggest, setSuggest] = useState<Suggest | null>(null);
@@ -138,7 +134,9 @@ export const SendMessageEditor: FC<SendMessageEditorProps> = ({
         underline: false,
       }),
       Placeholder.configure({ placeholder }),
-      MessageVariableNode.configure({ label: (key) => t(LABEL_KEY[key]) }),
+      MessageVariableNode.configure({
+        label: (key) => t(MESSAGE_VARIABLE_LABEL_KEY[key]),
+      }),
     ],
     content: toMessageDoc(value),
     editable: !disabled,

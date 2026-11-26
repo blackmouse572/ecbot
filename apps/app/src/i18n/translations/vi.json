@@ -4203,7 +4203,10 @@
         "title": "Sửa tin nhắn",
         "name": "Tên",
         "saved": "Đã lưu tin nhắn",
-        "text": "Tin nhắn"
+        "text": "Tin nhắn",
+        "errors": {
+          "name": "Nhập tên"
+        }
       },
       "turnOff": {
         "action": "Tắt tự gửi",

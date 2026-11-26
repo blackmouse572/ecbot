@@ -1,5 +1,6 @@
 import type { MarketingSendGetResponseDto } from "@/hooks/api/marketing-sends";
 import { useAnalyticsFormat } from "@/routes/dashboard/components/analytics/use-analytics-format";
+import { ORDER_DEFAULT_CURRENCY } from "@/routes/orders/constants";
 import { formatMoney } from "@/routes/orders/utils";
 import { StatCard } from "@repo/ui/charts";
 import type { FC } from "react";
@@ -37,8 +38,11 @@ export const SendStats: FC<SendStatsProps> = ({ send }) => {
         current={stats.ordered}
         format={f.number}
         hint={t("marketing.sends.stats.revenue", {
-          // VND has no minor unit, so minor units are đồng.
-          value: formatMoney(stats.revenue, "VND", i18n.language),
+          value: formatMoney(
+            stats.revenue,
+            ORDER_DEFAULT_CURRENCY,
+            i18n.language,
+          ),
         })}
       />
       <StatCard

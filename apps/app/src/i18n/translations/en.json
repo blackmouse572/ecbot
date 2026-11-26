@@ -4178,7 +4178,10 @@
         "title": "Edit message",
         "name": "Name",
         "saved": "Message saved",
-        "text": "Message"
+        "text": "Message",
+        "errors": {
+          "name": "Enter a name"
+        }
       },
       "turnOff": {
         "action": "Turn off auto-send",

@@ -102,6 +102,8 @@ describe("MarketingSendEdit", () => {
     fireEvent.change(screen.getByLabelText("Tên"), { target: { value: " " } });
     fireEvent.click(screen.getByRole("button", { name: "Lưu" }));
 
-    await waitFor(() => expect(state.update).not.toHaveBeenCalled());
+    // Schemas translate when they load, before the test switches to vi.
+    expect(await screen.findByText("Enter a name")).toBeTruthy();
+    expect(state.update).not.toHaveBeenCalled();
   });
 });

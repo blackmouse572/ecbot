@@ -52,7 +52,8 @@ export const SendRepliesSection: FC<SendRepliesSectionProps> = ({ sendId }) => {
       ) : (
         <ul className="divide-y">
           {replies.map((reply) => (
-            <li key={reply.customerId}>
+            // A customer can reply to the send on more than one day.
+            <li key={`${reply.customerId}-${reply.repliedAt}`}>
               <ReplyRow reply={reply} workspaceSlug={workspaceSlug} />
             </li>
           ))}

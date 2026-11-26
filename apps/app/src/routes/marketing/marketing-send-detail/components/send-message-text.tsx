@@ -1,13 +1,11 @@
 import { Text } from "@medusajs/ui";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
-
-const TOKENS = /(\{name\}|\{product\})/g;
-
-const LABEL_KEY: Record<string, string> = {
-  "{name}": "marketing.send.message.tokenName",
-  "{product}": "marketing.send.message.tokenProduct",
-};
+import {
+  isVariable,
+  MESSAGE_TOKENS,
+  MESSAGE_VARIABLE_LABEL_KEY,
+} from "../../marketing-send-create/utils/message-variables";
 
 /** A send's text as the shop wrote it, {name} and {product} as chips. */
 export const SendMessageText: FC<{ text: string }> = ({ text }) => {
@@ -15,18 +13,20 @@ export const SendMessageText: FC<{ text: string }> = ({ text }) => {
 
   return (
     <Text size="small" className="whitespace-pre-line break-words">
-      {text.split(TOKENS).map((part, index) =>
-        LABEL_KEY[part] ? (
+      {text.split(MESSAGE_TOKENS).map((part, index) => {
+        const key = part.slice(1, -1);
+
+        return isVariable(key) && part === `{${key}}` ? (
           <span
             key={index}
             className="bg-ui-tag-blue-bg text-ui-tag-blue-text shadow-borders-base txt-compact-small-plus mx-px rounded px-1 py-px"
           >
-            {`{${t(LABEL_KEY[part])}}`}
+            {`{${t(MESSAGE_VARIABLE_LABEL_KEY[key])}}`}
           </span>
         ) : (
           part
-        ),
-      )}
+        );
+      })}
     </Text>
   );
 };

@@ -132,7 +132,7 @@ export const MarketingSendDetail = () => {
 
       <TwoColumnPage hasOutlet>
         <TwoColumnPage.Main>
-          <SendRepliesSection sendId={send.id} />
+          <SendRepliesSection key={send.id} sendId={send.id} />
           <SendChannelsSection send={send} />
         </TwoColumnPage.Main>
         <TwoColumnPage.Sidebar>

@@ -2,6 +2,7 @@ import { channelOf } from "@/components/platform-icon/channel-catalog";
 import { PlatformIcon } from "@/components/platform-icon/platform-icon";
 import type { MarketingSendGetResponseDto } from "@/hooks/api/marketing-sends";
 import { Container, Heading, Table } from "@medusajs/ui";
+import { useAnalyticsFormat } from "@/routes/dashboard/components/analytics/use-analytics-format";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -11,8 +12,8 @@ const COLUMNS = ["sent", "replied", "ordered", "optedOut"] as const;
 
 /** Kết quả theo kênh: the send's counts on each channel it went out on. */
 export const SendChannelsSection: FC<SendChannelsSectionProps> = ({ send }) => {
-  const { t, i18n } = useTranslation();
-  const number = new Intl.NumberFormat(i18n.language);
+  const { t } = useTranslation();
+  const f = useAnalyticsFormat();
 
   if (!send.channels.length) return null;
 
@@ -46,7 +47,7 @@ export const SendChannelsSection: FC<SendChannelsSectionProps> = ({ send }) => {
                 </Table.Cell>
                 {COLUMNS.map((column) => (
                   <Table.Cell key={column} className="text-right tabular-nums">
-                    {number.format(row[column])}
+                    {f.number(row[column])}
                   </Table.Cell>
                 ))}
               </Table.Row>
