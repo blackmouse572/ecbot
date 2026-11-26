@@ -21,11 +21,13 @@ export const usePausePollingWhenIdle = (idleMs = 5 * 60_000) => {
 
     const onInput = () => {
       lastInput = Date.now();
+
       if (paused) {
         paused = false;
         focusManager.setFocused(undefined);
       }
     };
+
     const check = setInterval(() => {
       if (!paused && Date.now() - lastInput >= idleMs) {
         paused = true;
