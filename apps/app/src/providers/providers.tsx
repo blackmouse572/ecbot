@@ -13,6 +13,7 @@ import i18n from "@/i18n";
 import React from "react";
 import { createPortal } from "react-dom";
 import { ClientProvider } from "./client-provider";
+import { usePausePollingWhenIdle } from "@/hooks/use-pause-polling-when-idle";
 
 type ProvidersProps = PropsWithChildren<object>;
 const ReactQueryDevtoolsProduction = React.lazy(() =>
@@ -29,6 +30,7 @@ const renderInBody = (node: React.ReactNode) =>
 
 export const Providers = ({ children }: ProvidersProps) => {
   const [showDevtools, setShowDevtools] = React.useState(false);
+  usePausePollingWhenIdle();
 
   React.useEffect(() => {
     // @ts-expect-error Devtools
