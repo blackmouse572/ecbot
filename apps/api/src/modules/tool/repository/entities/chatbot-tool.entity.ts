@@ -13,7 +13,6 @@ import { ToolEntity } from 'src/modules/tool/repository/entities/tool.entity';
 export const ChatbotToolTableName = 'chatbot_tools';
 
 @Entity({ tableName: ChatbotToolTableName })
-@Index({ properties: ['chatbot'] })
 @Index({ properties: ['tool'] })
 @Unique({ properties: ['chatbot', 'tool'] })
 export class ChatbotToolEntity extends DatabaseEntityBase {

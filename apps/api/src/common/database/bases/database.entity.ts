@@ -4,9 +4,7 @@ import { IsOptional } from 'class-validator';
 import { randomUUID as uuidV4 } from 'node:crypto';
 
 @Entity()
-@Index({ properties: ['deleted'] })
 @Index({ properties: ['createdAt'] })
-@Index({ properties: ['updatedAt'] })
 @Index({ properties: ['deletedAt'] })
 export class DatabaseEntityBase {
     @IsOptional()

@@ -434,16 +434,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "accounts_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "external_id"
           ],
           "composite": false,
@@ -469,16 +459,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "accounts_slug_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "accounts_updated_at_index",
           "unique": false,
           "primary": false
         },
@@ -942,16 +922,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "activities_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -959,16 +929,6 @@
           "keyName": "activities_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "activities_updated_at_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -1347,16 +1307,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "api_keys_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "is_active"
           ],
           "composite": false,
@@ -1402,16 +1352,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "api_keys_type_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "api_keys_updated_at_index",
           "unique": false,
           "primary": false
         }
@@ -1681,16 +1621,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "chatbot_knowledge_items_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "knowledge_item_id"
           ],
           "composite": false,
@@ -1708,16 +1638,6 @@
           "keyName": "chatbot_knowledge_items_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "chatbot_knowledge_items_updated_at_index",
-          "unique": false,
-          "primary": false
         }
       ],
       "checks": [],
@@ -1975,16 +1895,6 @@
       "indexes": [
         {
           "columnNames": [
-            "chatbot_id"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "chatbot_skills_chatbot_id_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "chatbot_id",
             "skill_id"
           ],
@@ -2016,16 +1926,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "chatbot_skills_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -2041,16 +1941,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "chatbot_skills_skill_id_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "chatbot_skills_updated_at_index",
           "unique": false,
           "primary": false
         }
@@ -2326,16 +2216,6 @@
       "indexes": [
         {
           "columnNames": [
-            "chatbot_id"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "chatbot_tools_chatbot_id_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "chatbot_id",
             "tool_id"
           ],
@@ -2367,16 +2247,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "chatbot_tools_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -2392,16 +2262,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "chatbot_tools_tool_id_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "chatbot_tools_updated_at_index",
           "unique": false,
           "primary": false
         }
@@ -3097,16 +2957,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "chatbots_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -3132,16 +2982,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "chatbots_type_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "chatbots_updated_at_index",
           "unique": false,
           "primary": false
         },
@@ -3482,16 +3322,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "client_credentials_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "is_active"
           ],
           "composite": false,
@@ -3529,16 +3359,6 @@
           "keyName": "client_credentials_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "client_credentials_updated_at_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -3901,16 +3721,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "contact_points_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -3918,26 +3728,6 @@
           "keyName": "contact_points_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "contact_points_updated_at_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "workspace_id"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "contact_points_workspace_id_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -4381,16 +4171,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "conversation_reads_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "operator_id",
             "conversation_id"
           ],
@@ -4402,16 +4182,6 @@
         },
         {
           "columnNames": [
-            "operator_id"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "conversation_reads_operator_id_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -4419,16 +4189,6 @@
           "keyName": "conversation_reads_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "conversation_reads_updated_at_index",
-          "unique": false,
-          "primary": false
         }
       ],
       "checks": [],
@@ -4922,16 +4682,6 @@
         },
         {
           "columnNames": [
-            "chatbot_id"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "conversations_chatbot_id_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "contact_point_id"
           ],
           "composite": false,
@@ -4962,16 +4712,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "conversations_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -4997,16 +4737,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "conversations_status_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "conversations_updated_at_index",
           "unique": false,
           "primary": false
         }
@@ -5331,16 +5061,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "cookies_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -5348,16 +5068,6 @@
           "keyName": "cookies_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "cookies_updated_at_index",
-          "unique": false,
-          "primary": false
         }
       ],
       "checks": [],
@@ -5733,29 +5443,9 @@
             "alpha2code"
           ],
           "composite": false,
-          "constraint": false,
-          "keyName": "countries_alpha2code_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "alpha2code"
-          ],
-          "composite": false,
           "constraint": true,
           "keyName": "countries_alpha2code_unique",
           "unique": true,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "alpha3code"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "countries_alpha3code_index",
-          "unique": false,
           "primary": false
         },
         {
@@ -5785,16 +5475,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "countries_deleted_at_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "countries_deleted_index",
           "unique": false,
           "primary": false
         },
@@ -5837,16 +5517,6 @@
           "keyName": "countries_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "countries_updated_at_index",
-          "unique": false,
-          "primary": false
         }
       ],
       "checks": [],
@@ -6247,16 +5917,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "customer_marketing_states_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "workspace_id",
             "first_tracked_link_id"
           ],
@@ -6275,16 +5935,6 @@
           "keyName": "customer_marketing_states_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "customer_marketing_states_updated_at_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -6733,16 +6383,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "customer_merge_suggestions_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -6763,16 +6403,6 @@
         },
         {
           "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "customer_merge_suggestions_updated_at_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "workspace_id",
             "customer_a_id",
             "customer_b_id",
@@ -6782,16 +6412,6 @@
           "constraint": true,
           "keyName": "customer_merge_suggestions_workspace_id_customer__6a18c_unique",
           "unique": true,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "workspace_id"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "customer_merge_suggestions_workspace_id_index",
-          "unique": false,
           "primary": false
         }
       ],
@@ -7126,16 +6746,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "customer_product_reactions_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -7143,16 +6753,6 @@
           "keyName": "customer_product_reactions_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "customer_product_reactions_updated_at_index",
-          "unique": false,
-          "primary": false
         }
       ],
       "checks": [],
@@ -7417,16 +7017,6 @@
         },
         {
           "columnNames": [
-            "customer_id"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "customer_tag_assignments_customer_id_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "customer_id",
             "tag_id"
           ],
@@ -7448,16 +7038,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "customer_tag_assignments_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -7473,16 +7053,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "customer_tag_assignments_tag_id_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "customer_tag_assignments_updated_at_index",
           "unique": false,
           "primary": false
         }
@@ -7828,16 +7398,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "customer_tag_events_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -7853,16 +7413,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "customer_tag_events_tag_id_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "customer_tag_events_updated_at_index",
           "unique": false,
           "primary": false
         },
@@ -8243,16 +7793,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "customer_tags_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -8260,26 +7800,6 @@
           "keyName": "customer_tags_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "customer_tags_updated_at_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "workspace_id"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "customer_tags_workspace_id_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -8662,16 +8182,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "customers_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "email"
           ],
           "composite": false,
@@ -8709,16 +8219,6 @@
           "keyName": "customers_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "customers_updated_at_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -8945,16 +8445,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "database_entity_base_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -8962,16 +8452,6 @@
           "keyName": "database_entity_base_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "database_entity_base_updated_at_index",
-          "unique": false,
-          "primary": false
         }
       ],
       "checks": [],
@@ -9376,16 +8856,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "facebook_activities_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "page_id"
           ],
           "composite": false,
@@ -9421,16 +8891,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "facebook_activities_sender_id_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "facebook_activities_updated_at_index",
           "unique": false,
           "primary": false
         }
@@ -9839,16 +9299,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "followups_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -9864,16 +9314,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "followups_scheduled_at_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "followups_updated_at_index",
           "unique": false,
           "primary": false
         }
@@ -10302,16 +9742,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "invitations_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "expires_at"
           ],
           "composite": false,
@@ -10345,29 +9775,9 @@
             "token"
           ],
           "composite": false,
-          "constraint": false,
-          "keyName": "invitations_token_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "token"
-          ],
-          "composite": false,
           "constraint": true,
           "keyName": "invitations_token_unique",
           "unique": true,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "invitations_updated_at_index",
-          "unique": false,
           "primary": false
         },
         {
@@ -10728,16 +10138,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "knowledge_base_folders_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "knowledge_base_id",
             "parent_folder_id"
           ],
@@ -10768,16 +10168,6 @@
           "keyName": "knowledge_base_folders_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "knowledge_base_folders_updated_at_index",
-          "unique": false,
-          "primary": false
         }
       ],
       "checks": [],
@@ -11274,26 +10664,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "knowledge_base_items_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "knowledge_base_id"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "knowledge_base_items_knowledge_base_id_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "knowledge_base_id",
             "status"
           ],
@@ -11331,16 +10701,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "knowledge_base_items_status_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "knowledge_base_items_updated_at_index",
           "unique": false,
           "primary": false
         }
@@ -11652,16 +11012,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "knowledge_bases_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -11669,16 +11019,6 @@
           "keyName": "knowledge_bases_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "knowledge_bases_updated_at_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -12113,16 +11453,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "knowledge_item_tags_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "knowledge_item_id",
             "tag"
           ],
@@ -12149,16 +11479,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "knowledge_item_tags_tag_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "knowledge_item_tags_updated_at_index",
           "unique": false,
           "primary": false
         }
@@ -12467,16 +11787,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "marketing_audiences_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -12484,26 +11794,6 @@
           "keyName": "marketing_audiences_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "marketing_audiences_updated_at_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "workspace_id"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "marketing_audiences_workspace_id_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -12912,16 +12202,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "marketing_backfill_runs_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -12929,16 +12209,6 @@
           "keyName": "marketing_backfill_runs_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "marketing_backfill_runs_updated_at_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -13399,16 +12669,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "marketing_events_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -13424,16 +12684,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "marketing_events_tracked_link_id_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "marketing_events_updated_at_index",
           "unique": false,
           "primary": false
         },
@@ -13911,16 +13161,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "marketing_messages_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -13936,16 +13176,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "marketing_messages_send_id_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "marketing_messages_updated_at_index",
           "unique": false,
           "primary": false
         },
@@ -14360,16 +13590,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "marketing_sends_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -14377,16 +13597,6 @@
           "keyName": "marketing_sends_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "marketing_sends_updated_at_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -14757,16 +13967,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "marketing_settings_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -14774,16 +13974,6 @@
           "keyName": "marketing_settings_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "marketing_settings_updated_at_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -15247,11 +14437,12 @@
         },
         {
           "columnNames": [
-            "conversation_id"
+            "conversation_id",
+            "date_sent"
           ],
-          "composite": false,
+          "composite": true,
           "constraint": false,
-          "keyName": "messages_conversation_id_index",
+          "keyName": "messages_conversation_id_date_sent_index",
           "unique": false,
           "primary": false
         },
@@ -15287,16 +14478,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "messages_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "external_id"
           ],
           "composite": false,
@@ -15314,16 +14495,6 @@
           "keyName": "messages_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "messages_updated_at_index",
-          "unique": false,
-          "primary": false
         }
       ],
       "checks": [],
@@ -15620,16 +14791,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "notification_push_subscriptions_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "endpoint"
           ],
           "composite": false,
@@ -15647,16 +14808,6 @@
           "keyName": "notification_push_subscriptions_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "notification_push_subscriptions_updated_at_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -16159,16 +15310,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "notifications_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -16224,16 +15365,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "notifications_type_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "notifications_updated_at_index",
           "unique": false,
           "primary": false
         }
@@ -16558,16 +15689,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "order_items_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "order_id"
           ],
           "composite": false,
@@ -16593,16 +15714,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "order_items_product_group_id_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "order_items_updated_at_index",
           "unique": false,
           "primary": false
         }
@@ -17029,16 +16140,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "orders_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -17046,16 +16147,6 @@
           "keyName": "orders_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "orders_updated_at_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -17402,16 +16493,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "password_histories_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -17419,16 +16500,6 @@
           "keyName": "password_histories_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "password_histories_updated_at_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -17860,16 +16931,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "product_groups_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -17877,16 +16938,6 @@
           "keyName": "product_groups_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "product_groups_updated_at_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -18242,16 +17293,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "proxies_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -18259,16 +17300,6 @@
           "keyName": "proxies_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "proxies_updated_at_index",
-          "unique": false,
-          "primary": false
         }
       ],
       "checks": [],
@@ -18708,16 +17739,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "rags_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -18738,32 +17759,12 @@
         },
         {
           "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "rags_updated_at_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "workspace_id",
             "chatbot_id"
           ],
           "composite": true,
           "constraint": false,
           "keyName": "rags_workspace_id_chatbot_id_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "workspace_id"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "rags_workspace_id_index",
           "unique": false,
           "primary": false
         }
@@ -19131,16 +18132,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "requests_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -19186,16 +18177,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "requests_type_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "requests_updated_at_index",
           "unique": false,
           "primary": false
         },
@@ -19657,16 +18638,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "reset_passwords_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "is_active"
           ],
           "composite": false,
@@ -19710,16 +18681,6 @@
             "token"
           ],
           "composite": false,
-          "constraint": false,
-          "keyName": "reset_passwords_token_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "token"
-          ],
-          "composite": false,
           "constraint": true,
           "keyName": "reset_passwords_token_unique",
           "unique": true,
@@ -19732,16 +18693,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "reset_passwords_type_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "reset_passwords_updated_at_index",
           "unique": false,
           "primary": false
         },
@@ -20072,16 +19023,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "roles_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "is_active"
           ],
           "composite": false,
@@ -20118,16 +19059,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "roles_type_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "roles_updated_at_index",
           "unique": false,
           "primary": false
         }
@@ -20605,16 +19536,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "sessions_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "expired_at"
           ],
           "composite": false,
@@ -20640,16 +19561,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "sessions_status_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "sessions_updated_at_index",
           "unique": false,
           "primary": false
         },
@@ -21140,16 +20051,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "skills_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -21157,26 +20058,6 @@
           "keyName": "skills_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "skills_updated_at_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "workspace_id"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "skills_workspace_id_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -21504,16 +20385,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "tool_install_sessions_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "expires_at"
           ],
           "composite": false,
@@ -21531,16 +20402,6 @@
           "keyName": "tool_install_sessions_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "tool_install_sessions_updated_at_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -22174,16 +21035,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "toolkit_overrides_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -22200,16 +21051,6 @@
           "constraint": true,
           "keyName": "toolkit_overrides_slug_unique",
           "unique": true,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "toolkit_overrides_updated_at_index",
-          "unique": false,
           "primary": false
         }
       ],
@@ -22768,16 +21609,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "tools_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "kind"
           ],
           "composite": false,
@@ -22803,26 +21634,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "tools_status_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "tools_updated_at_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "workspace_id"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "tools_workspace_id_index",
           "unique": false,
           "primary": false
         },
@@ -23237,16 +22048,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "tracked_links_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -23254,16 +22055,6 @@
           "keyName": "tracked_links_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "tracked_links_updated_at_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -23629,16 +22420,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "usage_events_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -23646,16 +22427,6 @@
           "keyName": "usage_events_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "usage_events_updated_at_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -24511,42 +23282,12 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "users_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "email"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "users_email_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "email"
           ],
           "composite": false,
           "constraint": true,
           "keyName": "users_email_unique",
           "unique": true,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "last_seen_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "users_last_seen_at_index",
-          "unique": false,
           "primary": false
         },
         {
@@ -24568,26 +23309,6 @@
           "keyName": "users_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "users_updated_at_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "username"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "users_username_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -25003,16 +23724,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "verifications_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "is_active"
           ],
           "composite": false,
@@ -25048,16 +23759,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "verifications_type_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "verifications_updated_at_index",
           "unique": false,
           "primary": false
         },
@@ -25334,16 +24035,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "waitlists_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "email"
           ],
           "composite": false,
@@ -25369,16 +24060,6 @@
           "composite": false,
           "constraint": false,
           "keyName": "waitlists_source_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "waitlists_updated_at_index",
           "unique": false,
           "primary": false
         }
@@ -25664,16 +24345,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "workspace_members_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "is_active"
           ],
           "composite": false,
@@ -25704,31 +24375,11 @@
         },
         {
           "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "workspace_members_updated_at_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "user_id"
           ],
           "composite": false,
           "constraint": false,
           "keyName": "workspace_members_user_id_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "workspace_id"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "workspace_members_workspace_id_index",
           "unique": false,
           "primary": false
         },
@@ -26064,16 +24715,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "workspace_usage_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "id"
           ],
           "composite": false,
@@ -26081,26 +24722,6 @@
           "keyName": "workspace_usage_pkey",
           "unique": true,
           "primary": true
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "workspace_usage_updated_at_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "workspace_id"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "workspace_usage_workspace_id_index",
-          "unique": false,
-          "primary": false
         },
         {
           "columnNames": [
@@ -26474,16 +25095,6 @@
         },
         {
           "columnNames": [
-            "deleted"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "workspaces_deleted_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
             "owner_id"
           ],
           "composite": false,
@@ -26507,29 +25118,9 @@
             "slug"
           ],
           "composite": false,
-          "constraint": false,
-          "keyName": "workspaces_slug_index",
-          "unique": false,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "slug"
-          ],
-          "composite": false,
           "constraint": true,
           "keyName": "workspaces_slug_unique",
           "unique": true,
-          "primary": false
-        },
-        {
-          "columnNames": [
-            "updated_at"
-          ],
-          "composite": false,
-          "constraint": false,
-          "keyName": "workspaces_updated_at_index",
-          "unique": false,
           "primary": false
         }
       ],

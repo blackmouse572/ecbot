@@ -9,7 +9,6 @@ export const SessionTableName = 'sessions';
 @Index({ properties: ['status'] })
 @Index({ properties: ['user'] })
 @Index({ properties: ['expiredAt'] })
-@Index({ properties: ['deleted'] })
 export class SessionEntity extends DatabaseEntityBase {
     @Enum(() => ENUM_SESSION_STATUS)
     status: ENUM_SESSION_STATUS = ENUM_SESSION_STATUS.ACTIVE;

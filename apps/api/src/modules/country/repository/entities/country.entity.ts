@@ -5,8 +5,6 @@ export const CountryTableName = 'countries';
 
 @Entity({ tableName: CountryTableName })
 @Index({ properties: ['name'] })
-@Index({ properties: ['alpha2Code'] })
-@Index({ properties: ['alpha3Code'] })
 @Index({ properties: ['phoneCode'] })
 export class CountryEntity extends DatabaseEntityBase {
     @Property({ type: 'varchar', length: 100 })

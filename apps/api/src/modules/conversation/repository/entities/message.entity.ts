@@ -30,7 +30,7 @@ export type MessageReaction = {
 };
 
 @Entity({ tableName: MessageTableName })
-@Index({ properties: ['conversation'] })
+@Index({ properties: ['conversation', 'dateSent'] })
 @Index({ properties: ['externalId'] })
 @Index({ properties: ['clientNonce'] })
 @Index({ properties: ['dateSent'] })

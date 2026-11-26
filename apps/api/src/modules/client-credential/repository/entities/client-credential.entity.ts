@@ -11,7 +11,6 @@ export const ClientCredentialTableName = 'client_credentials';
 @Index({ properties: ['workspace'] })
 @Index({ properties: ['name'] })
 @Index({ properties: ['isActive'] })
-@Index({ properties: ['deleted'] })
 @Unique({ properties: ['key'] })
 export class ClientCredentialEntity extends DatabaseEntityBase {
     @ManyToOne(() => WorkspaceEntity)

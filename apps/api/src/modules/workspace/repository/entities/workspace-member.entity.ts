@@ -8,7 +8,6 @@ export const WorkspaceMemberTableName = 'workspace_members';
 
 @Entity({ tableName: WorkspaceMemberTableName })
 @Index({ properties: ['workspace', 'user'] })
-@Index({ properties: ['workspace'] })
 @Index({ properties: ['user'] })
 @Index({ properties: ['role'] })
 @Index({ properties: ['isActive'] })
