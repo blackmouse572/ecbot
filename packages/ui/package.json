@@ -52,7 +52,7 @@
     "copy-to-clipboard": "^3.3.3",
     "date-fns": "^4.4.0",
     "frimousse": "^0.3.0",
-    "i18next": "^25.10.10",
+    "i18next": "^26.3.4",
     "lodash": "^4.18.1",
     "match-sorter": "^8.3.0",
     "motion": "^12.43.0",
