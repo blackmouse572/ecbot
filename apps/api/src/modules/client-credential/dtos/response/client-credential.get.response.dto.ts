@@ -1,5 +1,5 @@
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
-import { Exclude } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
 import { DatabaseDto } from 'src/common/database/dtos/database.dto';
 
 // List/detail view — metadata only. The secret is never returned here; it is
@@ -14,6 +14,7 @@ export class ClientCredentialGetResponseDto extends DatabaseDto {
         example: 'Luettgen Group',
         required: true,
     })
+    @Expose()
     name: string;
 
     @ApiProperty({
@@ -21,6 +22,7 @@ export class ClientCredentialGetResponseDto extends DatabaseDto {
         example: 'wbWPYhNlenP7VxFHMJVy09IIK',
         required: true,
     })
+    @Expose()
     key: string;
 
     @ApiProperty({
@@ -28,6 +30,7 @@ export class ClientCredentialGetResponseDto extends DatabaseDto {
         example: true,
         required: true,
     })
+    @Expose()
     isActive: boolean;
 
     @ApiProperty({
@@ -35,6 +38,7 @@ export class ClientCredentialGetResponseDto extends DatabaseDto {
         example: new Date('2026-03-08T22:40:59.479Z'),
         required: false,
     })
+    @Expose()
     startDate?: Date;
 
     @ApiProperty({
@@ -42,5 +46,6 @@ export class ClientCredentialGetResponseDto extends DatabaseDto {
         example: new Date('2027-04-17T18:23:15.628Z'),
         required: false,
     })
+    @Expose()
     endDate?: Date;
 }

@@ -26,11 +26,8 @@ import {
 } from 'src/common/response/interfaces/response.interface';
 import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { ActivityService } from '@app/modules/activity/services/activity.service';
-import { hasToObject } from '@app/common/utils/common';
 import { UserParsePipe } from '@app/modules/user/pipes/user.parse.pipe';
-import { UserMetaResponseDto } from '@app/modules/user/dtos/response/user.meta.response.dto';
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
-import { plainToInstance } from 'class-transformer';
 import { UserProtected } from 'src/modules/user/decorators/user.decorator';
 import { ApiKeyProtected } from 'src/modules/api-key/decorators/api-key.decorator';
 import {
@@ -150,22 +147,9 @@ export class AccountAdminController {
             });
         }
 
-        // `toObject()` drops the hidden columns (accessToken, config); a row
-        // that is already plain has nothing to drop.
-        const plain = hasToObject(account) ? account.toObject() : account;
-        const data = plainToInstance(AccountGetDetailResponseDto, { ...plain });
-
-        // A populated user carries every column, password hash and salt
-        // included; only the fields UserMetaResponseDto exposes travel.
-        for (const key of ['createdBy', 'updatedBy'] as const) {
-            if (data[key]) {
-                data[key] = plainToInstance(UserMetaResponseDto, data[key], {
-                    excludeExtraneousValues: true,
-                });
-            }
-        }
-
-        return { data };
+        // mapDetail exposes only the DTO's fields, nested users included, so
+        // the populated users' password hash and salt stay out.
+        return { data: this.accountService.mapDetail(account) };
     }
 
     @AccountAdminCreateDoc()

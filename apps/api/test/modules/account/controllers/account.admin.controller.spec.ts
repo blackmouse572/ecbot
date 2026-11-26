@@ -1,4 +1,5 @@
 import { AccountAdminController } from 'src/modules/account/controllers/account.admin.controller';
+import { AccountService } from 'src/modules/account/services/account.service';
 
 describe('AccountAdminController', () => {
     // The admin account page shows who linked the account and who last
@@ -6,6 +7,7 @@ describe('AccountAdminController', () => {
     it('loads the audit users for the account detail', async () => {
         const accountService = {
             findOneByIdOrSlug: jest.fn().mockResolvedValue({ id: 'a1' }),
+            mapDetail: jest.fn(),
         };
         const controller = new AccountAdminController(
             {} as any,
@@ -29,16 +31,21 @@ describe('AccountAdminController', () => {
             salt: 'salt',
             mfaSecret: 'secret',
         };
-        const account = {
-            toObject: () => ({ id: 'a1', createdBy: user, updatedBy: user }),
+        const account = { id: 'a1', createdBy: user, updatedBy: user };
+        const accountService = {
+            findOneByIdOrSlug: jest.fn().mockResolvedValue(account),
+            mapDetail: jest.fn(AccountService.prototype.mapDetail),
         };
         const controller = new AccountAdminController(
             {} as any,
-            { findOneByIdOrSlug: jest.fn().mockResolvedValue(account) } as any,
+            accountService as any,
             {} as any
         );
 
         const { data } = await controller.get('a1');
+
+        // One narrowing contract for this DTO: the workspace route's.
+        expect(accountService.mapDetail).toHaveBeenCalledWith(account);
 
         for (const by of [data!.createdBy, data!.updatedBy]) {
             expect(by).toMatchObject({ id: 'u1', name: 'Ada' });
