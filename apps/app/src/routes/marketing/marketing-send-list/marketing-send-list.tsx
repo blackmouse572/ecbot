@@ -32,6 +32,17 @@ import { rate, sendStatus } from "../utils";
 
 const columnHelper = createColumnHelper<MarketingSendListResponseDto>();
 
+/** The sort menu writes "name" or "-name"; the API takes field + direction. */
+const toOrder = (order?: string) =>
+  order
+    ? {
+        orderBy: order.replace(/^-/, ""),
+        orderDirection: order.startsWith("-")
+          ? ("DESC" as const)
+          : ("ASC" as const),
+      }
+    : {};
+
 /** Đã gửi: every send and auto-send, and how customers answered. */
 export const MarketingSendList = () => {
   const { t } = useTranslation();
@@ -46,6 +57,7 @@ export const MarketingSendList = () => {
       page: raw.page ? Number(raw.page) : 1,
       search: raw.search || undefined,
       mode: raw.mode || undefined,
+      ...toOrder(raw.order),
     },
   );
 
@@ -109,6 +121,10 @@ export const MarketingSendList = () => {
           pagination
           isLoading={isLoading}
           queryObject={raw}
+          orderBy={[
+            { key: "name", label: t("fields.name") },
+            { key: "createdAt", label: t("fields.createdAt") },
+          ]}
           navigateTo={(row) => row.original.id}
           noRecords={{
             title: t("marketing.sends.noRecordsTitle"),

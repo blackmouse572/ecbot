@@ -133,6 +133,8 @@ export type MarketingSendListParams = {
   search?: string;
   /** "AUTO", "ONCE" or both, comma separated. */
   mode?: string;
+  orderBy?: string;
+  orderDirection?: "ASC" | "DESC";
 };
 
 /** Đã gửi: every send, newest first. */

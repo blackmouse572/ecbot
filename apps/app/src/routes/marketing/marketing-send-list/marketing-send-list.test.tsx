@@ -73,11 +73,11 @@ vi.mock("@/hooks/api/marketing-sends", () => ({
 
 import { MarketingSendList } from "./marketing-send-list";
 
-const renderIt = () =>
+const renderIt = (path = "/lumi/marketing/sends") =>
   render(
     <HelmetProvider>
       <TooltipProvider>
-        <MemoryRouter initialEntries={["/lumi/marketing/sends"]}>
+        <MemoryRouter initialEntries={[path]}>
           <MarketingSendList />
         </MemoryRouter>
       </TooltipProvider>
@@ -130,5 +130,14 @@ describe("MarketingSendList", () => {
       await screen.findByRole("button", { name: /Bật lại tự gửi/ }),
     ).toBeTruthy();
     expect(screen.queryByRole("button", { name: /^Tắt tự gửi/ })).toBeNull();
+  });
+
+  it("sorts by the order in the URL", () => {
+    renderIt("/lumi/marketing/sends?order=-name");
+
+    expect(state.params.at(-1)).toMatchObject({
+      orderBy: "name",
+      orderDirection: "DESC",
+    });
   });
 });

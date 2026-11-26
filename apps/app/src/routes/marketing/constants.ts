@@ -75,7 +75,7 @@ export const MARKETING_SEND_HOURS = Array.from(
 
 /** Đã gửi: rows per page, and the query its tabs, search and pages use. */
 export const MARKETING_SENDS_PAGE_SIZE = 20;
-export const MARKETING_SENDS_QUERY_PARAMS = ["page", "search", "mode"];
+export const MARKETING_SENDS_QUERY_PARAMS = ["page", "search", "mode", "order"];
 export const MARKETING_SEND_REPLIES_PAGE_SIZE = 5;
 
 export const MARKETING_SEND_STATUS_COLOR = {
