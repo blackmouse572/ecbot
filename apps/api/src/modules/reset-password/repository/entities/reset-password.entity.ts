@@ -13,7 +13,6 @@ export const ResetPasswordTableName = 'ResetPasswords';
 
 @Entity({ tableName: 'reset_passwords' })
 @Index({ properties: ['user'] })
-@Index({ properties: ['token'] })
 @Index({ properties: ['type'] })
 @Index({ properties: ['isReset'] })
 @Index({ properties: ['isActive'] })

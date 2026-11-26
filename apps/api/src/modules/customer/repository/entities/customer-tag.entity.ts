@@ -13,7 +13,6 @@ import { WorkspaceEntity } from 'src/modules/workspace/repository/entities/works
 export const CustomerTagTableName = 'customer_tags';
 
 @Entity({ tableName: CustomerTagTableName })
-@Index({ properties: ['workspace'] })
 @Index({ properties: ['workspace', 'systemKey'] })
 @Unique({ properties: ['workspace', 'name'] })
 export class CustomerTagEntity extends DatabaseEntityBase {

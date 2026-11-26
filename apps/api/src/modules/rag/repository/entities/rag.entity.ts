@@ -17,7 +17,6 @@ export const RAGTableName = 'RAGs';
 @Entity({ tableName: 'rags' })
 @Index({ properties: ['workspace', 'chatbot'] })
 @Index({ properties: ['chatbot'] })
-@Index({ properties: ['workspace'] })
 @Index({ properties: ['status'] })
 export class RAGEntity extends DatabaseEntityBase {
     @Embedded(() => AwsS3Entity)

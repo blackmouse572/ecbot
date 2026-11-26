@@ -13,7 +13,6 @@ import { SkillEntity } from './skill.entity';
 export const ChatbotSkillTableName = 'chatbot_skills';
 
 @Entity({ tableName: ChatbotSkillTableName })
-@Index({ properties: ['chatbot'] })
 @Index({ properties: ['skill'] })
 @Unique({ properties: ['chatbot', 'skill'] })
 export class ChatbotSkillEntity extends DatabaseEntityBase {

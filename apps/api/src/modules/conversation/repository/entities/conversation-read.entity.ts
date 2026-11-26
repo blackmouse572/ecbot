@@ -12,7 +12,6 @@ export const ConversationReadTableName = 'conversation_reads';
 
 @Entity({ tableName: ConversationReadTableName })
 @Unique({ properties: ['operatorId', 'conversation'] })
-@Index({ properties: ['operatorId'] })
 @Index({ properties: ['conversation'] })
 export class ConversationReadEntity extends DatabaseEntityBase {
     @Property({ type: 'varchar', length: 255 })

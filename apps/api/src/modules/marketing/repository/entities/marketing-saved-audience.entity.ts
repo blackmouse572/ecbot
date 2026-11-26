@@ -1,7 +1,6 @@
 import {
     Entity,
     Enum,
-    Index,
     ManyToOne,
     Property,
     Unique,
@@ -19,7 +18,6 @@ export const MarketingSavedAudienceTableName = 'marketing_audiences';
  * matched all or any. Who it reaches is worked out at send time.
  */
 @Entity({ tableName: MarketingSavedAudienceTableName })
-@Index({ properties: ['workspace'] })
 // Audiences are hard-deleted, so the name stays unique without soft-delete gaps.
 @Unique({ properties: ['workspace', 'name'] })
 export class MarketingSavedAudienceEntity extends DatabaseEntityBase {

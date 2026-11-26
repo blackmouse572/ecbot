@@ -23,8 +23,6 @@ export const UserTableName = 'users';
 
 @Entity({ tableName: UserTableName })
 @Index({ properties: ['name'] })
-@Index({ properties: ['username'] })
-@Index({ properties: ['email'] })
 export class UserEntity extends DatabaseEntityBase {
     @Property({ type: 'varchar', length: 100 })
     name: string;
@@ -74,8 +72,10 @@ export class UserEntity extends DatabaseEntityBase {
     termsAcceptedAt?: Date;
 
     // Last authenticated request, stamped with the session's throttled
-    // lastActiveAt. Null for users who never signed in.
-    @Property({ type: 'timestamptz', nullable: true, index: true })
+    // lastActiveAt. Null for users who never signed in. Not indexed: it
+    // changes every few minutes per active user, and an index on it turns
+    // each of those writes into a full (non-HOT) row update.
+    @Property({ type: 'timestamptz', nullable: true })
     lastSeenAt?: Date;
 
     @Property({ type: 'varchar', length: 20, nullable: true })

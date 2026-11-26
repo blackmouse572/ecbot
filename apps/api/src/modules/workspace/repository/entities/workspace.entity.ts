@@ -16,7 +16,6 @@ import { ENUM_WORKSPACE_STATUS } from '../../enums/workspace.enum';
 export const WorkspaceTableName = 'workspaces';
 
 @Entity({ tableName: WorkspaceTableName })
-@Index({ properties: ['slug'] })
 @Index({ properties: ['owner'] })
 export class WorkspaceEntity extends DatabaseEntityBase {
     @Property({ type: 'varchar', length: 255 })

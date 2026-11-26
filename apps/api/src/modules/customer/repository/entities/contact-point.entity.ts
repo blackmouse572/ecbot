@@ -14,7 +14,6 @@ import { CustomerEntity } from './customer.entity';
 export const ContactPointTableName = 'contact_points';
 
 @Entity({ tableName: ContactPointTableName })
-@Index({ properties: ['workspace'] })
 @Index({ properties: ['customer'] })
 @Unique({ properties: ['workspace', 'platform', 'externalSenderId'] })
 export class ContactPointEntity extends DatabaseEntityBase {

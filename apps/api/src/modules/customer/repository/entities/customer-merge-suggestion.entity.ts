@@ -27,7 +27,6 @@ export const CustomerMergeSuggestionTableName = 'customer_merge_suggestions';
  * going through that canonicalization step.
  */
 @Entity({ tableName: CustomerMergeSuggestionTableName })
-@Index({ properties: ['workspace'] })
 @Index({ properties: ['status'] })
 @Index({ properties: ['customerA'] })
 @Index({ properties: ['customerB'] })

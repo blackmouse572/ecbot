@@ -15,7 +15,6 @@ export const InvitationDatabaseName = 'Invitations';
 
 @Entity({ tableName: 'invitations' })
 @Index({ properties: ['workspace', 'inviteeEmail'] })
-@Index({ properties: ['token'] })
 @Index({ properties: ['expiresAt'] })
 export class InvitationEntity extends DatabaseEntityBase {
     @ManyToOne(() => WorkspaceEntity)

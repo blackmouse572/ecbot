@@ -25,7 +25,6 @@ export enum ENUM_HTTP_METHOD {
 }
 
 @Entity({ tableName: ToolTableName })
-@Index({ properties: ['workspace'] })
 @Index({ properties: ['kind'] })
 @Index({ properties: ['status'] })
 @Unique({ properties: ['workspace', 'slug'] })

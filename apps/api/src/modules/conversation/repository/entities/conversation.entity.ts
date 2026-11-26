@@ -15,7 +15,6 @@ import { ENUM_CONVERSATION_STATUS } from '../../enums/conversation.enum';
 export const ConversationTableName = 'conversations';
 
 @Entity({ tableName: ConversationTableName })
-@Index({ properties: ['chatbot'] })
 @Index({ properties: ['account'] })
 @Index({ properties: ['status'] })
 @Index({ properties: ['senderId'] })

@@ -8,7 +8,6 @@ export const ApiKeyTableName = 'api_keys';
 @Index({ properties: ['type'] })
 @Index({ properties: ['name'] })
 @Index({ properties: ['isActive'] })
-@Index({ properties: ['deleted'] })
 @Unique({ properties: ['key'] })
 export class ApiKeyEntity extends DatabaseEntityBase {
     @Enum(() => ENUM_API_KEY_TYPE)

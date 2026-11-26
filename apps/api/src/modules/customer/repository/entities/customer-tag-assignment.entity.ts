@@ -6,7 +6,6 @@ import { CustomerTagEntity } from './customer-tag.entity';
 export const CustomerTagAssignmentTableName = 'customer_tag_assignments';
 
 @Entity({ tableName: CustomerTagAssignmentTableName })
-@Index({ properties: ['customer'] })
 @Index({ properties: ['tag'] })
 @Unique({ properties: ['customer', 'tag'] })
 export class CustomerTagAssignmentEntity extends DatabaseEntityBase {

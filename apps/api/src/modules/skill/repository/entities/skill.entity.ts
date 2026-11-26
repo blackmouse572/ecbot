@@ -3,7 +3,6 @@ import {
     Embedded,
     Entity,
     Enum,
-    Index,
     ManyToOne,
     OneToMany,
     Property,
@@ -20,7 +19,6 @@ import { ENUM_SKILL_STATUS } from '../../enums/skill-status.enum';
 export const SkillTableName = 'skills';
 
 @Entity({ tableName: SkillTableName })
-@Index({ properties: ['workspace'] })
 @Unique({ properties: ['workspace', 'slug'] })
 export class SkillEntity extends DatabaseEntityBase {
     // null workspace = builtin skill authored by Ecbot

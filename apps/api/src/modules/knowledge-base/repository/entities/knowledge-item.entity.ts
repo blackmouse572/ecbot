@@ -21,7 +21,6 @@ import { KnowledgeItemTagEntity } from './knowledge-item-tag.entity';
 @Entity({ tableName: 'knowledge_base_items' })
 @Index({ properties: ['knowledgeBase', 'type'] })
 @Index({ properties: ['knowledgeBase', 'status'] })
-@Index({ properties: ['knowledgeBase'] })
 @Index({ properties: ['status'] })
 export class KnowledgeItemEntity extends DatabaseEntityBase {
     @ManyToOne(() => KnowledgeBaseEntity)
