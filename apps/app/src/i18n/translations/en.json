@@ -1965,7 +1965,8 @@
     "createNew": "Create new",
     "unlink": "Unlink",
     "connectChannel": "Connect a channel",
-    "send": "Send"
+    "send": "Send",
+    "done": "Done"
   },
   "general": {
     "notSet": "Not set",
@@ -3951,6 +3952,152 @@
         "optOuts": "Opted out",
         "paused": "Paused",
         "pausedHint": "They receive offers again when the pause ends"
+      }
+    },
+    "exclusion": {
+      "STOPPED": "stopped offers",
+      "HOSTILE": "upset",
+      "PAUSED": "paused",
+      "DEFERRED": "put off for later",
+      "OFFERED_TODAY": "already got another offer today",
+      "CAPPED": "reached the 30-day limit",
+      "RESTING": "resting after no replies"
+    },
+    "send": {
+      "description": "Ecbot picked the customers and drafted the message. Read it, then send.",
+      "notFoundTitle": "Nothing to send here",
+      "notFoundMessage": "Open it again from the to-do list on the Overview.",
+      "preset": {
+        "NEW": {
+          "title": "Welcome new customers",
+          "action": "Welcome them"
+        },
+        "INTERESTED": {
+          "title": "Send a first-order offer",
+          "action": "Send first offer"
+        },
+        "ASKED_PRICE": {
+          "title": "Follow up on price questions",
+          "action": "Follow up with offer"
+        },
+        "CROSS_SELL": {
+          "title": "Suggest something to go with it",
+          "action": "Suggest add-ons"
+        },
+        "REPURCHASE": {
+          "title": "Remind customers to buy again",
+          "action": "Remind to rebuy"
+        },
+        "WIN_BACK": {
+          "title": "Invite past customers back",
+          "action": "Invite back"
+        }
+      },
+      "audience": {
+        "title": "Who gets it",
+        "error": "Couldn't count customers. Try opening this again later.",
+        "excluded": "Ecbot left out {{value}} customers: {{reasons}}.",
+        "unticked_one": "You unticked {{count}} customer, they won't get this message.",
+        "unticked_other": "You unticked {{count}} customers, they won't get this message.",
+        "tickAll": "Tick all again"
+      },
+      "message": {
+        "title": "Message",
+        "drafted": "Drafted by Ecbot",
+        "offer": "Offer",
+        "offerPlaceholder": "10% off orders placed before Nov 20",
+        "offerHint": "Ecbot writes the message around this offer. Leave it empty for a simple check-in.",
+        "text": "Message text",
+        "placeholder": "Write the message customers get",
+        "drafting": "Ecbot is writing...",
+        "tokenName": "Customer name",
+        "tokenProduct": "Product",
+        "insert": "Insert customer name or product",
+        "insertHint": "Type { to insert",
+        "previewHint": "Each customer gets their own name and the product they asked about, with that product group's photo if it has one.",
+        "rewrite": {
+          "DIFFERENT": "Rewrite",
+          "LONGER": "Longer",
+          "SHORTER": "Shorter"
+        },
+        "tone": "Write it",
+        "tones": {
+          "FRIENDLY": "Friendly",
+          "POLITE": "Polite",
+          "PLAYFUL": "Playful"
+        }
+      },
+      "mode": {
+        "title": "How to send",
+        "AUTO": {
+          "label": "Send every day (recommended)",
+          "hint": "Send to these customers now, then every day to new customers who join this group. You can turn it off any time."
+        },
+        "ONCE": {
+          "label": "Send once",
+          "hint": "Only these customers, right now."
+        },
+        "limitsLabel": "Limits",
+        "limits": "Ecbot only sends during your send hours and inside each channel's free messaging window. Each customer gets at most 1 offer a day."
+      },
+      "footer": "Results show under Sent",
+      "submit": {
+        "AUTO": "Send and turn on",
+        "ONCE": "Send now"
+      },
+      "created": {
+        "AUTO": "Sent, and daily sending is on",
+        "ONCE": "Sending started"
+      },
+      "errors": {
+        "text": "Enter a message",
+        "draft": "Ecbot couldn't write a message. Write your own or try again.",
+        "create": "Couldn't send. Try again later."
+      },
+      "customers": {
+        "title": "Customers who get this",
+        "description": "Untick the customers you don't want to send to this time.",
+        "channel": "Channel",
+        "search": "Search by customer name",
+        "empty": "No customers match",
+        "unticked_one": "{{count}} customer unticked",
+        "unticked_other": "{{count}} customers unticked",
+        "allTicked": "All customers ticked",
+        "tooMany": "You can untick up to {{max}} customers."
+      }
+    },
+    "settings": {
+      "title": "Send settings",
+      "description": "Applies to every send and daily send in Marketing.",
+      "hours": "Hours offers can go out",
+      "sendFrom": "Send from",
+      "sendTo": "Send until",
+      "to": "to",
+      "hoursHint": "Messages outside these hours wait until {{time}} the next day.",
+      "cap": "Most offers per customer",
+      "maxPer30Days": "Offers in 30 days",
+      "capUnit": "offers in 30 days",
+      "capHint": "And never more than 1 a day, across all sends. Customers who reached it are skipped, with the reason in the results.",
+      "rest": "Let customers rest when they don't reply",
+      "restAfter": "After",
+      "restFor": "offers in a row with no reply, rest for",
+      "restDays": "Rest days",
+      "days": "days",
+      "restHint": "Keeps reply rates up and spam reports down.",
+      "keywords": "Stop keywords",
+      "keywordsPlaceholder": "Add a keyword...",
+      "keywordsHint": "A customer who sends one of these stops getting offers on every channel.",
+      "stopReply": "Confirm when a customer stops offers",
+      "stopReplyHint": "When off, Ecbot still records the stop, it just doesn't reply.",
+      "stopReplyText": "Confirmation message",
+      "stopReplyPlaceholder": "Got it, we won't send you offers anymore. Reply \"start\" if you change your mind.",
+      "stopReplyTextHint": "Leave it empty to use the built-in message in the agent's language.",
+      "saved": "Send settings saved",
+      "error": "Couldn't save. Try again later.",
+      "errors": {
+        "number": "Enter a number from 1 up",
+        "max": "At most {{max}}",
+        "hours": "The end time must be after the start time"
       }
     }
   }

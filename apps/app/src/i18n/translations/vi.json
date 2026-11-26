@@ -2070,7 +2070,8 @@
     "createNew": "Tạo mới",
     "unlink": "Bỏ liên kết",
     "connectChannel": "Kết nối kênh",
-    "send": "Gửi"
+    "send": "Gửi",
+    "done": "Xong"
   },
   "fields": {
     "name": "Tên",
@@ -3978,6 +3979,150 @@
         "optOuts": "Dừng nhận tin",
         "paused": "Đang tạm ngưng",
         "pausedHint": "Tự nhận tin lại khi hết hạn"
+      }
+    },
+    "exclusion": {
+      "STOPPED": "đã dừng nhận tin",
+      "HOSTILE": "đang khó chịu",
+      "PAUSED": "đang tạm ngưng",
+      "DEFERRED": "hẹn để sau",
+      "OFFERED_TODAY": "đã nhận ưu đãi khác hôm nay",
+      "CAPPED": "đã nhận đủ tin trong 30 ngày",
+      "RESTING": "đang tạm nghỉ vì không trả lời"
+    },
+    "send": {
+      "description": "Ecbot đã chọn khách và soạn sẵn tin, bạn xem rồi gửi.",
+      "notFoundTitle": "Không có việc này",
+      "notFoundMessage": "Mở lại từ Việc nên làm ở trang Tổng quan.",
+      "preset": {
+        "NEW": {
+          "title": "Chào khách mới nhắn",
+          "action": "Chào khách mới"
+        },
+        "INTERESTED": {
+          "title": "Gửi ưu đãi lần mua đầu",
+          "action": "Gửi ưu đãi lần đầu"
+        },
+        "ASKED_PRICE": {
+          "title": "Nhắc khách hỏi giá chưa mua",
+          "action": "Nhắc kèm ưu đãi"
+        },
+        "CROSS_SELL": {
+          "title": "Gợi ý món dùng kèm",
+          "action": "Gợi ý món kèm"
+        },
+        "REPURCHASE": {
+          "title": "Nhắc khách mua lại",
+          "action": "Nhắc mua lại"
+        },
+        "WIN_BACK": {
+          "title": "Mời khách cũ quay lại",
+          "action": "Mời quay lại"
+        }
+      },
+      "audience": {
+        "title": "Gửi cho ai",
+        "error": "Chưa đếm được khách. Bạn thử mở lại sau.",
+        "excluded": "Ecbot đã bỏ {{value}} khách: {{reasons}}.",
+        "unticked_other": "Bạn đã bỏ chọn {{count}} khách, họ sẽ không nhận tin này.",
+        "tickAll": "Chọn lại tất cả"
+      },
+      "message": {
+        "title": "Tin nhắn",
+        "drafted": "Ecbot soạn sẵn",
+        "offer": "Ưu đãi",
+        "offerPlaceholder": "Giảm 10% cho đơn đặt trước 20/11",
+        "offerHint": "Ecbot viết tin dựa trên ưu đãi này. Để trống thì tin chỉ nhắc khách quay lại.",
+        "text": "Lời nhắn",
+        "placeholder": "Viết lời nhắn gửi khách",
+        "drafting": "Ecbot đang viết tin...",
+        "tokenName": "Tên khách",
+        "tokenProduct": "Sản phẩm",
+        "insert": "Chèn tên khách hoặc sản phẩm",
+        "insertHint": "Gõ { để chèn nhanh",
+        "previewHint": "Tên khách và sản phẩm khách đã hỏi được điền riêng cho từng người. Tin gửi kèm ảnh của nhóm hàng đó nếu có.",
+        "rewrite": {
+          "DIFFERENT": "Viết lại",
+          "LONGER": "Dài hơn",
+          "SHORTER": "Ngắn hơn"
+        },
+        "tone": "Viết theo kiểu",
+        "tones": {
+          "FRIENDLY": "Thân thiện",
+          "POLITE": "Lịch sự",
+          "PLAYFUL": "Vui vẻ"
+        }
+      },
+      "mode": {
+        "title": "Cách gửi",
+        "AUTO": {
+          "label": "Tự gửi mỗi ngày (nên chọn)",
+          "hint": "Gửi những khách này ngay, rồi mỗi ngày tự gửi cho khách mới vào nhóm này. Bạn tắt được bất cứ lúc nào."
+        },
+        "ONCE": {
+          "label": "Chỉ gửi 1 lần",
+          "hint": "Chỉ gửi những khách này, ngay bây giờ."
+        },
+        "limitsLabel": "Giới hạn",
+        "limits": "Ecbot chỉ gửi trong giờ được gửi và trong khung nhắn miễn phí của từng kênh. Mỗi khách nhận tối đa 1 tin ưu đãi mỗi ngày."
+      },
+      "footer": "Kết quả hiện ở mục Đã gửi",
+      "submit": {
+        "AUTO": "Gửi và bật tự gửi",
+        "ONCE": "Gửi ngay"
+      },
+      "created": {
+        "AUTO": "Đã gửi và bật tự gửi",
+        "ONCE": "Đã bắt đầu gửi"
+      },
+      "errors": {
+        "text": "Nhập lời nhắn",
+        "draft": "Ecbot chưa viết được tin. Bạn tự viết hoặc thử lại.",
+        "create": "Chưa gửi được. Bạn thử lại sau."
+      },
+      "customers": {
+        "title": "Khách sẽ nhận tin",
+        "description": "Bỏ chọn khách bạn không muốn gửi lần này.",
+        "channel": "Kênh",
+        "search": "Tìm theo tên khách",
+        "empty": "Không có khách nào khớp",
+        "unticked_other": "Đã bỏ chọn {{count}} khách",
+        "allTicked": "Đang chọn tất cả khách",
+        "tooMany": "Chỉ bỏ chọn được tối đa {{max}} khách."
+      }
+    },
+    "settings": {
+      "title": "Cài đặt gửi tin",
+      "description": "Áp dụng cho mọi lần gửi và tự gửi trong Tiếp thị.",
+      "hours": "Giờ được gửi tin ưu đãi",
+      "sendFrom": "Gửi từ",
+      "sendTo": "Gửi đến",
+      "to": "đến",
+      "hoursHint": "Tin rơi ngoài giờ này sẽ chờ tới {{time}} hôm sau.",
+      "cap": "Số tin ưu đãi tối đa cho mỗi khách",
+      "maxPer30Days": "Số tin trong 30 ngày",
+      "capUnit": "tin trong 30 ngày",
+      "capHint": "Và không quá 1 tin mỗi ngày. Tính chung cho mọi lần gửi. Khách đã nhận đủ sẽ được bỏ qua và ghi lý do trong kết quả.",
+      "rest": "Cho khách tạm nghỉ khi không trả lời",
+      "restAfter": "Sau",
+      "restFor": "tin liền không trả lời, nghỉ",
+      "restDays": "Số ngày nghỉ",
+      "days": "ngày",
+      "restHint": "Giữ tỉ lệ trả lời cao, kênh ít bị báo spam.",
+      "keywords": "Từ khoá dừng nhận tin",
+      "keywordsPlaceholder": "Thêm từ khoá...",
+      "keywordsHint": "Khách nhắn một trong các từ này sẽ không nhận tin ưu đãi trên mọi kênh.",
+      "stopReply": "Gửi lời xác nhận khi khách dừng nhận tin",
+      "stopReplyHint": "Tắt thì Ecbot vẫn ghi nhận khách dừng, chỉ không nhắn lại.",
+      "stopReplyText": "Lời xác nhận",
+      "stopReplyPlaceholder": "Dạ shop sẽ không gửi tin ưu đãi nữa ạ. Bạn nhắn \"nhận lại\" nếu muốn nhận tiếp nha.",
+      "stopReplyTextHint": "Để trống thì Ecbot dùng lời có sẵn, theo ngôn ngữ của agent.",
+      "saved": "Đã lưu cài đặt gửi tin",
+      "error": "Chưa lưu được. Bạn thử lại sau.",
+      "errors": {
+        "number": "Nhập một số từ 1 trở lên",
+        "max": "Tối đa {{max}}",
+        "hours": "Giờ kết thúc phải sau giờ bắt đầu"
       }
     }
   }

@@ -4,10 +4,13 @@ import {
   type AnalyticsRange,
 } from "@/hooks/api/workspace-analytics";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
-import { Container, Heading, Select, Text } from "@medusajs/ui";
+import { CogSixTooth } from "@medusajs/icons";
+import { Button, Container, Heading, Select, Text } from "@medusajs/ui";
+import { Can } from "@repo/auth";
 import { SingleColumnPage } from "@repo/ui/layout";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { OverviewFunnel } from "./components/overview-funnel";
 import { OverviewHealth } from "./components/overview-health";
 import { OverviewMoves } from "./components/overview-moves";
@@ -15,7 +18,7 @@ import { OverviewStages } from "./components/overview-stages";
 import { OverviewTodos } from "./components/overview-todos";
 import { useOverviewRange } from "./use-overview-range";
 
-/** Tổng quan tiếp thị (#502): read-only until sending ships. */
+/** Tổng quan tiếp thị (#502): each Việc nên làm row opens its send drawer. */
 export const MarketingOverview = () => {
   const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
@@ -44,25 +47,35 @@ export const MarketingOverview = () => {
             {t("marketing.overview.description")}
           </Text>
         </div>
-        <Select
-          size="small"
-          value={range}
-          onValueChange={(value) => setRange(value as AnalyticsRange)}
-        >
-          <Select.Trigger
-            className="w-[160px]"
-            aria-label={t("marketing.overview.range")}
+        <div className="flex flex-wrap items-center gap-2">
+          <Select
+            size="small"
+            value={range}
+            onValueChange={(value) => setRange(value as AnalyticsRange)}
           >
-            <Select.Value />
-          </Select.Trigger>
-          <Select.Content>
-            {ANALYTICS_RANGES.map((value) => (
-              <Select.Item key={value} value={value}>
-                {t(`dashboard.analytics.range.${value}`)}
-              </Select.Item>
-            ))}
-          </Select.Content>
-        </Select>
+            <Select.Trigger
+              className="w-[160px]"
+              aria-label={t("marketing.overview.range")}
+            >
+              <Select.Value />
+            </Select.Trigger>
+            <Select.Content>
+              {ANALYTICS_RANGES.map((value) => (
+                <Select.Item key={value} value={value}>
+                  {t(`dashboard.analytics.range.${value}`)}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select>
+          <Can I="update" a="MARKETING">
+            <Button size="small" variant="secondary" asChild>
+              <Link to="settings">
+                <CogSixTooth />
+                {t("marketing.settings.title")}
+              </Link>
+            </Button>
+          </Can>
+        </div>
       </Container>
       <OverviewTodos {...props} />
       <OverviewFunnel {...props} />
