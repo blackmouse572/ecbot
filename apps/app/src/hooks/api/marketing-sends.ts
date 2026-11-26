@@ -1,4 +1,5 @@
 import { queryKeysFactory } from "@/libs/query-factory";
+import type { BatchResult } from "@/hooks/use-batch-result-toast";
 import {
   marketingAudienceWorkspaceControllerCustomersV1,
   marketingAudienceWorkspaceControllerPreviewV1,
@@ -223,5 +224,38 @@ export const useUpdateMarketingSend = (workspace: string, id: string) => {
       queryClient.setQueryData(marketingSendKeys.detail(id), send);
       queryClient.invalidateQueries({ queryKey: marketingSendKeys.lists() });
     },
+  });
+};
+
+/**
+ * Tắt / Bật lại tự gửi for the rows ticked in Đã gửi. The API has no batch
+ * route, so each send is patched on its own and the outcomes are counted.
+ */
+export const useBatchSetMarketingSendsActive = (workspace: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<BatchResult, Error, { ids: string[]; active: boolean }>({
+    mutationFn: async ({ ids, active }) => {
+      const results = await Promise.allSettled(
+        ids.map((send) =>
+          marketingSendWorkspaceControllerUpdateV1({
+            path: { workspace, send },
+            body: { active },
+          }),
+        ),
+      );
+
+      return results.reduce<BatchResult>(
+        (batch, result, i) => {
+          if (result.status === "fulfilled") batch.succeeded.push(ids[i]);
+          else batch.failed.push({ id: ids[i], reason: String(result.reason) });
+
+          return batch;
+        },
+        { succeeded: [], failed: [] },
+      );
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: marketingSendKeys.all }),
   });
 };

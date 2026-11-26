@@ -16,6 +16,7 @@ vi.mock("@/hooks/use-workspace-params", () => ({
 }));
 
 vi.mock("@/hooks/api/marketing-sends", () => ({
+  useBatchSetMarketingSendsActive: () => ({ mutateAsync: vi.fn() }),
   useMarketingSends: (_workspace: string, params: unknown) => {
     state.params.push(params);
     return {
@@ -41,8 +42,29 @@ vi.mock("@/hooks/api/marketing-sends", () => ({
             lastSentAt: null,
           },
         },
+        {
+          id: "s2",
+          name: "Mời khách cũ quay lại",
+          mode: "ONCE",
+          active: true,
+          text: "",
+          imageUrl: null,
+          preset: "WIN_BACK",
+          createdAt: "2026-11-02T09:00:00.000Z",
+          stats: {
+            queued: 0,
+            sent: 4,
+            failed: 0,
+            skipped: 0,
+            replied: 0,
+            ordered: 0,
+            revenue: 0,
+            optedOut: 0,
+            lastSentAt: null,
+          },
+        },
       ],
-      count: 1,
+      count: 2,
       isLoading: false,
       isError: false,
     };
@@ -87,5 +109,14 @@ describe("MarketingSendList", () => {
     await waitFor(() =>
       expect(state.params.at(-1)).toMatchObject({ mode: "ONCE", page: 1 }),
     );
+  });
+
+  it("lets only auto-sends be ticked for Tắt / Bật lại tự gửi", () => {
+    renderIt();
+
+    const boxes = screen.getAllByRole("checkbox");
+    // The header box, then one per row in order.
+    expect(boxes[1].hasAttribute("disabled")).toBe(false);
+    expect(boxes[2].hasAttribute("disabled")).toBe(true);
   });
 });

@@ -4218,7 +4218,17 @@
         "action": "Bật lại tự gửi",
         "done": "Đã bật lại tự gửi"
       },
-      "error": "Chưa lưu được. Bạn thử lại sau."
+      "error": "Chưa lưu được. Bạn thử lại sau.",
+      "batch": {
+        "turnOff": {
+          "label": "Tắt tự gửi",
+          "title": "Tắt tự gửi {{count}} lần gửi?",
+          "description": "Khách mới vào các nhóm này sẽ không nhận tin nữa. Kết quả cũ vẫn giữ."
+        },
+        "turnOn": {
+          "label": "Bật lại tự gửi"
+        }
+      }
     }
   }
 }

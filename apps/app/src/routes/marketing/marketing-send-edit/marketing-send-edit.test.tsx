@@ -10,6 +10,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({
   update: vi.fn(),
+  draft: vi.fn(),
   handleSuccess: vi.fn(),
 }));
 
@@ -24,6 +25,7 @@ vi.mock("@/hooks/api/marketing-sends", () => ({
       name: "Chào khách mới",
       mode: "AUTO",
       active: true,
+      preset: "ASKED_PRICE",
       text: "Chào {name}",
     },
     isLoading: false,
@@ -31,6 +33,10 @@ vi.mock("@/hooks/api/marketing-sends", () => ({
   }),
   useUpdateMarketingSend: () => ({
     mutateAsync: state.update,
+    isPending: false,
+  }),
+  useDraftMarketingSend: () => ({
+    mutateAsync: state.draft,
     isPending: false,
   }),
 }));
@@ -76,6 +82,9 @@ describe("MarketingSendEdit", () => {
 
   beforeEach(() => {
     state.update.mockReset().mockResolvedValue({});
+    state.draft
+      .mockReset()
+      .mockResolvedValue({ text: "Chào {name}, shop còn hàng nha." });
     state.handleSuccess.mockReset();
   });
 
@@ -105,5 +114,31 @@ describe("MarketingSendEdit", () => {
     // Schemas translate when they load, before the test switches to vi.
     expect(await screen.findByText("Enter a name")).toBeTruthy();
     expect(state.update).not.toHaveBeenCalled();
+  });
+
+  it("has Ecbot rewrite the text for the send's customers", async () => {
+    renderIt();
+
+    fireEvent.click(screen.getByRole("button", { name: "Dài hơn" }));
+
+    await waitFor(() =>
+      expect(state.draft).toHaveBeenCalledWith(
+        expect.objectContaining({
+          preset: "ASKED_PRICE",
+          previous: "Chào {name}",
+          rewrite: "LONGER",
+          tone: "FRIENDLY",
+        }),
+      ),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }));
+
+    await waitFor(() =>
+      expect(state.update).toHaveBeenCalledWith({
+        name: "Chào khách mới",
+        text: "Chào {name}, shop còn hàng nha.",
+      }),
+    );
   });
 });

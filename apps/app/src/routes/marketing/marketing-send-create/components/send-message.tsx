@@ -1,16 +1,12 @@
 import type { MarketingSendDraftRequestDto } from "@/hooks/api/marketing-sends";
-import { Badge, Button, DropdownMenu, Input } from "@medusajs/ui";
+import { Badge, Input } from "@medusajs/ui";
 import { Form } from "@repo/ui/common-components";
-import { ChevronDownMini, Sparkles } from "@medusajs/icons";
 import type { FC } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import {
-  MARKETING_DRAFT_LENGTHS,
-  MARKETING_DRAFT_TONES,
-} from "../../constants";
 import type { MarketingSendFormData } from "../../schemas";
 import { SendMessageEditor } from "./send-message-editor";
+import { SendRewriteActions } from "./send-rewrite-actions";
 import { SendStep } from "./send-step";
 
 type Rewrite = NonNullable<MarketingSendDraftRequestDto["rewrite"]>;
@@ -78,56 +74,14 @@ export const SendMessage: FC<SendMessageProps> = ({
                   : "marketing.send.message.placeholder",
               )}
               actions={
-                <>
-                  {/* Viết lại only asks how: each tone rewrites in it. */}
-                  <DropdownMenu>
-                    <DropdownMenu.Trigger asChild>
-                      <Button
-                        size="small"
-                        variant="transparent"
-                        type="button"
-                        disabled={drafting || !hasText}
-                      >
-                        <Sparkles />
-                        {t("marketing.send.message.rewrite.DIFFERENT")}
-                        <ChevronDownMini />
-                      </Button>
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Content align="start">
-                      <DropdownMenu.Label className="px-2 py-1.5">
-                        {t("marketing.send.message.tone")}
-                      </DropdownMenu.Label>
-                      <DropdownMenu.RadioGroup value={tone}>
-                        {MARKETING_DRAFT_TONES.map((value) => (
-                          <DropdownMenu.RadioItem
-                            key={value}
-                            value={value}
-                            // onSelect, not onValueChange: the current tone
-                            // rewrites too.
-                            onSelect={() => {
-                              form.setValue("tone", value);
-                              onWrite("DIFFERENT");
-                            }}
-                          >
-                            {t(`marketing.send.message.tones.${value}`)}
-                          </DropdownMenu.RadioItem>
-                        ))}
-                      </DropdownMenu.RadioGroup>
-                    </DropdownMenu.Content>
-                  </DropdownMenu>
-                  {MARKETING_DRAFT_LENGTHS.map((rewrite) => (
-                    <Button
-                      key={rewrite}
-                      size="small"
-                      variant="transparent"
-                      type="button"
-                      disabled={drafting || !hasText}
-                      onClick={() => onWrite(rewrite)}
-                    >
-                      {t(`marketing.send.message.rewrite.${rewrite}`)}
-                    </Button>
-                  ))}
-                </>
+                <SendRewriteActions
+                  tone={tone}
+                  disabled={drafting || !hasText}
+                  onRewrite={(rewrite, value) => {
+                    if (value) form.setValue("tone", value);
+                    onWrite(rewrite);
+                  }}
+                />
               }
             />
             <Form.Hint>{t("marketing.send.message.previewHint")}</Form.Hint>

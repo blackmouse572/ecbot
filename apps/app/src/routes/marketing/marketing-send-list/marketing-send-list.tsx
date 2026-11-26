@@ -1,16 +1,22 @@
+import { createSelectColumn } from "@/components/table/columns";
 import { _DataTable } from "@/components/table/data-table";
 import {
+  useBatchSetMarketingSendsActive,
   useMarketingSends,
   type MarketingSendListResponseDto,
 } from "@/hooks/api/marketing-sends";
+import { useBatchResultToast } from "@/hooks/use-batch-result-toast";
 import { useDataTable } from "@/hooks/use-data-table";
 import { useDate } from "@/hooks/use-date";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { ROUTES } from "@/routes/constants";
-import { Container, Heading, StatusBadge, Tabs } from "@medusajs/ui";
+import { Container, Heading, StatusBadge, Tabs, usePrompt } from "@medusajs/ui";
 import { useQueryParams } from "@repo/ui/hooks";
-import { createColumnHelper } from "@tanstack/react-table";
-import { useMemo } from "react";
+import {
+  createColumnHelper,
+  type RowSelectionState,
+} from "@tanstack/react-table";
+import { useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { Outlet, useSearchParams } from "react-router-dom";
@@ -44,6 +50,7 @@ export const MarketingSendList = () => {
   );
 
   const columns = useColumns();
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const { table } = useDataTable({
     data: sends,
     columns,
@@ -51,7 +58,11 @@ export const MarketingSendList = () => {
     enablePagination: true,
     pageSize: MARKETING_SENDS_PAGE_SIZE,
     getRowId: (row) => row.id,
+    // Only an auto-send can be turned off or back on.
+    enableRowSelection: (row) => row.original.mode === "AUTO",
+    rowSelection: { state: rowSelection, updater: setRowSelection },
   });
+  const commands = useCommands(workspaceSlug, setRowSelection);
 
   if (isError) {
     throw error;
@@ -85,6 +96,7 @@ export const MarketingSendList = () => {
         </div>
         <_DataTable
           table={table}
+          commands={commands}
           columns={columns}
           count={count}
           pageSize={MARKETING_SENDS_PAGE_SIZE}
@@ -106,6 +118,50 @@ export const MarketingSendList = () => {
       <Outlet />
     </div>
   );
+};
+
+// Bulk actions shown in the command bar once auto-sends are ticked.
+const useCommands = (
+  workspace: string,
+  setRowSelection: (selection: RowSelectionState) => void,
+) => {
+  const { t } = useTranslation();
+  const prompt = usePrompt();
+  const notifyBatchResult = useBatchResultToast();
+  const { mutateAsync } = useBatchSetMarketingSendsActive(workspace);
+
+  return useMemo(() => {
+    const setActive = async (ids: string[], active: boolean) => {
+      notifyBatchResult(await mutateAsync({ ids, active }));
+      setRowSelection({});
+    };
+
+    return [
+      {
+        label: t("marketing.sends.batch.turnOff.label"),
+        shortcut: "s",
+        action: async (selection: Record<string, boolean>) => {
+          const ids = Object.keys(selection);
+          const confirmed = await prompt({
+            title: t("marketing.sends.batch.turnOff.title", {
+              count: ids.length,
+            }),
+            description: t("marketing.sends.batch.turnOff.description"),
+            confirmText: t("marketing.sends.batch.turnOff.label"),
+            cancelText: t("actions.cancel"),
+          });
+
+          if (confirmed) await setActive(ids, false);
+        },
+      },
+      {
+        label: t("marketing.sends.batch.turnOn.label"),
+        shortcut: "a",
+        action: (selection: Record<string, boolean>) =>
+          setActive(Object.keys(selection), true),
+      },
+    ];
+  }, [t, prompt, notifyBatchResult, mutateAsync, setRowSelection]);
 };
 
 const useColumns = () => {
@@ -132,6 +188,7 @@ const useColumns = () => {
     );
 
     return [
+      createSelectColumn<MarketingSendListResponseDto>(),
       columnHelper.display({
         id: "name",
         header: () => t("marketing.sends.columns.name"),

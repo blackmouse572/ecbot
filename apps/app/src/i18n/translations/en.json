@@ -4193,7 +4193,17 @@
         "action": "Turn auto-send back on",
         "done": "Auto-send turned back on"
       },
-      "error": "Couldn't save. Please try again later."
+      "error": "Couldn't save. Please try again later.",
+      "batch": {
+        "turnOff": {
+          "label": "Turn off auto-send",
+          "title": "Turn off {{count}} auto-sends?",
+          "description": "New customers in these groups won't get the offer anymore. Past results stay."
+        },
+        "turnOn": {
+          "label": "Turn auto-send back on"
+        }
+      }
     }
   }
 }

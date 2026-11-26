@@ -5,7 +5,6 @@ import {
 import { useDate } from "@/hooks/use-date";
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { readApiError } from "@/libs/api-error";
-import { PauseSolid, PencilSquare, PlaySolid } from "@medusajs/icons";
 import {
   Button,
   Container,
@@ -17,6 +16,11 @@ import {
 } from "@medusajs/ui";
 import { TwoColumnPageSkeleton } from "@repo/ui/common-components";
 import { TwoColumnPage } from "@repo/ui/layout";
+import {
+  IconPencil,
+  IconPlayerPause,
+  IconPlayerPlay,
+} from "@tabler/icons-react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import { StageTag } from "../components/stage-tag";
@@ -105,7 +109,7 @@ export const MarketingSendDetail = () => {
           {editable && (
             <Button size="small" variant="secondary" asChild>
               <Link to="edit">
-                <PencilSquare />
+                <IconPencil size={15} stroke={1.5} />
                 {t("marketing.sends.edit.action")}
               </Link>
             </Button>
@@ -117,7 +121,11 @@ export const MarketingSendDetail = () => {
               onClick={toggle}
               isLoading={update.isPending}
             >
-              {send.active ? <PauseSolid /> : <PlaySolid />}
+              {send.active ? (
+                <IconPlayerPause size={15} stroke={1.5} />
+              ) : (
+                <IconPlayerPlay size={15} stroke={1.5} />
+              )}
               {t(
                 send.active
                   ? "marketing.sends.turnOff.action"
