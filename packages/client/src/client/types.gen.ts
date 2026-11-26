@@ -7490,7 +7490,7 @@ export type MarketingSavedAudienceUpdateRequestDto = {
 };
 
 export type MarketingAudienceExclusionDto = {
-    reason: 'STOPPED' | 'HOSTILE' | 'PAUSED' | 'DEFERRED' | 'CAPPED' | 'RESTING';
+    reason: 'STOPPED' | 'HOSTILE' | 'PAUSED' | 'DEFERRED' | 'OFFERED_TODAY' | 'CAPPED' | 'RESTING';
     count: number;
 };
 
@@ -7522,7 +7522,7 @@ export type MarketingAudiencePreviewResponseDto = {
     channels: Array<MarketingAudienceChannelDto>;
 };
 
-export type MarketingAudienceRequestDto = {
+export type MarketingAudiencePreviewRequestDto = {
     /**
      * A Tổng quan "Việc nên làm" row; leave out conditions
      */
@@ -7532,6 +7532,30 @@ export type MarketingAudienceRequestDto = {
      */
     match?: 'ALL' | 'ANY';
     conditions?: Array<MarketingAudienceConditionRequestDto>;
+    /**
+     * Customers the shop unticked; they get nothing from this send
+     */
+    excludedCustomerIds?: Array<string>;
+};
+
+export type MarketingAudienceCustomersRequestDto = {
+    /**
+     * A Tổng quan "Việc nên làm" row; leave out conditions
+     */
+    preset?: 'NEW' | 'INTERESTED' | 'ASKED_PRICE' | 'CROSS_SELL' | 'REPURCHASE' | 'WIN_BACK';
+    /**
+     * Khách khớp Tất cả (ALL) or Bất kỳ (ANY) điều kiện
+     */
+    match?: 'ALL' | 'ANY';
+    conditions?: Array<MarketingAudienceConditionRequestDto>;
+    /**
+     * Only customers reachable on this channel
+     */
+    platform?: 'FACEBOOK_ACCOUNT' | 'INSTAGRAM_ACCOUNT' | 'FACEBOOK_PAGE' | 'INSTAGRAM_PAGE' | 'ZALO_ACCOUNT' | 'ZALO_PAGE' | 'TIKTOK_SHOP' | 'SHOPEE_SHOP' | 'TELEGRAM_BOT' | 'API_CHANNEL' | 'WEBSITE_WIDGET' | 'WHATSAPP_BUSINESS' | 'THREADS_ACCOUNT';
+    /**
+     * Part of the customer name
+     */
+    search?: string;
 };
 
 export type MarketingOverviewStageDto = {
@@ -7688,7 +7712,7 @@ export type MarketingSendNotSentDto = {
     /**
      * Left out when the send started (CAPPED, RESTING, ...), or skipped at send time (WINDOW_CLOSED, ...)
      */
-    reason: 'STOPPED' | 'HOSTILE' | 'PAUSED' | 'DEFERRED' | 'CAPPED' | 'RESTING' | 'NO_CHANNEL' | 'WINDOW_CLOSED' | 'OPTED_OUT' | 'ACCOUNT_BLOCKED' | 'SEND_HOURS_ENDED';
+    reason: 'STOPPED' | 'HOSTILE' | 'PAUSED' | 'DEFERRED' | 'OFFERED_TODAY' | 'CAPPED' | 'RESTING' | 'NO_CHANNEL' | 'WINDOW_CLOSED' | 'OPTED_OUT' | 'ACCOUNT_BLOCKED' | 'SEND_HOURS_ENDED';
     count: number;
 };
 
@@ -7727,6 +7751,10 @@ export type MarketingSendCreateRequestDto = {
      */
     match?: 'ALL' | 'ANY';
     conditions?: Array<MarketingAudienceConditionRequestDto>;
+    /**
+     * Customers the shop unticked; they get nothing from this send
+     */
+    excludedCustomerIds?: Array<string>;
     name: string;
     /**
      * ONCE: Chỉ gửi 1 lần. AUTO: Tự gửi mỗi ngày to customers who newly match.
@@ -7869,9 +7897,7 @@ export type MarketingSettingsUpdateRequestDto = {
     /**
      * Sent when a customer opts out. Null: the built-in text in the agent language.
      */
-    stopReply?: {
-        [key: string]: unknown;
-    } | null;
+    stopReply?: string | null;
     /**
      * Gửi lời xác nhận khi khách dừng nhận tin. False: the customer gets no reply when they opt out.
      */
@@ -37094,7 +37120,7 @@ export type MarketingAudienceWorkspaceControllerUpdateV1Responses = {
 export type MarketingAudienceWorkspaceControllerUpdateV1Response = MarketingAudienceWorkspaceControllerUpdateV1Responses[keyof MarketingAudienceWorkspaceControllerUpdateV1Responses];
 
 export type MarketingAudienceWorkspaceControllerPreviewV1Data = {
-    body: MarketingAudienceRequestDto;
+    body: MarketingAudiencePreviewRequestDto;
     headers?: {
         /**
          * Custom language header
@@ -37173,7 +37199,7 @@ export type MarketingAudienceWorkspaceControllerPreviewV1Responses = {
 export type MarketingAudienceWorkspaceControllerPreviewV1Response = MarketingAudienceWorkspaceControllerPreviewV1Responses[keyof MarketingAudienceWorkspaceControllerPreviewV1Responses];
 
 export type MarketingAudienceWorkspaceControllerCustomersV1Data = {
-    body: MarketingAudienceRequestDto;
+    body: MarketingAudienceCustomersRequestDto;
     headers?: {
         /**
          * Custom language header

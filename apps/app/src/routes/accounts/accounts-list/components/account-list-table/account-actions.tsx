@@ -8,8 +8,11 @@ import { useTranslation } from "react-i18next";
 
 export const AccountActions = ({
   item,
+  onUnlinked,
 }: {
   item: Pick<AccountListResponseDto, "id" | "link">;
+  /** Runs after a successful unlink, e.g. to leave the deleted channel's page. */
+  onUnlinked?: () => void;
 }) => {
   const { t } = useTranslation();
   const { workspaceSlug } = useWorkspaceParams();
@@ -30,6 +33,7 @@ export const AccountActions = ({
     try {
       await unlinkAccount.mutateAsync(id);
       toast.success(t("accounts.unlink.success"));
+      onUnlinked?.();
     } catch (error) {
       console.error("Failed to unlink account:", error);
       toast.error(t("accounts.unlink.error"));

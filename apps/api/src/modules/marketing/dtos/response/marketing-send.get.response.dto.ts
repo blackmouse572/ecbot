@@ -125,8 +125,10 @@ export class MarketingSendNotSentDto {
     @Expose()
     @ApiProperty({
         enum: [
-            ...Object.values(ENUM_MARKETING_AUDIENCE_EXCLUSION),
-            ...Object.values(ENUM_MARKETING_SKIP_REASON),
+            ...new Set<string>([
+                ...Object.values(ENUM_MARKETING_AUDIENCE_EXCLUSION),
+                ...Object.values(ENUM_MARKETING_SKIP_REASON),
+            ]),
         ],
         description:
             'Left out when the send started (CAPPED, RESTING, ...), or skipped at send time (WINDOW_CLOSED, ...)',

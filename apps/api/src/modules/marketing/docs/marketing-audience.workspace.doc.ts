@@ -9,7 +9,8 @@ import { ENUM_DOC_REQUEST_BODY_TYPE } from '@app/common/doc/enums/doc.enum';
 import { CustomerGetResponseDto } from '@app/modules/customer/dtos/response/customer.get.response.dto';
 import { WorkspaceDocParamsId } from '@app/modules/workspace/constants/workspace.doc.constant';
 import { applyDecorators } from '@nestjs/common';
-import { MarketingAudienceRequestDto } from '../dtos/request/marketing-audience.request.dto';
+import { MarketingAudienceCustomersRequestDto } from '../dtos/request/marketing-audience-customers.request.dto';
+import { MarketingAudiencePreviewRequestDto } from '../dtos/request/marketing-audience-preview.request.dto';
 import { MarketingAudiencePreviewResponseDto } from '../dtos/response/marketing-audience-preview.response.dto';
 
 export function MarketingAudienceWorkspacePreviewDoc(): MethodDecorator {
@@ -20,7 +21,7 @@ export function MarketingAudienceWorkspacePreviewDoc(): MethodDecorator {
         }),
         DocRequest({
             params: [...WorkspaceDocParamsId],
-            dto: MarketingAudienceRequestDto,
+            dto: MarketingAudiencePreviewRequestDto,
             bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
         }),
         DocAuth({ xApiKey: true, jwtAccessToken: true }),
@@ -39,7 +40,7 @@ export function MarketingAudienceWorkspaceCustomersDoc(): MethodDecorator {
         }),
         DocRequest({
             params: [...WorkspaceDocParamsId],
-            dto: MarketingAudienceRequestDto,
+            dto: MarketingAudienceCustomersRequestDto,
             bodyType: ENUM_DOC_REQUEST_BODY_TYPE.JSON,
         }),
         DocAuth({ xApiKey: true, jwtAccessToken: true }),

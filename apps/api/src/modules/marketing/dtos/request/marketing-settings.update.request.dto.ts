@@ -87,6 +87,7 @@ export class MarketingSettingsUpdateRequestDto {
     stopKeywords?: string[] | null;
 
     @ApiPropertyOptional({
+        type: String,
         nullable: true,
         example: 'Dạ shop sẽ không gửi tin ưu đãi nữa ạ.',
         description:

@@ -140,16 +140,19 @@ const M = ENUM_MARKETING_MESSAGE_STATUS;
 const OFFERS = `FROM marketing_messages m
     WHERE m.customer_id = l.id AND m.deleted_at IS NULL`;
 
-/** Had the most offers allowed: one today (sent or queued), or the 30-day cap. */
-export const CAPPED = `(EXISTS (
+/** Already has today's one offer (sent or queued), from any send. */
+export const OFFERED_TODAY = `EXISTS (
         SELECT 1 ${OFFERS}
             AND m.status IN ('${M.QUEUED}', '${M.SENT}')
             AND m.send_day = w.today
-    ) OR (
+    )`;
+
+/** Had the most offers allowed in 30 days. */
+export const CAPPED = `(
         SELECT COUNT(*) ${OFFERS}
             AND m.status = '${M.SENT}'
             AND m.sent_at > ${ago(30)}
-    ) >= w.cap)`;
+    ) >= w.cap`;
 
 /**
  * Resting: the last `rest_after` offers were all sent after the customer's

@@ -37,22 +37,32 @@ const STOPPED_AFTER_OFFER = `EXISTS (
 )`;
 
 /**
- * The sends' messages (m), the orders their sent offers brought within the
- * order window (o, one row per order and send), and who opted out after a
- * sent offer (stopped). Binds the send ids, then the window in days.
+ * The sends' messages (m), the orders their sent offers brought (o, one row
+ * per order, credited to the customer's latest offer within the order window,
+ * whichever send it came from), and who opted out after a sent offer
+ * (stopped). Binds the send ids, then the window in days.
  */
 const RESULTS_SQL = `
     WITH m AS (
         SELECT * FROM marketing_messages WHERE send_id IN (?)
     ), o AS (
-        SELECT DISTINCT ON (o.id, m.send_id) m.send_id, m.channel, o.customer_id, o.total
-        FROM m
-        JOIN orders o ON o.customer_id = m.customer_id
-            AND o.ordered_at >= m.sent_at
-            AND o.ordered_at < m.sent_at + make_interval(days => ?)
+        SELECT latest.send_id, latest.channel, o.customer_id, o.total
+        FROM orders o
+        JOIN LATERAL (
+            SELECT mm.send_id, mm.channel
+            FROM marketing_messages mm
+            WHERE mm.customer_id = o.customer_id
+                AND mm.status = '${S.SENT}'
+                AND mm.deleted_at IS NULL
+                AND mm.sent_at <= o.ordered_at
+                AND mm.sent_at > o.ordered_at - make_interval(days => ?)
+            ORDER BY mm.sent_at DESC
+            LIMIT 1
+        ) latest ON true
+        WHERE o.customer_id IN (SELECT customer_id FROM m WHERE m.status = '${S.SENT}')
+            AND latest.send_id IN (SELECT send_id FROM m)
             AND o.status <> '${ENUM_ORDER_STATUS.CANCELLED}'
             AND o.deleted_at IS NULL
-        WHERE m.status = '${S.SENT}'
     ), stopped AS (
         SELECT DISTINCT m.send_id, m.channel, m.customer_id
         FROM m
@@ -94,20 +104,37 @@ export class MarketingMessageRepository extends DatabaseRepository<MarketingMess
             status: S;
         }[] = await this.em.getConnection().execute(
             `
-            INSERT INTO marketing_messages
-                (workspace_id, send_id, customer_id, channel, conversation_id, status, skip_reason, send_day)
-            SELECT ?::uuid, ?::uuid, r.customer_id, r.channel, r.conversation_id, r.status, r.skip_reason, r.send_day
-            FROM jsonb_to_recordset(?::jsonb) AS r(
-                customer_id uuid, channel text, conversation_id uuid,
-                status text, skip_reason text, send_day date
+            WITH r AS (
+                SELECT * FROM jsonb_to_recordset(?::jsonb) AS r(
+                    customer_id uuid, channel text, conversation_id uuid,
+                    status text, skip_reason text, send_day date
+                )
+            ), ins AS (
+                INSERT INTO marketing_messages
+                    (workspace_id, send_id, customer_id, channel, conversation_id, status, skip_reason, send_day)
+                SELECT ?::uuid, ?::uuid, r.customer_id, r.channel, r.conversation_id, r.status, r.skip_reason, r.send_day
+                FROM r
+                ON CONFLICT (customer_id, send_day) WHERE status IN ('${S.QUEUED}', '${S.SENT}')
+                DO NOTHING
+                RETURNING id, customer_id, send_day, status
+            ), offered_today AS (
+                -- Another send took this customer's one offer of the day at
+                -- the same moment: recorded as skipped, never retried.
+                INSERT INTO marketing_messages
+                    (workspace_id, send_id, customer_id, channel, conversation_id, status, skip_reason, send_day)
+                SELECT ?::uuid, ?::uuid, r.customer_id, r.channel, r.conversation_id,
+                    '${S.SKIPPED}', '${ENUM_MARKETING_SKIP_REASON.OFFERED_TODAY}', r.send_day
+                FROM r
+                WHERE r.status = '${S.QUEUED}'
+                    AND NOT EXISTS (
+                        SELECT 1 FROM ins
+                        WHERE ins.customer_id = r.customer_id AND ins.send_day = r.send_day
+                    )
             )
-            ON CONFLICT (customer_id, send_day) WHERE status IN ('${S.QUEUED}', '${S.SENT}')
-            DO NOTHING
-            RETURNING id, customer_id, to_char(send_day, 'YYYY-MM-DD') AS send_day, status
+            SELECT id, customer_id, to_char(send_day, 'YYYY-MM-DD') AS send_day, status
+            FROM ins
             `,
             [
-                workspaceId,
-                sendId,
                 JSON.stringify(
                     rows.map(r => ({
                         customer_id: r.customerId,
@@ -118,6 +145,10 @@ export class MarketingMessageRepository extends DatabaseRepository<MarketingMess
                         send_day: r.sendDay,
                     }))
                 ),
+                workspaceId,
+                sendId,
+                workspaceId,
+                sendId,
             ]
         );
         return inserted.flatMap(row =>
@@ -212,22 +243,32 @@ export class MarketingMessageRepository extends DatabaseRepository<MarketingMess
         return changed > 0;
     }
 
-    /** The customer wrote: answers every offer of the last 72 hours. */
+    /**
+     * The customer wrote: answers their latest offer of the last 72 hours,
+     * so two sends never claim the same reply.
+     */
     async markReplied(customerId: string, at: Date): Promise<void> {
-        await this.em.nativeUpdate(
-            MarketingMessageEntity,
-            {
-                customer: customerId,
-                status: S.SENT,
-                repliedAt: null,
-                sentAt: {
-                    $gte: new Date(
-                        at.getTime() - MARKETING_REPLY_WINDOW_HOURS * 3_600_000
-                    ),
-                    $lte: at,
-                },
-            },
-            { repliedAt: at }
+        await this.em.getConnection().execute(
+            `
+            UPDATE marketing_messages SET replied_at = ?, updated_at = now()
+            WHERE replied_at IS NULL AND id = (
+                SELECT id FROM marketing_messages
+                WHERE customer_id = ?::uuid
+                    AND status = '${S.SENT}'
+                    AND deleted_at IS NULL
+                    AND sent_at >= ? AND sent_at <= ?
+                ORDER BY sent_at DESC
+                LIMIT 1
+            )
+            `,
+            [
+                at,
+                customerId,
+                new Date(
+                    at.getTime() - MARKETING_REPLY_WINDOW_HOURS * 3_600_000
+                ),
+                at,
+            ]
         );
     }
 
@@ -371,6 +412,15 @@ export class MarketingMessageRepository extends DatabaseRepository<MarketingMess
                         AND o.ordered_at < m.sent_at + make_interval(days => ?)
                         AND o.status <> '${ENUM_ORDER_STATUS.CANCELLED}'
                         AND o.deleted_at IS NULL
+                        -- Credited to the latest offer before the order only.
+                        AND NOT EXISTS (
+                            SELECT 1 FROM marketing_messages later
+                            WHERE later.customer_id = m.customer_id
+                                AND later.status = '${S.SENT}'
+                                AND later.deleted_at IS NULL
+                                AND later.sent_at > m.sent_at
+                                AND later.sent_at <= o.ordered_at
+                        )
                 ) AS ordered,
                 ${STOPPED_AFTER_OFFER} AS stopped,
                 COALESCE(cv.bot_enabled = false AND cv.status = '${ENUM_CONVERSATION_STATUS.OPEN}', false) AS waiting

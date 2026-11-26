@@ -128,7 +128,7 @@ export class CustomerMarketingService {
         input: ICustomerMarketingInbound
     ): Promise<{ optedOut: boolean }> {
         const result = await this.applyInboundOnce(input);
-        // Any message answers the offers of the last 72 hours. Losing that
+        // Any message answers the latest offer of the last 72 hours. Losing that
         // mark must not lose the customer's turn.
         try {
             await this.marketingSends.markReplied(input.customerId);

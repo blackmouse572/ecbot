@@ -11,6 +11,7 @@ import {
     MARKETING_AUDIENCE_OPERATORS,
 } from '../constants/marketing-audience.constant';
 import { MarketingAudienceConditionRequestDto } from '../dtos/request/marketing-audience-condition.request.dto';
+import { MarketingAudiencePreviewRequestDto } from '../dtos/request/marketing-audience-preview.request.dto';
 import { MarketingAudienceRequestDto } from '../dtos/request/marketing-audience.request.dto';
 import { MarketingAudiencePreviewResponseDto } from '../dtos/response/marketing-audience-preview.response.dto';
 import {
@@ -20,6 +21,7 @@ import {
 } from '../enums/marketing-audience.enum';
 import {
     IMarketingAudience,
+    IMarketingAudienceCustomerFilter,
     IMarketingAudienceWindow,
 } from '../interfaces/marketing-audience.interface';
 import { MarketingAudienceRepository } from '../repository/repositories/marketing-audience.repository';
@@ -54,7 +56,7 @@ export class MarketingAudienceService {
 
     async preview(
         workspaceId: string,
-        dto: MarketingAudienceRequestDto,
+        dto: MarketingAudiencePreviewRequestDto,
         now: Date = new Date()
     ): Promise<MarketingAudiencePreviewResponseDto> {
         const audience = this.toAudience(dto);
@@ -87,11 +89,18 @@ export class MarketingAudienceService {
      */
     async reached(
         workspaceId: string,
-        dto: MarketingAudienceRequestDto,
+        dto: MarketingAudiencePreviewRequestDto,
         limit: number,
         offset: number,
-        now: Date = new Date(),
-        notReachedBy?: string
+        {
+            now = new Date(),
+            notReachedBy,
+            filter = {},
+        }: {
+            now?: Date;
+            notReachedBy?: string;
+            filter?: IMarketingAudienceCustomerFilter;
+        } = {}
     ): Promise<{ ids: string[]; total: number }> {
         const audience = this.toAudience(dto);
         return this.repository.reached(
@@ -99,7 +108,8 @@ export class MarketingAudienceService {
             audience,
             limit,
             offset,
-            notReachedBy
+            notReachedBy,
+            filter
         );
     }
 
@@ -116,8 +126,20 @@ export class MarketingAudienceService {
         };
     }
 
-    /** A preset, or conditions that each fit their field; anything else is a 400. */
-    toAudience(dto: MarketingAudienceRequestDto): IMarketingAudience {
+    /**
+     * A preset, or conditions that each fit their field (anything else is a
+     * 400), less the customers the shop unticked.
+     */
+    toAudience(dto: MarketingAudiencePreviewRequestDto): IMarketingAudience {
+        const audience = this.pick(dto);
+        if (dto.excludedCustomerIds?.length) {
+            audience.excludedCustomerIds = dto.excludedCustomerIds;
+        }
+
+        return audience;
+    }
+
+    private pick(dto: MarketingAudienceRequestDto): IMarketingAudience {
         const hasConditions = dto.conditions !== undefined;
         if (dto.preset && hasConditions) {
             throw new BadRequestException({

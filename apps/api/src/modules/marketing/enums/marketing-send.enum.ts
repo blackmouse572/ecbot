@@ -18,6 +18,11 @@ export enum ENUM_MARKETING_SKIP_REASON {
     ACCOUNT_BLOCKED = 'ACCOUNT_BLOCKED',
     /** Paced past the shop's closing hour that day, so it was not sent. */
     SEND_HOURS_ENDED = 'SEND_HOURS_ENDED',
+    /**
+     * "Đã nhận ưu đãi khác hôm nay": another send planned an offer for them
+     * the same day at the same moment. Not retried (one offer a day).
+     */
+    OFFERED_TODAY = 'OFFERED_TODAY',
 }
 
 /** Chỉ gửi 1 lần, or Tự gửi mỗi ngày to customers who newly match (#506). */

@@ -64,6 +64,7 @@ describe('MarketingAudienceService', () => {
                     { reason: X.HOSTILE, count: 0 },
                     { reason: X.PAUSED, count: 2 },
                     { reason: X.DEFERRED, count: 0 },
+                    { reason: X.OFFERED_TODAY, count: 0 },
                     { reason: X.CAPPED, count: 0 },
                     { reason: X.RESTING, count: 0 },
                 ],
@@ -86,15 +87,25 @@ describe('MarketingAudienceService', () => {
 
     it('pages the reached customers with their total', async () => {
         await expect(
-            service.reached('ws1', { preset: T.NEW }, 20, 40, now)
+            service.reached('ws1', { preset: T.NEW }, 20, 40, { now })
         ).resolves.toEqual({ ids: ['c1', 'c2'], total: 48 });
         expect(repository.reached).toHaveBeenCalledWith(
             window,
             { preset: T.NEW },
             20,
             40,
-            undefined
+            undefined,
+            {}
         );
+    });
+
+    it('keeps the customers the shop unticked with the audience', () => {
+        expect(
+            service.toAudience({ preset: T.NEW, excludedCustomerIds: ['c1'] })
+        ).toEqual({ preset: T.NEW, excludedCustomerIds: ['c1'] });
+        expect(
+            service.toAudience({ preset: T.NEW, excludedCustomerIds: [] })
+        ).toEqual({ preset: T.NEW });
     });
 
     it.each([

@@ -95,7 +95,10 @@ describe('E2E — marketing send rules', () => {
         };
         const send = em.create(MarketingSendEntity, {
             workspace,
-            audience: { match: ENUM_MARKETING_AUDIENCE_MATCH.ALL, conditions: [] },
+            audience: {
+                match: ENUM_MARKETING_AUDIENCE_MATCH.ALL,
+                conditions: [],
+            },
             text: 'Ưu đãi',
         } as Partial<MarketingSendEntity> as MarketingSendEntity);
         const offer = (c: CustomerEntity, daysAgo: number, status = M.SENT) => {
@@ -156,7 +159,11 @@ describe('E2E — marketing send rules', () => {
         const res = await preview();
         expect(res.status).toBe(200);
         // An is at the 30-day cap, Bình has one today, Chi rests.
-        expect(reasons(res)).toEqual({ CAPPED: 2, RESTING: 1 });
+        expect(reasons(res)).toEqual({
+            CAPPED: 1,
+            OFFERED_TODAY: 1,
+            RESTING: 1,
+        });
         // Dũng answered; Em's offers never went out.
         expect(res.body.data.count).toBe(2);
     });
@@ -180,8 +187,8 @@ describe('E2E — marketing send rules', () => {
 
         const res = await preview();
         // An has room for a fourth and rests only after four unanswered;
-        // Chi's 20 days of rest are over.
-        expect(reasons(res)).toEqual({ CAPPED: 1 });
+        // Chi's 20 days of rest are over. Bình still has one today.
+        expect(reasons(res)).toEqual({ OFFERED_TODAY: 1 });
         expect(res.body.data.count).toBe(4);
     });
 

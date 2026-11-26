@@ -1,5 +1,5 @@
 import { ENUM_ACCOUNT_TYPE } from '@app/modules/account/enums/account.enum';
-import { MarketingAudienceRequestDto } from '../dtos/request/marketing-audience.request.dto';
+import { MarketingAudiencePreviewRequestDto } from '../dtos/request/marketing-audience-preview.request.dto';
 import {
     ENUM_MARKETING_REPLY_STATUS,
     ENUM_MARKETING_SEND_MODE,
@@ -52,7 +52,7 @@ export type IMarketingRoute =
 export interface IMarketingSendInput {
     name: string;
     mode: ENUM_MARKETING_SEND_MODE;
-    audience: MarketingAudienceRequestDto;
+    audience: MarketingAudiencePreviewRequestDto;
     text: string;
     imageUrl?: string | null;
 }

@@ -15,13 +15,23 @@ export interface IMarketingAudienceCondition {
     number?: number;
 }
 
-/** A "Việc nên làm" preset, or conditions joined by Tất cả / Bất kỳ. */
-export type IMarketingAudience =
+/**
+ * A "Việc nên làm" preset, or conditions joined by Tất cả / Bất kỳ, less
+ * the customers the shop unticked in the send drawer.
+ */
+export type IMarketingAudience = (
     | { preset: ENUM_MARKETING_TODO }
     | {
           match: ENUM_MARKETING_AUDIENCE_MATCH;
           conditions: IMarketingAudienceCondition[];
-      };
+      }
+) & { excludedCustomerIds?: string[] };
+
+/** Narrows a reached-customers page: one channel, a name. */
+export interface IMarketingAudienceCustomerFilter {
+    platform?: ENUM_ACCOUNT_TYPE;
+    search?: string;
+}
 
 /** Whose customers, as of when, and under which send rules. */
 export interface IMarketingAudienceWindow {
