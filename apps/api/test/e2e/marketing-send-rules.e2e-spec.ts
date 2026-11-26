@@ -95,10 +95,7 @@ describe('E2E — marketing send rules', () => {
         };
         const send = em.create(MarketingSendEntity, {
             workspace,
-            audience: {
-                match: ENUM_MARKETING_AUDIENCE_MATCH.ALL,
-                conditions: [],
-            },
+            audience: { match: ENUM_MARKETING_AUDIENCE_MATCH.ALL, conditions: [] },
             text: 'Ưu đãi',
         } as Partial<MarketingSendEntity> as MarketingSendEntity);
         const offer = (c: CustomerEntity, daysAgo: number, status = M.SENT) => {
