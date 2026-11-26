@@ -834,6 +834,25 @@ describe('E2E — marketing sends', () => {
             expect(sorted.status).toBe(200);
             const values = sorted.body.data.map(value);
             expect(values).toEqual([...values].sort((a, b) => b - a));
+
+            // Ties (sends with nothing sent) still page without repeats.
+            const paged: string[] = [];
+            // The API allows 10 requests per 0.5 s.
+            await new Promise(resolve => setTimeout(resolve, 600));
+            // Two pages: a tied row must not land on both, or on neither.
+            const perPage = Math.ceil(sorted.body.data.length / 2);
+            const pages = 2;
+            for (let page = 1; page <= pages; page++) {
+                const one = await http(ctx.app)
+                    .get(
+                        url(
+                            `?orderBy=${orderBy}&orderDirection=DESC&perPage=${perPage}&page=${page}`
+                        )
+                    )
+                    .set(...auth());
+                paged.push(...one.body.data.map((d: any) => d.id));
+            }
+            expect(paged).toEqual(sorted.body.data.map((d: any) => d.id));
         }
     });
 });

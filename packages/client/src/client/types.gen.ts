@@ -37399,7 +37399,7 @@ export type MarketingSendWorkspaceControllerListV1Data = {
          */
         preset?: string;
         /**
-         * true (Đang tự gửi) and/or false (Đã tắt tự gửi), with ',' delimiter
+         * true (on) and/or false (Đã tắt tự gửi), with ',' delimiter. A one-off send is always true, so pair it with mode=AUTO for Đang tự gửi
          */
         active?: string;
         /**

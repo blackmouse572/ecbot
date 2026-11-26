@@ -179,7 +179,13 @@ export class MarketingSendWorkspaceController {
         const [sends, total] = await Promise.all([
             this.sendService.findAll(workspace.id, find, {
                 paging: { limit: _limit, offset: _offset },
-                order: _order,
+                // Pin ties (results are often equal) so paging never repeats a row.
+                order: {
+                    ..._order,
+                    id:
+                        Object.values(_order)[0] ??
+                        ENUM_PAGINATION_ORDER_DIRECTION_TYPE.DESC,
+                },
             }),
             this.sendService.getTotal(workspace.id, find),
         ]);
