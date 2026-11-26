@@ -1,6 +1,6 @@
 import type { MarketingOverviewResponseDto } from "@/hooks/api/marketing-overview";
 import { useAnalyticsFormat } from "@/routes/dashboard/components/analytics/use-analytics-format";
-import { Container, Heading, Text } from "@medusajs/ui";
+import { Container, Heading } from "@medusajs/ui";
 import { FunnelChart } from "@repo/ui/charts";
 import type { FC } from "react";
 import { useTranslation } from "react-i18next";
@@ -37,14 +37,7 @@ export const OverviewFunnel: FC<OverviewFunnelProps> = ({
 
   return (
     <Container className="flex flex-col gap-y-4">
-      <div>
-        <Heading level="h2">{t("marketing.overview.funnel.title")}</Heading>
-        <Text size="small" className="text-ui-fg-subtle">
-          {t("marketing.overview.funnel.description", {
-            value: f.number(overview?.total ?? 0),
-          })}
-        </Text>
-      </div>
+      <Heading level="h2">{t("marketing.overview.funnel.title")}</Heading>
       <FunnelChart
         stages={stages}
         series={series}

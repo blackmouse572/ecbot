@@ -9,7 +9,7 @@ import {
 import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { readApiError } from "@/libs/api-error";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, InlineTip, RadioGroup, Text, toast } from "@medusajs/ui";
+import { Button, InlineTip, RadioGroup, toast } from "@medusajs/ui";
 import { Form } from "@repo/ui/common-components";
 import { useEffect, useRef, type FC } from "react";
 import { useForm } from "react-hook-form";
@@ -150,25 +150,20 @@ export const SendForm: FC<{ preset: Preset }> = ({ preset }) => {
           </SendStep>
         </RouteDrawer.Body>
         <RouteDrawer.Footer>
-          <div className="flex w-full items-center justify-between gap-x-2">
-            <Text size="small" className="text-ui-fg-subtle">
-              {t("marketing.send.footer")}
-            </Text>
-            <div className="flex items-center gap-x-2">
-              <RouteDrawer.Close asChild>
-                <Button size="small" variant="secondary" type="button">
-                  {t("actions.cancel")}
-                </Button>
-              </RouteDrawer.Close>
-              <Button
-                size="small"
-                type="submit"
-                isLoading={create.isPending}
-                disabled={draft.isPending}
-              >
-                {t(`marketing.send.submit.${mode}`)}
+          <div className="flex items-center justify-end gap-x-2">
+            <RouteDrawer.Close asChild>
+              <Button size="small" variant="secondary" type="button">
+                {t("actions.cancel")}
               </Button>
-            </div>
+            </RouteDrawer.Close>
+            <Button
+              size="small"
+              type="submit"
+              isLoading={create.isPending}
+              disabled={draft.isPending}
+            >
+              {t(`marketing.send.submit.${mode}`)}
+            </Button>
           </div>
         </RouteDrawer.Footer>
       </KeyboundForm>

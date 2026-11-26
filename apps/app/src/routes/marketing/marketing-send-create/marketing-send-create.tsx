@@ -30,11 +30,6 @@ export const MarketingSendCreate = () => {
               : t("marketing.send.notFoundTitle")}
           </Heading>
         </RouteDrawer.Title>
-        <RouteDrawer.Description>
-          {isPreset(preset)
-            ? t("marketing.send.description")
-            : t("marketing.send.notFoundMessage")}
-        </RouteDrawer.Description>
       </RouteDrawer.Header>
       {isPreset(preset) ? (
         <SendForm preset={preset} />

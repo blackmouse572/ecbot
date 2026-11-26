@@ -3895,45 +3895,36 @@
     "overview": {
       "navTitle": "Overview",
       "title": "Marketing overview",
-      "description": "Which stage your customers are at, and what to do for each stage.",
       "period": "Last {{days}} days, against the {{days}} days before",
       "range": "Date range",
       "customers_one": "{{value}} customer",
       "customers_other": "{{value}} customers",
       "todos": {
         "title": "To do this week",
-        "description": "How many customers are worth a message at each stage. Ecbot leaves out customers who opted out, are paused or are upset.",
         "total": "customers to message, {{value}} left out",
         "excluded": "{{value}} customers left out.",
         "none": "No customers to message at this stage yet.",
         "NEW": {
-          "title": "{{value}} customers wrote for the first time this week",
-          "hint": "They just wrote to the shop for the first time. A quick answer keeps them asking."
+          "title": "{{value}} customers wrote for the first time this week"
         },
         "INTERESTED": {
-          "title": "{{value}} customers looked at products but did not ask the price",
-          "hint": "Send a first-order offer so they ask more."
+          "title": "{{value}} customers looked at products but did not ask the price"
         },
         "ASKED_PRICE": {
-          "title": "{{value}} customers asked the price in the last 7 days and did not buy",
-          "hint": "Send the product they asked about again, with a small offer."
+          "title": "{{value}} customers asked the price in the last 7 days and did not buy"
         },
         "CROSS_SELL": {
-          "title": "{{value}} customers bought for the first time 15 to 30 days ago",
-          "hint": "Suggest something that goes with what they bought."
+          "title": "{{value}} customers bought for the first time 15 to 30 days ago"
         },
         "REPURCHASE": {
-          "title": "{{value}} customers are about to run out",
-          "hint": "Ecbot uses each product group's repurchase cycle."
+          "title": "{{value}} customers are about to run out"
         },
         "WIN_BACK": {
-          "title": "{{value}} customers bought but have not come back in 31 to 90 days",
-          "hint": "Invite them back with an offer for returning customers."
+          "title": "{{value}} customers bought but have not come back in 31 to 90 days"
         }
       },
       "funnel": {
         "title": "Which stage customers are at",
-        "description": "How many customers reached each stage, out of {{value}}, by the channel they first wrote from. Click a stage below to see the customers.",
         "empty": "No customers yet",
         "dropped": "{{value}} stopped ({{share}})"
       },
@@ -3948,7 +3939,6 @@
       },
       "health": {
         "title": "Is the list healthy",
-        "description": "Customers opting out is a sign the shop is messaging too much.",
         "optOuts": "Opted out",
         "paused": "Paused",
         "pausedHint": "They receive offers again when the pause ends"
@@ -3969,7 +3959,6 @@
       "SEND_HOURS_ENDED": "sending hours ended for the day"
     },
     "send": {
-      "description": "Ecbot picked the customers and drafted the message. Read it, then send.",
       "notFoundTitle": "Nothing to send here",
       "notFoundMessage": "Open it again from the to-do list on the Overview.",
       "preset": {
@@ -4011,7 +4000,7 @@
         "drafted": "Drafted by Ecbot",
         "offer": "Offer",
         "offerPlaceholder": "10% off orders placed before Nov 20",
-        "offerHint": "Ecbot writes the message around this offer. Leave it empty for a simple check-in.",
+        "offerHint": "Leave it empty for a simple check-in.",
         "text": "Message text",
         "placeholder": "Write the message customers get",
         "drafting": "Ecbot is writing...",
@@ -4019,7 +4008,6 @@
         "tokenProduct": "Product",
         "insert": "Insert customer name or product",
         "insertHint": "Type { to insert",
-        "previewHint": "Each customer gets their own name and the product they asked about, with that product group's photo if it has one.",
         "rewrite": {
           "DIFFERENT": "Rewrite",
           "LONGER": "Longer",
@@ -4045,7 +4033,6 @@
         "limitsLabel": "Limits",
         "limits": "Ecbot only sends during your send hours and inside each channel's free messaging window. Each customer gets at most 1 offer a day."
       },
-      "footer": "Results show under Sent",
       "submit": {
         "AUTO": "Send and turn on",
         "ONCE": "Send now"
@@ -4073,7 +4060,6 @@
     },
     "settings": {
       "title": "Send settings",
-      "description": "Applies to every send and daily send in Marketing.",
       "hours": "Hours offers can go out",
       "sendFrom": "Send from",
       "sendTo": "Send until",
@@ -4088,10 +4074,8 @@
       "restFor": "offers in a row with no reply, rest for",
       "restDays": "Rest days",
       "days": "days",
-      "restHint": "Keeps reply rates up and spam reports down.",
       "keywords": "Stop keywords",
       "keywordsPlaceholder": "Add a keyword...",
-      "keywordsHint": "A customer who sends one of these stops getting offers on every channel.",
       "stopReply": "Confirm when a customer stops offers",
       "stopReplyHint": "When off, Ecbot still records the stop, it just doesn't reply.",
       "stopReplyText": "Confirmation message",

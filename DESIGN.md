@@ -23,6 +23,7 @@ Related: library and motion picks in [`.agents/skills/eccho-frontend/references/
 - Errors say what went wrong and how to fix it, with no apology.
 - Punctuate with commas, colons, periods or parentheses. **No em dash ("—") in product text**: our non-technical Vietnamese users read it as machine-written. This covers LLM prompt templates too.
 - No emoji as decoration. Channels are shown with their real logos, not emoji.
+- **No filler descriptions.** Leave out a subtitle or hint that restates its label, says where a result will show up ("Hiện trong danh sách Đã gửi."), explains how to click ("Bấm một dòng để mở hội thoại.") or lists a menu's items. Keep one only when it carries a fact the user can't see otherwise: a count, a limit, or a consequence ("Tin chưa gửi sẽ dùng nội dung mới.").
 - Numbers follow the locale: `1.284 tin nhắn`, `12,5%`, prices in VND without decimals (`199.000 ₫`). Plan prices are stored in cents; format at the edge.
 
 ## 3. Colour
@@ -227,7 +228,7 @@ The shape to follow (the existing `skill-create` predates it and differs in deta
 
 Editing an existing resource's fields (profile, workspace, customer, tag, a chatbot settings section) opens a **`RouteDrawer`** from the right on its own route, such as `/settings/profile/edit`, with the detail page still visible behind it. This fits short forms, up to about eight fields in the 560px column.
 
-- **Header**: `RouteDrawer.Title asChild` around `Heading`, plus a `RouteDrawer.Description` (it can be `sr-only`).
+- **Header**: `RouteDrawer.Title asChild` around `Heading`, plus a `RouteDrawer.Description` only when it carries a fact (see §2). `RouteDrawer` does not wire it to `aria-describedby`, so an `sr-only` one is not announced.
 - **Body**: `flex flex-1 flex-col gap-y-4 overflow-y-auto`. While the record loads, render the header and a `FormSkeleton` so the drawer opens at once. Render the form only after the data arrives, with `defaultValues` from the record.
 - **Footer**: right-aligned, `gap-x-2`. Cancel (`secondary`, small, inside `RouteDrawer.Close`), then Save (`primary`, small, `type="submit"`, `isLoading`).
 - **On success**: `toast.success` ("Đã lưu hồ sơ"), then `handleSuccess()`.
@@ -282,4 +283,5 @@ One exception: an edit opened from a side panel that sits beside live work, such
 - [ ] Create flows use `RouteFocusModal`, edit flows use `RouteDrawer`, destructive actions use `usePrompt`.
 - [ ] Usage bars use `Meter`.
 - [ ] No em dash in any user-facing string or prompt template.
+- [ ] Every subtitle and hint carries a fact, a limit or a consequence; none restates its label.
 - [ ] Screenshots attached to the PR.

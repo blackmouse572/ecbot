@@ -29,12 +29,7 @@ export const OverviewTodos: FC<OverviewTodosProps> = ({
   return (
     <Container className="divide-y p-0">
       <div className="flex flex-col gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-x-4">
-        <div>
-          <Heading level="h2">{t("marketing.overview.todos.title")}</Heading>
-          <Text size="small" className="text-ui-fg-subtle">
-            {t("marketing.overview.todos.description")}
-          </Text>
-        </div>
+        <Heading level="h2">{t("marketing.overview.todos.title")}</Heading>
         {overview && (
           <div className="flex shrink-0 flex-col sm:items-end">
             <Text size="xlarge" weight="plus" className="tabular-nums">
@@ -93,17 +88,17 @@ export const OverviewTodos: FC<OverviewTodosProps> = ({
                       {t("marketing.overview.todos.none")}
                     </Text>
                   )}
-                  <Text
-                    size="small"
-                    leading="compact"
-                    className="text-ui-fg-subtle"
-                  >
-                    {t(`marketing.overview.todos.${todo.key}.hint`)}
-                    {todo.excluded > 0 &&
-                      ` ${t("marketing.overview.todos.excluded", {
+                  {todo.excluded > 0 && (
+                    <Text
+                      size="small"
+                      leading="compact"
+                      className="text-ui-fg-subtle"
+                    >
+                      {t("marketing.overview.todos.excluded", {
                         value: f.number(todo.excluded),
-                      })}`}
-                  </Text>
+                      })}
+                    </Text>
+                  )}
                 </div>
                 {todo.count > 0 && (
                   <Can I="create" a="MARKETING">

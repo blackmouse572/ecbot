@@ -84,7 +84,6 @@ export const SendMessage: FC<SendMessageProps> = ({
                 />
               }
             />
-            <Form.Hint>{t("marketing.send.message.previewHint")}</Form.Hint>
             <Form.ErrorMessage />
           </Form.Item>
         )}
