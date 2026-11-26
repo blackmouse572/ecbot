@@ -285,7 +285,6 @@ describe('SessionService (geo + activity additions)', () => {
 
             await service.touchLastActive('s1');
 
-            expect(mockCache.set).toHaveBeenCalledTimes(1);
             expect(nativeUpdate).toHaveBeenCalledTimes(1);
             const [, filter, data] = nativeUpdate.mock.calls[0];
             expect(filter).toEqual({ id: 's1' });
@@ -304,13 +303,15 @@ describe('SessionService (geo + activity additions)', () => {
             expect(data).toEqual({ lastSeenAt: fixedNow });
         });
 
-        it('short-circuits (no DB write) within the throttle window', async () => {
-            mockCache.get.mockResolvedValueOnce(1);
+        it('writes once per throttle window, with no Redis commands', async () => {
             const service = build();
 
             await service.touchLastActive('s1');
+            await service.touchLastActive('s1');
 
-            expect(nativeUpdate).not.toHaveBeenCalled();
+            expect(nativeUpdate).toHaveBeenCalledTimes(1);
+            expect(mockCache.get).not.toHaveBeenCalled();
+            expect(mockCache.set).not.toHaveBeenCalled();
         });
 
         it('never throws (fire-and-forget safe) when the update fails', async () => {
@@ -319,6 +320,47 @@ describe('SessionService (geo + activity additions)', () => {
             await expect(
                 service.touchLastActive('s1')
             ).resolves.toBeUndefined();
+        });
+    });
+
+    describe('isLoginSessionActive', () => {
+        it('asks Redis once, then answers from memory', async () => {
+            mockCache.get.mockResolvedValueOnce({ user: 'u1' } as any);
+            const service = build();
+
+            await expect(service.isLoginSessionActive('s1')).resolves.toBe(
+                true
+            );
+            await expect(service.isLoginSessionActive('s1')).resolves.toBe(
+                true
+            );
+
+            expect(mockCache.get).toHaveBeenCalledTimes(1);
+        });
+
+        it('does not remember a missing session', async () => {
+            const service = build();
+
+            await expect(service.isLoginSessionActive('s1')).resolves.toBe(
+                false
+            );
+            await expect(service.isLoginSessionActive('s1')).resolves.toBe(
+                false
+            );
+
+            expect(mockCache.get).toHaveBeenCalledTimes(2);
+        });
+
+        it('forgets the session on this instance when it is deleted', async () => {
+            mockCache.get.mockResolvedValueOnce({ user: 'u1' } as any);
+            const service = build();
+            await service.isLoginSessionActive('s1');
+
+            await service.deleteLoginSession('s1');
+
+            await expect(service.isLoginSessionActive('s1')).resolves.toBe(
+                false
+            );
         });
     });
 

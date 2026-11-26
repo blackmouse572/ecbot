@@ -23,6 +23,10 @@ export class TtlCache<T> {
         return entry.value;
     }
 
+    delete(key: string): void {
+        this.entries.delete(key);
+    }
+
     set(key: string, value: T): void {
         // Map keeps insertion order, so the first key is the oldest.
         this.entries.delete(key);

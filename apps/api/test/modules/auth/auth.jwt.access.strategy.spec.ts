@@ -14,9 +14,9 @@ describe('AuthJwtAccessStrategy', () => {
     const get = jest.fn((key: string) => configValues[key]);
     const configService = { get } as any;
 
-    const findLoginSession = jest.fn();
+    const isLoginSessionActive = jest.fn();
     const touchLastActive = jest.fn();
-    const sessionService = { findLoginSession, touchLastActive } as any;
+    const sessionService = { isLoginSessionActive, touchLastActive } as any;
 
     const payload: IAuthJwtAccessTokenPayload = {
         loginDate: new Date(),
@@ -30,12 +30,12 @@ describe('AuthJwtAccessStrategy', () => {
 
     beforeEach(() => {
         get.mockClear();
-        findLoginSession.mockReset();
+        isLoginSessionActive.mockReset();
         touchLastActive.mockReset().mockResolvedValue(undefined);
     });
 
     it('rejects with the access-token unauthorized 401 when the login session was revoked', async () => {
-        findLoginSession.mockResolvedValue(undefined);
+        isLoginSessionActive.mockResolvedValue(false);
 
         const strategy = new AuthJwtAccessStrategy(
             configService,
@@ -55,7 +55,7 @@ describe('AuthJwtAccessStrategy', () => {
     });
 
     it('returns the payload and touches last-active when the login session is active', async () => {
-        findLoginSession.mockResolvedValue({ user: 'user-1' });
+        isLoginSessionActive.mockResolvedValue(true);
 
         const strategy = new AuthJwtAccessStrategy(
             configService,
@@ -63,12 +63,12 @@ describe('AuthJwtAccessStrategy', () => {
         );
 
         await expect(strategy.validate(payload)).resolves.toEqual(payload);
-        expect(findLoginSession).toHaveBeenCalledWith('session-1');
+        expect(isLoginSessionActive).toHaveBeenCalledWith('session-1');
         expect(touchLastActive).toHaveBeenCalledWith('session-1', 'user-1');
     });
 
     it("does not count an admin's impersonation as the user being seen", async () => {
-        findLoginSession.mockResolvedValue({ user: 'user-1' });
+        isLoginSessionActive.mockResolvedValue(true);
 
         const strategy = new AuthJwtAccessStrategy(
             configService,
@@ -82,9 +82,9 @@ describe('AuthJwtAccessStrategy', () => {
     it('rejects a payload without a session claim instead of skipping the check', async () => {
         // Every real access token always carries `session` (see
         // AuthService.createPayloadAccessToken) — this guards the case where
-        // a payload somehow lacks it: findLoginSession(undefined) resolves
+        // a payload somehow lacks it: isLoginSessionActive(undefined) resolves
         // falsy, so it must still 401 rather than silently pass through.
-        findLoginSession.mockResolvedValue(undefined);
+        isLoginSessionActive.mockResolvedValue(false);
         const payloadWithoutSession = {
             ...payload,
             session: undefined,
@@ -103,7 +103,7 @@ describe('AuthJwtAccessStrategy', () => {
                 message: 'auth.error.accessTokenUnauthorized',
             },
         });
-        expect(findLoginSession).toHaveBeenCalledWith(undefined);
+        expect(isLoginSessionActive).toHaveBeenCalledWith(undefined);
         expect(touchLastActive).not.toHaveBeenCalled();
     });
 });

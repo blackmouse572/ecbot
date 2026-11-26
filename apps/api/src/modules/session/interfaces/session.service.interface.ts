@@ -70,6 +70,7 @@ export interface ISessionService {
         currentSessionId?: string
     ): SessionAdminListResponseDto[];
     touchLastActive(id: string, userId?: string): Promise<void>;
+    isLoginSessionActive(id: string): Promise<boolean>;
     findLoginSession(_id: string): Promise<string>;
     setLoginSession(
         user: UserEntity,
