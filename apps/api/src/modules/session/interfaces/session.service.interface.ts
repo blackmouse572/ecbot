@@ -8,6 +8,7 @@ import {
     IDatabaseUpdateManyOptions,
 } from 'src/common/database/interfaces/database.interface';
 import { SessionCreateRequestDto } from 'src/modules/session/dtos/request/session.create.request.dto';
+import { ISessionLogin } from 'src/modules/session/interfaces/session.interface';
 import { SessionAdminListResponseDto } from 'src/modules/session/dtos/response/session.admin-list.response.dto';
 import { SessionListResponseDto } from 'src/modules/session/dtos/response/session.list.response.dto';
 import { SessionEntity } from 'src/modules/session/repository/entities/session.entity';
@@ -71,7 +72,7 @@ export interface ISessionService {
     ): SessionAdminListResponseDto[];
     touchLastActive(id: string, userId?: string): Promise<void>;
     isLoginSessionActive(id: string): Promise<boolean>;
-    findLoginSession(_id: string): Promise<string>;
+    findLoginSession(_id: string): Promise<ISessionLogin | undefined>;
     setLoginSession(
         user: UserEntity,
         session: SessionEntity,

@@ -38,4 +38,15 @@ describe('TtlCache', () => {
 
         expect(cache.get('a')).toBeUndefined();
     });
+
+    it('forgets every key on clear', () => {
+        const cache = new TtlCache<string>(30_000, 10, clock);
+        cache.set('a', 'one');
+        cache.set('b', 'two');
+
+        cache.clear();
+
+        expect(cache.get('a')).toBeUndefined();
+        expect(cache.get('b')).toBeUndefined();
+    });
 });

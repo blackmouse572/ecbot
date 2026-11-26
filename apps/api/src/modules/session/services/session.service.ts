@@ -22,6 +22,7 @@ import { ENUM_ACTIVITY_ACTION } from 'src/modules/activity/enums/activity.enum';
 import { ActivityService } from 'src/modules/activity/services/activity.service';
 import { ENUM_POLICY_SUBJECT } from 'src/modules/policy/enums/policy.enum';
 import { SessionCreateRequestDto } from 'src/modules/session/dtos/request/session.create.request.dto';
+import { ISessionLogin } from 'src/modules/session/interfaces/session.interface';
 import { SessionAdminListResponseDto } from 'src/modules/session/dtos/response/session.admin-list.response.dto';
 import { SessionListResponseDto } from 'src/modules/session/dtos/response/session.list.response.dto';
 import { UserMetaResponseDto } from 'src/modules/user/dtos/response/user.meta.response.dto';
@@ -289,10 +290,10 @@ export class SessionService implements ISessionService {
         return true;
     }
 
-    async findLoginSession(id: string): Promise<string> {
-        return (await this.cacheManager.get<string>(
+    async findLoginSession(id: string): Promise<ISessionLogin | undefined> {
+        return this.cacheManager.get<ISessionLogin>(
             `${this.appName}:${this.sessionKeyPrefix}:${id}`
-        ))!;
+        );
     }
 
     async setLoginSession(
@@ -307,7 +308,7 @@ export class SessionService implements ISessionService {
         // ms(...) / 1000); cache-manager v6 `set()` takes milliseconds.
         await this.cacheManager.set(
             key,
-            { user: user.id },
+            { user: user.id } satisfies ISessionLogin,
             overrideTtlMs ?? this.refreshTokenExpiration * 1000
         );
 
@@ -322,6 +323,7 @@ export class SessionService implements ISessionService {
     }
 
     async resetLoginSession(): Promise<void> {
+        this.activeLogins.clear();
         await this.cacheManager.clear();
 
         return;

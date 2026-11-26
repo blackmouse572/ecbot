@@ -1,5 +1,6 @@
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
 import { ENUM_SESSION_STATUS } from '../../../src/modules/session/enums/session.enum';
+import { SESSION_LOGIN_CACHE_TTL_MS } from '../../../src/modules/session/constants/session.constant';
 import { SessionService } from '../../../src/modules/session/services/session.service';
 
 describe('SessionService (geo + activity additions)', () => {
@@ -47,6 +48,7 @@ describe('SessionService (geo + activity additions)', () => {
         get: jest.fn(async () => undefined),
         set: jest.fn(async () => undefined),
         del: jest.fn(async () => undefined),
+        clear: jest.fn(async () => undefined),
     };
     const mockMessageService = {
         setMessage: jest.fn(() => 'session not found'),
@@ -361,6 +363,46 @@ describe('SessionService (geo + activity additions)', () => {
             await expect(service.isLoginSessionActive('s1')).resolves.toBe(
                 false
             );
+        });
+
+        it('forgets every session on this instance on reset', async () => {
+            mockCache.get.mockResolvedValueOnce({ user: 'u1' } as any);
+            const service = build();
+            await service.isLoginSessionActive('s1');
+
+            await service.resetLoginSession();
+
+            await expect(service.isLoginSessionActive('s1')).resolves.toBe(
+                false
+            );
+        });
+
+        // A revoke on another instance only evicts its own memory, so this
+        // instance must go back to Redis once the window ends.
+        it('asks Redis again after the window, so a revoke elsewhere is picked up', async () => {
+            jest.useFakeTimers();
+            try {
+                mockCache.get
+                    .mockResolvedValueOnce({ user: 'u1' } as any)
+                    .mockResolvedValueOnce(undefined);
+                const service = build();
+
+                await expect(service.isLoginSessionActive('s1')).resolves.toBe(
+                    true
+                );
+                jest.advanceTimersByTime(SESSION_LOGIN_CACHE_TTL_MS - 1);
+                await expect(service.isLoginSessionActive('s1')).resolves.toBe(
+                    true
+                );
+                jest.advanceTimersByTime(1);
+                await expect(service.isLoginSessionActive('s1')).resolves.toBe(
+                    false
+                );
+
+                expect(mockCache.get).toHaveBeenCalledTimes(2);
+            } finally {
+                jest.useRealTimers();
+            }
         });
     });
 
