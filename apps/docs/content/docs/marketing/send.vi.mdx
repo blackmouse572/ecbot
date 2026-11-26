@@ -1,0 +1,142 @@
+---
+title: Gửi ưu đãi
+description: Gửi ưu đãi cho một dòng Việc nên làm trên Tổng quan tiếp thị. Ecbot chọn khách và soạn sẵn tin, bạn chỉ cần đọc lại rồi gửi.
+faq:
+  - q: Mọi khách trong dòng đều nhận tin à?
+    a: Chỉ những khách Ecbot được nhắn hôm nay. Ecbot bỏ ra khách đã dừng nhận tin, đang khó chịu, đang tạm ngưng, đang tạm nghỉ hoặc đã nhận ưu đãi khác hôm nay, và bạn bỏ chọn được thêm bất kỳ ai.
+  - q: Khách đã hết khung nhắn miễn phí thì sao?
+    a: Ecbot không trả phí để nhắn. Ưu đãi chỉ gửi trong khung nhắn miễn phí của từng kênh, nên khách đó sẽ được bỏ qua.
+  - q: Khách dừng nhận ưu đãi bằng cách nào?
+    a: Khách bấm Không nhận nữa dưới tin, hoặc nhắn một từ khoá dừng như "dừng". Ưu đãi sẽ dừng trên mọi kênh.
+  - q: Tự gửi mỗi ngày khác Chỉ gửi 1 lần thế nào?
+    a: Chỉ gửi 1 lần nhắn cho những khách đang trong dòng, ngay bây giờ. Tự gửi mỗi ngày còn nhắn cho khách mới vào dòng ở những ngày sau.
+---
+
+Mỗi dòng **Việc nên làm tuần này** trên [Tổng quan tiếp thị](/docs/marketing) có một nút gửi. Ecbot chọn khách trong dòng đó, soạn sẵn tin cho họ, bạn đọc lại rồi gửi. Tin được agent gửi đi, trong đúng cuộc trò chuyện của từng khách.
+
+<Screenshot
+  name="marketing-todos"
+  alt="Danh sách Việc nên làm tuần này với nút gửi ở mỗi dòng"
+>
+  <Mark id="range">Khoảng ngày cho các biểu đồ bên dưới.</Mark>
+  <Mark id="total">Số khách nên nhắn tuần này, và số khách đã bỏ ra.</Mark>
+  <Mark id="rows">Mỗi nhóm khách nên nhắn một dòng.</Mark>
+  <Mark id="send">
+    Nút gửi. Tên nút cho biết tin dùng để làm gì, ví dụ **Nhắc kèm ưu đãi**.
+  </Mark>
+  <Mark id="settings">
+    **Cài đặt gửi tin**: giờ gửi, giới hạn và từ khoá dừng cho mọi lần gửi.
+  </Mark>
+</Screenshot>
+
+| Dòng         | Nút                    |
+| ------------ | ---------------------- |
+| Mới biết     | **Chào khách mới**     |
+| Quan tâm     | **Gửi ưu đãi lần đầu** |
+| Hỏi giá      | **Nhắc kèm ưu đãi**    |
+| Đã mua 1 lần | **Gợi ý món kèm**      |
+| Mua lại      | **Nhắc mua lại**       |
+| Mời quay lại | **Mời quay lại**       |
+
+## Gửi một ưu đãi
+
+Bấm nút của một dòng. Một khung mở ra với ba bước.
+
+<Screenshot
+  name="marketing-send"
+  alt="Khung gửi tin với Gửi cho ai, Tin nhắn và Cách gửi"
+>
+  <Mark id="audience">
+    Bao nhiêu khách nhận tin, theo từng kênh. Bấm một kênh để xem danh sách
+    khách.
+  </Mark>
+  <Mark id="offer">
+    Không bắt buộc. Ecbot viết tin dựa trên ưu đãi của bạn.
+  </Mark>
+  <Mark id="message">
+    Tin Ecbot soạn sẵn. Sửa trực tiếp, hoặc dùng Viết lại, Dài hơn, Ngắn hơn.
+  </Mark>
+  <Mark id="mode">Tự gửi mỗi ngày, hoặc chỉ gửi 1 lần.</Mark>
+</Screenshot>
+
+<Steps>
+<Step>
+
+### Gửi cho ai
+
+Khung cho biết bao nhiêu khách sẽ nhận tin, mỗi kênh một ô. Bên dưới ghi số khách Ecbot đã bỏ ra và lý do: đã dừng nhận tin, đang khó chịu, đang tạm ngưng, hẹn để sau, đang tạm nghỉ vì không trả lời, đã nhận đủ tin trong 30 ngày, hoặc đã nhận ưu đãi khác hôm nay.
+
+Muốn bỏ ai ra, bấm vào ô kênh. **Khách sẽ nhận tin** liệt kê khách kèm số điện thoại, email, giai đoạn và hội thoại. Bỏ chọn những khách bạn không muốn gửi lần này, rồi bấm **Xong**. **Chọn lại tất cả** để chọn lại họ.
+
+<Screenshot
+  name="marketing-send-customers"
+  alt="Danh sách khách sẽ nhận tin, với một khách đã bỏ chọn"
+>
+  <Mark id="table">Khách trên kênh đó. Bỏ chọn bất kỳ ai bạn muốn bỏ ra.</Mark>
+  <Mark id="unticked">Số khách bạn đã bỏ chọn.</Mark>
+</Screenshot>
+
+</Step>
+<Step>
+
+### Tin nhắn
+
+Ecbot soạn sẵn tin ngay khi khung mở ra.
+
+- **Ưu đãi** (không bắt buộc): viết ưu đãi theo cách của bạn, ví dụ "Giảm 10% cho đơn đặt trước 20/11". Ecbot viết tin dựa trên ưu đãi này. Để trống thì tin chỉ nhắc khách quay lại.
+- **Lời nhắn**: sửa như văn bản bình thường. **Viết lại** viết một bản khác, menu của nút cho chọn kiểu: Thân thiện, Lịch sự hoặc Vui vẻ. **Dài hơn** và **Ngắn hơn** đổi độ dài.
+- **Tên khách** và **Sản phẩm** được điền riêng cho từng khách. Gõ `{` hoặc bấm nút `{ }` để chèn. Khách chưa có tên sẽ được gọi là "bạn", khách chưa hỏi sản phẩm nào sẽ thấy "sản phẩm bạn quan tâm". Nếu nhóm hàng của sản phẩm có ảnh, ảnh được gửi kèm.
+
+</Step>
+<Step>
+
+### Cách gửi
+
+- **Tự gửi mỗi ngày (nên chọn)**: gửi những khách này ngay, rồi mỗi ngày tự gửi cho khách mới vào dòng.
+- **Chỉ gửi 1 lần**: chỉ những khách này, ngay bây giờ.
+
+Bấm **Gửi và bật tự gửi** hoặc **Gửi ngay**.
+
+</Step>
+</Steps>
+
+## Khách nhận được gì
+
+- Tin đến từ agent, trong kênh khách nhắn gần nhất, và hiện trong **Hội thoại** như tin của bot.
+- Ứng dụng chat có nút trả lời nhanh, như Messenger, sẽ có nút **Không nhận nữa** dưới tin. Trên ứng dụng chat không có nút trả lời nhanh, như Zalo, Telegram và Threads, dòng cuối của tin cho biết nhắn từ gì để dừng.
+- Khách trả lời trong 72 giờ, hoặc đặt đơn trong 7 ngày, được tính cho ưu đãi đó.
+
+<Callout title="Sắp có">
+  Trang **Đã gửi**, với kết quả từng lần gửi và nút tắt tự gửi mỗi ngày, sẽ có ở
+  bản sau.
+</Callout>
+
+## Giới hạn để bảo vệ khách
+
+Ecbot kiểm tra lại từng khách ngay trước khi gửi, và bỏ qua khách chưa nên nhận tin lúc đó:
+
+- **Giờ gửi**: chỉ trong khung giờ ở Cài đặt gửi tin, mặc định 09:00 đến 20:00. Tin rơi ngoài giờ sẽ chờ tới hôm sau.
+- **Khung nhắn miễn phí**: chỉ khi ứng dụng chat còn cho shop nhắn miễn phí, ví dụ 24 giờ sau tin cuối của khách trên Messenger.
+- **Tối đa 1 ưu đãi mỗi ngày** cho mỗi khách, tính chung mọi lần gửi.
+- **Tối đa 3 ưu đãi trong 30 ngày** cho mỗi khách, theo mặc định.
+- **Tạm nghỉ**: sau 3 tin liền không trả lời, khách được nghỉ 30 ngày, theo mặc định.
+
+## Cài đặt gửi tin [#send-settings]
+
+Bấm **Cài đặt gửi tin** ở góc trên bên phải Tổng quan tiếp thị. Cài đặt áp dụng cho mọi lần gửi và tự gửi.
+
+<Screenshot name="marketing-settings" alt="Khung Cài đặt gửi tin">
+  <Mark id="hours">Khung giờ được gửi ưu đãi, theo giờ của shop.</Mark>
+  <Mark id="cap">Số ưu đãi tối đa một khách nhận trong 30 ngày.</Mark>
+  <Mark id="rest">Khi nào khách được tạm nghỉ, và nghỉ bao lâu.</Mark>
+  <Mark id="keywords">
+    Các từ khiến khách dừng nhận ưu đãi. Danh sách của bạn thay cho các từ có
+    sẵn.
+  </Mark>
+</Screenshot>
+
+- **Giờ được gửi tin ưu đãi**: giờ bắt đầu và giờ kết thúc.
+- **Số tin ưu đãi tối đa cho mỗi khách**: số tin trong 30 ngày, tối đa 10. Không bao giờ quá 1 tin mỗi ngày.
+- **Cho khách tạm nghỉ khi không trả lời**: sau bao nhiêu tin không được trả lời, và nghỉ bao nhiêu ngày.
+- **Từ khoá dừng nhận tin**: khách nhắn một trong các từ này sẽ không nhận ưu đãi trên mọi kênh. Để trống thì Ecbot dùng "dừng", "dung" và "stop".
+- **Gửi lời xác nhận khi khách dừng nhận tin**: khi bật, Ecbot trả lời bằng lời xác nhận của bạn, hoặc lời có sẵn theo ngôn ngữ của agent nếu bạn để trống. Khi tắt, Ecbot vẫn ghi nhận khách dừng.

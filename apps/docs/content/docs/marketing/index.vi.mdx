@@ -6,8 +6,8 @@ faq:
     a: Khách đã dừng nhận tin, đang tạm ngưng hoặc đang Khó chịu. Ô tổng cho biết đã bỏ bao nhiêu khách.
   - q: Khoảng ngày có đổi Việc nên làm tuần này không?
     a: Không. Khoảng ngày đổi biểu đồ phễu, khách chuyển giai đoạn và độ khoẻ danh sách. Mỗi dòng Việc nên làm giữ khung ngày riêng, ví dụ 7 ngày qua với Hỏi giá.
-  - q: Ecbot có gửi tin từ Tổng quan tiếp thị không?
-    a: Chưa. Mỗi con số mở danh sách khách đã lọc, và bạn nhắn cho từng khách trong cuộc trò chuyện của họ.
+  - q: Tôi gửi ưu đãi từ Tổng quan tiếp thị được không?
+    a: Được. Mỗi dòng Việc nên làm có một nút gửi. Ecbot chọn khách và soạn sẵn tin, bạn đọc lại trước khi gửi.
   - q: Ai mở được Tổng quan tiếp thị?
     a: Thành viên có vai trò được xem Tiếp thị, như Chủ sở hữu, Manager và Marketing.
 ---
@@ -35,14 +35,14 @@ Tiếp thị trong Ecbot đi theo một vòng, mỗi bước có trang riêng:
 2. **Hiểu khách**: Ecbot gắn cho mỗi khách giai đoạn và việc khách có muốn nhận ưu đãi không, xem [Giai đoạn khách và nhận ưu đãi](/docs/marketing/stages).
 3. **Ghi đơn**: đơn đã xác nhận cho Ecbot biết ai mua gì và khi nào, xem [Đơn hàng và nhóm hàng](/docs/marketing/orders).
 4. **Tìm khách**: trang này liệt kê những khách nên nhắn tuần này, và vì sao.
-5. **Hành động**: bạn nhắn cho những khách đó, rồi xem giai đoạn và độ khoẻ danh sách thay đổi.
+5. **Hành động**: gửi ưu đãi cho họ bằng nút của từng dòng, xem [Gửi ưu đãi](/docs/marketing/send), rồi xem giai đoạn và độ khoẻ danh sách thay đổi.
 
 Mới dùng Tiếp thị? Làm theo [Thiết lập Tiếp thị](/docs/marketing/setup) trước, để trang này có đơn hàng và nguồn khách để làm việc.
 
-<Callout type="warn" title="Trang này không gửi tin">
-  Mỗi con số mở danh sách khách đã lọc sẵn. Ecbot không gửi gì từ trang này: bạn
-  nhắn cho từng khách trong cuộc trò chuyện của họ. Gửi ưu đãi cho cả nhóm khách
-  từ Ecbot sẽ có ở bản sau.
+<Callout title="Gửi ngay từ từng dòng">
+  Mỗi dòng Việc nên làm có một nút gửi. Ecbot chọn khách, soạn sẵn tin và kiểm
+  tra các giới hạn, bạn đọc lại trước khi gửi. Xem [Gửi ưu
+  đãi](/docs/marketing/send).
 </Callout>
 
 ## Khi nào dùng
@@ -62,6 +62,10 @@ Mở trang mỗi tuần một lần để quyết định nhắn cho ai tiếp t
   </Mark>
   <Mark id="rows">
     Mỗi giai đoạn một dòng: nên làm gì, và áp dụng cho bao nhiêu khách.
+  </Mark>
+  <Mark id="send">Nút gửi mở một tin soạn sẵn cho dòng đó.</Mark>
+  <Mark id="settings">
+    **Cài đặt gửi tin**: giờ gửi, giới hạn và từ khoá dừng cho mọi lần gửi.
   </Mark>
 </Screenshot>
 

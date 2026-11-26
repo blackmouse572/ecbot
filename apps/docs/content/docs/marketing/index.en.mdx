@@ -6,8 +6,8 @@ faq:
     a: Customers who opted out of offers, are paused, or are marked Upset. The total shows how many were left out.
   - q: Does the date range change the To do this week list?
     a: No. The range changes the funnel, stage moves and list health. Each To do row keeps its own window, such as the last 7 days for Asked price.
-  - q: Does Ecbot send messages from the Marketing overview?
-    a: Not yet. A number opens the filtered customer list, and you message each customer from their conversation.
+  - q: Can I send offers from the Marketing overview?
+    a: Yes. Each To do row has a send button. Ecbot picks the customers and drafts the message, and you check it before it goes out.
   - q: Who can open the Marketing overview?
     a: Members whose role can read Marketing, such as the Owner, Manager and Marketing roles.
 ---
@@ -35,14 +35,14 @@ Marketing in Ecbot follows one cycle, and each step has its own page:
 2. **Understand**: Ecbot labels each customer with a stage and whether they want offers, see [Customer stages and offers](/docs/marketing/stages).
 3. **Record**: confirmed orders tell Ecbot who bought what and when, see [Orders and product groups](/docs/marketing/orders).
 4. **Find**: this page lists who is worth a message this week, and why.
-5. **Act**: you message those customers, then watch the stages and list health change.
+5. **Act**: send them an offer from the row's button, see [Send offers](/docs/marketing/send), then watch the stages and list health change.
 
 New to Marketing? Follow [Set up Marketing](/docs/marketing/setup) first, so this page has orders and sources to work from.
 
-<Callout type="warn" title="This page does not send messages">
-  A number opens the customer list filtered to those customers. Ecbot does not
-  send anything from here: you message each customer from their conversation.
-  Sending offers to a whole group from Ecbot comes in a later release.
+<Callout title="Send from each row">
+  Each To do row has a send button. Ecbot picks the customers, drafts the
+  message and checks the limits, and you read it before it goes out. See [Send
+  offers](/docs/marketing/send).
 </Callout>
 
 ## When to use it
@@ -63,6 +63,12 @@ Open it once a week to decide who to message next. Every number on the page open
   </Mark>
   <Mark id="rows">
     One row per stage: what to do, and how many customers it applies to.
+  </Mark>
+  <Mark id="send">
+    The send button opens a ready-made message for that row.
+  </Mark>
+  <Mark id="settings">
+    **Send settings**: hours, limits and stop keywords for every send.
   </Mark>
 </Screenshot>
 
