@@ -5,12 +5,15 @@ import { useTranslation } from "react-i18next";
 
 interface PasswordInputProps extends Omit<ComponentProps<"input">, "type"> {
   errorMessage?: string;
+  // Start with the value shown, e.g. right after a password is generated.
+  defaultVisible?: boolean;
 }
 
 // A plain <input> with Medusa's field styles: @medusajs/ui's Input adds its own
 // untranslated toggle whenever type="password".
 const PasswordInput = ({
   errorMessage,
+  defaultVisible = false,
   className,
   disabled,
   "aria-describedby": ariaDescribedBy,
@@ -18,7 +21,7 @@ const PasswordInput = ({
 }: PasswordInputProps) => {
   const { t } = useTranslation();
   const errorId = useId();
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(defaultVisible);
 
   return (
     <div>

@@ -2085,9 +2085,16 @@ export type AuthImpersonateResponseDto = {
 
 export type AuthAdminUpdatePasswordResponseDto = {
     /**
-     * New temporary password, shown to the admin once
+     * New temporary password, shown to the admin once. Absent when the admin typed the password
      */
-    password: string;
+    password?: string;
+};
+
+export type AuthAdminUpdatePasswordRequestDto = {
+    /**
+     * Password the admin typed. Leave it out to generate a temporary one
+     */
+    password?: string;
 };
 
 export type SessionListResponseDto = {
@@ -16712,7 +16719,7 @@ export type AuthAdminControllerResetMfaV1Responses = {
 export type AuthAdminControllerResetMfaV1Response = AuthAdminControllerResetMfaV1Responses[keyof AuthAdminControllerResetMfaV1Responses];
 
 export type AuthAdminControllerUpdatePasswordV1Data = {
-    body?: never;
+    body: AuthAdminUpdatePasswordRequestDto;
     headers?: {
         /**
          * Custom language header
@@ -16763,6 +16770,13 @@ export type AuthAdminControllerUpdatePasswordV1Errors = {
      * 408
      */
     408: ResponseDto & {
+        message?: unknown;
+        statusCode?: number;
+    };
+    /**
+     * 422
+     */
+    422: ResponseDto & {
         message?: unknown;
         statusCode?: number;
     };

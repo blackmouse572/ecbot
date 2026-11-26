@@ -22,6 +22,17 @@ describe("PasswordInput", () => {
     ).toHaveAttribute("aria-pressed", "true");
   });
 
+  it("starts shown with defaultVisible", () => {
+    renderWithProviders(
+      <PasswordInput placeholder="Password" defaultVisible />,
+    );
+
+    expect(screen.getByPlaceholderText("Password")).toHaveAttribute(
+      "type",
+      "text",
+    );
+  });
+
   it("renders exactly one visibility toggle", () => {
     renderWithProviders(<PasswordInput />);
 

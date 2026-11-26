@@ -2,6 +2,7 @@ import { CloudTasksQueueClient } from '@app/worker/cloud-tasks-queue.client';
 import { EntityManager } from '@mikro-orm/postgresql';
 import {
     BadRequestException,
+    Body,
     Controller,
     ForbiddenException,
     Headers,
@@ -28,8 +29,10 @@ import {
     AuthAdminResetMfaDoc,
     AuthAdminUpdatePasswordDoc,
 } from 'src/modules/auth/docs/auth.admin.doc';
+import { AuthAdminUpdatePasswordRequestDto } from 'src/modules/auth/dtos/request/auth.admin-update-password.request.dto';
 import { AuthAdminUpdatePasswordResponseDto } from 'src/modules/auth/dtos/response/auth.admin-update-password.response.dto';
 import { ENUM_AUTH_STATUS_CODE_ERROR } from 'src/modules/auth/enums/auth.status-code.enum';
+import { IAuthPassword } from 'src/modules/auth/interfaces/auth.interface';
 import { AuthService } from 'src/modules/auth/services/auth.service';
 import { MfaService } from 'src/modules/auth/services/mfa.service';
 import { ENUM_ACTIVITY_ACTION } from 'src/modules/activity/enums/activity.enum';
@@ -50,6 +53,7 @@ import {
     UserParam,
     UserProtected,
 } from 'src/modules/user/decorators/user.decorator';
+import { SessionService } from 'src/modules/session/services/session.service';
 import { UserNotSelfPipe } from 'src/modules/user/pipes/user.not-self.pipe';
 import {
     UserParsePipe,
@@ -73,7 +77,8 @@ export class AuthAdminController {
         private readonly userService: UserService,
         private readonly passwordHistoryService: PasswordHistoryService,
         private readonly mfaService: MfaService,
-        private readonly activityService: ActivityService
+        private readonly activityService: ActivityService,
+        private readonly sessionService: SessionService
     ) {}
 
     /**
@@ -128,6 +133,11 @@ export class AuthAdminController {
         });
     }
 
+    /**
+     * Sets a password the admin typed, or generates a temporary one (emailed
+     * and returned once). Either way the user is signed out everywhere and
+     * the change is audited. The password itself is never logged.
+     */
     @AuthAdminUpdatePasswordDoc()
     @Response('auth.updatePassword')
     @PolicyAbilityProtected({
@@ -138,6 +148,7 @@ export class AuthAdminController {
     @UserProtected()
     @AuthJwtAccessProtected()
     @ApiKeyProtected()
+    @Throttle({ default: { ttl: 60000, limit: 10 } })
     @Put('/update/:user/password')
     async updatePassword(
         @AuthJwtPayload('user') updatedBy: string,
@@ -149,10 +160,11 @@ export class AuthAdminController {
             UserNotSelfPipe
         )
         user: UserEntity,
+        @Body() body: AuthAdminUpdatePasswordRequestDto = {},
         // The admin's language: users have no stored preference.
         @Headers('x-custom-lang') language?: string
     ): Promise<IResponse<AuthAdminUpdatePasswordResponseDto>> {
-        // The new password comes back in the response: same hierarchy as
+        // A generated password comes back in the response: same hierarchy as
         // resetMfa, or an admin could sign in as a super admin.
         if (
             user.role.type !== ENUM_POLICY_ROLE_TYPE.USER &&
@@ -165,15 +177,17 @@ export class AuthAdminController {
             });
         }
 
+        const typed = body?.password != null;
+        const passwordString =
+            body?.password ?? this.authService.createPasswordRandom();
         const session = this.em.fork();
         await session.begin();
 
+        let password: IAuthPassword;
         try {
-            const passwordString = this.authService.createPasswordRandom();
-            const password = await this.authService.createPassword(
-                passwordString,
-                { temporary: true }
-            );
+            password = await this.authService.createPassword(passwordString, {
+                temporary: !typed,
+            });
 
             user = await this.userService.updatePassword(user, password, {
                 em: session,
@@ -186,36 +200,31 @@ export class AuthAdminController {
                 user,
                 {
                     by: updatedBy,
-                    type: ENUM_PASSWORD_HISTORY_TYPE.TEMPORARY,
+                    type: typed
+                        ? ENUM_PASSWORD_HISTORY_TYPE.CHANGE
+                        : ENUM_PASSWORD_HISTORY_TYPE.TEMPORARY,
                 },
                 { em: session, actionBy: updatedBy }
             );
+            await this.activityService.createByAdmin(
+                user,
+                updatedBy,
+                {
+                    action: ENUM_ACTIVITY_ACTION.UPDATE,
+                    subject: ENUM_POLICY_SUBJECT.AUTH,
+                    metadata: {
+                        id: user.id,
+                        by: updatedBy,
+                        password: typed ? 'set_by_admin' : 'reset_by_admin',
+                    },
+                },
+                { em: session }
+            );
+            await this.sessionService.updateManyRevokeByUser(user.id, {
+                em: session,
+            });
 
             await session.commit();
-
-            await this.cloudTasksClient
-                .enqueue(
-                    'email',
-                    ENUM_SEND_EMAIL_PROCESS.TEMPORARY_PASSWORD,
-                    {
-                        send: { email: user.email, name: user.name },
-                        data: {
-                            passwordExpiredAt: password.passwordExpired,
-                            password: passwordString,
-                            language,
-                        },
-                    },
-                    {
-                        taskName: `${ENUM_SEND_EMAIL_PROCESS.TEMPORARY_PASSWORD}-${user.id}-${randomUUID()}`,
-                    }
-                )
-                .catch(err => {
-                    this.logger.warn(
-                        `Email queue failed after update-password for user [${user.id}] job [${ENUM_SEND_EMAIL_PROCESS.TEMPORARY_PASSWORD}] (non-fatal): ${(err as Error)?.message}`
-                    );
-                });
-
-            return { data: { password: passwordString } };
         } catch (err: unknown) {
             await session.rollback();
 
@@ -225,5 +234,34 @@ export class AuthAdminController {
                 _error: err,
             });
         }
+
+        // A typed password is shared by the admin: the email only says it
+        // changed, and the response carries no password.
+        const job = typed
+            ? ENUM_SEND_EMAIL_PROCESS.CHANGE_PASSWORD
+            : ENUM_SEND_EMAIL_PROCESS.TEMPORARY_PASSWORD;
+        await this.cloudTasksClient
+            .enqueue(
+                'email',
+                job,
+                typed
+                    ? { send: { email: user.email, name: user.name } }
+                    : {
+                          send: { email: user.email, name: user.name },
+                          data: {
+                              passwordExpiredAt: password.passwordExpired,
+                              password: passwordString,
+                              language,
+                          },
+                      },
+                { taskName: `${job}-${user.id}-${randomUUID()}` }
+            )
+            .catch(err => {
+                this.logger.warn(
+                    `Email queue failed after update-password for user [${user.id}] job [${job}] (non-fatal): ${(err as Error)?.message}`
+                );
+            });
+
+        return { data: typed ? {} : { password: passwordString } };
     }
 }
