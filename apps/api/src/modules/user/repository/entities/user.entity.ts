@@ -74,7 +74,9 @@ export class UserEntity extends DatabaseEntityBase {
     // Last authenticated request, stamped with the session's throttled
     // lastActiveAt. Null for users who never signed in. Not indexed: it
     // changes every few minutes per active user, and an index on it turns
-    // each of those writes into a full (non-HOT) row update.
+    // each of those writes into a full (non-HOT) row update. The admin Users
+    // list sorts by it by default, so that list sorts in memory: free at prod's
+    // 10 users (Nov 2026). Re-add the index only if that list gets slow.
     @Property({ type: 'timestamptz', nullable: true })
     lastSeenAt?: Date;
 

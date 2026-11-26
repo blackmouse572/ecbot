@@ -6,7 +6,10 @@ import { join } from 'path';
 // November 2026, 356 of the 527 prod indexes had never been scanned. Most were
 // the base entity's `deleted` and `updated_at` indexes, plus plain indexes that
 // a unique or composite index already covers. This reads the committed schema
-// snapshot (what migrations build) so a new one cannot come back unnoticed.
+// snapshot (what migrations build). It catches one that comes back through a
+// migration; an entity decorator added without one is caught by
+// `migration:check` in test-api.yml, which fails when entities and snapshot
+// disagree.
 interface ISnapshotIndex {
     keyName: string;
     columnNames: string[];
