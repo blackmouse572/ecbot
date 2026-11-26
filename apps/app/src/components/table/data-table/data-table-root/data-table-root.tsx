@@ -202,8 +202,6 @@ export const DataTableRoot = <TData,>({
             <Table.Body className="border-b-0">
               {table.getRowModel().rows.map((row) => {
                 const to = navigateTo ? navigateTo(row) : undefined;
-                const isRowDisabled = hasSelect && !row.getCanSelect();
-
                 const isOdd = row.depth % 2 !== 0;
 
                 const cells = row.getVisibleCells();
@@ -220,8 +218,6 @@ export const DataTableRoot = <TData,>({
                         "cursor-pointer": !!to,
                         "bg-ui-bg-highlight hover:bg-ui-bg-highlight-hover":
                           row.getIsSelected(),
-                        "!bg-ui-bg-disabled !hover:bg-ui-bg-disabled":
-                          isRowDisabled,
                       },
                     )}
                   >
@@ -271,8 +267,6 @@ export const DataTableRoot = <TData,>({
                             "sm:left-[68px]": hasLeftOffset,
                             "after:bg-ui-border-base":
                               showStickyBorder && isStickyCell && !isSelectCell,
-                            "!bg-ui-bg-disabled !hover:bg-ui-bg-disabled":
-                              isRowDisabled,
                           })}
                           style={{
                             paddingLeft: depthOffset

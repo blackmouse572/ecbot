@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { MarketingOverviewFunnelDto } from "@/hooks/api/marketing-overview";
 import { JOURNEY_STAGES } from "./constants";
-import { customersAtStage, funnelSeries } from "./utils";
+import { customersAtStage, funnelSeries, rate, sendStatus } from "./utils";
 
 const row = (
   platform: MarketingOverviewFunnelDto["platform"],
@@ -45,5 +45,20 @@ describe("customersAtStage", () => {
     expect(customersAtStage("lumi", "DORMANT")).toBe(
       "/lumi/customers?dormant=true",
     );
+  });
+});
+
+describe("sendStatus", () => {
+  it("names a send by how it goes out and whether it still does", () => {
+    expect(sendStatus({ mode: "ONCE", active: true })).toBe("ONCE");
+    expect(sendStatus({ mode: "AUTO", active: true })).toBe("ACTIVE");
+    expect(sendStatus({ mode: "AUTO", active: false })).toBe("OFF");
+  });
+});
+
+describe("rate", () => {
+  it("is the part over the whole, and 0 with nothing sent", () => {
+    expect(rate(1, 4)).toBe(0.25);
+    expect(rate(3, 0)).toBe(0);
   });
 });

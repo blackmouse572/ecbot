@@ -3961,7 +3961,12 @@
       "DEFERRED": "put off for later",
       "OFFERED_TODAY": "already got another offer today",
       "CAPPED": "reached the 30-day limit",
-      "RESTING": "resting after no replies"
+      "RESTING": "resting after no replies",
+      "NO_CHANNEL": "no channel to message them on",
+      "WINDOW_CLOSED": "more than 24 hours since their last message",
+      "OPTED_OUT": "opted out",
+      "ACCOUNT_BLOCKED": "blocked the page",
+      "SEND_HOURS_ENDED": "sending hours ended for the day"
     },
     "send": {
       "description": "Ecbot picked the customers and drafted the message. Read it, then send.",
@@ -4098,6 +4103,106 @@
         "number": "Enter a number from 1 up",
         "max": "At most {{max}}",
         "hours": "The end time must be after the start time"
+      }
+    },
+    "sends": {
+      "navTitle": "Sent",
+      "title": "Sent",
+      "tabs": {
+        "all": "All",
+        "AUTO": "Auto-send daily",
+        "ONCE": "Sent once"
+      },
+      "columns": {
+        "name": "Name",
+        "stage": "Stage",
+        "mode": "How it sends",
+        "sent": "Sent",
+        "replied": "Replied",
+        "ordered": "Orders",
+        "lastSentAt": "Last sent"
+      },
+      "status": {
+        "ACTIVE": "Auto-sending",
+        "OFF": "Auto-send off",
+        "ONCE": "Sent once"
+      },
+      "noRecordsTitle": "Nothing sent yet",
+      "noRecordsMessage": "Send your first message from To do on the Overview page.",
+      "openOverview": "Open Overview",
+      "summary": {
+        "ACTIVE": "Sends every day to customers who newly join this group. Started {{date}}.",
+        "OFF": "Started {{date}}.",
+        "ONCE": "Sent {{date}}."
+      },
+      "stats": {
+        "sent": "Sent",
+        "queued": "{{value}} waiting to go out",
+        "replied": "Replied",
+        "repliedHint": "{{value}} customers",
+        "ordered": "Ordered after the message",
+        "revenue": "{{value}} within 7 days",
+        "optedOut": "Opted out"
+      },
+      "channels": {
+        "title": "Results by channel",
+        "channel": "Channel",
+        "sent": "Sent",
+        "replied": "Replied",
+        "ordered": "Orders",
+        "optedOut": "Opted out"
+      },
+      "replies": {
+        "title": "Customers who replied",
+        "description": "Their first message after the offer.",
+        "empty": "No replies yet.",
+        "unnamed": "Customer",
+        "status": {
+          "ORDERED": "Ordered",
+          "STOPPED": "Opted out",
+          "WAITING": "Waiting for you",
+          "BOT": "Bot replying"
+        }
+      },
+      "notSent": {
+        "title": "Not sent",
+        "total": "{{value}} customers"
+      },
+      "message": {
+        "AUTO": "Message being sent",
+        "ONCE": "Message sent",
+        "editHint": "Messages not sent yet will use the new text."
+      },
+      "edit": {
+        "action": "Edit message",
+        "title": "Edit message",
+        "name": "Name",
+        "saved": "Message saved",
+        "text": "Message",
+        "errors": {
+          "name": "Enter a name"
+        }
+      },
+      "turnOff": {
+        "action": "Turn off auto-send",
+        "title": "Turn off auto-send \"{{name}}\"?",
+        "description": "Customers who newly join this group won't get this message. Past results stay, and you can turn it back on any time.",
+        "done": "Auto-send turned off"
+      },
+      "turnOn": {
+        "action": "Turn auto-send back on",
+        "done": "Auto-send turned back on"
+      },
+      "error": "Couldn't save. Please try again later.",
+      "batch": {
+        "turnOff": {
+          "label": "Turn off auto-send",
+          "title": "Turn off {{count}} auto-sends?",
+          "description": "New customers in these groups won't get the offer anymore. Past results stay."
+        },
+        "turnOn": {
+          "label": "Turn auto-send back on"
+        }
       }
     }
   }

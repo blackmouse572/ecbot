@@ -4,6 +4,7 @@ import {
   MARKETING_DRAFT_TONES,
   MARKETING_SEND_EXCLUDED_MAX,
   MARKETING_SEND_MODES,
+  MARKETING_SEND_NAME_MAX,
   MARKETING_SEND_TEXT_MAX,
   MARKETING_SETTINGS_LIMITS,
 } from "./constants";
@@ -28,6 +29,17 @@ export const marketingSendFormSchema = zod.object({
 });
 
 export type MarketingSendFormData = zod.infer<typeof marketingSendFormSchema>;
+
+export const marketingSendEditSchema = zod.object({
+  name: zod
+    .string()
+    .trim()
+    .min(1, t("marketing.sends.edit.errors.name"))
+    .max(MARKETING_SEND_NAME_MAX),
+  text: marketingSendFormSchema.shape.text,
+});
+
+export type MarketingSendEditData = zod.infer<typeof marketingSendEditSchema>;
 
 const count = (max: number) =>
   zod

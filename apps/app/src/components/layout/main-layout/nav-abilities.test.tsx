@@ -1,4 +1,5 @@
 import { renderHook } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { useCoreRoutes } from "./use-core-routes";
 import { useMarketingRoutes } from "./use-marketing-routes";
@@ -42,7 +43,8 @@ const readOnly =
 describe("nav abilities", () => {
   const core = () => renderHook(useCoreRoutes).result.current as NavItem[];
   const marketing = () =>
-    renderHook(useMarketingRoutes).result.current as NavItem[];
+    renderHook(useMarketingRoutes, { wrapper: MemoryRouter }).result
+      .current as NavItem[];
 
   it.each([
     ["/lumi/conversations", "CONVERSATION"],
@@ -53,7 +55,7 @@ describe("nav abilities", () => {
     expect(abilityOf(core(), to)).toEqual({ action: "read", subject });
   });
 
-  it.each(["/lumi/marketing", "/lumi/sources"])(
+  it.each(["/lumi/marketing", "/lumi/marketing/sends", "/lumi/sources"])(
     "%s needs read MARKETING",
     (to) => {
       expect(abilityOf(marketing(), to)).toEqual({

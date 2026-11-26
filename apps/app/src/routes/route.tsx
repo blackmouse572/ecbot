@@ -461,6 +461,42 @@ function getRouteMaps(): RouteObject[] {
                     },
                   ],
                 },
+                {
+                  path: "sends",
+                  handle: {
+                    breadcrumb: () => t("marketing.sends.navTitle"),
+                  },
+                  children: [
+                    {
+                      path: "",
+                      lazy: () => import("./marketing/marketing-send-list"),
+                    },
+                    {
+                      path: ":sendId",
+                      ErrorBoundary: ErrorBoundary,
+                      lazy: async function () {
+                        const { loader, Breadcrumb, Component } =
+                          await import("./marketing/marketing-send-detail");
+                        return {
+                          Component,
+                          loader,
+                          handle: {
+                            breadcrumb: (match: UIMatch) => (
+                              <Breadcrumb {...match} />
+                            ),
+                          },
+                        };
+                      },
+                      children: [
+                        {
+                          path: "edit",
+                          ErrorBoundary: ErrorBoundary,
+                          lazy: () => import("./marketing/marketing-send-edit"),
+                        },
+                      ],
+                    },
+                  ],
+                },
               ],
             },
             {

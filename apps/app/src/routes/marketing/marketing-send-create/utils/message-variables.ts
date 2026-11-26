@@ -10,9 +10,16 @@ export const MESSAGE_VARIABLES = ["name", "product"] as const;
 
 export type MessageVariable = (typeof MESSAGE_VARIABLES)[number];
 
-const TOKENS = /(\{name\}|\{product\})/g;
+/** Splits a send text so each placeholder is a part of its own. */
+export const MESSAGE_TOKENS = /(\{name\}|\{product\})/g;
 
-const isVariable = (value: unknown): value is MessageVariable =>
+/** The i18n key of each placeholder's chip label. */
+export const MESSAGE_VARIABLE_LABEL_KEY: Record<MessageVariable, string> = {
+  name: "marketing.send.message.tokenName",
+  product: "marketing.send.message.tokenProduct",
+};
+
+export const isVariable = (value: unknown): value is MessageVariable =>
   MESSAGE_VARIABLES.some((key) => key === value);
 
 /**
@@ -82,7 +89,7 @@ export const MessageVariableNode = Node.create<{
 export const toMessageDoc = (text: string): JSONContent => ({
   type: "doc",
   content: text.split("\n").map((line) => {
-    const parts = line.split(TOKENS).filter(Boolean);
+    const parts = line.split(MESSAGE_TOKENS).filter(Boolean);
 
     return {
       type: "paragraph",

@@ -71,15 +71,19 @@ export const NavItem = ({
       isActive,
       isNested = false,
       isSetting = false,
+      exact = false,
     }: {
       to: string;
       isActive: boolean;
       isNested?: boolean;
       isSetting?: boolean;
+      /** Active on `to` only, not on the pages under it. */
+      exact?: boolean;
     }) => {
       if (["core", "setting"].includes(type)) {
         isActive =
-          pathname === to || (pathname.startsWith(to + "/") && to !== "/");
+          pathname === to ||
+          (!exact && pathname.startsWith(to + "/") && to !== "/");
       }
 
       return clx(BASE_NAV_LINK_CLASSES, {
@@ -115,9 +119,12 @@ export const NavItem = ({
                 : undefined
             }
             className={({ isActive }) => {
-              return clx(navLinkClassNames({ isActive, isSetting, to }), {
-                "max-lg:hidden": !!items?.length,
-              });
+              return clx(
+                navLinkClassNames({ isActive, isSetting, to, exact: end }),
+                {
+                  "max-lg:hidden": !!items?.length,
+                },
+              );
             }}
           >
             {type !== "setting" && (

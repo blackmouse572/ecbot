@@ -5,6 +5,7 @@ import {
 } from "@/components/platform-icon/channel-catalog";
 import type { MarketingOverviewFunnelDto } from "@/hooks/api/marketing-overview";
 import { ROUTES } from "@/routes/constants";
+import { MARKETING_SEND_STATUS_COLOR } from "./constants";
 import type { JourneyStage, StageKey } from "./types";
 
 /** The Customers list filtered to one stage, or to Lâu không nhắn. */
@@ -37,3 +38,14 @@ export const funnelSeries = (
       },
     ];
   });
+
+/** Đang tự gửi, Đã tắt tự gửi or Gửi 1 lần. */
+export const sendStatus = (send: {
+  mode: "ONCE" | "AUTO";
+  active: boolean;
+}): keyof typeof MARKETING_SEND_STATUS_COLOR =>
+  send.mode === "ONCE" ? "ONCE" : send.active ? "ACTIVE" : "OFF";
+
+/** Share of `part` in `whole`, 0 when nothing was sent. */
+export const rate = (part: number, whole: number) =>
+  whole > 0 ? part / whole : 0;
