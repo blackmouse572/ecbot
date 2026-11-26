@@ -29,4 +29,24 @@ describe('TtlCache', () => {
         expect(cache.get('b')).toBe(2);
         expect(cache.get('c')).toBe(3);
     });
+
+    it('forgets a deleted key', () => {
+        const cache = new TtlCache<string>(30_000, 10, clock);
+        cache.set('a', 'one');
+
+        cache.delete('a');
+
+        expect(cache.get('a')).toBeUndefined();
+    });
+
+    it('forgets every key on clear', () => {
+        const cache = new TtlCache<string>(30_000, 10, clock);
+        cache.set('a', 'one');
+        cache.set('b', 'two');
+
+        cache.clear();
+
+        expect(cache.get('a')).toBeUndefined();
+        expect(cache.get('b')).toBeUndefined();
+    });
 });

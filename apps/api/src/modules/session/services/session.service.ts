@@ -16,14 +16,21 @@ import {
     IDatabaseUpdateManyOptions,
 } from 'src/common/database/interfaces/database.interface';
 import { HelperDateService } from 'src/common/helper/services/helper.date.service';
+import { TtlCache } from 'src/common/utils/ttl-cache.util';
 import { MessageService } from 'src/common/message/services/message.service';
 import { ENUM_ACTIVITY_ACTION } from 'src/modules/activity/enums/activity.enum';
 import { ActivityService } from 'src/modules/activity/services/activity.service';
 import { ENUM_POLICY_SUBJECT } from 'src/modules/policy/enums/policy.enum';
 import { SessionCreateRequestDto } from 'src/modules/session/dtos/request/session.create.request.dto';
+import { ISessionLogin } from 'src/modules/session/interfaces/session.interface';
 import { SessionAdminListResponseDto } from 'src/modules/session/dtos/response/session.admin-list.response.dto';
 import { SessionListResponseDto } from 'src/modules/session/dtos/response/session.list.response.dto';
 import { UserMetaResponseDto } from 'src/modules/user/dtos/response/user.meta.response.dto';
+import {
+    SESSION_ACTIVE_THROTTLE_MS,
+    SESSION_LOGIN_CACHE_MAX_ENTRIES,
+    SESSION_LOGIN_CACHE_TTL_MS,
+} from 'src/modules/session/constants/session.constant';
 import { ENUM_SESSION_STATUS } from 'src/modules/session/enums/session.enum';
 import {
     ImpersonationEndReason,
@@ -31,9 +38,6 @@ import {
 } from 'src/modules/session/interfaces/session.service.interface';
 import { SessionEntity } from 'src/modules/session/repository/entities/session.entity';
 import { SessionRepository } from 'src/modules/session/repository/repositories/session.repository';
-
-// Minimum gap between lastActiveAt writes for a single session.
-const SESSION_ACTIVE_THROTTLE_SECONDS = 60;
 
 @Injectable()
 export class SessionService implements ISessionService {
@@ -43,6 +47,17 @@ export class SessionService implements ISessionService {
 
     private readonly sessionKeyPrefix: string;
     private readonly logger = new Logger(SessionService.name);
+
+    // Per instance, so the hot path skips a Redis round trip (and two billed
+    // commands) on most authenticated requests.
+    private readonly activeLogins = new TtlCache<true>(
+        SESSION_LOGIN_CACHE_TTL_MS,
+        SESSION_LOGIN_CACHE_MAX_ENTRIES
+    );
+    private readonly recentlyTouched = new TtlCache<true>(
+        SESSION_ACTIVE_THROTTLE_MS,
+        SESSION_LOGIN_CACHE_MAX_ENTRIES
+    );
 
     constructor(
         @Inject(CACHE_MANAGER) private cacheManager: Cache,
@@ -212,19 +227,14 @@ export class SessionService implements ISessionService {
     }
 
     // Bump lastActiveAt on the current session. Runs on every authenticated
-    // request, so it is gated by a short-lived cache key: within the throttle
-    // window a cheap cache hit short-circuits before any DB round-trip.
+    // request, so it is gated per instance: within the throttle window it
+    // returns before any DB or Redis round trip.
     // Fire-and-forget safe (never throws). Given a user, it also stamps their
     // lastSeenAt, which the admin Users list shows and sorts by.
     async touchLastActive(id: string, userId?: string): Promise<void> {
         try {
-            const cacheKey = `${this.appName}:${this.sessionKeyPrefix}:active:${id}`;
-            if (await this.cacheManager.get(cacheKey)) return;
-            await this.cacheManager.set(
-                cacheKey,
-                1,
-                SESSION_ACTIVE_THROTTLE_SECONDS * 1000
-            );
+            if (this.recentlyTouched.get(id)) return;
+            this.recentlyTouched.set(id, true);
             const now = this.helperDateService.create();
             const em = this.sessionRepository.getEntityManager();
             await em.nativeUpdate(SessionEntity, { id }, { lastActiveAt: now });
@@ -270,10 +280,20 @@ export class SessionService implements ISessionService {
         });
     }
 
-    async findLoginSession(id: string): Promise<string> {
-        return (await this.cacheManager.get<string>(
+    // For the access-token check on every request. The refresh path keeps
+    // asking Redis through findLoginSession, so a revoked session can't mint
+    // new tokens from a stale entry.
+    async isLoginSessionActive(id: string): Promise<boolean> {
+        if (this.activeLogins.get(id)) return true;
+        if (!(await this.findLoginSession(id))) return false;
+        this.activeLogins.set(id, true);
+        return true;
+    }
+
+    async findLoginSession(id: string): Promise<ISessionLogin | undefined> {
+        return this.cacheManager.get<ISessionLogin>(
             `${this.appName}:${this.sessionKeyPrefix}:${id}`
-        ))!;
+        );
     }
 
     async setLoginSession(
@@ -288,7 +308,7 @@ export class SessionService implements ISessionService {
         // ms(...) / 1000); cache-manager v6 `set()` takes milliseconds.
         await this.cacheManager.set(
             key,
-            { user: user.id },
+            { user: user.id } satisfies ISessionLogin,
             overrideTtlMs ?? this.refreshTokenExpiration * 1000
         );
 
@@ -297,11 +317,13 @@ export class SessionService implements ISessionService {
 
     async deleteLoginSession(id: string): Promise<void> {
         const key = `${this.appName}:${this.sessionKeyPrefix}:${id}`;
+        this.activeLogins.delete(id);
         await this.cacheManager.del(key);
         return;
     }
 
     async resetLoginSession(): Promise<void> {
+        this.activeLogins.clear();
         await this.cacheManager.clear();
 
         return;

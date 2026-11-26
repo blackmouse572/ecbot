@@ -540,11 +540,13 @@ The system provides APIs for managing sessions:
 
 ### Session Cache
 
-Sessions are cached in Redis for performance:
+Login sessions live in Redis:
 
 - Session ID is used as the key with a prefix
 - Cache expiration matches refresh token expiration
 - Background job handles session expiration and status updates
+
+The access-token check (`SessionService.isLoginSessionActive`) also remembers, in each API instance's memory, a session that Redis said is active, for `SESSION_LOGIN_CACHE_TTL_MS` (30 s, a constant in `session/constants/session.constant.ts`). A missing session is never remembered. `deleteLoginSession` (logout, revoke, password change, impersonation end) and `resetLoginSession` clear that memory on the instance that runs them; other instances go back to Redis when their 30 s ends. The refresh route skips the memory and asks Redis every time.
 
 ### Session Configuration
 
@@ -561,4 +563,4 @@ this.refreshTokenExpiration = this.configService.get<number>(
 
 The session management system in this boilerplate is designed to work seamlessly with JWT authentication, focusing specifically on refresh token management while allowing access tokens to function independently.
 
-> **Important Note**: Since access tokens have a short lifespan (typically 15-30 minutes) while sessions may be revoked at any time, there is an intentional security gap where a recently revoked session's access token might still work until it expires. This is a standard security trade-off that balances security with performance.
+> **Important Note**: A revoked session's access token stops working on the next request to the instance that handled the revoke, and within 30 s on every other instance (the per-instance memory above, the same window `USER_GUARD_CACHE_TTL_MS` allows for a blocked user). A revoked session can never refresh, because the refresh route always asks Redis.

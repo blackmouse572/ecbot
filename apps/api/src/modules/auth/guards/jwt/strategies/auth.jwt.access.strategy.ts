@@ -42,11 +42,9 @@ export class AuthJwtAccessStrategy extends PassportStrategy(
     ): Promise<IAuthJwtAccessTokenPayload> {
         // Reject tokens whose session was revoked (logout, admin revoke,
         // password reset) even though the JWT itself is still cryptographically
-        // valid and unexpired — the Redis login session is the source of truth.
-        const activeSession = await this.sessionService.findLoginSession(
-            data.session
-        );
-        if (!activeSession) {
+        // valid and unexpired — the Redis login session is the source of truth,
+        // remembered per instance for SESSION_LOGIN_CACHE_TTL_MS.
+        if (!(await this.sessionService.isLoginSessionActive(data.session))) {
             throw new UnauthorizedException({
                 statusCode: ENUM_AUTH_STATUS_CODE_ERROR.JWT_ACCESS_TOKEN,
                 message: 'auth.error.accessTokenUnauthorized',
