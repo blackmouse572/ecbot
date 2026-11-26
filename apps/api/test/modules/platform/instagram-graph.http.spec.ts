@@ -348,14 +348,14 @@ describe('Instagram messaging over HTTP', () => {
         expect(sent.externalId).toBe('aWdfOUT2');
     });
 
-    it('sends typing, read and love reaction sender actions', async () => {
+    it('sends typing, read and emoji reaction sender actions', async () => {
         for (const body of [
             { recipient: { id: CUSTOMER }, sender_action: 'typing_on' },
             { recipient: { id: CUSTOMER }, sender_action: 'mark_seen' },
             {
                 recipient: { id: CUSTOMER },
                 sender_action: 'react',
-                payload: { message_id: 'aWdfZAG1', reaction: 'love' },
+                payload: { message_id: 'aWdfZAG1', reaction: '❤️' },
             },
         ]) {
             graph()
