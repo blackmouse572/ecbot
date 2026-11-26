@@ -58,7 +58,11 @@ export class CountrySharedController {
     }
 
     @CountrySystemListDoc()
-    @ResponsePaging('country.list')
+    // Countries are seed data that never change at runtime, so a page is
+    // served from cache (keyed by URL, so per page and filter) for a day.
+    @ResponsePaging('country.list', {
+        cached: { ttl: 24 * 60 * 60 * 1000 },
+    })
     @ApiKeyProtected()
     @Get('/list-public')
     async listPublic(
