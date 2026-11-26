@@ -10,7 +10,7 @@ import { SendForm } from "./components/send-form";
 type Preset = MarketingOverviewTodoDto["key"];
 
 const isPreset = (value?: string): value is Preset =>
-  !!value && value in TODO_STAGE;
+  !!value && Object.hasOwn(TODO_STAGE, value);
 
 /**
  * Gửi theo giai đoạn: one "Việc nên làm" row opens this drawer. Ecbot has

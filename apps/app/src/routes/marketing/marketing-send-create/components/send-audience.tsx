@@ -10,7 +10,7 @@ import { useWorkspaceParams } from "@/hooks/use-workspace-params";
 import { useAnalyticsFormat } from "@/routes/dashboard/components/analytics/use-analytics-format";
 import { Button, Skeleton, Text } from "@medusajs/ui";
 import { useState, type FC } from "react";
-import { useWatch, type UseFormReturn } from "react-hook-form";
+import { useFormState, useWatch, type UseFormReturn } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { MarketingSendFormData } from "../../schemas";
 import {
@@ -42,6 +42,12 @@ export const SendAudience: FC<SendAudienceProps> = ({ form, preset }) => {
     control: form.control,
     name: "excludedCustomerIds",
   });
+
+  const { errors } = useFormState({
+    control: form.control,
+    name: "excludedCustomerIds",
+  });
+  const tooMany = errors.excludedCustomerIds?.message;
 
   const setExcluded = (ids: string[]) =>
     form.setValue("excludedCustomerIds", ids, {
@@ -110,6 +116,12 @@ export const SendAudience: FC<SendAudienceProps> = ({ form, preset }) => {
                 {t("marketing.send.audience.tickAll")}
               </Button>
             </div>
+          )}
+          {/* No field holds the list, so its cap error shows here. */}
+          {tooMany && (
+            <Text size="small" className="text-ui-fg-error">
+              {tooMany}
+            </Text>
           )}
           {left.length > 0 && (
             <Text size="small" className="text-ui-fg-subtle">

@@ -145,6 +145,15 @@ describe("MarketingSendCreate", () => {
     expect(draft.mock.calls[0][0]).not.toHaveProperty("previous");
   });
 
+  it("shows not found for a name off the object prototype", () => {
+    renderAt("toString");
+
+    expect(
+      screen.getByRole("heading", { name: "Không có việc này" }),
+    ).toBeTruthy();
+    expect(draft).not.toHaveBeenCalled();
+  });
+
   it("rewrites the current text longer", async () => {
     renderAt("ASKED_PRICE");
     await drafted();

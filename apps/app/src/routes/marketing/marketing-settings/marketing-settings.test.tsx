@@ -103,6 +103,20 @@ describe("MarketingSettings", () => {
     });
   });
 
+  it("saves no keywords as the built-in words", async () => {
+    renderIt();
+
+    const keywords = screen.getByLabelText("Từ khoá dừng nhận tin");
+    fireEvent.keyDown(keywords, { key: "Backspace" });
+    fireEvent.keyDown(keywords, { key: "Backspace" });
+    fireEvent.click(screen.getByRole("button", { name: "Lưu" }));
+
+    await waitFor(() => expect(update).toHaveBeenCalled());
+    expect(update).toHaveBeenCalledWith(
+      expect.objectContaining({ stopKeywords: null }),
+    );
+  });
+
   it("keeps the confirmation text the shop writes", async () => {
     renderIt();
 

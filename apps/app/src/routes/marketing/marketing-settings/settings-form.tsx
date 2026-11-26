@@ -50,6 +50,8 @@ export const SettingsForm: FC<SettingsFormProps> = ({ settings }) => {
     try {
       await update.mutateAsync({
         ...data,
+        // None: the built-in words, which the API keeps as null.
+        stopKeywords: data.stopKeywords.length ? data.stopKeywords : null,
         // Empty: the built-in confirmation in the agent's language.
         stopReply: data.stopReply || null,
       });
