@@ -29,10 +29,13 @@ export class DatabaseRepository<TEntity extends object> {
     protected readonly _populate?: string[];
     protected readonly em: EntityManager;
 
+    // No populate by default: joining createdBy / updatedBy / deletedBy on
+    // every read cost three LEFT JOINs to users per query. A repository whose
+    // screens show those names passes DATABASE_AUDIT_POPULATE.
     constructor(
         em: EntityManager,
         entity: EntityName<TEntity>,
-        populate: string[] = ['createdBy', 'updatedBy', 'deletedBy']
+        populate?: string[]
     ) {
         this.entityName = entity;
         this._populate = populate;

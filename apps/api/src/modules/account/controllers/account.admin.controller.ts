@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
+import { DATABASE_AUDIT_POPULATE } from 'src/common/database/constants/database.constant';
 import { DatabaseIdResponseDto } from 'src/common/database/dtos/response/database.id.response.dto';
 import { PaginationQuery } from 'src/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from 'src/common/pagination/dtos/pagination.list.dto';
@@ -138,7 +139,9 @@ export class AccountAdminController {
     async get(
         @Param('accountId') accountId: string
     ): Promise<IResponse<AccountGetDetailResponseDto>> {
-        const account = await this.accountService.findOneByIdOrSlug(accountId);
+        const account = await this.accountService.findOneByIdOrSlug(accountId, {
+            populate: DATABASE_AUDIT_POPULATE,
+        });
         if (!account) {
             throw new NotFoundException({
                 statusCode: ENUM_APP_STATUS_CODE_ERROR.NOT_FOUND,
