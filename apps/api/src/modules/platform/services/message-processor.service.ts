@@ -656,12 +656,19 @@ export class MessageProcessorService implements OnModuleInit {
             const avatarBase64 = profile.avatar
                 ? await fetchAsBase64(profile.avatar)
                 : undefined;
+            // No avatar on the profile clears it. One that can't be
+            // downloaded or read keeps the stored one.
+            const avatarPatch =
+                profile.avatar && !avatarBase64
+                    ? {}
+                    : { senderAvatar: avatarBase64 ?? null };
             const now = new Date();
+
             await this.conversationService.updateSenderProfile(
                 conversation.id,
                 {
                     senderName,
-                    senderAvatar: avatarBase64 ?? null,
+                    ...avatarPatch,
                     senderProfileFetchedAt: now,
                 }
             );
@@ -672,7 +679,7 @@ export class MessageProcessorService implements OnModuleInit {
                     contactPointId,
                     {
                         displaySenderName: senderName,
-                        senderAvatar: avatarBase64 ?? null,
+                        ...avatarPatch,
                         fetchedAt: now,
                     }
                 );
@@ -681,9 +688,12 @@ export class MessageProcessorService implements OnModuleInit {
                     senderName
                 );
             }
-            conversation.senderName = senderName;
-            conversation.senderAvatar = avatarBase64 ?? null;
-            conversation.senderProfileFetchedAt = now;
+
+            Object.assign(conversation, {
+                senderName,
+                ...avatarPatch,
+                senderProfileFetchedAt: now,
+            });
         } catch (e) {
             this.logger.warn(
                 `fetchSenderProfile failed for account=${account.type} sender=${event.senderId}: ${(e as Error).message}`
