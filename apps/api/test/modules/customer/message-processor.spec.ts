@@ -282,6 +282,76 @@ describe('MessageProcessorService — Customer + ContactPoint wiring (#172)', ()
             );
         });
 
+        it('keeps the stored avatar when the new picture cannot be downloaded or read', async () => {
+            const { fetchAsBase64 } = jest.requireMock(
+                '../../../src/common/utils/fetch-as-base64.util'
+            );
+            fetchAsBase64.mockResolvedValueOnce(undefined);
+            customerService.resolveContactPoint.mockResolvedValue({
+                contactPoint: { id: 'cp-1', customer: { id: 'cust-1' } },
+                customerId: 'cust-1',
+                created: false,
+            });
+            conversationService.findOrCreate.mockResolvedValue(
+                freshConversation({
+                    id: 'conv-1',
+                    senderProfileFetchedAt: null,
+                    senderAvatar: 'data:image/jpeg;base64,old',
+                })
+            );
+            adapterMessaging.fetchSenderProfile.mockResolvedValue({
+                id: 'sender-fb-1',
+                name: 'Alice Fetched',
+                avatar: 'https://cdn/not-an-image',
+            });
+
+            await processor.process(baseEvent);
+
+            const conversationPatch =
+                conversationService.updateSenderProfile.mock.calls[0][1];
+            const contactPointPatch =
+                customerService.updateContactPointProfile.mock.calls[0][1];
+
+            expect(conversationPatch.senderName).toBe('Alice Fetched');
+            expect(conversationPatch).not.toHaveProperty('senderAvatar');
+            expect(contactPointPatch).not.toHaveProperty('senderAvatar');
+        });
+
+        it('clears the avatar when the profile has none', async () => {
+            customerService.resolveContactPoint.mockResolvedValue({
+                contactPoint: { id: 'cp-1', customer: { id: 'cust-1' } },
+                customerId: 'cust-1',
+                created: false,
+            });
+            conversationService.findOrCreate.mockResolvedValue(
+                freshConversation({
+                    id: 'conv-1',
+                    senderProfileFetchedAt: null,
+                    senderAvatar: 'data:image/jpeg;base64,old',
+                })
+            );
+            adapterMessaging.fetchSenderProfile.mockResolvedValue({
+                id: 'sender-fb-1',
+                name: 'Alice Fetched',
+                avatar: null,
+            });
+
+            await processor.process(baseEvent);
+
+            expect(
+                conversationService.updateSenderProfile
+            ).toHaveBeenCalledWith(
+                'conv-1',
+                expect.objectContaining({ senderAvatar: null })
+            );
+            expect(
+                customerService.updateContactPointProfile
+            ).toHaveBeenCalledWith(
+                'cp-1',
+                expect.objectContaining({ senderAvatar: null })
+            );
+        });
+
         it('seeds Customer.name only when it is null (fillCustomerNameIfEmpty is invoked unconditionally; the *service* enforces the no-clobber rule)', async () => {
             customerService.resolveContactPoint.mockResolvedValue({
                 contactPoint: { id: 'cp-1', customer: { id: 'cust-1' } },
