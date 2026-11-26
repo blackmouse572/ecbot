@@ -16,17 +16,12 @@ export async function fetchAsBase64(url: string): Promise<string | undefined> {
             responseType: 'arraybuffer',
             timeout: 5000,
         });
-        return await toAvatarDataUrl(Buffer.from(response.data));
+        const jpeg = await sharp(Buffer.from(response.data))
+            .resize(AVATAR_SIZE, AVATAR_SIZE, { fit: 'cover' })
+            .jpeg({ quality: 80 })
+            .toBuffer();
+        return `data:image/jpeg;base64,${jpeg.toString('base64')}`;
     } catch {
         return undefined;
     }
-}
-
-/** Resizes image bytes to the stored avatar size. Throws on non-images. */
-export async function toAvatarDataUrl(image: Buffer): Promise<string> {
-    const jpeg = await sharp(image)
-        .resize(AVATAR_SIZE, AVATAR_SIZE, { fit: 'cover' })
-        .jpeg({ quality: 80 })
-        .toBuffer();
-    return `data:image/jpeg;base64,${jpeg.toString('base64')}`;
 }

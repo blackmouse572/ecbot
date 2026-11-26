@@ -10,7 +10,6 @@ import { MigrationAccountWebhookResubscribeSeed } from 'src/migration/seeds/migr
 import { OAuthModule } from '@app/common/oauth/oauth.module';
 import { MigrationApiKeySeed } from 'src/migration/seeds/migration.api-key.seed';
 import { MigrationCountrySeed } from 'src/migration/seeds/migration.country.seed';
-import { MigrationAvatarShrinkSeed } from 'src/migration/seeds/migration.avatar-shrink.seed';
 import { MigrationRagPrivateBucketSeed } from 'src/migration/seeds/migration.rag-private-bucket.seed';
 import { MigrationRoleSeed } from 'src/migration/seeds/migration.role.seed';
 import { MigrationSkillSeed } from 'src/migration/seeds/migration.skill.seed';
@@ -63,7 +62,6 @@ import { MigrationUserCreateSeed } from './seeds/migration.user-create.seed';
         MigrationAccountTokenReencryptSeed,
         MigrationAccountWebhookResubscribeSeed,
         MigrationApiKeySeed,
-        MigrationAvatarShrinkSeed,
         MigrationCountrySeed,
         MigrationRagPrivateBucketSeed,
         MigrationUserSeed,

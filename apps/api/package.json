@@ -38,7 +38,6 @@
         "migrate:account-tokens": "nestjs-command account:reencrypt-tokens",
         "migrate:webhook-fields": "nestjs-command account:resubscribe-webhooks",
         "migrate:rag-private": "nestjs-command rag:move-to-private",
-        "migrate:shrink-avatars": "nestjs-command avatar:shrink",
         "user:create": "nestjs-command user:create",
         "rollback:template": "nestjs-command rollback:template",
         "mikro-orm": "npx mikro-orm",
