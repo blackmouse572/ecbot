@@ -140,4 +140,14 @@ describe("MarketingSendList", () => {
       orderDirection: "DESC",
     });
   });
+
+  it("filters by stage and on/off, keeping one-off sends out of on/off", () => {
+    renderIt("/lumi/marketing/sends?preset=ASKED_PRICE,NEW&active=false");
+
+    expect(state.params.at(-1)).toMatchObject({
+      preset: "ASKED_PRICE,NEW",
+      active: "false",
+      mode: "AUTO",
+    });
+  });
 });

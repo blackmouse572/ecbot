@@ -133,6 +133,10 @@ export type MarketingSendListParams = {
   search?: string;
   /** "AUTO", "ONCE" or both, comma separated. */
   mode?: string;
+  /** Stages ("ASKED_PRICE,NEW"), comma separated. */
+  preset?: string;
+  /** "true" (Đang tự gửi) and/or "false" (Đã tắt tự gửi). */
+  active?: string;
   orderBy?: string;
   orderDirection?: "ASC" | "DESC";
 };

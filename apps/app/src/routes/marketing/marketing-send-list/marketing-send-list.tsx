@@ -1,6 +1,6 @@
 import { createSelectColumn } from "@/components/table/columns";
 import { DateCell } from "@/components/table/table-cells/common/date-cell";
-import { _DataTable } from "@/components/table/data-table";
+import { _DataTable, type Filter } from "@/components/table/data-table";
 import {
   useBatchSetMarketingSendsActive,
   useMarketingSends,
@@ -20,6 +20,7 @@ import { useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { Outlet, useSearchParams } from "react-router-dom";
+import { useStageLabel } from "../components/stage-label";
 import { StageTag } from "../components/stage-tag";
 import {
   MARKETING_SEND_MODES,
@@ -31,6 +32,10 @@ import {
 import { rate, sendStatus } from "../utils";
 
 const columnHelper = createColumnHelper<MarketingSendListResponseDto>();
+
+// SAFETY: the sort menu only writes its key into ?order=, which the API
+// reads. Results like "sent" are API sort fields that live under row.stats.
+const apiSortKey = (key: string) => key as keyof MarketingSendListResponseDto;
 
 /** The sort menu writes "name" or "-name"; the API takes field + direction. */
 const toOrder = (order?: string) =>
@@ -56,12 +61,16 @@ export const MarketingSendList = () => {
       perPage: MARKETING_SENDS_PAGE_SIZE,
       page: raw.page ? Number(raw.page) : 1,
       search: raw.search || undefined,
-      mode: raw.mode || undefined,
+      // On/off only means something for an auto-send.
+      mode: raw.active ? "AUTO" : raw.mode || undefined,
+      preset: raw.preset || undefined,
+      active: raw.active || undefined,
       ...toOrder(raw.order),
     },
   );
 
   const columns = useColumns();
+  const filters = useFilters();
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const { table } = useDataTable({
     data: sends,
@@ -121,9 +130,22 @@ export const MarketingSendList = () => {
           pagination
           isLoading={isLoading}
           queryObject={raw}
+          filters={filters}
           orderBy={[
             { key: "name", label: t("fields.name") },
             { key: "createdAt", label: t("fields.createdAt") },
+            {
+              key: apiSortKey("sent"),
+              label: t("marketing.sends.columns.sent"),
+            },
+            {
+              key: apiSortKey("replyRate"),
+              label: t("marketing.sends.columns.replied"),
+            },
+            {
+              key: apiSortKey("lastSentAt"),
+              label: t("marketing.sends.columns.lastSentAt"),
+            },
           ]}
           navigateTo={(row) => row.original.id}
           noRecords={{
@@ -195,6 +217,37 @@ const useCommands = (
     offer.turnOff,
     offer.turnOn,
   ]);
+};
+
+/** Giai đoạn and Trạng thái facets above the table. */
+const useFilters = (): Filter[] => {
+  const { t } = useTranslation();
+  const stageLabel = useStageLabel();
+
+  return useMemo<Filter[]>(
+    () => [
+      {
+        key: "preset",
+        label: t("marketing.sends.columns.stage"),
+        type: "select",
+        multiple: true,
+        options: Object.entries(TODO_STAGE).map(([value, stage]) => ({
+          value,
+          label: stageLabel(stage),
+        })),
+      },
+      {
+        key: "active",
+        label: t("fields.status"),
+        type: "select",
+        options: [
+          { value: "true", label: t("marketing.sends.status.ACTIVE") },
+          { value: "false", label: t("marketing.sends.status.OFF") },
+        ],
+      },
+    ],
+    [t, stageLabel],
+  );
 };
 
 const useColumns = () => {
