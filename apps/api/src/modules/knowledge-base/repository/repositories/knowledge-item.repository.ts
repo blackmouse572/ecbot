@@ -1,3 +1,4 @@
+import { DATABASE_AUDIT_POPULATE } from 'src/common/database/constants/database.constant';
 import { DatabaseRepository } from '@app/common/database/bases/database.repository';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
@@ -8,7 +9,7 @@ import { KnowledgeItemEntity } from '../entities/knowledge-item.entity';
 @Injectable()
 export class KnowledgeItemRepository extends DatabaseRepository<KnowledgeItemEntity> {
     constructor(em: EntityManager) {
-        super(em, KnowledgeItemEntity);
+        super(em, KnowledgeItemEntity, DATABASE_AUDIT_POPULATE);
     }
 
     async findByKnowledgeBase(kbId: string) {

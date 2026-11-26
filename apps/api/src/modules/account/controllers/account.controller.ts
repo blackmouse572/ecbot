@@ -1,3 +1,4 @@
+import { DATABASE_AUDIT_POPULATE } from 'src/common/database/constants/database.constant';
 import { BatchIdsRequestDto } from '@app/common/batch/dtos/batch.request.dto';
 import { BatchResultResponseDto } from '@app/common/batch/dtos/batch.response.dto';
 import { runBatch } from '@app/common/batch/utils/run-batch.util';
@@ -82,9 +83,6 @@ import { ActivityService } from '@app/modules/activity/services/activity.service
 import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { ENUM_ACCOUNT_TYPE } from '../enums/account.enum';
 
-// Reads carry the people behind the row: who linked it, who last touched it.
-const AUDIT_POPULATE = ['createdBy', 'updatedBy'];
-
 @ApiTags('modules.shared.account')
 @Controller({
     version: '1',
@@ -134,7 +132,7 @@ export class AccountController {
                     offset: _offset,
                 },
                 order: _order,
-                populate: [...AUDIT_POPULATE, 'chatbot'],
+                populate: [...DATABASE_AUDIT_POPULATE, 'chatbot'],
             }
         );
         const total: number = await this.accountService.getTotal(find);
@@ -209,7 +207,7 @@ export class AccountController {
         const account = await this.accountService.findOneByIdOrSlug(
             accountId,
             {
-                populate: AUDIT_POPULATE,
+                populate: DATABASE_AUDIT_POPULATE,
             },
             workspace.id
         );

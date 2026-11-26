@@ -1193,4 +1193,47 @@ describe('AccountService - mapList keeps secrets out', () => {
         expect(view.refreshToken).toBeUndefined();
         expect(JSON.stringify(view)).not.toContain('v1:v1');
     });
+
+    // The workspace channel list populates who linked and last changed each
+    // channel. A populated user carries every column, so only the public
+    // fields may travel to workspace members.
+    it('returns only the public fields of the audit users', () => {
+        const user = {
+            id: 'u1',
+            name: 'Ada',
+            username: 'ada',
+            email: 'ada@example.com',
+            password: 'argon2-hash',
+            salt: 'salt',
+            mfaSecret: 'secret',
+        };
+        const [mapped] = buildService().mapList([
+            {
+                id: 'account-fb',
+                name: 'Axios Page',
+                createdBy: user,
+                updatedBy: user,
+            } as any,
+        ]);
+        const view = JSON.parse(JSON.stringify(mapped));
+
+        for (const by of [view.createdBy, view.updatedBy]) {
+            expect(by).toMatchObject({
+                id: 'u1',
+                name: 'Ada',
+                email: 'ada@example.com',
+            });
+            expect(by).not.toHaveProperty('password');
+            expect(by).not.toHaveProperty('salt');
+            expect(by).not.toHaveProperty('mfaSecret');
+        }
+    });
+
+    it('leaves an unpopulated audit user as it is', () => {
+        const [mapped] = buildService().mapList([
+            { id: 'account-fb', createdBy: 'u1' } as any,
+        ]);
+
+        expect((mapped as any).createdBy).toBe('u1');
+    });
 });

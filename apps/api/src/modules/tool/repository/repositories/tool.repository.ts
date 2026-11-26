@@ -1,3 +1,4 @@
+import { DATABASE_AUDIT_POPULATE } from 'src/common/database/constants/database.constant';
 import { Injectable } from '@nestjs/common';
 import { EntityManager, EntityRepository } from '@mikro-orm/postgresql';
 import { IPaginationOrder } from 'src/common/pagination/interfaces/pagination.interface';
@@ -10,7 +11,7 @@ import { DatabaseRepository } from '@app/common/database/bases/database.reposito
 @Injectable()
 export class ToolRepository extends DatabaseRepository<ToolEntity> {
     constructor(em: EntityManager) {
-        super(em, ToolEntity);
+        super(em, ToolEntity, DATABASE_AUDIT_POPULATE);
     }
 
     async findByWorkspaceId(workspaceId: string): Promise<ToolEntity[]> {

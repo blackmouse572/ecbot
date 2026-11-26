@@ -282,10 +282,14 @@ export class ApiKeyService implements IApiKeyService {
     }
 
     mapList(apiKeys: ApiKeyEntity[] | ApiKeyEntity[]): ApiKeyListResponseDto[] {
-        return plainToInstance(ApiKeyListResponseDto, apiKeys);
+        return plainToInstance(ApiKeyListResponseDto, apiKeys, {
+            excludeExtraneousValues: true,
+        });
     }
 
     mapGet(apiKey: ApiKeyEntity | ApiKeyEntity): ApiKeyGetResponseDto {
-        return plainToInstance(ApiKeyGetResponseDto, apiKey);
+        return plainToInstance(ApiKeyGetResponseDto, apiKey, {
+            excludeExtraneousValues: true,
+        });
     }
 }

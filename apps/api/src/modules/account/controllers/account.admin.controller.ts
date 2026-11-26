@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ENUM_APP_STATUS_CODE_ERROR } from 'src/app/enums/app.status-code.enum';
+import { DATABASE_AUDIT_POPULATE } from 'src/common/database/constants/database.constant';
 import { DatabaseIdResponseDto } from 'src/common/database/dtos/response/database.id.response.dto';
 import { PaginationQuery } from 'src/common/pagination/decorators/pagination.decorator';
 import { PaginationListDto } from 'src/common/pagination/dtos/pagination.list.dto';
@@ -25,10 +26,8 @@ import {
 } from 'src/common/response/interfaces/response.interface';
 import { ENUM_ACTIVITY_ACTION } from '@app/modules/activity/enums/activity.enum';
 import { ActivityService } from '@app/modules/activity/services/activity.service';
-import { hasToObject } from '@app/common/utils/common';
 import { UserParsePipe } from '@app/modules/user/pipes/user.parse.pipe';
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
-import { plainToInstance } from 'class-transformer';
 import { UserProtected } from 'src/modules/user/decorators/user.decorator';
 import { ApiKeyProtected } from 'src/modules/api-key/decorators/api-key.decorator';
 import {
@@ -138,7 +137,9 @@ export class AccountAdminController {
     async get(
         @Param('accountId') accountId: string
     ): Promise<IResponse<AccountGetDetailResponseDto>> {
-        const account = await this.accountService.findOneByIdOrSlug(accountId);
+        const account = await this.accountService.findOneByIdOrSlug(accountId, {
+            populate: DATABASE_AUDIT_POPULATE,
+        });
         if (!account) {
             throw new NotFoundException({
                 statusCode: ENUM_APP_STATUS_CODE_ERROR.NOT_FOUND,
@@ -146,13 +147,9 @@ export class AccountAdminController {
             });
         }
 
-        // `toObject()` drops the hidden columns (accessToken, config); a row
-        // that is already plain has nothing to drop.
-        const plain = hasToObject(account) ? account.toObject() : account;
-
-        return {
-            data: plainToInstance(AccountGetDetailResponseDto, { ...plain }),
-        };
+        // mapDetail exposes only the DTO's fields, nested users included, so
+        // the populated users' password hash and salt stay out.
+        return { data: this.accountService.mapDetail(account) };
     }
 
     @AccountAdminCreateDoc()

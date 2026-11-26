@@ -1,3 +1,4 @@
+import { DATABASE_AUDIT_POPULATE } from 'src/common/database/constants/database.constant';
 import { DatabaseRepository } from '@app/common/database/bases/database.repository';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Injectable } from '@nestjs/common';
@@ -9,7 +10,7 @@ export type SkillScope = 'workspace' | 'template' | 'all' | 'system';
 @Injectable()
 export class SkillRepository extends DatabaseRepository<SkillEntity> {
     constructor(em: EntityManager) {
-        super(em, SkillEntity);
+        super(em, SkillEntity, DATABASE_AUDIT_POPULATE);
     }
 
     // Scope: 'workspace' = owned only, 'template' = builtin (workspace null),

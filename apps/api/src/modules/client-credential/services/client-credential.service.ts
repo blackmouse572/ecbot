@@ -161,6 +161,8 @@ export class ClientCredentialService {
     mapList(
         entities: ClientCredentialEntity[]
     ): ClientCredentialGetResponseDto[] {
-        return plainToInstance(ClientCredentialGetResponseDto, entities);
+        return plainToInstance(ClientCredentialGetResponseDto, entities, {
+            excludeExtraneousValues: true,
+        });
     }
 }

@@ -1,5 +1,5 @@
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
-import { Exclude } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
 import { DatabaseDto } from 'src/common/database/dtos/database.dto';
 import { ENUM_API_KEY_TYPE } from 'src/modules/api-key/enums/api-key.enum';
 
@@ -13,6 +13,7 @@ export class ApiKeyGetResponseDto extends DatabaseDto {
         example: true,
         required: true,
     })
+    @Expose()
     isActive: boolean;
 
     @ApiProperty({
@@ -20,6 +21,7 @@ export class ApiKeyGetResponseDto extends DatabaseDto {
         example: new Date('2026-03-26T20:29:42.654Z'),
         required: false,
     })
+    @Expose()
     startDate?: Date;
 
     @ApiProperty({
@@ -27,6 +29,7 @@ export class ApiKeyGetResponseDto extends DatabaseDto {
         example: new Date('2027-06-09T23:47:57.166Z'),
         required: false,
     })
+    @Expose()
     endDate?: Date;
 
     @ApiProperty({
@@ -34,6 +37,7 @@ export class ApiKeyGetResponseDto extends DatabaseDto {
         example: 'Forward Infrastructure Technician',
         required: true,
     })
+    @Expose()
     name: string;
 
     @ApiProperty({
@@ -42,6 +46,7 @@ export class ApiKeyGetResponseDto extends DatabaseDto {
         enum: ENUM_API_KEY_TYPE,
         required: true,
     })
+    @Expose()
     type: ENUM_API_KEY_TYPE;
 
     @ApiProperty({
@@ -49,5 +54,6 @@ export class ApiKeyGetResponseDto extends DatabaseDto {
         example: 'GpZdMacOfKnbePW',
         required: true,
     })
+    @Expose()
     key: string;
 }

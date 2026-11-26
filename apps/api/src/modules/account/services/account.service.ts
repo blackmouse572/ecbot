@@ -33,6 +33,7 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
+import { UserMetaResponseDto } from 'src/modules/user/dtos/response/user.meta.response.dto';
 import { isUUID } from 'class-validator';
 import slugify from 'slugify';
 import { AccountCreateRequestDto } from '../dtos/request/account.create.request.dto';
@@ -303,6 +304,15 @@ export class AccountService implements IAccountService {
     }
 
     mapList(accounts: AccountEntity[]): AccountListResponseDto[] {
+        // A populated user carries every column (password hash, salt, MFA
+        // secret); only the fields UserMetaResponseDto exposes travel.
+        const auditUser = (user: unknown) =>
+            user && typeof user === 'object'
+                ? plainToInstance(UserMetaResponseDto, user, {
+                      excludeExtraneousValues: true,
+                  })
+                : user;
+
         return accounts.map((a: AccountEntity) => {
             const obj = hasToObject(a) ? a.toObject() : a;
             // A populated chatbot carries every column; only the summary
@@ -333,6 +343,8 @@ export class AccountService implements IAccountService {
                 // exposes `callbackUrl` instead.
                 config: undefined,
                 refreshToken: undefined,
+                createdBy: auditUser((obj as any).createdBy),
+                updatedBy: auditUser((obj as any).updatedBy),
                 chatbot:
                     chatbot && typeof chatbot === 'object' && !chatbot.deletedAt
                         ? {
