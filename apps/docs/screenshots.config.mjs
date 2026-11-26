@@ -930,6 +930,126 @@ export const shots = [
         target: "[data-testid=todo-NEW]",
         to: "[data-testid=todo-WIN_BACK]",
       },
+      {
+        id: "send",
+        target: "main >> text=/^(Follow up with offer|Nhắc kèm ưu đãi)$/",
+        pad: 4,
+      },
+      {
+        id: "settings",
+        target: "main >> text=/^(Send settings|Cài đặt gửi tin)$/",
+        pad: 6,
+      },
+    ],
+  },
+  {
+    name: "marketing-send",
+    path: "/:ws/marketing/send/ASKED_PRICE",
+    setup: async (page) => {
+      await page
+        .getByRole("dialog")
+        .getByText(/^(Drafted by Ecbot|Ecbot soạn sẵn)$/)
+        .waitFor();
+      await page.waitForTimeout(800);
+    },
+    marks: [
+      {
+        id: "audience",
+        target: "[role=dialog] >> text=/^(Who gets it|Gửi cho ai)$/",
+        up: 1,
+        pad: 2,
+      },
+      {
+        id: "offer",
+        target: "[role=dialog] >> text=/^(Offer|Ưu đãi)$/",
+        up: 1,
+        pad: 2,
+      },
+      {
+        id: "message",
+        target: "[role=dialog] >> [contenteditable=true]",
+        pad: 4,
+      },
+      {
+        id: "mode",
+        target: "[role=dialog] >> text=/^(How to send|Cách gửi)$/",
+        up: 1,
+        pad: 2,
+      },
+    ],
+  },
+  {
+    name: "marketing-send-customers",
+    path: "/:ws/marketing/send/ASKED_PRICE",
+    setup: async (page) => {
+      await page
+        .getByRole("dialog")
+        .getByText(/^(Drafted by Ecbot|Ecbot soạn sẵn)$/)
+        .waitFor();
+      await page
+        .getByRole("dialog")
+        .getByRole("button", { name: /Messenger|Facebook/ })
+        .first()
+        .click();
+      await page.getByRole("dialog").last().getByRole("row").nth(1).waitFor();
+      await page
+        .getByRole("dialog")
+        .last()
+        .getByRole("checkbox")
+        .nth(2)
+        .click();
+      await page.waitForTimeout(600);
+    },
+    marks: [
+      {
+        id: "table",
+        target: "[role=dialog] >> nth=-1 >> role=table",
+        pad: 2,
+      },
+      {
+        id: "unticked",
+        target:
+          "[role=dialog] >> nth=-1 >> text=/(customers? unticked|Đã bỏ chọn)/",
+        pad: 4,
+      },
+    ],
+  },
+  {
+    name: "marketing-settings",
+    path: "/:ws/marketing/settings",
+    setup: async (page) => {
+      await page.getByRole("dialog").getByRole("textbox").first().waitFor();
+      await page.waitForTimeout(600);
+    },
+    marks: [
+      {
+        id: "hours",
+        target:
+          "[role=dialog] >> text=/^(Hours offers can go out|Giờ được gửi tin ưu đãi)$/",
+        up: 1,
+        pad: 2,
+      },
+      {
+        id: "cap",
+        target:
+          "[role=dialog] >> text=/^(Most offers per customer|Số tin ưu đãi tối đa cho mỗi khách)$/",
+        up: 1,
+        pad: 2,
+      },
+      {
+        id: "rest",
+        target:
+          "[role=dialog] >> text=/^(Let customers rest when they don't reply|Cho khách tạm nghỉ khi không trả lời)$/",
+        up: 1,
+        pad: 2,
+      },
+      {
+        id: "keywords",
+        target:
+          "[role=dialog] >> text=/^(Stop keywords|Từ khoá dừng nhận tin)$/",
+        up: 1,
+        pad: 2,
+      },
     ],
   },
   {

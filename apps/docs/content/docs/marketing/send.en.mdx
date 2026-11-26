@@ -1,0 +1,143 @@
+---
+title: Send offers
+description: Send an offer to a To do row from the Marketing overview. Ecbot picks the customers and drafts the message, and you check it and send.
+faq:
+  - q: Does every customer in the row get the message?
+    a: Only those Ecbot may message today. It leaves out customers who stopped offers, are upset, paused, resting or already got an offer today, and you can untick anyone else.
+  - q: What happens if a customer is outside the free messaging window?
+    a: Ecbot does not pay to reach them. Offers only go out inside each channel's free messaging window, so that customer is skipped.
+  - q: How does a customer stop getting offers?
+    a: They tap Stop offers under the message, or send a stop keyword such as "dừng". Offers then stop on every channel.
+  - q: What is the difference between Send every day and Send once?
+    a: Send once messages the customers in the row now. Send every day also messages new customers who join the row on later days.
+---
+
+Each row of **To do this week** on the [Marketing overview](/docs/marketing) has a send button. Ecbot picks the customers in that row, drafts a message for them, and you read it and send. Messages go out through the agent, in each customer's own chat.
+
+<Screenshot
+  name="marketing-todos"
+  alt="The To do this week list with a send button on each row"
+>
+  <Mark id="range">The date range for the charts below.</Mark>
+  <Mark id="total">
+    Customers to message this week, and how many were left out.
+  </Mark>
+  <Mark id="rows">One row per group of customers worth a message.</Mark>
+  <Mark id="send">
+    The send button. Its label says what the message is for, such as **Follow up
+    with offer**.
+  </Mark>
+  <Mark id="settings">
+    **Send settings**: hours, limits and stop keywords for every send.
+  </Mark>
+</Screenshot>
+
+| Row          | Button                   |
+| ------------ | ------------------------ |
+| New          | **Welcome them**         |
+| Interested   | **Send first offer**     |
+| Asked price  | **Follow up with offer** |
+| Bought once  | **Suggest add-ons**      |
+| Repeat buyer | **Remind to rebuy**      |
+| Win-back     | **Invite back**          |
+
+## Send an offer
+
+Click a row's button. A panel opens with three steps.
+
+<Screenshot
+  name="marketing-send"
+  alt="The send panel with who gets it, the message and how to send"
+>
+  <Mark id="audience">
+    How many customers get it, by channel. Click a channel to see the customers.
+  </Mark>
+  <Mark id="offer">Optional. Ecbot writes the message around your offer.</Mark>
+  <Mark id="message">
+    The message Ecbot drafted. Edit it, or use Rewrite, Longer and Shorter.
+  </Mark>
+  <Mark id="mode">Send every day, or send once.</Mark>
+</Screenshot>
+
+<Steps>
+<Step>
+
+### Who gets it
+
+The panel shows how many customers get the message, with one chip per channel. Below, it says how many customers Ecbot left out and why: stopped offers, upset, paused, put off for later, resting after no replies, reached the 30-day limit, or already got another offer today.
+
+To leave someone out, click a channel chip. **Customers who get this** lists them with their phone, email, stage and conversations. Untick the customers you do not want to message this time, then click **Done**. **Tick all again** brings them back.
+
+<Screenshot
+  name="marketing-send-customers"
+  alt="The list of customers who get the message, with one customer unticked"
+>
+  <Mark id="table">
+    The customers on that channel. Untick anyone you want to leave out.
+  </Mark>
+  <Mark id="unticked">How many customers you unticked.</Mark>
+</Screenshot>
+
+</Step>
+<Step>
+
+### Message
+
+Ecbot drafts the message when the panel opens.
+
+- **Offer** (optional): write your offer in your own words, such as "10% off orders placed before Nov 20". Ecbot writes the message around it. Leave it empty for a simple check-in.
+- **Message text**: edit it like any text. **Rewrite** writes it again, and its menu picks a style: Friendly, Polite or Playful. **Longer** and **Shorter** change the length.
+- **Customer name** and **Product** are filled in for each customer. Type `{` or click the `{ }` button to add them. A customer with no name gets "there", and one with no product gets "the product you asked about". If the product's group has a photo, it is sent with the message.
+
+</Step>
+<Step>
+
+### How to send
+
+- **Send every day (recommended)**: sends to these customers now, then every day to new customers who join the row.
+- **Send once**: only these customers, right now.
+
+Click **Send and turn on** or **Send now**.
+
+</Step>
+</Steps>
+
+## What customers get
+
+- The message comes from the agent, in the chat the customer used most recently, and shows in **Conversations** like a bot message.
+- Where the chat app has quick replies, such as Messenger, the message has a **Stop offers** button. On Zalo and Telegram the last line says which word to send to stop.
+- A reply within 72 hours, or an order within 7 days, counts toward the offer.
+
+<Callout title="Coming next">
+  A **Sent** page, with each send's results and a switch to turn daily sending
+  off, comes in a later release.
+</Callout>
+
+## Limits that protect your customers
+
+Ecbot checks every customer again right before sending, and skips anyone who should not get the message now:
+
+- **Send hours**: only between the hours in Send settings, 09:00 to 20:00 by default. Messages outside the hours wait until the next day.
+- **Free messaging window**: only while the chat app lets the shop message for free, such as 24 hours after the customer's last message on Messenger.
+- **At most 1 offer a day** for each customer, across every send.
+- **At most 3 offers in 30 days** for each customer, by default.
+- **Rest**: after 3 offers in a row with no reply, the customer rests for 30 days, by default.
+
+## Send settings
+
+Click **Send settings** in the top right of the Marketing overview. The settings apply to every send and daily send.
+
+<Screenshot name="marketing-settings" alt="The Send settings panel">
+  <Mark id="hours">The hours offers can go out, in shop time.</Mark>
+  <Mark id="cap">The most offers one customer gets in 30 days.</Mark>
+  <Mark id="rest">When a customer rests, and for how long.</Mark>
+  <Mark id="keywords">
+    Words that stop offers. Your list replaces the built-in words.
+  </Mark>
+</Screenshot>
+
+- **Hours offers can go out**: the start and end time.
+- **Most offers per customer**: offers in 30 days, up to 10. Never more than 1 a day.
+- **Let customers rest when they don't reply**: after how many unanswered offers, and for how many days.
+- **Stop keywords**: a customer who sends one stops getting offers on every channel. With an empty list, Ecbot uses "dừng", "dung" and "stop".
+- **Confirm when a customer stops offers**: when on, Ecbot replies with the confirmation message, or a built-in one in the agent's language if you leave it empty. When off, Ecbot still records the stop.

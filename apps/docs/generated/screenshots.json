@@ -979,6 +979,174 @@
       }
     }
   },
+  "marketing-send": {
+    "en": {
+      "src": "/_docs/screenshots/en/marketing-send.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "audience": {
+          "x": 62.15,
+          "y": 14.76,
+          "w": 7.11,
+          "h": 2.67
+        },
+        "offer": {
+          "x": 62.15,
+          "y": 38.31,
+          "w": 35.69,
+          "h": 2.67
+        },
+        "message": {
+          "x": 62.01,
+          "y": 52.4,
+          "w": 35.97,
+          "h": 11.56
+        },
+        "mode": {
+          "x": 62.15,
+          "y": 76.91,
+          "w": 7.62,
+          "h": 2.67
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/marketing-send.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "audience": {
+          "x": 62.15,
+          "y": 12.27,
+          "w": 6.53,
+          "h": 2.67
+        },
+        "offer": {
+          "x": 62.15,
+          "y": 35.82,
+          "w": 35.69,
+          "h": 2.67
+        },
+        "message": {
+          "x": 62.01,
+          "y": 49.91,
+          "w": 35.97,
+          "h": 11.56
+        },
+        "mode": {
+          "x": 62.15,
+          "y": 74.42,
+          "w": 6.06,
+          "h": 2.67
+        }
+      }
+    }
+  },
+  "marketing-send-customers": {
+    "en": {
+      "src": "/_docs/screenshots/en/marketing-send-customers.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "table": {
+          "x": 60.49,
+          "y": 19.44,
+          "w": 39.51,
+          "h": 43.11
+        },
+        "unticked": {
+          "x": 62.01,
+          "y": 94.07,
+          "w": 9.09,
+          "h": 3.2
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/marketing-send-customers.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "table": {
+          "x": 60.49,
+          "y": 19.44,
+          "w": 39.51,
+          "h": 43.11
+        },
+        "unticked": {
+          "x": 62.01,
+          "y": 94.07,
+          "w": 8.9,
+          "h": 3.2
+        }
+      }
+    }
+  },
+  "marketing-settings": {
+    "en": {
+      "src": "/_docs/screenshots/en/marketing-settings.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "hours": {
+          "x": 62.15,
+          "y": 12.27,
+          "w": 35.69,
+          "h": 10.4
+        },
+        "cap": {
+          "x": 62.15,
+          "y": 24.89,
+          "w": 35.69,
+          "h": 12.71
+        },
+        "rest": {
+          "x": 62.15,
+          "y": 39.82,
+          "w": 35.69,
+          "h": 10.4
+        },
+        "keywords": {
+          "x": 62.15,
+          "y": 55.22,
+          "w": 35.69,
+          "h": 2.67
+        }
+      }
+    },
+    "vi": {
+      "src": "/_docs/screenshots/vi/marketing-settings.png",
+      "width": 1440,
+      "height": 900,
+      "marks": {
+        "hours": {
+          "x": 62.15,
+          "y": 12.27,
+          "w": 35.69,
+          "h": 10.4
+        },
+        "cap": {
+          "x": 62.15,
+          "y": 24.89,
+          "w": 35.69,
+          "h": 12.71
+        },
+        "rest": {
+          "x": 62.15,
+          "y": 39.82,
+          "w": 35.69,
+          "h": 10.4
+        },
+        "keywords": {
+          "x": 62.15,
+          "y": 55.22,
+          "w": 35.69,
+          "h": 2.67
+        }
+      }
+    }
+  },
   "marketing-todos": {
     "en": {
       "src": "/_docs/screenshots/en/marketing-todos.png",
@@ -986,7 +1154,7 @@
       "height": 900,
       "marks": {
         "range": {
-          "x": 86.11,
+          "x": 77.11,
           "y": 9.71,
           "w": 11.67,
           "h": 4
@@ -1002,6 +1170,18 @@
           "y": 26.53,
           "w": 83.06,
           "h": 51.22
+        },
+        "send": {
+          "x": 87.63,
+          "y": 45.87,
+          "w": 10.15,
+          "h": 4
+        },
+        "settings": {
+          "x": 88.64,
+          "y": 9.49,
+          "w": 9.28,
+          "h": 4.44
         }
       }
     },
@@ -1011,7 +1191,7 @@
       "height": 900,
       "marks": {
         "range": {
-          "x": 86.11,
+          "x": 77.05,
           "y": 9.71,
           "w": 11.67,
           "h": 4
@@ -1027,6 +1207,18 @@
           "y": 26.53,
           "w": 83.06,
           "h": 51.22
+        },
+        "send": {
+          "x": 88.9,
+          "y": 45.87,
+          "w": 8.88,
+          "h": 4
+        },
+        "settings": {
+          "x": 88.58,
+          "y": 9.49,
+          "w": 9.34,
+          "h": 4.44
         }
       }
     }
