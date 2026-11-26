@@ -4,6 +4,7 @@ export const COUNTRY_DEFAULT_AVAILABLE_SEARCH = [
     'phoneCode',
 ];
 
-export const COUNTRY_CACHE_KEY = {
-    CountryList: 'country.list',
-};
+// Countries change only when re-seeded at deploy. The Redis cache outlives a
+// deploy, so a re-seed reaches cached pages within this TTL. Kept short
+// because the key is the client's URL (any page/search/sort mints an entry).
+export const COUNTRY_LIST_CACHE_TTL_MS = 60 * 60 * 1000;

@@ -26,9 +26,6 @@ export class CountryService implements ICountryService {
         find?: Record<string, any>,
         options?: IDatabaseFindAllOptions
     ): Promise<CountryDoc[]> {
-        // TODO: [Adrian] - get countries from cache
-        // Implement check if search item in not in cached then call service
-        //const countriesCached = await this.cacheManager.get(COUNTRY_CACHE_KEY.CountryList);
         return this.countryRepository.find(find, options);
     }
 
