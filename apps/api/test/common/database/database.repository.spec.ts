@@ -55,14 +55,13 @@ describe('DatabaseRepository populate', () => {
 
     // These screens show who created or updated a row, so their repositories
     // keep the two users: the app's skill, tool and knowledge pages, the
-    // client credentials list, and the admin api key and tool pages.
+    // client credentials list, and the admin tool pages.
     it.each([
         ['skills', SkillRepository],
         ['tools', ToolRepository],
         ['knowledge bases', KnowledgeBaseRepository],
         ['knowledge items', KnowledgeItemRepository],
         ['client credentials', ClientCredentialRepository],
-        ['api keys', ApiKeyRepository],
     ])('keeps createdBy and updatedBy for %s', async (_name, Repository) => {
         const em = mockEm();
         const repository = new (Repository as any)(em);
@@ -73,5 +72,16 @@ describe('DatabaseRepository populate', () => {
             'createdBy',
             'updatedBy',
         ]);
+    });
+
+    // The x-api-key guard reads a key on every request. Only the admin api
+    // key page shows the names, and its pipe asks for them.
+    it('does not join the audit users for api keys', async () => {
+        const em = mockEm();
+        const repository = new ApiKeyRepository(em);
+
+        await repository.findOne({ key: 'k' });
+
+        expect(em.findOne.mock.calls[0][2].populate).toBeUndefined();
     });
 });
