@@ -3986,7 +3986,6 @@
       "SEND_HOURS_ENDED": "hết giờ gửi trong ngày"
     },
     "send": {
-      "description": "Ecbot đã chọn khách và soạn sẵn tin, bạn xem rồi gửi.",
       "notFoundTitle": "Không có việc này",
       "notFoundMessage": "Mở lại từ Việc nên làm ở trang Tổng quan.",
       "preset": {
@@ -4051,7 +4050,7 @@
         "title": "Cách gửi",
         "AUTO": {
           "label": "Tự gửi mỗi ngày (nên chọn)",
-          "hint": "Gửi những khách này ngay, rồi mỗi ngày tự gửi cho khách mới vào nhóm này."
+          "hint": "Gửi những khách này ngay, rồi mỗi ngày tự gửi cho khách mới vào nhóm này. Bạn tắt được bất cứ lúc nào."
         },
         "ONCE": {
           "label": "Chỉ gửi 1 lần",
@@ -4086,7 +4085,6 @@
     },
     "settings": {
       "title": "Cài đặt gửi tin",
-      "description": "Áp dụng cho mọi lần gửi và tự gửi trong Tiếp thị.",
       "hours": "Giờ được gửi tin ưu đãi",
       "sendFrom": "Gửi từ",
       "sendTo": "Gửi đến",
@@ -4095,7 +4093,7 @@
       "cap": "Số tin ưu đãi tối đa cho mỗi khách",
       "maxPer30Days": "Số tin trong 30 ngày",
       "capUnit": "tin trong 30 ngày",
-      "capHint": "Và không quá 1 tin mỗi ngày.",
+      "capHint": "Và không quá 1 tin mỗi ngày. Tính chung cho mọi lần gửi. Khách đã nhận đủ sẽ được bỏ qua và ghi lý do trong kết quả.",
       "rest": "Cho khách tạm nghỉ khi không trả lời",
       "restAfter": "Sau",
       "restFor": "tin liền không trả lời, nghỉ",

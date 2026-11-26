@@ -3959,7 +3959,6 @@
       "SEND_HOURS_ENDED": "sending hours ended for the day"
     },
     "send": {
-      "description": "Ecbot picked the customers and drafted the message. Read it, then send.",
       "notFoundTitle": "Nothing to send here",
       "notFoundMessage": "Open it again from the to-do list on the Overview.",
       "preset": {
@@ -4025,7 +4024,7 @@
         "title": "How to send",
         "AUTO": {
           "label": "Send every day (recommended)",
-          "hint": "Send to these customers now, then every day to new customers who join this group."
+          "hint": "Send to these customers now, then every day to new customers who join this group. You can turn it off any time."
         },
         "ONCE": {
           "label": "Send once",
@@ -4061,7 +4060,6 @@
     },
     "settings": {
       "title": "Send settings",
-      "description": "Applies to every send and daily send in Marketing.",
       "hours": "Hours offers can go out",
       "sendFrom": "Send from",
       "sendTo": "Send until",
@@ -4070,7 +4068,7 @@
       "cap": "Most offers per customer",
       "maxPer30Days": "Offers in 30 days",
       "capUnit": "offers in 30 days",
-      "capHint": "And never more than 1 a day.",
+      "capHint": "And never more than 1 a day, across all sends. Customers who reached it are skipped, with the reason in the results.",
       "rest": "Let customers rest when they don't reply",
       "restAfter": "After",
       "restFor": "offers in a row with no reply, rest for",

@@ -24,9 +24,6 @@ export const MarketingSettings = () => {
         <RouteDrawer.Title asChild>
           <Heading>{t("marketing.settings.title")}</Heading>
         </RouteDrawer.Title>
-        <RouteDrawer.Description className="sr-only">
-          {t("marketing.settings.description")}
-        </RouteDrawer.Description>
       </RouteDrawer.Header>
       {isLoading || !settings ? (
         <RouteDrawer.Body className="p-6">
