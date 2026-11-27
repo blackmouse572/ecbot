@@ -10,14 +10,17 @@ Async hooks (`awrap_*`) are required: the app invokes the agent asynchronously
 (`ainvoke` / `astream_events`), and the sync hooks raise under async invocation.
 Both hooks are needed — `awrap_model_call` injects the dynamic operator tools and
 `awrap_tool_call` teaches the agent how to execute them (tools not present in the
-initial `create_agent` config are otherwise unexecutable).
+initial `create_agent` config are otherwise unexecutable). `awrap_tool_call` also
+refuses a call the turn already made with the same arguments (#643).
 """
 from __future__ import annotations
 
+import json
 from typing import Any
 
 import openai
 from langchain.agents.middleware import AgentMiddleware, AgentState
+from langchain_core.messages import ToolMessage
 
 from eccho_ai.core.app_logger import get_logger
 from eccho_ai.llm.prompts.current_time import (
@@ -28,6 +31,7 @@ from eccho_ai.llm.prompts.current_time import (
 from eccho_ai.llm.prompts.loader import render_system_prompt
 from eccho_ai.llm.prompts.opening_hours import render_opening_hours
 from eccho_ai.llm.providers.chat_model import build_chat_model
+from eccho_ai.llm.tools.constants import REPEATED_TOOL_CALL
 from eccho_ai.modules.chat.models.agent_models import AgentRequestContext
 
 logger = get_logger(__name__)
@@ -36,6 +40,46 @@ logger = get_logger(__name__)
 def _context_from(request) -> object | None:
     runtime = getattr(request, "runtime", None)
     return getattr(runtime, "context", None)
+
+
+def _tool_call_key(tool_call: Any) -> str:
+    """What makes two calls the same call: the tool's name and its arguments."""
+    return json.dumps(
+        [tool_call.get("name"), tool_call.get("args") or {}],
+        sort_keys=True,
+        default=str,
+    )
+
+
+def _repeated_tool_message(tool_call: Any) -> ToolMessage:
+    """The message that stands in for a call the turn has already made."""
+    name = tool_call.get("name")
+    return ToolMessage(
+        content=REPEATED_TOOL_CALL.format(name=name),
+        tool_call_id=tool_call["id"],
+        name=name,
+    )
+
+
+def _block_repeated_call(context: Any, tool_call: Any) -> ToolMessage | None:
+    """Record this call; return the stand-in message when it repeats the turn.
+
+    A model that re-issues one call (same tool, same arguments) would otherwise
+    spend every tool round on it and end the turn at `recursion_limit` — the
+    observed 51K-token, 65 s `GraphRecursionError` turns (#643). The call is
+    recorded before it runs, so duplicates emitted in the same parallel batch
+    are caught too. Everything stays inside the existing graph and its
+    `recursion_limit`: no extra middleware node, so no superstep is spent.
+    """
+    made = getattr(context, "tool_calls_made", None)
+    if made is None:  # no per-request context: nothing to dedupe against
+        return None
+    key = _tool_call_key(tool_call)
+    if key not in made:
+        made.add(key)
+        return None
+    logger.info("repeated_tool_call_blocked", tool=tool_call.get("name"))
+    return _repeated_tool_message(tool_call)
 
 
 def _with_sticky_session(model, conversation_id: str | None):
@@ -123,6 +167,9 @@ class ChatbotConfigMiddleware(AgentMiddleware[AgentState[Any], AgentRequestConte
 
     async def awrap_tool_call(self, request, handler):
         context = _context_from(request)
+        repeated = _block_repeated_call(context, request.tool_call)
+        if repeated is not None:
+            return repeated
         injected = getattr(context, "tools", None) or []
         by_name = {t.name: t for t in injected}
         tool = by_name.get(request.tool_call["name"])

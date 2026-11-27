@@ -50,6 +50,11 @@ class AgentRequestContext(BaseModel):
     # The turn's clock, fixed when the request arrives so every model call in
     # one turn (tool rounds included) sends the same bytes and keeps the cache.
     now: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    # The tool calls (name + arguments, see _tool_call_key) already made this
+    # turn. ChatbotConfigMiddleware refuses an identical repeat, so a model that
+    # re-issues one call cannot burn every tool round until the recursion limit
+    # (#643). Lives on the per-request context, so each turn starts empty.
+    tool_calls_made: SkipValidation[set[str]] = Field(default_factory=set, repr=False)
 
 
 class ToolExecutionRequest(TypedDict):
