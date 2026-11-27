@@ -1,7 +1,8 @@
-import { Suspense } from "react";
+import { Suspense, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { Outlet, useParams } from "react-router-dom";
+import { useElementWidth } from "@/hooks/use-element-width";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { ConversationList } from "../conversation-list/conversation-list";
 import { SMALL_SCREEN_QUERY } from "../constants";
@@ -11,11 +12,14 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@repo/ui/components";
+import { LIST_DEFAULT_SIZE, LIST_MAX_SIZE, listMinSize } from "./list-min-size";
 
 export function ConversationsShell() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const isSmallScreen = useMediaQuery(SMALL_SCREEN_QUERY);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const minSize = listMinSize(useElementWidth(containerRef));
 
   const thread = (
     <main className="flex h-full flex-col overflow-hidden">
@@ -37,6 +41,7 @@ export function ConversationsShell() {
         <title>{t("conversations.title")} - Ecbot</title>
       </Helmet>
       <div
+        ref={containerRef}
         data-full-bleed
         className="h-[calc(100dvh-57px)] w-full overflow-hidden"
       >
@@ -57,9 +62,9 @@ export function ConversationsShell() {
             <ResizablePanel
               id="conversation-list"
               order={1}
-              defaultSize={24}
-              minSize={16}
-              maxSize={40}
+              defaultSize={Math.max(LIST_DEFAULT_SIZE, minSize)}
+              minSize={minSize}
+              maxSize={LIST_MAX_SIZE}
             >
               {list}
             </ResizablePanel>

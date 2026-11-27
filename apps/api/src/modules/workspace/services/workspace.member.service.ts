@@ -12,7 +12,6 @@ import { RoleEntity } from '@app/modules/role/repository/entities/role.entity';
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
 import { EntityManager } from '@mikro-orm/postgresql';
 import {
-    ConflictException,
     ForbiddenException,
     Injectable,
     NotFoundException,
@@ -30,6 +29,7 @@ import {
 import { WorkspaceMemberListResponseDto } from '../dtos/response/workspace-member.list.response.dto';
 import { WORKSPACE_DEFAULT_MEMBER_ROLE_NAME } from '../constants/workspace.constant';
 import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from '../enums/workspace.status-code.enum';
+import { defaultMemberRoleMissingException } from '../utils/default-member-role-missing.util';
 import { IWorkspaceMemberWithUserDoc } from '../interfaces/workspace-member.interface';
 import {
     DecodedInvitationToken,
@@ -382,40 +382,35 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
         // The invitation row's role is the one to grant: it is set when the
         // invite is sent and changes when an owner edits it on the
         // Invitations page. The token's roleId is frozen at send time, so it
-        // would ignore that edit. No role: the built-in Sales role, looked up
-        // by name (every built-in role shares its type).
-        const role = await this.roleService.findOne(
-            invitation.role?.id
-                ? {
+        // would ignore that edit. No role, or one deleted or turned off since
+        // the invite: the built-in Sales role, looked up by name (every
+        // built-in role shares its type).
+        const invitedRole = invitation.role?.id
+            ? await this.roleService.findOne(
+                  {
                       id: invitation.role.id,
                       workspace: workspaceId,
                       isActive: true,
-                  }
-                : {
-                      workspace: workspaceId,
-                      type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
-                      name: WORKSPACE_DEFAULT_MEMBER_ROLE_NAME,
-                      isActive: true,
                   },
-            options
-        );
-
-        if (!role && !invitation.role?.id) {
-            // The owner turned the built-in Sales role off. Never fall back
-            // to another built-in role, which shares its type.
-            throw new ConflictException({
-                statusCode:
-                    ENUM_WORKSPACE_STATUS_CODE_ERROR.DEFAULT_MEMBER_ROLE_MISSING,
-                message: 'workspace.error.defaultMemberRoleMissing',
-            });
-        }
+                  options
+              )
+            : null;
+        const role =
+            invitedRole ??
+            (await this.roleService.findOne(
+                {
+                    workspace: workspaceId,
+                    type: ENUM_POLICY_ROLE_TYPE.WORKSPACE_MEMBER,
+                    name: WORKSPACE_DEFAULT_MEMBER_ROLE_NAME,
+                    isActive: true,
+                },
+                options
+            ));
 
         if (!role) {
-            // The invited role was deleted or turned off since the invite.
-            throw new NotFoundException({
-                statusCode: ENUM_WORKSPACE_STATUS_CODE_ERROR.NOT_FOUND,
-                message: 'role.error.notFound',
-            });
+            // The owner turned the built-in Sales role off. Never fall back
+            // to another built-in role, which shares its type.
+            throw defaultMemberRoleMissingException();
         }
 
         await this.assignRoleToMember(workspaceId, userId, role.id, options);

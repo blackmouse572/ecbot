@@ -20,6 +20,7 @@ describe('WorkspaceInvitationAcceptService', () => {
         findPendingForEmail: jest.fn(),
         findOneByToken: jest.fn(),
         revoke: jest.fn(),
+        decline: jest.fn(),
     };
     const activityService = { createByUserWithWorkspace: jest.fn() };
     const memberJoinedEmail = { send: jest.fn() };
@@ -197,16 +198,28 @@ describe('WorkspaceInvitationAcceptService', () => {
     });
 
     describe('declineMine', () => {
-        it('revokes it as me, so it leaves the owner pending list', async () => {
+        it('marks it declined by me, so the owner sees Declined and it leaves the pending list', async () => {
             invitationService.findPendingForEmail.mockResolvedValue([
                 invitation,
             ]);
 
             await service.declineMine('inv-1', me);
 
-            expect(invitationService.revoke).toHaveBeenCalledWith(
+            expect(invitationService.decline).toHaveBeenCalledWith(
                 'inv-1',
                 'user-me'
+            );
+            expect(invitationService.revoke).not.toHaveBeenCalled();
+            expect(
+                activityService.createByUserWithWorkspace
+            ).toHaveBeenCalledWith(
+                me,
+                invitation.workspace,
+                expect.objectContaining({
+                    action: 'decline_invitation',
+                    subject: 'INVITATION',
+                    metadata: { id: 'inv-1' },
+                })
             );
         });
 
@@ -216,7 +229,7 @@ describe('WorkspaceInvitationAcceptService', () => {
             await expect(service.declineMine('inv-other', me)).rejects.toThrow(
                 NotFoundException
             );
-            expect(invitationService.revoke).not.toHaveBeenCalled();
+            expect(invitationService.decline).not.toHaveBeenCalled();
         });
     });
 

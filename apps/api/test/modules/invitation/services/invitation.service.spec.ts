@@ -202,6 +202,26 @@ describe('InvitationService', () => {
         });
     });
 
+    describe('decline', () => {
+        it('should set status DECLINED with revokedAt + the invitee as revokedByUser', async () => {
+            const id = randomUUID();
+            const userId = randomUUID();
+            mockInvitationRepository.updateEntity.mockResolvedValue({ id });
+
+            await service.decline(id, userId);
+
+            expect(mockInvitationRepository.updateEntity).toHaveBeenCalledWith(
+                { id },
+                expect.objectContaining({
+                    status: ENUM_INVITATION_STATUS.DECLINED,
+                    revokedByUser: { id: userId },
+                    revokedAt: expect.any(Date),
+                }),
+                undefined
+            );
+        });
+    });
+
     describe('findPendingForEmail', () => {
         it('finds only pending, unexpired invitations to the lowercased email in live workspaces', async () => {
             mockInvitationRepository.find.mockResolvedValue([]);

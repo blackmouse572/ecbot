@@ -315,7 +315,43 @@ describe('WorkspaceMemberService', () => {
             expect(mockInvitationService.accept).not.toHaveBeenCalled();
         });
 
-        it('refuses when the invited custom role was deleted since', async () => {
+        // #648: a deleted or turned-off invited role no longer strands the
+        // invitee; they join with the default member role instead.
+        it('joins as the default member role when the invited role was deleted since', async () => {
+            const memberRoleId = randomUUID();
+            mockRoleService.findOne
+                .mockResolvedValueOnce(null)
+                .mockResolvedValueOnce({ id: memberRoleId, name: 'Sales' });
+            mockInvitationService.findOneByToken.mockResolvedValue({
+                id: invitationId,
+                status: 'PENDING',
+                expiresAt: new Date(Date.now() + 60_000),
+                inviteeEmail: 'invitee@mail.com',
+                workspace: { id: workspaceId },
+                role: { id: roleId },
+            });
+
+            const result = await join();
+
+            // First the invited role (gone), then the default member role.
+            expect(mockRoleService.findOne).toHaveBeenNthCalledWith(
+                2,
+                expect.objectContaining({
+                    workspace: workspaceId,
+                    name: 'Sales',
+                    isActive: true,
+                }),
+                undefined
+            );
+            expect(result.role).toMatchObject({ id: memberRoleId });
+            expect(mockWorkspaceMemberRepository.create).toHaveBeenCalledWith(
+                expect.objectContaining({ role: { id: memberRoleId } }),
+                undefined
+            );
+            expect(mockInvitationService.accept).toHaveBeenCalled();
+        });
+
+        it('refuses with the default-role conflict when the invited role and Sales are both off', async () => {
             mockRoleService.findOne.mockResolvedValue(null);
             mockInvitationService.findOneByToken.mockResolvedValue({
                 id: invitationId,
@@ -326,7 +362,12 @@ describe('WorkspaceMemberService', () => {
                 role: { id: roleId },
             });
 
-            await expect(join()).rejects.toThrow(NotFoundException);
+            await expect(join()).rejects.toMatchObject({
+                response: {
+                    statusCode:
+                        ENUM_WORKSPACE_STATUS_CODE_ERROR.DEFAULT_MEMBER_ROLE_MISSING,
+                },
+            });
             expect(mockWorkspaceMemberRepository.create).not.toHaveBeenCalled();
         });
 

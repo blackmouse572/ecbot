@@ -80,6 +80,20 @@ describe("ActivityItemDefault", () => {
     await i18n.changeLanguage("en");
   });
 
+  // #648: the invitee's own decline, logged with the invitation id only.
+  it("says an invitation was declined, in both languages", async () => {
+    const item = activity("INVITATION", "decline_invitation", { id: "i1" });
+    expect(renderItem(item)).toContain(
+      "Lan\u00a0declined an invitation to join the workspace",
+    );
+
+    await i18n.changeLanguage("vi");
+    expect(renderItem(item)).toContain(
+      "Lan\u00a0đã từ chối lời mời tham gia không gian làm việc",
+    );
+    await i18n.changeLanguage("en");
+  });
+
   it("names the workspace a member joined", () => {
     expect(
       renderItem(

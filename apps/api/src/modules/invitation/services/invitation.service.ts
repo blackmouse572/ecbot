@@ -191,7 +191,8 @@ export class InvitationService implements IInvitationService {
         }
 
         if (
-            status === ENUM_INVITATION_STATUS.REVOKED &&
+            (status === ENUM_INVITATION_STATUS.REVOKED ||
+                status === ENUM_INVITATION_STATUS.DECLINED) &&
             metadata?.revokedByUserId
         ) {
             updateData.revokedAt = new Date();
@@ -204,6 +205,20 @@ export class InvitationService implements IInvitationService {
         return this.invitationRepository.updateEntity(
             { id: id },
             updateData,
+            options
+        );
+    }
+
+    /** The invitee turned it down: like revoke, but the owner sees Declined. */
+    async decline(
+        id: string,
+        inviteeUserId: string,
+        options?: IDatabaseFindOneOptions
+    ): Promise<InvitationEntity> {
+        return this.updateStatus(
+            id,
+            ENUM_INVITATION_STATUS.DECLINED,
+            { revokedByUserId: inviteeUserId },
             options
         );
     }

@@ -56,6 +56,7 @@ export const ACTIVITY_MESSAGE_MAP: Partial<
   join_workspace: "activities.workspace.join",
   leave_workspace: "activities.workspace.leave",
   invite_member: "activities.member.invite",
+  decline_invitation: "activities.member.declineInvitation",
   remove_member: "activities.member.remove",
   approve_join_workspace: "activities.member.approve",
   active_chatbot: "activities.chatbot.active",

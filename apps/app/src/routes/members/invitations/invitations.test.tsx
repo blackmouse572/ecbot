@@ -111,7 +111,7 @@ describe("Invitations page", () => {
     ).toHaveTextContent("members.invitations.defaultRole");
   });
 
-  it.each(["PENDING", "ACCEPTED", "REVOKED", "EXPIRED"])(
+  it.each(["PENDING", "ACCEPTED", "REVOKED", "DECLINED", "EXPIRED"])(
     "shows readable text for the %s status, not the raw enum",
     (status) => {
       vi.mocked(useInvitations).mockReturnValue({

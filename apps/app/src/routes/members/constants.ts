@@ -44,5 +44,6 @@ export const INVITATION_STATUS_COLOR: Record<
   PENDING: "orange",
   ACCEPTED: "green",
   REVOKED: "grey",
+  DECLINED: "grey",
   EXPIRED: "red",
 };

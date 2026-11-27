@@ -89,9 +89,19 @@ export class WorkspaceInvitationAcceptService {
 
     async declineMine(id: string, user: UserEntity): Promise<void> {
         const invitation = await this.findMine(id, user);
-        // No DECLINED status exists: REVOKED by the invitee themselves takes
-        // it off the owner's pending list and frees the seat.
-        await this.invitationService.revoke(invitation.id, user.id);
+        // Off the owner's pending list (and its seat freed), shown as
+        // Declined rather than Revoked.
+        await this.invitationService.decline(invitation.id, user.id);
+        await this.activityService.createByUserWithWorkspace(
+            user,
+            invitation.workspace,
+            {
+                action: ENUM_ACTIVITY_ACTION.DECLINE_INVITATION,
+                subject: ENUM_POLICY_SUBJECT.INVITATION,
+                // Ids only: the audit log is append-only and outlives the account.
+                metadata: { id: invitation.id },
+            }
+        );
     }
 
     /**

@@ -7,6 +7,7 @@ export enum ENUM_ACTIVITY_ACTION {
     JOIN_WORKSPACE = 'join_workspace',
     LEAVE_WORKSPACE = 'leave_workspace',
     INVITE_MEMBER = 'invite_member',
+    DECLINE_INVITATION = 'decline_invitation',
     REMOVE_MEMBER = 'remove_member',
     APPROVE_JOIN_WORKSPACE = 'approve_join_workspace',
     ACTIVE_CHATBOT = 'active_chatbot',

@@ -291,6 +291,56 @@ describe("CustomerTags settings page", () => {
     expect(payload.notifiesTeam).toBe(false);
   });
 
+  // #648: the client rejects with the axios error, so the 409 sits on
+  // `response.status`, not on the error itself.
+  it.each([
+    { status: 409, inline: true },
+    { status: 422, inline: false },
+    { status: 500, inline: false },
+  ])(
+    "a $status on create shows the inline name error: $inline",
+    async ({ status, inline }) => {
+      useListMock.mockReturnValue({
+        tags: [],
+        isLoading: false,
+      } as unknown as UseListReturn);
+      createMutateAsync.mockRejectedValueOnce({ response: { status } });
+      const { toast } = await import("@medusajs/ui");
+      const user = userEvent.setup();
+
+      render(<CustomerTags />);
+
+      await user.click(
+        screen.getAllByRole("button", {
+          name: "settings.customerTags.actions.create",
+        })[0],
+      );
+      await user.type(
+        await screen.findByLabelText("settings.customerTags.fields.name"),
+        "VIP",
+      );
+      await user.click(
+        screen
+          .getAllByRole("button", { name: "actions.create" })
+          .find((b) => b.getAttribute("type") === "submit")!,
+      );
+
+      if (inline) {
+        expect(
+          await screen.findByText("settings.customerTags.errors.nameTaken"),
+        ).toBeInTheDocument();
+        expect(toast.error).not.toHaveBeenCalled();
+      } else {
+        expect(toast.error).toHaveBeenCalledWith(
+          "settings.customerTags.toast.createFailed",
+        );
+        expect(
+          screen.queryByText("settings.customerTags.errors.nameTaken"),
+        ).not.toBeInTheDocument();
+      }
+    },
+  );
+
   // #288: a tag can tell the team without handing the conversation over.
   it("sends notifiesTeam when the owner turns on Notify the team", async () => {
     useListMock.mockReturnValue({
