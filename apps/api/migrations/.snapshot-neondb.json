@@ -9552,7 +9552,8 @@
             "PENDING",
             "ACCEPTED",
             "EXPIRED",
-            "REVOKED"
+            "REVOKED",
+            "DECLINED"
           ],
           "mappedType": "enum"
         },

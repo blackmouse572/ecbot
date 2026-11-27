@@ -7,9 +7,11 @@ export function useElementWidth(ref: RefObject<HTMLElement | null>): number {
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
-    setWidth(element.getBoundingClientRect().width);
+    // Whole pixels: a window drag fires every frame, and an unchanged value
+    // skips the re-render.
+    setWidth(Math.round(element.getBoundingClientRect().width));
     const observer = new ResizeObserver(([entry]) =>
-      setWidth(entry.contentRect.width),
+      setWidth(Math.round(entry.contentRect.width)),
     );
     observer.observe(element);
     return () => observer.disconnect();

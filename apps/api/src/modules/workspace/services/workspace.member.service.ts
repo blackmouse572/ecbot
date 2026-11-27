@@ -12,7 +12,6 @@ import { RoleEntity } from '@app/modules/role/repository/entities/role.entity';
 import { UserEntity } from '@app/modules/user/repository/entities/user.entity';
 import { EntityManager } from '@mikro-orm/postgresql';
 import {
-    ConflictException,
     ForbiddenException,
     Injectable,
     NotFoundException,
@@ -30,6 +29,7 @@ import {
 import { WorkspaceMemberListResponseDto } from '../dtos/response/workspace-member.list.response.dto';
 import { WORKSPACE_DEFAULT_MEMBER_ROLE_NAME } from '../constants/workspace.constant';
 import { ENUM_WORKSPACE_STATUS_CODE_ERROR } from '../enums/workspace.status-code.enum';
+import { defaultMemberRoleMissingException } from '../utils/default-member-role-missing.util';
 import { IWorkspaceMemberWithUserDoc } from '../interfaces/workspace-member.interface';
 import {
     DecodedInvitationToken,
@@ -410,11 +410,7 @@ export class WorkspaceMemberService implements IWorkspaceMemberService {
         if (!role) {
             // The owner turned the built-in Sales role off. Never fall back
             // to another built-in role, which shares its type.
-            throw new ConflictException({
-                statusCode:
-                    ENUM_WORKSPACE_STATUS_CODE_ERROR.DEFAULT_MEMBER_ROLE_MISSING,
-                message: 'workspace.error.defaultMemberRoleMissing',
-            });
+            throw defaultMemberRoleMissingException();
         }
 
         await this.assignRoleToMember(workspaceId, userId, role.id, options);
