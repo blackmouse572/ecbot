@@ -1,6 +1,7 @@
 import { IconTag } from "@tabler/icons-react";
 import { _DataTable } from "@/components/table/data-table";
 import { useDataTable } from "@/hooks/use-data-table";
+import { readApiError } from "@/libs/api-error";
 import {
   useCreateCustomerTag,
   useCustomerTagList,
@@ -295,12 +296,7 @@ function CustomerTagDrawer({
     } catch (e) {
       console.error(e);
       // 409 = tag name already taken in this workspace.
-      if (
-        e &&
-        typeof e === "object" &&
-        "status" in e &&
-        (e as { status?: number }).status === 409
-      ) {
+      if (readApiError(e).status === 409) {
         form.setError("name", {
           type: "manual",
           message: t("settings.customerTags.errors.nameTaken"),
