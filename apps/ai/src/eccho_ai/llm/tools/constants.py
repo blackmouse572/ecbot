@@ -35,6 +35,17 @@ HANDOFF_FAILED = (
     "Do not tell the customer a staff member will take over."
 )
 
+# An identical call (same tool, same arguments) was already made this turn and
+# is not run again (#643: the agent re-applied the same tag every round until
+# GraphRecursionError, 51K tokens a turn). Formatted with `name`.
+REPEATED_TOOL_CALL = (
+    "You already called {name} with these exact arguments in this turn, and "
+    "that result is in the conversation above; it was not run again. Do not "
+    "call it again: use the result you have. If it changed something (a tag "
+    "was applied, a handoff fired, data was saved), tell the customer what "
+    "happens next; otherwise answer them now."
+)
+
 # Not "proceed without it": the agent then improvised the skill's procedure and
 # promised to get back to the customer later. Formatted with `slug`.
 SKILL_LOAD_FAILED = (

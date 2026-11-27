@@ -9,6 +9,8 @@ from __future__ import annotations
 from datetime import UTC
 from unittest.mock import MagicMock
 
+import pytest
+
 from langchain.agents import create_agent
 from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
 from langchain_core.messages import AIMessage
@@ -344,3 +346,130 @@ async def test_orders_on_keeps_record_order(monkeypatch):
     overrides = await _model_overrides(monkeypatch, orders_enabled=True)
     assert [t.name for t in overrides["tools"]] == ["record_order", "apply_customer_tag"]
     assert overrides["system_prompt"] == "orders=True"
+
+
+# ── identical tool calls do not loop a turn away (#643) ──────────────────────
+
+# The burst's questions: plain menu/facility asks that ended at
+# GraphRecursionError because the model re-applied the same tag every round.
+_LOOPING_QUESTIONS = [
+    "Quán có wifi không?",
+    "Có ghế cho em bé không?",
+    "Bàn này ngồi được mấy người?",
+    "Có menu cho trẻ em không?",
+    "Tôm hùm giá bao nhiêu?",
+]
+
+
+def _tag_call(name: str, call_id: str) -> AIMessage:
+    return AIMessage(
+        content="",
+        tool_calls=[{"name": "apply_customer_tag", "args": {"name": name}, "id": call_id, "type": "tool_call"}],
+    )
+
+
+def _looping_turn(monkeypatch, messages: list, executed: list[str]):
+    """The production graph (shared agent + middleware) with a scripted model."""
+
+    async def apply_customer_tag(name: str) -> dict:
+        executed.append(name)
+        return {"ok": True, "triggersHandoff": True, "triggeredHandoff": True}
+
+    tool = StructuredTool.from_function(
+        coroutine=apply_customer_tag, name="apply_customer_tag", description="apply a tag"
+    )
+    fake = _FakeToolModel(messages=iter(messages))
+    monkeypatch.setattr(mw, "build_chat_model", lambda **kw: fake)
+    monkeypatch.setattr(mw, "render_system_prompt", lambda chatbot, **kw: "sys")
+    agent = _agent()
+    ctx = AgentRequestContext(chatbot=MagicMock(), chatbot_id="bot", tools=[tool])
+    return agent, ctx, tool
+
+
+async def _run_turn(agent, ctx, message: str):
+    # 11 is what apps/api's max_tool_iterations=5 produces (get_agent_config).
+    return await agent.ainvoke(
+        {"messages": [("user", message)]}, context=ctx, config={"recursion_limit": 11}
+    )
+
+
+@pytest.mark.parametrize("question", _LOOPING_QUESTIONS)
+async def test_a_menu_question_turn_answers_after_a_repeated_handoff(monkeypatch, question):
+    """One repeat is refused, then the model answers: the turn ends in a reply,
+    not at the recursion limit."""
+    executed: list[str] = []
+    agent, ctx, _ = _looping_turn(
+        monkeypatch,
+        [
+            _tag_call("Khách khó tính", "c1"),
+            _tag_call("Khách khó tính", "c2"),
+            AIMessage(content="Dạ em đã chuyển cho nhân viên ạ."),
+        ],
+        executed,
+    )
+
+    result = await _run_turn(agent, ctx, question)
+
+    assert executed == ["Khách khó tính"], "the repeated handoff must not re-run"
+    assert result["messages"][-1].content == "Dạ em đã chuyển cho nhân viên ạ."
+
+
+async def test_a_repeated_call_is_written_once_however_often_it_repeats(monkeypatch):
+    """Every repeat after the first is refused without touching the tool.
+
+    A model that never stops still ends the turn at the limit — 11 supersteps
+    afford two tool rounds — but the tag is written once instead of once per
+    round, and a refused round costs no more than the round it replaced."""
+    from langgraph.errors import GraphRecursionError
+
+    executed: list[str] = []
+    agent, ctx, _ = _looping_turn(
+        monkeypatch,
+        [_tag_call("Khách khó tính", f"c{i}") for i in range(8)],
+        executed,
+    )
+
+    with pytest.raises(GraphRecursionError):
+        await _run_turn(agent, ctx, "Quán có wifi không?")
+
+    assert executed == ["Khách khó tính"]
+
+
+async def test_different_arguments_are_not_a_repeat(monkeypatch):
+    """Two tags in one turn are two calls: both are applied."""
+    executed: list[str] = []
+    agent, ctx, _ = _looping_turn(
+        monkeypatch,
+        [
+            _tag_call("VIP", "c1"),
+            _tag_call("Đơn hàng mới", "c2"),
+            AIMessage(content="Dạ em ghi nhận ạ."),
+        ],
+        executed,
+    )
+
+    await _run_turn(agent, ctx, "Mình là khách quen, đặt thêm 1 phần nha.")
+
+    assert executed == ["VIP", "Đơn hàng mới"]
+
+
+async def test_each_turn_records_its_own_calls(monkeypatch):
+    """The record lives on the turn's context: the next turn may call the same
+    tool with the same arguments again."""
+    executed: list[str] = []
+    agent, ctx, tool = _looping_turn(
+        monkeypatch,
+        [
+            _tag_call("VIP", "c1"),
+            AIMessage(content="Dạ vâng ạ."),
+            _tag_call("VIP", "c2"),
+            AIMessage(content="Dạ vâng ạ."),
+        ],
+        executed,
+    )
+
+    await _run_turn(agent, ctx, "Gắn tag giúp em nha.")
+    next_turn = AgentRequestContext(chatbot=MagicMock(), chatbot_id="bot", tools=[tool])
+    await _run_turn(agent, next_turn, "Gắn tag lại giúp em nha.")
+
+    assert executed == ["VIP", "VIP"]
