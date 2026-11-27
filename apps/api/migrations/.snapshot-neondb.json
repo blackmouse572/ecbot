@@ -738,6 +738,7 @@
             "join_workspace",
             "leave_workspace",
             "invite_member",
+            "decline_invitation",
             "remove_member",
             "approve_join_workspace",
             "active_chatbot",
