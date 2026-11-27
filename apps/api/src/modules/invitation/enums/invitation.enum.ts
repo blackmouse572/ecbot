@@ -3,6 +3,8 @@ export enum ENUM_INVITATION_STATUS {
     ACCEPTED = 'ACCEPTED',
     EXPIRED = 'EXPIRED',
     REVOKED = 'REVOKED',
+    // The invitee said no; revokedAt/revokedByUser hold when and who.
+    DECLINED = 'DECLINED',
 }
 
 export enum ENUM_INVITATION_STATUS_CODE_ERROR {

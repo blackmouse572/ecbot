@@ -49,9 +49,9 @@ describe('WorkspaceRequestService — approve', () => {
     it('looks up the request scoped to the workspace', async () => {
         mockRequestRepository.findOne.mockResolvedValue(null);
 
-        await expect(
-            service.approve('req-1', workspace)
-        ).rejects.toThrow(NotFoundException);
+        await expect(service.approve('req-1', workspace)).rejects.toThrow(
+            NotFoundException
+        );
 
         expect(mockRequestRepository.findOne).toHaveBeenCalledWith({
             id: 'req-1',

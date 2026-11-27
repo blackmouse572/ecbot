@@ -958,6 +958,7 @@
     },
     "member": {
       "invite": "sent an invitation to join the workspace",
+      "declineInvitation": "declined an invitation to join the workspace",
       "remove": "removed member <link/>",
       "approve": "approved member <link/>"
     },
@@ -1544,6 +1545,7 @@
         "PENDING": "Pending",
         "ACCEPTED": "Accepted",
         "REVOKED": "Revoked",
+        "DECLINED": "Declined",
         "EXPIRED": "Expired"
       }
     },

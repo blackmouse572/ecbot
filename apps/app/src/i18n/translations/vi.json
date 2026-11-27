@@ -975,6 +975,7 @@
     },
     "member": {
       "invite": "đã gửi lời mời tham gia không gian làm việc",
+      "declineInvitation": "đã từ chối lời mời tham gia không gian làm việc",
       "remove": "đã xóa thành viên <link/>",
       "approve": "đã duyệt thành viên <link/>"
     },
@@ -1601,6 +1602,7 @@
         "PENDING": "Đang chờ",
         "ACCEPTED": "Đã chấp nhận",
         "REVOKED": "Đã hủy",
+        "DECLINED": "Đã từ chối",
         "EXPIRED": "Hết hạn"
       }
     },
